@@ -1,1 +1,1 @@
-export { tokenize } from "./tokenize"
+export { tokenize, TokenizeError } from "./tokenize"
