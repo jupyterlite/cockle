@@ -8,5 +8,7 @@ module.exports = {
       }
     ]
   },
-  verbose: true
+  verbose: true,
+  collectCoverage: true,
+  coverageDirectory: '.coverage'
 };
