@@ -1,0 +1,27 @@
+{
+  "name": "@ianthomas23/cockle",
+  "version": "0.0.1",
+  "description": "In browser bash-like shell",
+  "homepage": "https://github.com/ianthomas23/cockle",
+  "license": "BSD-3-Clause",
+  "author": "Ian Thomas",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ianthomas23/cockle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ianthomas23/cockle/issues"
+  },
+  "main": "index.ts",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.4.5"
+  }
+}
