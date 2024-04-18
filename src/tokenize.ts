@@ -69,7 +69,7 @@ export function tokenize(source: string): TokenizedSource {
         offsets.push(i, i, i+1)
         inToken = false
       }
-    } else {  // !in_token
+    } else {  // !inToken
       if (delimiters.includes(char)) {
         // Single character delimiter.
         offsets.push(i, i+1)

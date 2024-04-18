@@ -76,7 +76,7 @@ describe("Tokenize validate", () => {
     expect(() => new TokenizedSource("", [0, 2, 1, 3])).toThrow(TokenizeError)
   })
 
-  it("should raise if tokens overlap", () => {
+  it("should raise if offsets out of bounds", () => {
     expect(() => new TokenizedSource("l", [0, 2])).toThrow(TokenizeError)
     expect(() => new TokenizedSource("l", [-1, 1])).toThrow(TokenizeError)
   })
