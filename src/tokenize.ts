@@ -55,15 +55,15 @@ export class TokenizedSource {
 export function tokenize(source: string): TokenizedSource {
   const offsets = []
   const n = source.length
-  let in_token: boolean = false
+  let inToken: boolean = false
 
   for (let i = 0; i < n; i++) {
     const char = source[i]
-    if (in_token) {
+    if (inToken) {
       if (whitespace.includes(char)) {
         // Finish current token.
         offsets.push(i)
-        in_token = false
+        inToken = false
       } else if (delimiters.includes(char)) {
         // Finish current token and start next one.
         offsets.push(i, i)
@@ -72,11 +72,11 @@ export function tokenize(source: string): TokenizedSource {
       if (!whitespace.includes(char)) {
         // Start new token.
         offsets.push(i)
-        in_token = true
+        inToken = true
       }
     }
   }
-  if (in_token) {
+  if (inToken) {
     // Finish last token.
     offsets.push(n)
   }

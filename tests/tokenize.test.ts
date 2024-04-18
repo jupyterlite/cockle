@@ -29,18 +29,18 @@ describe("Tokenize offsets", () => {
 
 describe("Tokenize token", () => {
   it("should return single token", () => {
-    const tokenized_source = tokenize("ls -al; pwd")
-    expect(tokenized_source.length).toEqual(4)
-    expect(tokenized_source.token(0)).toEqual("ls")
-    expect(tokenized_source.token(1)).toEqual("-al")
-    expect(tokenized_source.token(2)).toEqual(";")
-    expect(tokenized_source.token(3)).toEqual("pwd")
+    const tokenizedSource = tokenize("ls -al; pwd")
+    expect(tokenizedSource.length).toEqual(4)
+    expect(tokenizedSource.token(0)).toEqual("ls")
+    expect(tokenizedSource.token(1)).toEqual("-al")
+    expect(tokenizedSource.token(2)).toEqual(";")
+    expect(tokenizedSource.token(3)).toEqual("pwd")
   })
 
   it("should raise on invalid index bounds", () => {
-    const tokenized_source = tokenize("ls -al")
-    expect(() => tokenized_source.token(-1)).toThrow(RangeError)
-    expect(() => tokenized_source.token(2)).toThrow(RangeError)
+    const tokenizedSource = tokenize("ls -al")
+    expect(() => tokenizedSource.token(-1)).toThrow(RangeError)
+    expect(() => tokenizedSource.token(2)).toThrow(RangeError)
   })
 })
 
