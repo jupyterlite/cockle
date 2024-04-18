@@ -18,12 +18,15 @@ describe("Tokenize offsets", () => {
   it("should support multiple tokens", () => {
     expect(tokenize("ls -al; pwd").offsets).toStrictEqual([0, 2, 3, 6, 6, 7, 8, 11])
     expect(tokenize("ls -al& pwd").offsets).toStrictEqual([0, 2, 3, 6, 6, 7, 8, 11])
+    expect(tokenize(";;").offsets).toStrictEqual([0, 1, 1, 2])
   })
 
   it("should ignore leading and trailing whitespace", () => {
     expect(tokenize("  ls").offsets).toStrictEqual([2, 4])
     expect(tokenize("ls  ").offsets).toStrictEqual([0, 2])
     expect(tokenize(" ls   ").offsets).toStrictEqual([1, 3])
+    expect(tokenize(" ;; ").offsets).toStrictEqual([1, 2, 2, 3])
+    expect(tokenize(" ; ; ").offsets).toStrictEqual([1, 2, 3, 4])
   })
 })
 
@@ -47,6 +50,16 @@ describe("Tokenize token", () => {
 describe("Tokenize tokens", () => {
   it("should return all tokens", () => {
     expect(tokenize("ls -al; pwd").tokens).toEqual(["ls", "-al", ";", "pwd"])
+  })
+
+  it("should support delimiters with and without whitespace", () => {
+    expect(tokenize("ls;").tokens).toEqual(["ls", ";"])
+    expect(tokenize(";ls").tokens).toEqual([";", "ls"])
+    expect(tokenize(";ls;;").tokens).toEqual([";", "ls", ";", ";"])
+    expect(tokenize("ls ; ; pwd").tokens).toEqual(["ls", ";", ";", "pwd"])
+    expect(tokenize("ls ;; pwd").tokens).toEqual(["ls", ";", ";", "pwd"])
+    expect(tokenize("ls;pwd").tokens).toEqual(["ls", ";", "pwd"])
+    expect(tokenize("ls;;pwd").tokens).toEqual(["ls", ";", ";", "pwd"])
   })
 })
 

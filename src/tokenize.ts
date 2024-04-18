@@ -65,11 +65,15 @@ export function tokenize(source: string): TokenizedSource {
         offsets.push(i)
         inToken = false
       } else if (delimiters.includes(char)) {
-        // Finish current token and start next one.
-        offsets.push(i, i)
+        // Finish current token and create new one for delimiter.
+        offsets.push(i, i, i+1)
+        inToken = false
       }
     } else {  // !in_token
-      if (!whitespace.includes(char)) {
+      if (delimiters.includes(char)) {
+        // Single character delimiter.
+        offsets.push(i, i+1)
+      } else if (!whitespace.includes(char)) {
         // Start new token.
         offsets.push(i)
         inToken = true
