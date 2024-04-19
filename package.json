@@ -19,9 +19,15 @@
     "test": "jest"
   },
   "devDependencies": {
+    "@jupyterlab/services": "^7.1.6",
     "@types/jest": "^29.5.12",
+    "@types/json-schema": "^7.0.15",
+    "@types/react": "^18.2.79",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.2",
     "typescript": "^5.4.5"
+  },
+  "optionalDependencies": {
+    "@jupyterlab/services": "^7.1.6"
   }
 }
