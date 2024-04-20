@@ -30,3 +30,23 @@ describe("IFileSystem", () => {
     expect(filenames).toEqual(["dirA", "file1", "file2"])
   })
 })
+
+describe("IFileSystem", () => {
+  it.each(["jupyter", "node"])
+  ('.touch %s', async (name) => {
+    const [fs, dir] = await setup(name)
+    await fs.touch(join(dir, "newfile"))
+    const filenames = await fs.list(dir)
+    expect(filenames).toEqual(["dirA", "file1", "file2", "newfile"])
+  })
+})
+
+describe("IFileSystem", () => {
+  it.each(["jupyter", "node"])
+  ('.delete %s', async (name) => {
+    const [fs, dir] = await setup(name)
+    await fs.delete(join(dir, "file1"))
+    const filenames = await fs.list(dir)
+    expect(filenames).toEqual(["dirA", "file2"])
+  })
+})
