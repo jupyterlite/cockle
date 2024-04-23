@@ -2,7 +2,7 @@ import { Command } from "../command"
 import { Context } from "../context"
 
 export class LsCommand extends Command {
-  async run(context: Context): Promise<number> {
+  override async run(context: Context): Promise<number> {
 
     // Validate and expand arguments (flags and file/directory names).
     // Only supporting single path and no flags so far.
@@ -13,9 +13,7 @@ export class LsCommand extends Command {
 
     const path = context.args[0]
     const filenames = await context.filesystem.list(path)
-    console.log("FILENAMES", filenames.join("  "))
-    // Write this to stdout
-
+    await context.stdout.write(filenames.join("  "))
     return 0
   }
 }

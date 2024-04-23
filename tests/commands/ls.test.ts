@@ -8,6 +8,7 @@ import { NodeFileSystem } from "../../src/node_file_system"
 
 import { CommandRegistry } from "../../src/command_registry"
 import { Context } from "../../src/context"
+import { ConsoleOutput } from "../../src/io/console_output"
 
 async function setup(name: string): Promise<IFileSystem> {
   if (name == "jupyter") {
@@ -27,15 +28,20 @@ async function setup(name: string): Promise<IFileSystem> {
 
 describe("ls command", () => {
   it.each(["jupyter", "node"])
-  ('should do something %s', async (name) => {
+  ('should write to console %s', async (name) => {
     const fs = await setup(name)
-    const context = new Context(["/"], fs)
+    const stdout = new ConsoleOutput()
+    const context = new Context(["/"], fs, stdout)
+
+    const spy = jest.spyOn(console, 'log').mockImplementation(() => {})
 
     const cls = CommandRegistry.instance().get("ls")
     expect(cls).not.toBeNull()
     const cmd = new (cls as any)()
     const exit_code = await cmd.run(context)
     expect(exit_code).toBe(0)
-    // Check text in stdout
+
+    expect(spy).toHaveBeenCalledWith("dirA  file1  file2");
+    spy.mockRestore();
   })
 })
