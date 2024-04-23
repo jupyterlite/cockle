@@ -7,6 +7,18 @@ export class CommandRegistry {
 
   private constructor() {}
 
+  /**
+   * Create a new Command identified by its string name.
+   */
+  create(name: string): Command | null {
+    const cls = this.get(name)
+    if (cls) {
+      return new (cls as any)()
+    } else {
+      return null
+    }
+  }
+
   get(name: string): typeof Command | null {
     return this._map.get(name) ?? null
   }

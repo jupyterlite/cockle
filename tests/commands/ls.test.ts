@@ -35,10 +35,9 @@ describe("ls command", () => {
 
     const spy = jest.spyOn(console, 'log').mockImplementation(() => {})
 
-    const cls = CommandRegistry.instance().get("ls")
-    expect(cls).not.toBeNull()
-    const cmd = new (cls as any)()
-    const exit_code = await cmd.run(context)
+    const cmd = CommandRegistry.instance().create("ls")
+    expect(cmd).not.toBeNull()
+    const exit_code = await cmd!.run(context)
     expect(exit_code).toBe(0)
 
     expect(spy).toHaveBeenCalledWith("dirA  file1  file2");
