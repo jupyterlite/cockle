@@ -10,6 +10,13 @@ export class JupyterFileSystem implements IFileSystem {
     await this._contentsManager.delete(path)
   }
 
+  async get(path: string): Promise<string> {
+    const listing = await this._contentsManager.get(path)
+    // Should check only a single item returned.
+    const content = listing.content as string
+    return content
+  }
+
   async list(path: string): Promise<string[]> {
     const listing = await this._contentsManager.get(path)
     const content = listing.content as Contents.IModel[]

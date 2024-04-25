@@ -17,6 +17,11 @@ export class NodeFileSystem implements IFileSystem {
     await fs.unlink(join(this._baseDir, path))
   }
 
+  async get(path: string): Promise<string> {
+    const contents = await fs.readFile(join(this._baseDir, path), "utf-8")
+    return contents
+  }
+
   async list(path: string): Promise<string[]> {
     const filenames = await fs.readdir(join(this._baseDir, path))
     return filenames.sort()

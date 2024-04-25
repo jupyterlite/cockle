@@ -3,6 +3,9 @@ export interface IFileSystem {
 
   delete(path: string): Promise<void>
 
+  // Get file contents
+  get(path: string): Promise<string>
+
   list(path: string): Promise<string[]>
 
   // Assume new file ...
