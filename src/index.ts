@@ -1,4 +1,6 @@
 export { IFileSystem } from "./file_system"
+export { JupyterFileSystem } from "./jupyter_file_system"
 export { Context } from "./context"
 export { parse, ParseError } from "./parse"
+export { OutputCallback, Shell } from "./shell"
 export { tokenize, TokenizeError } from "./tokenize"

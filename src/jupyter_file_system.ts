@@ -1,4 +1,4 @@
-import { Contents } from '@jupyterlab/services';
+import type { Contents } from '@jupyterlab/services';
 import { IFileSystem } from "./file_system"
 
 export class JupyterFileSystem implements IFileSystem {
