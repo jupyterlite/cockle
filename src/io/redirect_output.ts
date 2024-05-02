@@ -8,8 +8,8 @@ export class RedirectOutput extends BufferedOutput {
   }
 
   override async flush(): Promise<void> {
-    this.data.forEach((line) => {
-      this.target.write(line)
+    this.data.forEach(async (line) => {
+      await this.target.write(line)
     })
     this.clear()
     await this.target.flush()

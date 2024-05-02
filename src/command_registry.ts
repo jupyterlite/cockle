@@ -20,11 +20,17 @@ export class CommandRegistry {
     return this._map.get(name) ?? null
   }
 
-  static instance()  {
+  static instance(): CommandRegistry {
     if (!CommandRegistry._instance) {
       CommandRegistry._instance = new CommandRegistry()
     }
     return CommandRegistry._instance
+  }
+
+  match(start: string): string[] {
+    return [...this._map.keys()].filter((name) => {
+      return name.startsWith(start)
+    })
   }
 
   register(name: string, cls: typeof Command) {

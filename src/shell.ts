@@ -21,9 +21,49 @@ export class Shell {
     this._env.set("LINES", "0")
   }
 
-  async input(text: string): Promise<void> {
-    for (const char of text) {
-      await this._inputSingleChar(char)
+  async input(char: string): Promise<void> {
+    // Might be a multi-char string if begins with escape code.
+    const code = char.charCodeAt(0)
+    //console.log("CODE", code)
+    if (code == 13) {  // \r
+      await this.output("\r\n")
+      const cmdText = this._currentLine
+      this._currentLine = ""
+      await this._runCommands(cmdText)
+      await this.output(this._env.get("PS1") ?? "")
+    } else if (code == 127) {  // Backspace
+      if (this._currentLine.length > 0) {
+        this._currentLine = this._currentLine.slice(0, -1);
+        const backspace = "\x1B[1D"
+        await this.output(backspace + ' ' + backspace)
+      }
+    } else if (code == 9) {  // Tab \t
+      const possibles = await this._tabComplete(this._currentLine)
+      if (possibles.length == 1) {
+        const n = this._currentLine.length
+        this._currentLine = possibles[0] + " "
+        await this.output(this._currentLine.slice(n))
+      } else if (possibles.length > 1) {
+        const line = possibles.join("  ")
+        this._currentLine = ""
+        await this.output(`\r\n${line}\r\n${this._env.get("PS1") ?? ""}`)
+      }
+    } else if (code == 27) {  // Escape following by 1+ more characters
+      const remainder = char.slice(1)
+      if (remainder == "[A" || remainder == "[1A") {  // Up arrow
+
+      } else if (remainder == "[B" || remainder == "[1B") {  // Down arrow
+
+      }
+    } else {
+      this._currentLine += char
+      await this.output(char)
+    }
+  }
+
+  async inputs(chars: string[]): Promise<void> {
+    for (let i = 0; i < chars.length; ++i) {
+      await this.input(chars[i])
     }
   }
 
@@ -40,24 +80,6 @@ export class Shell {
     const prompt = this._env.get("PS1")
     if (prompt) {
       await this.output(prompt)
-    }
-  }
-
-  private async _inputSingleChar(char: string): Promise<void> {
-    // Is char always just one character?
-    if (char == "\r") {
-      await this.output("\r\n")
-      const cmdText = this._currentLine
-      this._currentLine = ""
-      await this._runCommands(cmdText)
-
-      const prompt = this._env.get("PS1")
-      if (prompt) {
-        await this.output(prompt)
-      }
-    } else {
-      this._currentLine += char
-      await this.output(char)
     }
   }
 
@@ -84,9 +106,15 @@ export class Shell {
       }
     } catch (e) {
       // Send result via output??????  With color.  Should be to stderr.
-      stdout.write("\x1b[1;31mERROR...\x1b[1;0m")
+      stdout.write("\x1b[1;31mERROR...\x1b[1;0m\r\n")
       await stdout.flush()
     }
+  }
+
+  private async _tabComplete(text: string): Promise<string[]> {
+    // Find all commands that begin with text.
+    // Will need to extend to cover filenames too.
+    return CommandRegistry.instance().match(text)
   }
 
   private readonly _filesystem: IFileSystem
