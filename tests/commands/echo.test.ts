@@ -18,7 +18,7 @@ describe("echo command", () => {
     const exit_code = await cmd!.run(context)
     expect(exit_code).toBe(0)
 
-    expect(spy).toHaveBeenCalledWith("some_text");
-    spy.mockRestore();
+    expect(spy).toHaveBeenCalledWith("some_text\r\n")
+    spy.mockRestore()
   })
 })

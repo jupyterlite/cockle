@@ -10,7 +10,7 @@ export class EchoCommand extends Command {
       return 1
     }
 
-    await context.stdout.write(context.args[0])
+    await context.stdout.write(context.args[0] + "\r\n")
     return 0
   }
 }

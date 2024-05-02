@@ -18,7 +18,7 @@ describe("cat command", () => {
     const exit_code = await cmd!.run(context)
     expect(exit_code).toBe(0)
 
-    expect(spy).toHaveBeenCalledWith("Contents of file1");
-    spy.mockRestore();
+    expect(spy).toHaveBeenCalledWith("Contents of file1\r\n")
+    spy.mockRestore()
   })
 })

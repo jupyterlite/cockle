@@ -2,9 +2,6 @@ import { Command } from "./command"
 import * as AllCommands from "./commands"
 
 export class CommandRegistry {
-  private static _instance: CommandRegistry
-  private _map: Map<string, typeof Command> = new Map()
-
   private constructor() {}
 
   /**
@@ -36,6 +33,9 @@ export class CommandRegistry {
       this._map.set(shortName, cls)
     }
   }
+
+  private static _instance: CommandRegistry
+  private _map: Map<string, typeof Command> = new Map()
 }
 
 function registerCommands(commands: {[key: string]: typeof Command}) {

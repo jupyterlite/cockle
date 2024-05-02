@@ -12,7 +12,7 @@ export class CatCommand extends Command {
 
     const path = context.args[0]
     const content = await context.filesystem.get(path)
-    await context.stdout.write(content)
+    await context.stdout.write(content + "\r\n")
     return 0
   }
 }
