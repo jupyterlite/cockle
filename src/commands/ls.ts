@@ -12,7 +12,7 @@ export class LsCommand extends Command {
       return 1
     }
 
-    const path = args.length == 0 ? "/" : args[0]  // Should be pwd really.
+    const path = args.length == 0 ? (context.env.get("PWD") ?? "/"): args[0]
     const filenames = await context.filesystem.list(path)
     await context.stdout.write(filenames.join("  ") + "\r\n")  // How to deal with newlines?
     return 0

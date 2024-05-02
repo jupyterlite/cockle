@@ -12,8 +12,13 @@ export class Shell {
   ) {
     this._filesystem = filesystem
     this._outputCallback = outputCallback
-    this._prompt = "\x1b[1;31mjs-shell:$\x1b[1;0m " // red color.
     this._currentLine = ""
+
+    this._env = new Map()
+    this._env.set("PS1", "\x1b[1;31mjs-shell:$\x1b[1;0m ")  // red color
+    this._env.set("PWD", "/")
+    this._env.set("COLUMNS", "0")
+    this._env.set("LINES", "0")
   }
 
   async input(text: string): Promise<void> {
@@ -27,11 +32,15 @@ export class Shell {
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
-    console.log("setSize", rows, columns)
+    this._env.set("COLUMNS", columns.toString())
+    this._env.set("LINES", rows.toString())
   }
 
   async start(): Promise<void> {
-    await this.output(this._prompt)
+    const prompt = this._env.get("PS1")
+    if (prompt) {
+      await this.output(prompt)
+    }
   }
 
   private async _inputSingleChar(char: string): Promise<void> {
@@ -41,7 +50,11 @@ export class Shell {
       const cmdText = this._currentLine
       this._currentLine = ""
       await this._runCommands(cmdText)
-      await this.output(this._prompt)
+
+      const prompt = this._env.get("PS1")
+      if (prompt) {
+        await this.output(prompt)
+      }
     } else {
       this._currentLine += char
       await this.output(char)
@@ -64,7 +77,7 @@ export class Shell {
         }
 
         const cmdArgs = cmd.slice(1)
-        const context = new Context(cmdArgs, this._filesystem, stdout)
+        const context = new Context(cmdArgs, this._filesystem, stdout, this._env)
         //const exit_code = await command?.run(context)
         await command?.run(context)
         await stdout.flush()
@@ -78,6 +91,6 @@ export class Shell {
 
   private readonly _filesystem: IFileSystem
   private readonly _outputCallback: OutputCallback
-  private _prompt: string
   private _currentLine: string
+  private _env: Map<string, string>
 }
