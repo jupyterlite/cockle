@@ -23,6 +23,7 @@ export class NodeFileSystem implements IFileSystem {
   }
 
   async list(path: string): Promise<string[]> {
+    // May not be a directory...
     const filenames = await fs.readdir(join(this._baseDir, path))
     return filenames.sort()
   }

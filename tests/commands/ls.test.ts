@@ -6,7 +6,7 @@ import { ConsoleOutput } from "../../src/io/console_output"
 
 describe("ls command", () => {
   it.each(["jupyter", "node"])
-  ('should write to console %s', async (name) => {
+  ('should write dir to console %s', async (name) => {
     const fs = await file_system_setup(name)
     const stdout = new ConsoleOutput()
     const context = new Context(["/"], fs, stdout)
@@ -19,6 +19,24 @@ describe("ls command", () => {
     expect(exit_code).toBe(0)
 
     expect(spy).toHaveBeenCalledWith("dirA  file1  file2\r\n")
+    spy.mockRestore()
+  })
+
+  //it.each(["jupyter", "node"])
+  it.each(["jupyter"])
+  ('should write file to console %s', async (name) => {
+    const fs = await file_system_setup(name)
+    const stdout = new ConsoleOutput()
+    const context = new Context(["file2"], fs, stdout)
+
+    const spy = jest.spyOn(console, 'log').mockImplementation(() => {})
+
+    const cmd = CommandRegistry.instance().create("ls")
+    expect(cmd).not.toBeNull()
+    const exit_code = await cmd!.run(context)
+    expect(exit_code).toBe(0)
+
+    expect(spy).toHaveBeenCalledWith("file2\r\n")
     spy.mockRestore()
   })
 })

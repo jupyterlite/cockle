@@ -11,17 +11,21 @@ export class JupyterFileSystem implements IFileSystem {
   }
 
   async get(path: string): Promise<string> {
-    const listing = await this._contentsManager.get(path)
+    const listing = await this._contentsManager.get(path, { content: true })
     // Should check only a single item returned.
     const content = listing.content as string
     return content
   }
 
   async list(path: string): Promise<string[]> {
-    const listing = await this._contentsManager.get(path)
-    const content = listing.content as Contents.IModel[]
-    const filenames = content.map((model) => model.name)
-    return filenames.sort()
+    const listing = await this._contentsManager.get(path, { content: true })
+    if (listing.type == "file") {
+      return [listing.name]
+    } else {  // listing.type == "directory"
+      const content = listing.content as Contents.IModel[]
+      const filenames = content.map((model) => model.name)
+      return filenames.sort()
+    }
   }
 
   async touch(path: string): Promise<void> {

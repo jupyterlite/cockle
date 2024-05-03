@@ -95,7 +95,7 @@ export class Shell {
         const command = CommandRegistry.instance().create(cmdName)
         if (command === null) {
           // Give location of command in input?
-          throw new Error(`No such command: '${cmdName}'`)
+          throw new Error(`Unknown command: '${cmdName}'`)
         }
 
         const cmdArgs = cmd.slice(1)
@@ -104,9 +104,9 @@ export class Shell {
         await command?.run(context)
         await stdout.flush()
       }
-    } catch (e) {
+    } catch (error: any) {
       // Send result via output??????  With color.  Should be to stderr.
-      stdout.write("\x1b[1;31mERROR...\x1b[1;0m\r\n")
+      stdout.write("\x1b[1;31m" + error + "\x1b[1;0m\r\n")
       await stdout.flush()
     }
   }
