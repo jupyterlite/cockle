@@ -13,6 +13,14 @@ describe("Shell", () => {
       expect(output.text).toEqual("dirA  file1  file2\r\n")
     })
 
+    it("should run ls command with leading whitespace", async () => {
+      const fs = await file_system_setup("jupyter")
+      const output = new MockTerminalOutput()
+      const shell = new Shell(fs, output.callback)
+      await shell._runCommands("   ls")
+      expect(output.text).toEqual("dirA  file1  file2\r\n")
+    })
+
     it("should run env command", async () => {
       const fs = await file_system_setup("jupyter")
       const output = new MockTerminalOutput()
@@ -38,8 +46,10 @@ describe("Shell", () => {
       await shell.inputs(["l", "s", "\r"])
       expect(output.text).toEqual("ls\r\ndirA  file1  file2\r\n\x1b[1;31mjs-shell:$\x1b[1;0m ")
     })
+  })
 
-    it("should tab complete", async () => {
+  describe("input tab complete", () => {
+    it("should complete ec", async () => {
       const fs = await file_system_setup("jupyter")
       const output = new MockTerminalOutput()
       const shell = new Shell(fs, output.callback)
@@ -47,20 +57,45 @@ describe("Shell", () => {
       expect(output.text).toEqual("echo ")
     })
 
+    it("should ignore leading whitespace", async () => {
+      const fs = await file_system_setup("jupyter")
+      const output = new MockTerminalOutput()
+      const shell = new Shell(fs, output.callback)
+      await shell.inputs([" ", "e", "c", "\t"])
+      expect(output.text).toEqual(" echo ")
+    })
+
+    it("should ignore leading whitespace x2", async () => {
+      const fs = await file_system_setup("jupyter")
+      const output = new MockTerminalOutput()
+      const shell = new Shell(fs, output.callback)
+      await shell.inputs([" ", " ", "e", "c", "\t"])
+      expect(output.text).toEqual("  echo ")
+    })
+
     it("should show tab completion options", async () => {
       const fs = await file_system_setup("jupyter")
       const output = new MockTerminalOutput()
       const shell = new Shell(fs, output.callback)
       await shell.inputs(["e", "\t"])
-      expect(output.text).toEqual("e\r\necho  env\r\n\x1b[1;31mjs-shell:$\x1b[1;0m ")
+      expect(output.text).toEqual("e\r\necho  env\r\n\x1b[1;31mjs-shell:$\x1b[1;0m e")
     })
 
-    it("should fail to tab complete", async () => {
+    it("should do nothing on unknown command", async () => {
       const fs = await file_system_setup("jupyter")
       const output = new MockTerminalOutput()
       const shell = new Shell(fs, output.callback)
       await shell.inputs(["u", "n", "k", "\t"])
       expect(output.text).toEqual("unk")
+    })
+
+    it("should tab complete filename", async () => {
+      const fs = await file_system_setup("jupyter")
+      await fs.touch("otherfile")
+      const output = new MockTerminalOutput()
+      const shell = new Shell(fs, output.callback)
+      await shell.inputs(["l", "s", " ", "o", "\t"])
+      expect(output.text).toEqual("ls otherfile ")
     })
   })
 })

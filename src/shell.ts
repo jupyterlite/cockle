@@ -27,7 +27,7 @@ export class Shell {
     //console.log("CODE", code)
     if (code == 13) {  // \r
       await this.output("\r\n")
-      const cmdText = this._currentLine
+      const cmdText = this._currentLine.trimStart()
       this._currentLine = ""
       await this._runCommands(cmdText)
       await this.output(this._env.get("PS1") ?? "")
@@ -38,15 +38,22 @@ export class Shell {
         await this.output(backspace + ' ' + backspace)
       }
     } else if (code == 9) {  // Tab \t
-      const possibles = await this._tabComplete(this._currentLine)
+      const trimmedLine = this._currentLine.trimStart()
+      if (trimmedLine.length == 0) {
+        return
+      }
+
+      // This tab complete needs to be improved.
+      const [offset, possibles] = await this._tabComplete(trimmedLine)
       if (possibles.length == 1) {
         const n = this._currentLine.length
-        this._currentLine = possibles[0] + " "
+        this._currentLine = this._currentLine + possibles[0].slice(offset) + " "
         await this.output(this._currentLine.slice(n))
       } else if (possibles.length > 1) {
         const line = possibles.join("  ")
+        // Note keep leading whitespace on current line.
+        await this.output(`\r\n${line}\r\n${this._env.get("PS1") ?? ""}${this._currentLine}`)
         this._currentLine = ""
-        await this.output(`\r\n${line}\r\n${this._env.get("PS1") ?? ""}`)
       }
     } else if (code == 27) {  // Escape following by 1+ more characters
       const remainder = char.slice(1)
@@ -111,10 +118,25 @@ export class Shell {
     }
   }
 
-  private async _tabComplete(text: string): Promise<string[]> {
-    // Find all commands that begin with text.
-    // Will need to extend to cover filenames too.
-    return CommandRegistry.instance().match(text)
+  private async _tabComplete(text: string): Promise<[number, string[]]> {
+    const i = text.indexOf(" ")
+    if (i == -1) {
+      // Assume tab completing command.
+      return [text.length, CommandRegistry.instance().match(text)]
+    } else {
+      // Check initial command exists.
+      const cmdText = text.slice(0, i)
+      if (CommandRegistry.instance().get(cmdText) == null) {
+        return [0, []]
+      }
+      const start = text.slice(i+1).trimStart()
+      // Try to match possible file/directory names in pwd.
+      const filenames = await this._filesystem.list(this._env.get("PWD")!)
+      const ret = filenames.filter((name) => {
+        return name.startsWith(start)
+      })
+      return [start.length, ret]
+    }
   }
 
   private readonly _filesystem: IFileSystem
