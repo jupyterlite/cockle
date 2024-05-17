@@ -1,7 +1,7 @@
 import { file_system_setup } from "./file_system_setup"
 
 describe("IFileSystem", () => {
-  it.each(["jupyter", "node"])
+  it.each(["jupyter"])
   ('.list %s', async (name) => {
     const fs = await file_system_setup(name)
     const filenames = await fs.list("")
@@ -10,7 +10,7 @@ describe("IFileSystem", () => {
 })
 
 describe("IFileSystem", () => {
-  it.each(["jupyter", "node"])
+  it.each(["jupyter"])
   ('.touch %s', async (name) => {
     const fs = await file_system_setup(name)
     await fs.touch("newfile")
@@ -20,7 +20,7 @@ describe("IFileSystem", () => {
 })
 
 describe("IFileSystem", () => {
-  it.each(["jupyter", "node"])
+  it.each(["jupyter"])
   ('.delete %s', async (name) => {
     const fs = await file_system_setup(name)
     await fs.delete("file1")

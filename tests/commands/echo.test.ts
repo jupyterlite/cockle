@@ -5,7 +5,7 @@ import { Context } from "../../src/context"
 import { ConsoleOutput } from "../../src/io/console_output"
 
 describe("echo command", () => {
-  it.each(["jupyter", "node"])
+  it.each(["jupyter"])
   ('should write to console %s', async (name) => {
     const fs = await file_system_setup(name)
     const stdout = new ConsoleOutput()

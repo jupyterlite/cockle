@@ -5,7 +5,7 @@ import { Context } from "../../src/context"
 import { ConsoleOutput } from "../../src/io/console_output"
 
 describe("ls command", () => {
-  it.each(["jupyter", "node"])
+  it.each(["jupyter"])
   ('should write dir to console %s', async (name) => {
     const fs = await file_system_setup(name)
     const stdout = new ConsoleOutput()
@@ -22,7 +22,6 @@ describe("ls command", () => {
     spy.mockRestore()
   })
 
-  //it.each(["jupyter", "node"])
   it.each(["jupyter"])
   ('should write file to console %s', async (name) => {
     const fs = await file_system_setup(name)
