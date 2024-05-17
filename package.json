@@ -12,14 +12,20 @@
   "bugs": {
     "url": "https://github.com/ianthomas23/cockle/issues"
   },
+  "files": [
+    "dist/",
+    "src/**/*.ts"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "jest"
   },
+  "dependencies": {
+    "@jupyterlab/services": "^7.1.6"
+  },
   "devDependencies": {
-    "@jupyterlab/services": "^7.1.6",
     "@types/jest": "^29.5.12",
     "@types/json-schema": "^7.0.15",
     "@types/react": "^18.2.79",
