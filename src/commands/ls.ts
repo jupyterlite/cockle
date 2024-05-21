@@ -1,9 +1,23 @@
 import { Command } from "../command"
 import { Context } from "../context"
+import { BooleanOption } from "../option"
+import { Options } from "../options"
 
-export class LsCommand extends Command {
+class LsOptions extends Options {
+  commaSeparated = new BooleanOption("m")
+  long = new BooleanOption("l")
+  reverse = new BooleanOption("r")
+}
+
+export class LsCommand extends Command<LsOptions> {
   override async run(context: Context): Promise<number> {
     const args = context.args
+    const options = Options.fromArgs(args, LsOptions)
+
+    // Can use lines like this for options.
+    if (options.reverse.isSet) {
+
+    }
 
     // Validate and expand arguments (flags and file/directory names).
     // Only supporting single path and no flags so far.
