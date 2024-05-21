@@ -1,4 +1,4 @@
-import { TokenizedSource, tokenize } from "./tokenize"
+import { Token, tokenize } from "./tokenize"
 
 const endOfCommand = ";&"
 //const ignore_trailing = ";"
@@ -8,7 +8,7 @@ export class ParseError extends Error {}
 export class AST {
   // This is called an AST but is just an array of commands initially.
   // Eventually will change a lot to support more complexity.
-  constructor(readonly tokenizedSource: TokenizedSource, readonly commandOffsets: number[]) {
+  constructor(readonly tokens: Token[], readonly commandOffsets: number[]) {
     this._validate()
   }
 
@@ -19,7 +19,7 @@ export class AST {
     const startIndex = this.commandOffsets[2*i]
     const endIndex = this.commandOffsets[2*i+1]
     const range = [...Array(endIndex - startIndex).keys()]
-    return range.map((i) => this.tokenizedSource.token(i + startIndex))
+    return range.map((i) => this.tokens[i + startIndex].value)
   }
 
   get commandCount(): number {
@@ -54,29 +54,29 @@ export class AST {
         throw new ParseError(`Token ${i/2} overlaps previous token`)
       }
     }
-    if (this.commandOffsets[0] < 0 || this.commandOffsets[n-1] > this.tokenizedSource.length) {
+    if (this.commandOffsets[0] < 0 || this.commandOffsets[n-1] > this.tokens.length) {
       throw new ParseError("Offsets are outside source string")
     }
   }
 }
 
 export function parse(source: string): AST {
-  const tokenizedSource = tokenize(source)
+  const tokens = tokenize(source)
 
   const commandOffsets: number[] = []
-  const ntokens = tokenizedSource.length
+  const ntokens = tokens.length
   let inCommand: boolean = false
 
   for (let i = 0; i < ntokens; i++) {
-    const token = tokenizedSource.token(i)
+    const token = tokens[i]
     if (inCommand) {
-      if (endOfCommand.includes(token)) {
+      if (endOfCommand.includes(token.value)) {
         // Finish current command, ignore endOfCommand token.
         commandOffsets.push(i)
         inCommand = false
       }
     } else {  // !inCommand
-      if (!endOfCommand.includes(token)) {
+      if (!endOfCommand.includes(token.value)) {
         // Start new token.
         commandOffsets.push(i)
         inCommand = true
@@ -87,5 +87,5 @@ export function parse(source: string): AST {
     // Finish last token.
     commandOffsets.push(ntokens)
   }
-  return new AST(tokenizedSource, commandOffsets)
+  return new AST(tokens, commandOffsets)
 }

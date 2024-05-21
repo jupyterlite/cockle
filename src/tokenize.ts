@@ -1,88 +1,45 @@
 const delimiters = ";&"
 const whitespace = " "
 
-export class TokenizeError extends Error {}
-
-export class TokenizedSource {
-  // Length of offsets array is twice number of tokens.
-  // Offsets are (start, end) indices for each token in source.
-  constructor(readonly source: string, readonly offsets: number[]) {
-    this._validate()
-  }
-
-  get length(): number {
-    return this.offsets.length / 2
-  }
-
-  token(i: number): string {
-    if (i < 0 || i >= this.length) {
-      throw new RangeError(`index must be in range 0 to ${this.length} inclusive`)
-    }
-    return this.source.slice(this.offsets[2*i], this.offsets[2*i+1])
-  }
-
-  get tokens(): string[] {
-    const n = this.length
-    const range = [...Array(n).keys()]
-    return range.map((i) => this.token(i))
-  }
-
-  private _validate(): void {
-    const n = this.offsets.length
-    if (n == 0) {
-      return
-    }
-
-    if (n % 2 == 1) {
-      throw new TokenizeError("Offsets has odd length")
-    }
-    for (let i = 0; i < n; i += 2) {
-      const start = this.offsets[i]
-      const end = this.offsets[i+1]
-      if (end <= start) {
-        throw new TokenizeError(`Token ${i/2} has invalid offsets [${start}, ${end}]]`)
-      }
-      if (i > 0 && this.offsets[i-1] > start) {
-        throw new TokenizeError(`Token ${i/2} overlaps previous token`)
-      }
-    }
-    if (this.offsets[0] < 0 || this.offsets[n-1] > this.source.length) {
-      throw new TokenizeError("Offsets are outside source string")
-    }
-  }
+export class Token {
+  // Stores offset into source string for error reporting.
+  constructor(readonly offset: number, readonly value: string) {}
 }
 
-export function tokenize(source: string): TokenizedSource {
-  const offsets = []
+export function tokenize(source: string): Token[] {
+  const tokens: Token[] = []
+  
+  let offset: number = -1  // Offset of start of current token, -1 if not in token.
   const n = source.length
-  let inToken: boolean = false
 
   for (let i = 0; i < n; i++) {
     const char = source[i]
-    if (inToken) {
+    if (offset >= 0) {  // In token.
       if (whitespace.includes(char)) {
         // Finish current token.
-        offsets.push(i)
-        inToken = false
+        tokens.push(new Token(offset, source.slice(offset, i)))
+        offset = -1
       } else if (delimiters.includes(char)) {
         // Finish current token and create new one for delimiter.
-        offsets.push(i, i, i+1)
-        inToken = false
+        tokens.push(new Token(offset, source.slice(offset, i)))
+        tokens.push(new Token(i, source.slice(i, i+1)))
+        offset = -1
       }
-    } else {  // !inToken
+    } else {  // Not in token.
       if (delimiters.includes(char)) {
         // Single character delimiter.
-        offsets.push(i, i+1)
+        tokens.push(new Token(i, source.slice(i, i+1)))
       } else if (!whitespace.includes(char)) {
         // Start new token.
-        offsets.push(i)
-        inToken = true
+        offset = i
       }
     }
   }
-  if (inToken) {
+
+  if (offset >= 0) {
     // Finish last token.
-    offsets.push(n)
+    tokens.push(new Token(offset, source.slice(offset, n)))
   }
-  return new TokenizedSource(source, offsets)
+
+  return tokens
 }
