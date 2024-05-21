@@ -4,9 +4,9 @@ import { BooleanOption } from "../option"
 import { Options } from "../options"
 
 class LsOptions extends Options {
-  commaSeparated = new BooleanOption("m")
-  long = new BooleanOption("l")
-  reverse = new BooleanOption("r")
+  commaSeparated = new BooleanOption("m", "", "List files across the page, separated by commas.")
+  long = new BooleanOption("l", "", "List files in long format.")
+  reverse = new BooleanOption("r", "", "Reverse the order of the sort.")
 }
 
 export class LsCommand extends Command<LsOptions> {

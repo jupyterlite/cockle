@@ -1,5 +1,9 @@
 export abstract class Option {
-  constructor(readonly shortName: string) {}
+  constructor(
+    readonly shortName: string,
+    readonly longName: string,
+    readonly description: string,
+  ) {}
 
   get isSet(): boolean {
     return this._isSet
@@ -13,7 +17,7 @@ export abstract class Option {
 }
 
 export class BooleanOption extends Option {
-  constructor(shortName: string) {
-    super(shortName)
+  constructor(shortName: string, longName: string, description: string) {
+    super(shortName, longName, description)
   }
 }
