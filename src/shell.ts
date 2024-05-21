@@ -2,7 +2,7 @@ import { CommandRegistry } from "./command_registry"
 import { Context } from "./context"
 import { TerminalOutput } from "./io"
 import { OutputCallback } from "./output_callback"
-import { parse } from "./parse"
+import { CommandNode, parse } from "./parse"
 import { IFileSystem } from "./file_system"
 
 export class Shell {
@@ -92,20 +92,20 @@ export class Shell {
 
   // Keeping this public for tests.
   async _runCommands(cmdText: string): Promise<void> {
-    const ast = parse(cmdText)
-    const ncmds = ast.commandCount
+    const cmdNodes = parse(cmdText)
+    const ncmds = cmdNodes.length
     const stdout = new TerminalOutput(this._outputCallback)
     try {
       for (let i = 0; i < ncmds; ++i) {
-        const cmd = ast.command(i)
-        const cmdName = cmd[0]
+        const cmd = cmdNodes[i] as CommandNode
+        const cmdName = cmd.name.value
         const command = CommandRegistry.instance().create(cmdName)
         if (command === null) {
           // Give location of command in input?
           throw new Error(`Unknown command: '${cmdName}'`)
         }
 
-        const cmdArgs = cmd.slice(1)
+        const cmdArgs = cmd.suffix.map((token) => token.value)
         const context = new Context(cmdArgs, this._filesystem, stdout, this._env)
         //const exit_code = await command?.run(context)
         await command?.run(context)
