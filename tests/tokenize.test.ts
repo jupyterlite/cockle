@@ -19,7 +19,6 @@ describe("Tokenize", () => {
     expect(tokenize(" ls   ")).toEqual([{offset: 1, value: "ls"}])
   })
 
-
   it("should support multiple tokens", () => {
     expect(tokenize("ls -al; pwd")).toEqual([
       {offset: 0, value: "ls"}, {offset: 3, value: "-al"}, {offset: 6, value: ";"},
@@ -51,5 +50,27 @@ describe("Tokenize", () => {
     ])
     expect(tokenize(" ;; ")).toEqual([{offset: 1, value: ";"}, {offset: 2, value: ";"}])
     expect(tokenize(" ; ; ")).toEqual([{offset: 1, value: ";"}, {offset: 3, value: ";"}])
+  })
+
+  it("should support pipe", () => {
+    expect(tokenize("ls -l | sort")).toEqual([
+      {offset: 0, value: "ls"}, {offset: 3, value: "-l"}, {offset: 6, value: "|"},
+      {offset: 8, value: "sort"},
+    ])
+    expect(tokenize("ls -l|sort")).toEqual([
+      {offset: 0, value: "ls"}, {offset: 3, value: "-l"}, {offset: 5, value: "|"},
+      {offset: 6, value: "sort"},
+    ])
+  })
+
+  it("should support redirection of stdout", () => {
+    expect(tokenize("ls -l > somefile")).toEqual([
+      {offset: 0, value: "ls"}, {offset: 3, value: "-l"}, {offset: 6, value: ">"},
+      {offset: 8, value: "somefile"},
+    ])
+    expect(tokenize("ls -l>somefile")).toEqual([
+      {offset: 0, value: "ls"}, {offset: 3, value: "-l"}, {offset: 5, value: ">"},
+      {offset: 6, value: "somefile"},
+    ])
   })
 })

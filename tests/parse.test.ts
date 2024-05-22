@@ -1,4 +1,4 @@
-import { CommandNode, parse } from "../src/parse"
+import { CommandNode, PipeNode, RedirectNode, parse } from "../src/parse"
 
 describe("parse", () => {
   it("should support no commands", () => {
@@ -28,6 +28,45 @@ describe("parse", () => {
       new CommandNode({offset: 0, value: "echo"}, [{offset: 5, value: "abc"}]),
       new CommandNode({offset: 9, value: "pwd"}, []),
       new CommandNode({offset: 13, value: "ls"}, [{offset: 16, value: "-al"}]),
+    ])
+  })
+
+  it("should support pipe", () => {
+    expect(parse("ls | sort")).toEqual([
+      new PipeNode([
+        new CommandNode({offset: 0, value: "ls"}, []),
+        new CommandNode({offset: 5, value: "sort"}, []),
+      ]),
+    ])
+    expect(parse("ls | sort|uniq")).toEqual([
+      new PipeNode([
+        new CommandNode({offset: 0, value: "ls"}, []),
+        new CommandNode({offset: 5, value: "sort"}, []),
+        new CommandNode({offset: 10, value: "uniq"}, []),
+      ]),
+    ])
+
+    expect(parse("ls | sort; cat")).toEqual([
+      new PipeNode([
+        new CommandNode({offset: 0, value: "ls"}, []),
+        new CommandNode({offset: 5, value: "sort"}, []),
+      ]),
+      new CommandNode({offset: 11, value: "cat"}, []),
+    ])
+  })
+
+  it("should support redirect", () => {
+    expect(parse("ls -l > file")).toEqual([
+      new CommandNode(
+        {offset: 0, value: "ls"},
+        [{offset: 3, value: "-l"}],
+        [new RedirectNode({offset: 6, value: ">"}, {offset: 8, value: "file"})])
+    ])
+    expect(parse("ls -l>file")).toEqual([
+      new CommandNode(
+        {offset: 0, value: "ls"},
+        [{offset: 3, value: "-l"}],
+        [new RedirectNode({offset: 5, value: ">"}, {offset: 6, value: "file"})])
     ])
   })
 })
