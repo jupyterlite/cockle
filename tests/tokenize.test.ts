@@ -1,4 +1,4 @@
-import { Token, tokenize } from "../src"
+import { tokenize } from "../src"
 
 describe("Tokenize", () => {
   it("should support no tokens", () => {
@@ -8,43 +8,48 @@ describe("Tokenize", () => {
   })
 
   it("should support single token", () => {
-    expect(tokenize("pwd")).toEqual([new Token(0, "pwd")])
-    expect(tokenize("grep")).toEqual([new Token(0, "grep")])
+    expect(tokenize("pwd")).toEqual([{offset: 0, value: "pwd"}])
+    expect(tokenize("grep")).toEqual([{offset: 0, value: "grep"}])
   })
 
   it("should support single token ignoring whitespace", () => {
     expect(tokenize(" ")).toEqual([])
-    expect(tokenize("ls  ")).toEqual([new Token(0, "ls")])
-    expect(tokenize("  ls")).toEqual([new Token(2, "ls")])
-    expect(tokenize(" ls   ")).toEqual([new Token(1, "ls")])
+    expect(tokenize("ls  ")).toEqual([{offset: 0, value: "ls"}])
+    expect(tokenize("  ls")).toEqual([{offset: 2, value: "ls"}])
+    expect(tokenize(" ls   ")).toEqual([{offset: 1, value: "ls"}])
   })
 
 
   it("should support multiple tokens", () => {
     expect(tokenize("ls -al; pwd")).toEqual([
-      new Token(0, "ls"), new Token(3, "-al"), new Token(6, ";"), new Token(8, "pwd"),
+      {offset: 0, value: "ls"}, {offset: 3, value: "-al"}, {offset: 6, value: ";"},
+      {offset: 8, value: "pwd"},
     ])
   })
 
   it("should support delimiters with and without whitespace", () => {
-    expect(tokenize("ls;")).toEqual([new Token(0, "ls"), new Token(2, ";")])
-    expect(tokenize(";ls")).toEqual([new Token(0, ";"), new Token(1, "ls")])
+    expect(tokenize("ls;")).toEqual([{offset: 0, value: "ls"}, {offset: 2, value: ";"}])
+    expect(tokenize(";ls")).toEqual([{offset: 0, value: ";"}, {offset: 1, value: "ls"}])
     expect(tokenize(";ls;;")).toEqual([
-      new Token(0, ";"), new Token(1, "ls"), new Token(3, ";"), new Token(4, ";"),
+      {offset: 0, value: ";"}, {offset: 1, value: "ls"}, {offset: 3, value: ";"},
+      {offset: 4, value: ";"},
     ])
     expect(tokenize("ls ; ; pwd")).toEqual([
-      new Token(0, "ls"), new Token(3, ";"), new Token(5, ";"), new Token(7, "pwd"),
+      {offset: 0, value: "ls"}, {offset: 3, value: ";"}, {offset: 5, value: ";"},
+      {offset: 7, value: "pwd"},
     ])
     expect(tokenize("ls ;; pwd")).toEqual([
-      new Token(0, "ls"), new Token(3, ";"), new Token(4, ";"), new Token(6, "pwd"),
+      {offset: 0, value: "ls"}, {offset: 3, value: ";"}, {offset: 4, value: ";"},
+      {offset: 6, value: "pwd"},
     ])
     expect(tokenize("ls;pwd")).toEqual([
-      new Token(0, "ls"), new Token(2, ";"), new Token(3, "pwd"),
+      {offset: 0, value: "ls"}, {offset: 2, value: ";"}, {offset: 3, value: "pwd"},
     ])
     expect(tokenize("ls;;pwd")).toEqual([
-      new Token(0, "ls"), new Token(2, ";"), new Token(3, ";"), new Token(4, "pwd"),
+      {offset: 0, value: "ls"}, {offset: 2, value: ";"}, {offset: 3, value: ";"},
+      {offset: 4, value: "pwd"},
     ])
-    expect(tokenize(" ;; ")).toEqual([new Token(1, ";"), new Token(2, ";")])
-    expect(tokenize(" ; ; ")).toEqual([new Token(1, ";"), new Token(3, ";")])
+    expect(tokenize(" ;; ")).toEqual([{offset: 1, value: ";"}, {offset: 2, value: ";"}])
+    expect(tokenize(" ; ; ")).toEqual([{offset: 1, value: ";"}, {offset: 3, value: ";"}])
   })
 })
