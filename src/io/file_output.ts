@@ -7,11 +7,15 @@ export class FileOutput extends BufferedOutput {
     this.fs = fs
     this.path = path
     this.append = append
+
+    if (this.append) {
+      throw Error("FileOutput in append mode not implemented")
+    }
   }
 
   override async flush(): Promise<void> {
     const all_data = this.data.join()
-    console.log("TO FILE:", this.fs, this.path, this.append, all_data)
+    this.fs.write(this.path, all_data);
     this.clear()
   }
 

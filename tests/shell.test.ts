@@ -28,6 +28,25 @@ describe("Shell", () => {
       await shell._runCommands("env")
       expect(output.text).toEqual("PS1=\x1b[1;31mjs-shell:$\x1b[1;0m \r\nPWD=/\r\nCOLUMNS=0\r\nLINES=0\r\n")
     })
+
+    it("should echo to terminal", async () => {
+      const fs = await file_system_setup("jupyter")
+      const output = new MockTerminalOutput()
+      const shell = new Shell(fs, output.callback)
+      await shell._runCommands("echo sometext")
+      expect(output.text).toEqual("sometext\r\n")
+    })
+
+    it("should echo to file", async () => {
+      const fs = await file_system_setup("jupyter")
+      const output = new MockTerminalOutput()
+      const shell = new Shell(fs, output.callback)
+      expect(await fs.list("afile.txt")).toEqual([])
+      await shell._runCommands("echo sometext > afile.txt")
+      expect(await fs.list("afile.txt")).toEqual(["afile.txt"])
+      // Should this really have appended \r\n ???
+      expect(await fs.get("afile.txt")).toEqual("sometext\r\n")
+    })
   })
 
   describe("input", () => {

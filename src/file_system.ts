@@ -10,4 +10,6 @@ export interface IFileSystem {
 
   // Assume new file ...
   touch(path: string): Promise<void>
+
+  write(path: string, content: string): Promise<void>
 }

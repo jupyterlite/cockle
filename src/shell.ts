@@ -1,6 +1,6 @@
 import { CommandRegistry } from "./command_registry"
 import { Context } from "./context"
-import { TerminalOutput } from "./io"
+import { FileOutput, Output, TerminalOutput } from "./io"
 import { OutputCallback } from "./output_callback"
 import { CommandNode, parse } from "./parse"
 import { IFileSystem } from "./file_system"
@@ -105,11 +105,25 @@ export class Shell {
           throw new Error(`Unknown command: '${cmdName}'`)
         }
 
+        let output: Output = stdout
+        if (cmd.redirects) {
+          // Support single redirect only, write (not append) to file.
+          if (cmd.redirects.length > 1) {
+            throw Error("Only implemented a single redirect per command")
+          }
+          if (cmd.redirects[0].token.value != ">") {
+            throw Error("Only implemented redirect write to file")
+          }
+
+          const path = cmd.redirects[0].target.value
+          output = new FileOutput(this._filesystem, path, false)
+        }
+
         const cmdArgs = cmd.suffix.map((token) => token.value)
-        const context = new Context(cmdArgs, this._filesystem, stdout, this._env)
-        //const exit_code = await command?.run(context)
+        const context = new Context(cmdArgs, this._filesystem, output, this._env)
+        //const exit_code = await command?.run(context)  // Do something with exit_code
         await command?.run(context)
-        await stdout.flush()
+        await output.flush()
       }
     } catch (error: any) {
       // Send result via output??????  With color.  Should be to stderr.
