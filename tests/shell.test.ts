@@ -10,7 +10,7 @@ describe("Shell", () => {
       const output = new MockTerminalOutput()
       const shell = new Shell(fs, output.callback)
       await shell._runCommands("ls")
-      expect(output.text).toEqual("dirA  file1  file2\r\n")
+      expect(output.text).toEqual("dirA\r\nfile1\r\nfile2\r\n")
     })
 
     it("should run ls command with leading whitespace", async () => {
@@ -18,7 +18,7 @@ describe("Shell", () => {
       const output = new MockTerminalOutput()
       const shell = new Shell(fs, output.callback)
       await shell._runCommands("   ls")
-      expect(output.text).toEqual("dirA  file1  file2\r\n")
+      expect(output.text).toEqual("dirA\r\nfile1\r\nfile2\r\n")
     })
 
     it("should run env command", async () => {
@@ -63,7 +63,7 @@ describe("Shell", () => {
       const output = new MockTerminalOutput()
       const shell = new Shell(fs, output.callback)
       await shell.inputs(["l", "s", "\r"])
-      expect(output.text).toEqual("ls\r\ndirA  file1  file2\r\n\x1b[1;31mjs-shell:$\x1b[1;0m ")
+      expect(output.text).toEqual("ls\r\ndirA\r\nfile1\r\nfile2\r\n\x1b[1;31mjs-shell:$\x1b[1;0m ")
     })
   })
 

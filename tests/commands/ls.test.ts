@@ -18,7 +18,7 @@ describe("ls command", () => {
     const exit_code = await cmd!.run(context)
     expect(exit_code).toBe(0)
 
-    expect(spy).toHaveBeenCalledWith("dirA  file1  file2\r\n")
+    expect(spy).toHaveBeenCalledWith("dirA\r\nfile1\r\nfile2\r\n")
     spy.mockRestore()
   })
 

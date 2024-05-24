@@ -21,6 +21,18 @@ export class Context {
     await this.stdout.flush()
   }
 
+  env_number(name: string): number | null {
+    const str = this.env_string(name)
+    if (str == null) {
+      return null
+    }
+    return Number(str)
+  }
+
+  env_string(name: string): string | null {
+    return this.env.get(name) ?? null
+  }
+
   readonly args: string[]
   readonly filesystem: IFileSystem
   readonly stdout: Output
