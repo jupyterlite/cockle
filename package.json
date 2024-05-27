@@ -1,6 +1,6 @@
 {
   "name": "@ianthomas23/cockle",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "In browser bash-like shell",
   "homepage": "https://github.com/ianthomas23/cockle",
   "license": "BSD-3-Clause",
