@@ -17,10 +17,6 @@ export class Context {
     this.env = env ?? new Map()
   }
 
-  async flush(): Promise<void> {
-    await this.stdout.flush()
-  }
-
   env_number(name: string): number | null {
     const str = this.env_string(name)
     if (str == null) {
@@ -31,6 +27,14 @@ export class Context {
 
   env_string(name: string): string | null {
     return this.env.get(name) ?? null
+  }
+
+  async flush(): Promise<void> {
+    await this.stdout.flush()
+  }
+
+  pwd(): string {
+    return this.env_string("PWD") ?? "/"
   }
 
   readonly args: string[]

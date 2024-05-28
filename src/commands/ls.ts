@@ -1,12 +1,13 @@
 import { Command } from "../command"
 import { Context } from "../context"
-import { BooleanOption } from "../option"
+import { BooleanOption, TrailingPathsOption } from "../option"
 import { Options } from "../options"
 
 class LsOptions extends Options {
   commaSeparated = new BooleanOption("m", "", "List files across the page, separated by commas.")
   long = new BooleanOption("l", "", "List files in long format.")
   reverse = new BooleanOption("r", "", "Reverse the order of the sort.")
+  paths = new TrailingPathsOption(0)
 }
 
 export class LsCommand extends Command<LsOptions> {
@@ -14,14 +15,12 @@ export class LsCommand extends Command<LsOptions> {
     const args = context.args
     const options = Options.fromArgs(args, LsOptions)
 
-    // Validate and expand arguments (flags and file/directory names).
-    // Only supporting single path and no flags so far.
-    if (args.length > 1) {
-      // Write error message to stderr
-      return 1
+    // Only accept 0 or 1 path so far.
+    if (options.paths.length > 1) {
+      throw Error("Not yet supporting 2+ paths in ls command")
     }
 
-    const path = args.length == 0 ? (context.env_string("PWD") ?? "/"): args[0]
+    const path = options.paths.length > 0 ? options.paths.paths[0] : context.pwd()
     let filenames = await context.filesystem.list(path)
 
     // Can use lines like this for options.
