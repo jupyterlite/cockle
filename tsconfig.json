@@ -12,7 +12,7 @@
     "noUnusedLocals": true,
     "preserveWatchOutput": true,
     "resolveJsonModule": true,
-    "outDir": "dist",
+    "outDir": "lib",
     "rootDir": "src",
     "strict": true,
     "strictNullChecks": true,

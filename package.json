@@ -13,11 +13,11 @@
     "url": "https://github.com/jupyterlite/cockle/issues"
   },
   "files": [
-    "dist/",
+    "lib/",
     "src/**/*.ts"
   ],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "jest"
