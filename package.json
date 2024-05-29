@@ -1,16 +1,16 @@
 {
-  "name": "@ianthomas23/cockle",
+  "name": "@jupyterlite/cockle",
   "version": "0.0.2",
   "description": "In browser bash-like shell",
-  "homepage": "https://github.com/ianthomas23/cockle",
+  "homepage": "https://github.com/jupyterlite/cockle",
   "license": "BSD-3-Clause",
   "author": "Ian Thomas",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ianthomas23/cockle.git"
+    "url": "git+https://github.com/jupyterlite/cockle.git"
   },
   "bugs": {
-    "url": "https://github.com/ianthomas23/cockle/issues"
+    "url": "https://github.com/jupyterlite/cockle/issues"
   },
   "files": [
     "dist/",
