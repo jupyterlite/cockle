@@ -4,7 +4,7 @@ on:
     inputs:
       version_spec:
         description: 'New Version Specifier'
-        default: 'next'
+        default: 'patch'
         required: false
       branch:
         description: 'The branch to target'
