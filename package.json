@@ -20,7 +20,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "prepare": "npm install && npm run build",
+    "prepack": "npm run build",
     "test": "jest"
   },
   "dependencies": {
