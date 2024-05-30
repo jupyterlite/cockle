@@ -28,9 +28,11 @@ export class LsCommand extends Command<LsOptions> {
 
     }
 
-    const width = context.env_number("COLUMNS")
-    const output = _toColumns(filenames, width)
-    await context.stdout.write(output)  // How to deal with newlines?
+    if (filenames.length > 0) {
+      const width = context.env_number("COLUMNS")
+      const output = _toColumns(filenames, width)
+      await context.stdout.write(output)  // How to deal with newlines?
+    }
     return 0
   }
 }
