@@ -6,39 +6,13 @@ import { Output } from "./io"
  */
 export class Context {
   constructor(
-    args: string[],
-    filesystem: IFileSystem,
-    stdout: Output,
-    env: Map<string, string> | null = null,
-  ) {
-    this.args = args
-    this.filesystem = filesystem
-    this.stdout = stdout
-    this.env = env ?? new Map()
-  }
-
-  env_number(name: string): number | null {
-    const str = this.env_string(name)
-    if (str == null) {
-      return null
-    }
-    return Number(str)
-  }
-
-  env_string(name: string): string | null {
-    return this.env.get(name) ?? null
-  }
+    readonly args: string[],
+    readonly fileSystem: IFileSystem,
+    readonly mountpoint: string,
+    readonly stdout: Output,
+  ) {}
 
   async flush(): Promise<void> {
     await this.stdout.flush()
   }
-
-  pwd(): string {
-    return this.env_string("PWD") ?? "/"
-  }
-
-  readonly args: string[]
-  readonly filesystem: IFileSystem
-  readonly stdout: Output
-  env: Map<string, string>
 }

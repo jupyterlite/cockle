@@ -1,1 +1,1 @@
-export interface OutputCallback { (output: string): Promise<void> }
+export interface IOutputCallback { (output: string): Promise<void> }
