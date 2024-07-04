@@ -1,23 +1,24 @@
-import { Command } from "./command"
-import * as AllCommands from "./commands"
+import { ICommandRunner } from "./commands/command_runner"
+import { BuiltinCommandRunner } from "./commands/builtin_command_runner"
+import { CoreutilsCommandRunner } from "./commands/coreutils_command_runner"
 
 export class CommandRegistry {
-  private constructor() {}
+  private constructor() {
+    this._commandRunners = [
+      new BuiltinCommandRunner(),
+      new CoreutilsCommandRunner(),
+    ]
 
-  /**
-   * Create a new Command identified by its string name.
-   */
-  create(name: string): Command | null {
-    const cls = this.get(name)
-    if (cls) {
-      return new (cls as any)()
-    } else {
-      return null
+    // Command name -> runner mapping
+    for (const runner of this._commandRunners) {
+      for (const name of runner.names()) {
+        this._map.set(name, runner)
+      }
     }
   }
 
-  get(name: string): typeof Command | null {
-    return this._map.get(name) ?? null
+  get(name: string): ICommandRunner | null {
+      return this._map.get(name) ?? null
   }
 
   static instance(): CommandRegistry {
@@ -33,22 +34,8 @@ export class CommandRegistry {
     })
   }
 
-  register(name: string, cls: typeof Command) {
-    if (name.endsWith("Command")) {
-      const shortName = name.slice(0, -7).toLowerCase()
-      this._map.set(shortName, cls)
-    }
-  }
+  private _commandRunners: ICommandRunner[];
+  private _map: Map<string, ICommandRunner> = new Map()
 
   private static _instance: CommandRegistry
-  private _map: Map<string, typeof Command> = new Map()
 }
-
-function registerCommands(commands: {[key: string]: typeof Command}) {
-  const registry = CommandRegistry.instance()
-  for (const [key, value] of Object.entries(commands)) {
-    registry.register(key, value)
-  }
-}
-
-registerCommands(AllCommands)

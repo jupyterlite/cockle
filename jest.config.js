@@ -10,5 +10,7 @@ module.exports = {
   },
   verbose: true,
   collectCoverage: true,
-  coverageDirectory: '.coverage'
+  coverageDirectory: '.coverage',
+  testEnvironment: "jsdom",
+  setupFilesAfterEnv: ["<rootDir>/tests/global_setup.ts"]
 };

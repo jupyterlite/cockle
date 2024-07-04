@@ -1,24 +1,20 @@
 import { CommandRegistry } from "./command_registry"
 import { Context } from "./context"
-import { FileOutput, Output, TerminalOutput } from "./io"
-import { OutputCallback } from "./output_callback"
-import { CommandNode, parse } from "./parse"
 import { IFileSystem } from "./file_system"
+import { TerminalOutput } from "./io"
+import { IOutputCallback } from "./output_callback"
+import { CommandNode, parse } from "./parse"
+import * as FsModule from './wasm/fs'
 
 export class Shell {
   constructor(
-    filesystem: IFileSystem,
-    outputCallback: OutputCallback,
+    outputCallback: IOutputCallback,
+    mountpoint: string = '/drive',
   ) {
-    this._filesystem = filesystem
     this._outputCallback = outputCallback
+    this._mountpoint = mountpoint;
     this._currentLine = ""
-
-    this._env = new Map()
-    this._env.set("PS1", "\x1b[1;31mjs-shell:$\x1b[1;0m ")  // red color
-    this._env.set("PWD", "/")
-    this._env.set("COLUMNS", "0")
-    this._env.set("LINES", "0")
+    this._prompt = "\x1b[1;31mjs-shell:$\x1b[1;0m "  // red color
   }
 
   async input(char: string): Promise<void> {
@@ -30,10 +26,10 @@ export class Shell {
       const cmdText = this._currentLine.trimStart()
       this._currentLine = ""
       await this._runCommands(cmdText)
-      await this.output(this._env.get("PS1") ?? "")
+      await this.output(this._prompt)
     } else if (code == 127) {  // Backspace
       if (this._currentLine.length > 0) {
-        this._currentLine = this._currentLine.slice(0, -1);
+        this._currentLine = this._currentLine.slice(0, -1)
         const backspace = "\x1B[1D"
         await this.output(backspace + ' ' + backspace)
       }
@@ -52,8 +48,7 @@ export class Shell {
       } else if (possibles.length > 1) {
         const line = possibles.join("  ")
         // Note keep leading whitespace on current line.
-        await this.output(`\r\n${line}\r\n${this._env.get("PS1") ?? ""}${this._currentLine}`)
-        this._currentLine = ""
+        await this.output(`\r\n${line}\r\n${this._prompt}${this._currentLine}`)
       }
     } else if (code == 27) {  // Escape following by 1+ more characters
       const remainder = char.slice(1)
@@ -68,6 +63,15 @@ export class Shell {
     }
   }
 
+  async initFilesystem(): Promise<IFileSystem> {
+    this._fsModule = await FsModule.default()
+    const { FS, PATH, ERRNO_CODES, PROXYFS } = this._fsModule;
+    FS.mkdir(this._mountpoint, 0o777)
+    FS.chdir(this._mountpoint)
+    this._fileSystem = { FS, PATH, ERRNO_CODES, PROXYFS }
+    return this._fileSystem
+  }
+
   async inputs(chars: string[]): Promise<void> {
     for (let i = 0; i < chars.length; ++i) {
       await this.input(chars[i])
@@ -79,15 +83,12 @@ export class Shell {
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
-    this._env.set("COLUMNS", columns.toString())
-    this._env.set("LINES", rows.toString())
+    //this._env.set("COLUMNS", columns.toString())
+    //this._env.set("LINES", rows.toString())
   }
 
   async start(): Promise<void> {
-    const prompt = this._env.get("PS1")
-    if (prompt) {
-      await this.output(prompt)
-    }
+    await this.output(this._prompt)
   }
 
   // Keeping this public for tests.
@@ -97,33 +98,20 @@ export class Shell {
     const stdout = new TerminalOutput(this._outputCallback)
     try {
       for (let i = 0; i < ncmds; ++i) {
-        const cmd = cmdNodes[i] as CommandNode
-        const cmdName = cmd.name.value
-        const command = CommandRegistry.instance().create(cmdName)
-        if (command === null) {
+        const command = cmdNodes[i] as CommandNode
+        const cmdName = command.name.value
+
+        const commands = CommandRegistry.instance().get(cmdName)
+        if (commands === null) {
           // Give location of command in input?
           throw new Error(`Unknown command: '${cmdName}'`)
         }
 
-        let output: Output = stdout
-        if (cmd.redirects) {
-          // Support single redirect only, write (not append) to file.
-          if (cmd.redirects.length > 1) {
-            throw Error("Only implemented a single redirect per command")
-          }
-          if (cmd.redirects[0].token.value != ">") {
-            throw Error("Only implemented redirect write to file")
-          }
+        const args = command.suffix.map((token) => token.value)
+        const context = new Context(args, this._fileSystem!, this._mountpoint, stdout)
+        await commands.run(cmdName, context)
 
-          const path = cmd.redirects[0].target.value
-          output = new FileOutput(this._filesystem, path, false)
-        }
-
-        const cmdArgs = cmd.suffix.map((token) => token.value)
-        const context = new Context(cmdArgs, this._filesystem, output, this._env)
-        //const exit_code = await command?.run(context)  // Do something with exit_code
-        await command?.run(context)
-        await output.flush()
+        await context.flush()
       }
     } catch (error: any) {
       // Send result via output??????  With color.  Should be to stderr.
@@ -133,28 +121,15 @@ export class Shell {
   }
 
   private async _tabComplete(text: string): Promise<[number, string[]]> {
-    const i = text.indexOf(" ")
-    if (i == -1) {
-      // Assume tab completing command.
-      return [text.length, CommandRegistry.instance().match(text)]
-    } else {
-      // Check initial command exists.
-      const cmdText = text.slice(0, i)
-      if (CommandRegistry.instance().get(cmdText) == null) {
-        return [0, []]
-      }
-      const start = text.slice(i+1).trimStart()
-      // Try to match possible file/directory names in pwd.
-      const filenames = await this._filesystem.list(this._env.get("PWD")!)
-      const ret = filenames.filter((name) => {
-        return name.startsWith(start)
-      })
-      return [start.length, ret]
-    }
+    // Assume tab completing command.
+    return [text.length, CommandRegistry.instance().match(text)]
   }
 
-  private readonly _filesystem: IFileSystem
-  private readonly _outputCallback: OutputCallback
+  private readonly _outputCallback: IOutputCallback
   private _currentLine: string
-  private _env: Map<string, string>
+  private _prompt: string  // Should really obtain this from env
+
+  private _fsModule: any
+  private _fileSystem?: IFileSystem
+  private _mountpoint: string;
 }

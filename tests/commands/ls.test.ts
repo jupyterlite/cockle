@@ -1,60 +1,19 @@
-import { ContentsManagerMock } from "@jupyterlab/services/lib/testutils"
-
-import { file_system_setup } from "../file_system_setup"
-
-import { CommandRegistry } from "../../src/command_registry"
-import { Context } from "../../src/context"
-import { ConsoleOutput } from "../../src/io/console_output"
-import { JupyterFileSystem } from "../../src/jupyter_file_system"
+import { shell_setup_empty, shell_setup_simple } from "../shell_setup"
 
 describe("ls command", () => {
-  it.each(["jupyter"])
-  ('should write dir to console %s', async (name) => {
-    const fs = await file_system_setup(name)
-    const stdout = new ConsoleOutput()
-    const context = new Context(["/"], fs, stdout)
+  it("should write to stdout", async () => {
+    const [shell, output] = await shell_setup_simple()
+    await shell._runCommands("ls")
+    expect(output.text).toEqual("dirA  file1  file2\r\n")
 
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {})
-
-    const cmd = CommandRegistry.instance().create("ls")
-    expect(cmd).not.toBeNull()
-    const exit_code = await cmd!.run(context)
-    expect(exit_code).toBe(0)
-
-    expect(spy).toHaveBeenCalledWith("dirA\r\nfile1\r\nfile2\r\n")
-    spy.mockRestore()
-  })
-
-  it.each(["jupyter"])
-  ('should write file to console %s', async (name) => {
-    const fs = await file_system_setup(name)
-    const stdout = new ConsoleOutput()
-    const context = new Context(["file2"], fs, stdout)
-
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {})
-
-    const cmd = CommandRegistry.instance().create("ls")
-    expect(cmd).not.toBeNull()
-    const exit_code = await cmd!.run(context)
-    expect(exit_code).toBe(0)
-
-    expect(spy).toHaveBeenCalledWith("file2\r\n")
-    spy.mockRestore()
+    output.clear()
+    await shell._runCommands("ls -a")
+    expect(output.text).toEqual(".  ..  dirA  file1  file2\r\n")
   })
 
   it("should handle empty listing", async () => {
-    const fs = new JupyterFileSystem(new ContentsManagerMock())
-    const stdout = new ConsoleOutput()
-    const context = new Context([], fs, stdout)
-
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {})
-
-    const cmd = CommandRegistry.instance().create("ls")
-    expect(cmd).not.toBeNull()
-    const exit_code = await cmd!.run(context)
-    expect(exit_code).toBe(0)
-
-    expect(spy).toHaveBeenCalledTimes(0)
-    spy.mockRestore()
+    const [shell, output] = await shell_setup_empty()
+    await shell._runCommands("ls")
+    expect(output.text).toEqual("")
   })
 })

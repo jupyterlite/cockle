@@ -12,5 +12,5 @@ npm t
 
 To run single test file
 ```bash
-npm t -- test/whatever.ts
+npm t -- tests/whatever.ts
 ```

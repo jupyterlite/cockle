@@ -15,7 +15,7 @@ describe("CommandRegistry", () => {
       const registry = CommandRegistry.instance()
       expect(registry.match("unkn")).toEqual([])
       expect(registry.match("ec")).toEqual(["echo"])
-      expect(registry.match("e")).toEqual(["echo", "env"])
+      expect(registry.match("e")).toEqual(["echo", "env", "expr"])
     })
   })
 })
