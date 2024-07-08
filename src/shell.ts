@@ -1,7 +1,7 @@
 import { CommandRegistry } from "./command_registry"
 import { Context } from "./context"
 import { IFileSystem } from "./file_system"
-import { TerminalOutput } from "./io"
+import { FileOutput, Output, TerminalOutput } from "./io"
 import { IOutputCallback } from "./output_callback"
 import { CommandNode, parse } from "./parse"
 import * as FsModule from './wasm/fs'
@@ -93,23 +93,40 @@ export class Shell {
 
   // Keeping this public for tests.
   async _runCommands(cmdText: string): Promise<void> {
-    const cmdNodes = parse(cmdText)
-    const ncmds = cmdNodes.length
     const stdout = new TerminalOutput(this._outputCallback)
     try {
+      const cmdNodes = parse(cmdText)
+      const ncmds = cmdNodes.length
+
       for (let i = 0; i < ncmds; ++i) {
         const command = cmdNodes[i] as CommandNode
         const cmdName = command.name.value
 
-        const commands = CommandRegistry.instance().get(cmdName)
-        if (commands === null) {
+        const runner = CommandRegistry.instance().get(cmdName)
+        if (runner === null) {
           // Give location of command in input?
           throw new Error(`Unknown command: '${cmdName}'`)
         }
 
+        let output: Output = stdout
+        if (command.redirects) {
+          // Support single redirect only, write or append to file.
+          if (command.redirects.length > 1) {
+            throw new Error("Only implemented a single redirect per command")
+          }
+          const redirect = command.redirects[0]
+          const redirectChars = redirect.token.value
+          if (!(redirectChars == ">" || redirectChars == ">>")) {
+            throw new Error("Only implemented redirect write to file, not " + redirectChars)
+          }
+
+          const path = redirect.target.value
+          output = new FileOutput(this._fileSystem!, path, redirectChars == ">>")
+        }
+
         const args = command.suffix.map((token) => token.value)
-        const context = new Context(args, this._fileSystem!, this._mountpoint, stdout)
-        await commands.run(cmdName, context)
+        const context = new Context(args, this._fileSystem!, this._mountpoint, output)
+        await runner.run(cmdName, context)
 
         await context.flush()
       }

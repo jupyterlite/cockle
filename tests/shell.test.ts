@@ -13,6 +13,17 @@ describe("Shell", () => {
       await shell._runCommands("   ls")
       expect(output.text).toEqual("dirA  file1  file2\r\n")
     })
+
+    it("should output to file", async () => {
+      const { shell, output, FS } = await shell_setup_simple()
+      await shell._runCommands("echo Hello > out")
+      expect(output.text).toEqual("")
+      expect(FS.readFile("out", { "encoding": "utf8" })).toEqual("Hello\n")
+
+      await shell._runCommands("echo Goodbye >> out")
+      expect(output.text).toEqual("")
+      expect(FS.readFile("out", { "encoding": "utf8" })).toEqual("Hello\nGoodbye\n")
+    })
   })
 
   describe("input", () => {

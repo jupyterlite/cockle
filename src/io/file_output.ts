@@ -1,28 +1,25 @@
 import { BufferedOutput } from "./buffered_output"
-//import { IFileSystem } from "../file_system"
+import { IFileSystem } from "../file_system"
 
 export class FileOutput extends BufferedOutput {
-  //constructor(fs: IFileSystem, path: string, append: boolean) {
-  constructor(path: string, append: boolean) {
+  constructor(readonly fileSystem: IFileSystem, readonly path: string, readonly append: boolean) {
     super()
-    //this.fs = fs
-    this.path = path
-    this.append = append
-
-    console.log(this.path)
-
-    if (this.append) {
-      throw Error("FileOutput in append mode not implemented")
-    }
   }
 
   override async flush(): Promise<void> {
-    //const all_data = this.data.join()
-    //this.fs.write(this.path, all_data)
+    const { FS } = this.fileSystem
+    let content = this.data.join("")
+
+    if (this.append) {
+      try {
+        const prevContent = FS.readFile(this.path, { "encoding": "utf8" })
+        content = prevContent + content
+      } catch (e) {
+        // If file does not exist, fallback to write (non-append) behaviour.
+      }
+    }
+
+    FS.writeFile(this.path, content)
     this.clear()
   }
-
-  //private readonly fs: IFileSystem
-  private readonly path: string
-  private readonly append: boolean  // or replace
 }

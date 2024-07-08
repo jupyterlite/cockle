@@ -30,25 +30,22 @@ describe("Tokenize", () => {
     expect(tokenize("ls;")).toEqual([{offset: 0, value: "ls"}, {offset: 2, value: ";"}])
     expect(tokenize(";ls")).toEqual([{offset: 0, value: ";"}, {offset: 1, value: "ls"}])
     expect(tokenize(";ls;;")).toEqual([
-      {offset: 0, value: ";"}, {offset: 1, value: "ls"}, {offset: 3, value: ";"},
-      {offset: 4, value: ";"},
+      {offset: 0, value: ";"}, {offset: 1, value: "ls"}, {offset: 3, value: ";;"},
     ])
     expect(tokenize("ls ; ; pwd")).toEqual([
       {offset: 0, value: "ls"}, {offset: 3, value: ";"}, {offset: 5, value: ";"},
       {offset: 7, value: "pwd"},
     ])
     expect(tokenize("ls ;; pwd")).toEqual([
-      {offset: 0, value: "ls"}, {offset: 3, value: ";"}, {offset: 4, value: ";"},
-      {offset: 6, value: "pwd"},
+      {offset: 0, value: "ls"}, {offset: 3, value: ";;"}, {offset: 6, value: "pwd"},
     ])
     expect(tokenize("ls;pwd")).toEqual([
       {offset: 0, value: "ls"}, {offset: 2, value: ";"}, {offset: 3, value: "pwd"},
     ])
     expect(tokenize("ls;;pwd")).toEqual([
-      {offset: 0, value: "ls"}, {offset: 2, value: ";"}, {offset: 3, value: ";"},
-      {offset: 4, value: "pwd"},
+      {offset: 0, value: "ls"}, {offset: 2, value: ";;"}, {offset: 4, value: "pwd"},
     ])
-    expect(tokenize(" ;; ")).toEqual([{offset: 1, value: ";"}, {offset: 2, value: ";"}])
+    expect(tokenize(" ;; ")).toEqual([{offset: 1, value: ";;"}])
     expect(tokenize(" ; ; ")).toEqual([{offset: 1, value: ";"}, {offset: 3, value: ";"}])
   })
 
@@ -71,6 +68,18 @@ describe("Tokenize", () => {
     expect(tokenize("ls -l>somefile")).toEqual([
       {offset: 0, value: "ls"}, {offset: 3, value: "-l"}, {offset: 5, value: ">"},
       {offset: 6, value: "somefile"},
+    ])
+    expect(tokenize("ls >> somefile")).toEqual([
+      {offset: 0, value: "ls"}, {offset: 3, value: ">>"}, {offset: 6, value: "somefile"},
+    ])
+    expect(tokenize("ls>>somefile")).toEqual([
+      {offset: 0, value: "ls"}, {offset: 2, value: ">>"}, {offset: 4, value: "somefile"},
+    ])
+    expect(tokenize("ls >>somefile")).toEqual([
+      {offset: 0, value: "ls"}, {offset: 3, value: ">>"}, {offset: 5, value: "somefile"},
+    ])
+    expect(tokenize("ls>> somefile")).toEqual([
+      {offset: 0, value: "ls"}, {offset: 2, value: ">>"}, {offset: 5, value: "somefile"},
     ])
   })
 })

@@ -69,4 +69,9 @@ describe("parse", () => {
         [new RedirectNode({offset: 5, value: ">"}, {offset: 6, value: "file"})])
     ])
   })
+
+  it("should raise on redirect without target file", () => {
+    expect(() => parse("ls >")).toThrow("file to redirect to")
+    expect(() => parse("ls >>")).toThrow("file to redirect to")
+  })
 })
