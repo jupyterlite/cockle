@@ -1,5 +1,6 @@
 import { CommandRegistry } from "./command_registry"
 import { Context } from "./context"
+import { Environment } from "./environment"
 import { IFileSystem } from "./file_system"
 import { FileOutput, Output, TerminalOutput } from "./io"
 import { IOutputCallback } from "./output_callback"
@@ -14,7 +15,11 @@ export class Shell {
     this._outputCallback = outputCallback
     this._mountpoint = mountpoint;
     this._currentLine = ""
-    this._prompt = "\x1b[1;31mjs-shell:$\x1b[1;0m "  // red color
+    this._environment = new Environment()
+  }
+
+  get environment(): Environment {
+    return this._environment
   }
 
   async input(char: string): Promise<void> {
@@ -26,7 +31,7 @@ export class Shell {
       const cmdText = this._currentLine.trimStart()
       this._currentLine = ""
       await this._runCommands(cmdText)
-      await this.output(this._prompt)
+      await this.output(this._environment.getPrompt())
     } else if (code == 127) {  // Backspace
       if (this._currentLine.length > 0) {
         this._currentLine = this._currentLine.slice(0, -1)
@@ -48,7 +53,7 @@ export class Shell {
       } else if (possibles.length > 1) {
         const line = possibles.join("  ")
         // Note keep leading whitespace on current line.
-        await this.output(`\r\n${line}\r\n${this._prompt}${this._currentLine}`)
+        await this.output(`\r\n${line}\r\n${this._environment.getPrompt()}${this._currentLine}`)
       }
     } else if (code == 27) {  // Escape following by 1+ more characters
       const remainder = char.slice(1)
@@ -68,6 +73,7 @@ export class Shell {
     const { FS, PATH, ERRNO_CODES, PROXYFS } = this._fsModule;
     FS.mkdir(this._mountpoint, 0o777)
     FS.chdir(this._mountpoint)
+    this._environment.set("PWD", FS.cwd())
     this._fileSystem = { FS, PATH, ERRNO_CODES, PROXYFS }
     return this._fileSystem
   }
@@ -88,7 +94,7 @@ export class Shell {
   }
 
   async start(): Promise<void> {
-    await this.output(this._prompt)
+    await this.output(this._environment.getPrompt())
   }
 
   // Keeping this public for tests.
@@ -125,7 +131,9 @@ export class Shell {
         }
 
         const args = command.suffix.map((token) => token.value)
-        const context = new Context(args, this._fileSystem!, this._mountpoint, output)
+        const context = new Context(
+          args, this._fileSystem!, this._mountpoint, this._environment, output,
+        )
         await runner.run(cmdName, context)
 
         await context.flush()
@@ -144,7 +152,7 @@ export class Shell {
 
   private readonly _outputCallback: IOutputCallback
   private _currentLine: string
-  private _prompt: string  // Should really obtain this from env
+  private _environment: Environment
 
   private _fsModule: any
   private _fileSystem?: IFileSystem
