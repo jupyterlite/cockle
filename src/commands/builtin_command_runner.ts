@@ -21,8 +21,10 @@ export class BuiltinCommandRunner implements ICommandRunner {
       return;
     }
     const path = args[0]  // Ignore other arguments?
-    // Need to handle path of "-". Maybe previous path is in an env var?
-    context.fileSystem.FS.chdir(path)
-    // Need to set PWD env var?
+    // Need to handle path of "-". Maybe previous path is in an env var?  "OLDPWD"
+
+    const { FS } = context.fileSystem
+    FS.chdir(path)
+    context.environment.set("PWD", FS.cwd())
   }
 }
