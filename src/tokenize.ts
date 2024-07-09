@@ -13,28 +13,29 @@ export function tokenize(source: string): Token[] {
   let offset: number = -1  // Offset of start of current token, -1 if not in token.
   const n = source.length
 
+  let prevChar: string = ""
+  let prevCharType: CharType = CharType.None
   for (let i = 0; i < n; i++) {
     const char = source[i]
+    const charType = _getCharType(char)
     if (offset >= 0) {  // In token.
-      if (whitespace.includes(char)) {
+      if (charType == CharType.Whitespace) {
         // Finish current token.
         tokens.push({offset, value: source.slice(offset, i)})
         offset = -1
-      } else if (delimiters.includes(char)) {
-        // Finish current token and create new one for delimiter.
+      } else if (charType != prevCharType || (charType == CharType.Delimiter && char != prevChar)) {
+        // Finish current token and start new one.
         tokens.push({offset, value: source.slice(offset, i)})
-        tokens.push({offset: i, value: source.slice(i, i+1)})
-        offset = -1
+        offset = i
       }
     } else {  // Not in token.
-      if (delimiters.includes(char)) {
-        // Single character delimiter.
-        tokens.push({offset: i, value: source.slice(i, i+1)})
-      } else if (!whitespace.includes(char)) {
+      if (charType != CharType.Whitespace) {
         // Start new token.
         offset = i
       }
     }
+    prevChar = char
+    prevCharType = charType
   }
 
   if (offset >= 0) {
@@ -43,4 +44,21 @@ export function tokenize(source: string): Token[] {
   }
 
   return tokens
+}
+
+enum CharType {
+  None,
+  Delimiter,
+  Whitespace,
+  Other,
+}
+
+function _getCharType(char: string): CharType {
+  if (whitespace.includes(char)) {
+    return CharType.Whitespace
+  } else if (delimiters.includes(char)) {
+    return CharType.Delimiter
+  } else {
+    return CharType.Other
+  }
 }

@@ -78,12 +78,12 @@ function _createCommandNode(tokens: Token[]) {
   let args = tokens.slice(1)
 
   // Handle redirects.
-  const index = args.findIndex((token) => token.value == ">")
+  const index = args.findIndex((token) => token.value.startsWith(">"))
   if (index >= 0) {
     // Must support multiple redirects for a single command.
     if (args.length != index + 2) {
       // Need better error handling here.
-      throw Error("Redirect should be followed by file to redirect to")
+      throw new Error("Redirect should be followed by file to redirect to")
     }
     const redirect = new RedirectNode(args[index], args[index+1])
     args = args.slice(0, index)
