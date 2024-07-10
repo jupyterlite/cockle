@@ -77,8 +77,12 @@ export function parse(source: string): Node[] {
 function _createCommandNode(tokens: Token[]) {
   let args = tokens.slice(1)
 
+  function isRedirect(str: string): boolean {
+    return str.startsWith(">") || str.startsWith("<")
+  }
+
   // Handle redirects.
-  const index = args.findIndex((token) => token.value.startsWith(">"))
+  const index = args.findIndex((token) => isRedirect(token.value))
   if (index >= 0) {
     // Must support multiple redirects for a single command.
     if (args.length != index + 2) {

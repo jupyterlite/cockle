@@ -2,7 +2,7 @@ import { CommandRegistry } from "./command_registry"
 import { Context } from "./context"
 import { Environment } from "./environment"
 import { IFileSystem } from "./file_system"
-import { FileOutput, Output, TerminalOutput } from "./io"
+import { FileInput, FileOutput, Input, Output, TerminalInput, TerminalOutput } from "./io"
 import { IOutputCallback } from "./output_callback"
 import { CommandNode, parse } from "./parse"
 import * as FsModule from './wasm/fs'
@@ -62,6 +62,9 @@ export class Shell {
       } else if (remainder == "[B" || remainder == "[1B") {  // Down arrow
 
       }
+    } else if (code == 4) {  // EOT, usually = Ctrl-D
+
+
     } else {
       this._currentLine += char
       await this.output(char)
@@ -99,6 +102,7 @@ export class Shell {
 
   // Keeping this public for tests.
   async _runCommands(cmdText: string): Promise<void> {
+    const stdin = new TerminalInput()
     const stdout = new TerminalOutput(this._outputCallback)
     try {
       const cmdNodes = parse(cmdText)
@@ -114,6 +118,7 @@ export class Shell {
           throw new Error(`Unknown command: '${cmdName}'`)
         }
 
+        let input: Input = stdin
         let output: Output = stdout
         if (command.redirects) {
           // Support single redirect only, write or append to file.
@@ -122,17 +127,19 @@ export class Shell {
           }
           const redirect = command.redirects[0]
           const redirectChars = redirect.token.value
-          if (!(redirectChars == ">" || redirectChars == ">>")) {
-            throw new Error("Only implemented redirect write to file, not " + redirectChars)
-          }
-
           const path = redirect.target.value
-          output = new FileOutput(this._fileSystem!, path, redirectChars == ">>")
+          if (redirectChars == ">" || redirectChars == ">>") {
+            output = new FileOutput(this._fileSystem!, path, redirectChars == ">>")
+          } else if (redirectChars == "<") {
+            input = new FileInput(this._fileSystem!, path)
+          } else {
+            throw new Error("Unrecognised redirect " + redirectChars)
+          }
         }
 
         const args = command.suffix.map((token) => token.value)
         const context = new Context(
-          args, this._fileSystem!, this._mountpoint, this._environment, output,
+          args, this._fileSystem!, this._mountpoint, this._environment, input, output,
         )
         await runner.run(cmdName, context)
 

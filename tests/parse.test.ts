@@ -55,7 +55,7 @@ describe("parse", () => {
     ])
   })
 
-  it("should support redirect", () => {
+  it("should support redirect of output", () => {
     expect(parse("ls -l > file")).toEqual([
       new CommandNode(
         {offset: 0, value: "ls"},
@@ -70,8 +70,17 @@ describe("parse", () => {
     ])
   })
 
-  it("should raise on redirect without target file", () => {
+  it("should raise on redirect of output without target file", () => {
     expect(() => parse("ls >")).toThrow("file to redirect to")
     expect(() => parse("ls >>")).toThrow("file to redirect to")
+  })
+
+  it("should support redirect of input", () => {
+    expect(parse("wc -l < file")).toEqual([
+      new CommandNode(
+        {offset: 0, value: "wc"},
+        [{offset: 3, value: "-l"}],
+        [new RedirectNode({offset: 6, value: "<"}, {offset: 8, value: "file"})])
+    ])
   })
 })

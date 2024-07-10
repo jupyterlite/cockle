@@ -1,9 +1,11 @@
 import { MockTerminalOutput } from "./util"
+import { IFileSystem } from "../src/file_system"
 import { Shell } from "../src/shell"
 
 export interface IShellSetup {
   shell: Shell
   output: MockTerminalOutput
+  fileSystem: IFileSystem
   FS: any
 }
 
@@ -18,7 +20,8 @@ export async function shell_setup_simple(): Promise<IShellSetup> {
 async function _shell_setup_common(level: number): Promise<IShellSetup> {
   const output = new MockTerminalOutput(false)
   const shell = new Shell(output.callback)
-  const { FS } = await shell.initFilesystem()
+  const fileSystem = await shell.initFilesystem()
+  const { FS } = fileSystem
 
   await shell.start()
   output.start()
@@ -29,5 +32,5 @@ async function _shell_setup_common(level: number): Promise<IShellSetup> {
     FS.mkdir('dirA')
   }
 
-  return { shell, output, FS }
+  return { shell, output, fileSystem, FS }
 }

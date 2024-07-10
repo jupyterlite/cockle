@@ -1,4 +1,4 @@
-const delimiters = ";&|>"
+const delimiters = ";&|><"
 const whitespace = " "
 
 export type Token = {
