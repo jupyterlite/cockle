@@ -1,6 +1,6 @@
 import { Environment } from "./environment"
 import { IFileSystem } from "./file_system"
-import { Output } from "./io"
+import { Input, Output } from "./io"
 
 /**
  * Context used to run commands.
@@ -11,6 +11,7 @@ export class Context {
     readonly fileSystem: IFileSystem,
     readonly mountpoint: string,
     environment: Environment,
+    readonly stdin: Input,
     readonly stdout: Output,
   ) {
     this.environment = environment

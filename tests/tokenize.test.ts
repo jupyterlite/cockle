@@ -82,4 +82,11 @@ describe("Tokenize", () => {
       {offset: 0, value: "ls"}, {offset: 2, value: ">>"}, {offset: 5, value: "somefile"},
     ])
   })
+
+  it("should support redirection of stdin", () => {
+    expect(tokenize("wc -l < somefile")).toEqual([
+      {offset: 0, value: "wc"}, {offset: 3, value: "-l"}, {offset: 6, value: "<"},
+      {offset: 8, value: "somefile"},
+    ])
+  })
 })

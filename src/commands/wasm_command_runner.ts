@@ -1,5 +1,6 @@
 import { ICommandRunner } from "./command_runner"
 import { Context } from "../context"
+import { SingleCharInput } from "../io"
 
 export abstract class WasmCommandRunner implements ICommandRunner {
   abstract names(): string[]
@@ -11,6 +12,8 @@ export abstract class WasmCommandRunner implements ICommandRunner {
     if (!this._wasmModule) {
       this._wasmModule = this._getWasmModule()
     }
+
+    const stdin = new SingleCharInput(context.stdin)
 
     const wasm = await this._wasmModule({
       thisProgram: cmdName,
@@ -26,6 +29,14 @@ export abstract class WasmCommandRunner implements ICommandRunner {
 
         // Copy environment variables into command.
         context.environment.copyIntoCommand(module.ENV)
+      },
+      stdin: () => {
+        const charCode = stdin.readCharCode()
+        if (charCode === 4) {  // EOT
+          return null
+        } else {
+          return charCode
+        }
       },
     })
     const loaded = Date.now()
