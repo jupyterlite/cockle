@@ -8,7 +8,7 @@ export class FileOutput extends BufferedOutput {
 
   override async flush(): Promise<void> {
     const { FS } = this.fileSystem
-    let content = this.data.join("")
+    let content = this.allContent
 
     if (this.append) {
       try {

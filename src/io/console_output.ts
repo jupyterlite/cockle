@@ -1,9 +1,9 @@
-import { Output } from "./output"
+import { IOutput } from "./output"
 
-export class ConsoleOutput extends Output {
-  override async flush(): Promise<void> {}
+export class ConsoleOutput implements IOutput {
+  async flush(): Promise<void> {}
 
-  override async write(text: string): Promise<void> {
+  async write(text: string): Promise<void> {
     console.log(text)
   }
 }

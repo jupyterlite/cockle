@@ -1,10 +1,10 @@
-import { Input } from "./input"
+import { IInput } from "./input"
 
 /**
  * Wrapper for an Input that reads a single character at a time.
  */
 export class SingleCharInput {
-  constructor(readonly input: Input) {}
+  constructor(readonly input: IInput) {}
 
   /**
    * Return a single character at a time.  Return ascii 4 (EOT) when nothing more left to read.

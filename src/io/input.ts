@@ -1,6 +1,6 @@
-export abstract class Input {
+export interface IInput {
   /**
    * Read and return the entire contents of this input.
    */
-  abstract read(): string
+  read(): string
 }

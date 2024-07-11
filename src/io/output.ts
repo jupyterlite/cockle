@@ -1,4 +1,4 @@
-export abstract class Output {
-  abstract flush(): Promise<void>
-  abstract write(text: string): Promise<void>
+export interface IOutput {
+  flush(): Promise<void>
+  write(text: string): Promise<void>
 }

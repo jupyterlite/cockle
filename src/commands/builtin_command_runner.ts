@@ -22,7 +22,7 @@ export class BuiltinCommandRunner implements ICommandRunner {
     } else if (args.length > 1) {
       throw new Error("cd: too many arguments")
     }
-    
+
     let path = args[0]
     if (path == "-") {
       const oldPwd = context.environment.get("OLDPWD")

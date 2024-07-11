@@ -4,15 +4,10 @@ import { WasmCommandRunner } from "./wasm_command_runner"
 export class CoreutilsCommandRunner extends WasmCommandRunner {
   names(): string[] {
     return [
-      // File commands
-      "cp", "echo", "env", "ln", "ls", "mkdir", "mv", "pwd", "realpath", "rm", "rmdir", "touch",
-      "uname",
-      // Text commands
-      "cat", "cut", "head", "join", "md5sum", "nl", "sha1sum", "sha224sum", "sha256sum",
-      "sha384sum", "sha512sum", "sort", "tail", "tr", "wc",
-      // Shell commands
-      "basename", "date", "dirname", "echo", "env", "expr", "id", "logname", "pwd", "seq", "sleep",
-      "stat", "uname",
+      "basename", "cat", "cp", "cut", "date", "dirname", "echo", "env", "expr", "head", "id",
+      "join", "ln", "logname", "ls", "md5sum", "mkdir", "mv", "nl", "pwd", "realpath", "rm",
+      "rmdir", "seq", "sha1sum", "sha224sum", "sha256sum", "sha384sum", "sha512sum", "sleep",
+      "sort", "stat", "tail", "touch", "tr", "uname", "uniq", "wc",
     ]
   }
 

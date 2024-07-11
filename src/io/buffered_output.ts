@@ -1,15 +1,17 @@
-import { Output } from "./output"
+import { IOutput } from "./output"
 
-export abstract class BufferedOutput extends Output {
-  constructor() {
-    super()
+export abstract class BufferedOutput implements IOutput {
+  protected get allContent(): string {
+    return this.data.join("")
   }
 
   protected clear() {
     this.data = []
   }
 
-  override async write(text: string): Promise<void> {
+  abstract flush(): Promise<void>
+
+  async write(text: string): Promise<void> {
     this.data.push(text)
   }
 
