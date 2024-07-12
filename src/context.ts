@@ -1,4 +1,5 @@
 import { Environment } from "./environment"
+import { History } from "./history"
 import { IFileSystem } from "./file_system"
 import { IInput, IOutput } from "./io"
 
@@ -10,16 +11,13 @@ export class Context {
     readonly args: string[],
     readonly fileSystem: IFileSystem,
     readonly mountpoint: string,
-    environment: Environment,
+    readonly environment: Environment,
+    readonly history: History,
     readonly stdin: IInput,
     readonly stdout: IOutput,
-  ) {
-    this.environment = environment
-  }
+  ) {}
 
   async flush(): Promise<void> {
     await this.stdout.flush()
   }
-
-  environment: Environment
 }
