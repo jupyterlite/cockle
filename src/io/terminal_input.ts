@@ -1,6 +1,6 @@
-import { Input } from "./input"
+import { IInput } from "./input"
 
-export class TerminalInput extends Input {
+export class TerminalInput implements IInput {
   read(): string {
     return ""
   }

@@ -2,9 +2,9 @@ import { CommandRegistry } from "./command_registry"
 import { Context } from "./context"
 import { Environment } from "./environment"
 import { IFileSystem } from "./file_system"
-import { FileInput, FileOutput, Input, Output, TerminalInput, TerminalOutput } from "./io"
+import { FileInput, FileOutput, IInput, IOutput, Pipe, TerminalInput, TerminalOutput } from "./io"
 import { IOutputCallback } from "./output_callback"
-import { CommandNode, parse } from "./parse"
+import { CommandNode, PipeNode, parse } from "./parse"
 import * as FsModule from './wasm/fs'
 
 export class Shell {
@@ -105,51 +105,68 @@ export class Shell {
     const stdin = new TerminalInput()
     const stdout = new TerminalOutput(this._outputCallback)
     try {
-      const cmdNodes = parse(cmdText)
-      const ncmds = cmdNodes.length
+      const nodes = parse(cmdText)
 
-      for (let i = 0; i < ncmds; ++i) {
-        const command = cmdNodes[i] as CommandNode
-        const cmdName = command.name.value
-
-        const runner = CommandRegistry.instance().get(cmdName)
-        if (runner === null) {
-          // Give location of command in input?
-          throw new Error(`Unknown command: '${cmdName}'`)
-        }
-
-        let input: Input = stdin
-        let output: Output = stdout
-        if (command.redirects) {
-          // Support single redirect only, write or append to file.
-          if (command.redirects.length > 1) {
-            throw new Error("Only implemented a single redirect per command")
+      for (const node of nodes) {
+        if (node instanceof CommandNode) {
+          await this._runCommand(node, stdin, stdout)
+        } else if (node instanceof PipeNode) {
+          const { commands } = node
+          const n = commands.length
+          let prevPipe: Pipe
+          for (let i = 0; i < n; i++) {
+            const input = i == 0 ? stdin : prevPipe!
+            const output = i < n-1 ? (prevPipe = new Pipe()) : stdout
+            await this._runCommand(commands[i], input, output)
           }
-          const redirect = command.redirects[0]
-          const redirectChars = redirect.token.value
-          const path = redirect.target.value
-          if (redirectChars == ">" || redirectChars == ">>") {
-            output = new FileOutput(this._fileSystem!, path, redirectChars == ">>")
-          } else if (redirectChars == "<") {
-            input = new FileInput(this._fileSystem!, path)
-          } else {
-            throw new Error("Unrecognised redirect " + redirectChars)
-          }
+        } else {
+          // This should not occur.
+          throw new Error(`Expected CommandNode or PipeNode not ${node}`)
         }
-
-        const args = command.suffix.map((token) => token.value)
-        const context = new Context(
-          args, this._fileSystem!, this._mountpoint, this._environment, input, output,
-        )
-        await runner.run(cmdName, context)
-
-        await context.flush()
       }
     } catch (error: any) {
       // Send result via output??????  With color.  Should be to stderr.
       stdout.write("\x1b[1;31m" + error + "\x1b[1;0m\r\n")
       await stdout.flush()
     }
+  }
+
+  private async _runCommand(
+    commandNode: CommandNode,
+    input: IInput,
+    output: IOutput,
+): Promise<void> {
+    const name = commandNode.name.value
+    const runner = CommandRegistry.instance().get(name)
+    if (runner === null) {
+      // Give location of command in input?
+      throw new Error(`Unknown command: '${name}'`)
+    }
+
+    if (commandNode.redirects) {
+      // Support single redirect only, write or append to file.
+      if (commandNode.redirects.length > 1) {
+        throw new Error("Only implemented a single redirect per command")
+      }
+      const redirect = commandNode.redirects[0]
+      const redirectChars = redirect.token.value
+      const path = redirect.target.value
+      if (redirectChars == ">" || redirectChars == ">>") {
+        output = new FileOutput(this._fileSystem!, path, redirectChars == ">>")
+      } else if (redirectChars == "<") {
+        input = new FileInput(this._fileSystem!, path)
+      } else {
+        throw new Error("Unrecognised redirect " + redirectChars)
+      }
+    }
+
+    const args = commandNode.suffix.map((token) => token.value)
+    const context = new Context(
+      args, this._fileSystem!, this._mountpoint, this._environment, input, output,
+    )
+    await runner.run(name, context)
+
+    await context.flush()
   }
 
   private async _tabComplete(text: string): Promise<[number, string[]]> {

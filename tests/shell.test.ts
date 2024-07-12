@@ -30,6 +30,16 @@ describe("Shell", () => {
       await shell._runCommands("wc < file2")
       expect(output.text).toEqual("      1       5      27\r\n")
     })
+
+    it("should support pipe", async () => {
+      const { shell, output } = await shell_setup_simple()
+      await shell._runCommands("ls -1|sort -r")
+      expect(output.text).toEqual("file2\r\nfile1\r\ndirA\r\n")
+      output.clear()
+
+      await shell._runCommands("ls -1|sort -r|uniq -c")
+      expect(output.text).toEqual("      1 file2\r\n      1 file1\r\n      1 dirA\r\n")
+    })
   })
 
   describe("input", () => {

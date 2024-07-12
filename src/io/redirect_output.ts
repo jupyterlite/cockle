@@ -1,8 +1,8 @@
-import { Output } from "./output"
 import { BufferedOutput } from "./buffered_output"
+import { IOutput } from "./output"
 
 export class RedirectOutput extends BufferedOutput {
-  constructor(target: Output) {
+  constructor(target: IOutput) {
     super()
     this.target = target
   }
@@ -15,5 +15,5 @@ export class RedirectOutput extends BufferedOutput {
     await this.target.flush()
   }
 
-  private readonly target: Output
+  private readonly target: IOutput
 }

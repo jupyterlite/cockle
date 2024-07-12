@@ -1,10 +1,8 @@
-import { Input } from "./input"
 import { IFileSystem } from "../file_system"
+import { IInput } from "./input"
 
-export class FileInput extends Input {
-  constructor(readonly fileSystem: IFileSystem, readonly path: string) {
-    super()
-  }
+export class FileInput implements IInput {
+  constructor(readonly fileSystem: IFileSystem, readonly path: string) {}
 
   read(): string {
     const { FS } = this.fileSystem
