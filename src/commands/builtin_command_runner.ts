@@ -3,7 +3,7 @@ import { Context } from "../context"
 
 export class BuiltinCommandRunner implements ICommandRunner {
   names(): string[] {
-    return ["cd"]
+    return ["cd", "history"]
   }
 
   async run(cmdName: string, context: Context): Promise<void> {
@@ -11,7 +11,10 @@ export class BuiltinCommandRunner implements ICommandRunner {
       case "cd":
         this._cd(context)
         break
-    }
+      case "history":
+        await this._history(context)
+        break
+      }
   }
 
   private _cd(context: Context) {
@@ -37,5 +40,11 @@ export class BuiltinCommandRunner implements ICommandRunner {
     FS.chdir(path)
     context.environment.set("OLDPWD", oldPwd)
     context.environment.set("PWD", FS.cwd())
+  }
+
+  private async _history(context: Context) {
+    // TODO: support flags to clear, etc, history.
+    const { history, stdout } = context
+    await history.write(stdout)
   }
 }

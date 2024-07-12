@@ -2,6 +2,7 @@ import { CommandRegistry } from "./command_registry"
 import { Context } from "./context"
 import { Environment } from "./environment"
 import { IFileSystem } from "./file_system"
+import { History } from "./history"
 import { FileInput, FileOutput, IInput, IOutput, Pipe, TerminalInput, TerminalOutput } from "./io"
 import { IOutputCallback } from "./output_callback"
 import { CommandNode, PipeNode, parse } from "./parse"
@@ -16,10 +17,15 @@ export class Shell {
     this._mountpoint = mountpoint;
     this._currentLine = ""
     this._environment = new Environment()
+    this._history = new History()
   }
 
   get environment(): Environment {
     return this._environment
+  }
+
+  get history(): History {
+    return this._history
   }
 
   async input(char: string): Promise<void> {
@@ -57,10 +63,12 @@ export class Shell {
       }
     } else if (code == 27) {  // Escape following by 1+ more characters
       const remainder = char.slice(1)
-      if (remainder == "[A" || remainder == "[1A") {  // Up arrow
-
-      } else if (remainder == "[B" || remainder == "[1B") {  // Down arrow
-
+      if (remainder == "[A" || remainder == "[1A" ||  // Up arrow
+          remainder == "[B" || remainder == "[1B") {  // Down arrow
+        const cmdText = this._history.scrollCurrent(remainder.endsWith("B"))
+        this._currentLine = cmdText !== null ? cmdText : ""
+        // Re-output whole line.
+        this.output(`\x1B[1K\r${this._environment.getPrompt()}${this._currentLine}`)
       }
     } else if (code == 4) {  // EOT, usually = Ctrl-D
 
@@ -102,6 +110,20 @@ export class Shell {
 
   // Keeping this public for tests.
   async _runCommands(cmdText: string): Promise<void> {
+    if (cmdText.startsWith("!")) {
+      // Get command from history and run that.
+      const index = parseInt(cmdText.slice(1))
+      const possibleCmd = this._history.at(index)
+      if (possibleCmd === null) {
+        await this.output("\x1b[1;31m!" + index + ": event not found\x1b[1;0m\r\n")
+        await this.output(this._environment.getPrompt())
+        return
+      }
+      cmdText = possibleCmd
+    }
+
+    this._history.add(cmdText)
+
     const stdin = new TerminalInput()
     const stdout = new TerminalOutput(this._outputCallback)
     try {
@@ -162,7 +184,7 @@ export class Shell {
 
     const args = commandNode.suffix.map((token) => token.value)
     const context = new Context(
-      args, this._fileSystem!, this._mountpoint, this._environment, input, output,
+      args, this._fileSystem!, this._mountpoint, this._environment, this._history, input, output,
     )
     await runner.run(name, context)
 
@@ -177,6 +199,7 @@ export class Shell {
   private readonly _outputCallback: IOutputCallback
   private _currentLine: string
   private _environment: Environment
+  private _history: History
 
   private _fsModule: any
   private _fileSystem?: IFileSystem
