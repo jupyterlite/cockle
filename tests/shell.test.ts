@@ -87,4 +87,23 @@ describe("Shell", () => {
       expect(output.text).toEqual("unk")
     })
   })
+
+  describe("setSize", () => {
+    it("should set env vars", async () => {
+      const { shell } = await shell_setup_empty()
+      const { environment } = shell
+
+      await shell.setSize(10, 44)
+      expect(environment.getNumber("LINES")).toEqual(10)
+      expect(environment.getNumber("COLUMNS")).toEqual(44)
+
+      await shell.setSize(0, 45)
+      expect(environment.getNumber("LINES")).toBeNull()
+      expect(environment.getNumber("COLUMNS")).toEqual(45)
+
+      await shell.setSize(14, -1)
+      expect(environment.getNumber("LINES")).toEqual(14)
+      expect(environment.getNumber("COLUMNS")).toBeNull()
+    })
+  })
 })

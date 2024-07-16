@@ -4576,6 +4576,7 @@ Module['FS_createPreloadedFile'] = FS.createPreloadedFile;
 Module['FS'] = FS;
 Module['ENV'] = ENV;
 Module['getEnvStrings'] = getEnvStrings;
+Module['TTY'] = TTY;
 var missingLibrarySymbols = [
   'writeI53ToI64',
   'writeI53ToI64Clamped',
@@ -4832,7 +4833,6 @@ var unexportedSymbols = [
   'FS_stdin_getChar_buffer',
   'FS_stdin_getChar',
   'MEMFS',
-  'TTY',
   'PIPEFS',
   'SOCKFS',
   'tempFixedLengthArray',

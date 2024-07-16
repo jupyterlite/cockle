@@ -7,7 +7,7 @@ export class CoreutilsCommandRunner extends WasmCommandRunner {
       "basename", "cat", "cp", "cut", "date", "dirname", "echo", "env", "expr", "head", "id",
       "join", "ln", "logname", "ls", "md5sum", "mkdir", "mv", "nl", "pwd", "realpath", "rm",
       "rmdir", "seq", "sha1sum", "sha224sum", "sha256sum", "sha384sum", "sha512sum", "sleep",
-      "sort", "stat", "tail", "touch", "tr", "uname", "uniq", "wc",
+      "sort", "stat", "stty", "tail", "touch", "tr", "tty", "uname", "uniq", "wc",
     ]
   }
 

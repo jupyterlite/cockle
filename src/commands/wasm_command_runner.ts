@@ -33,13 +33,29 @@ export abstract class WasmCommandRunner implements ICommandRunner {
           // Copy environment variables into command.
           context.environment.copyIntoCommand(module.ENV)
         }
-      },
-      stdin: () => {
-        const charCode = stdin.readCharCode()
-        if (charCode === 4) {  // EOT
-          return null
-        } else {
-          return charCode
+
+        if (module.hasOwnProperty("TTY")) {
+          // Monkey patch window size.
+          function getWindowSize(tty: any): [number, number] {
+            return [
+              context.environment.getNumber("LINES") ?? 24,
+              context.environment.getNumber("COLUMNS") ?? 80,
+            ]
+          }
+          module.TTY.default_tty_ops.ioctl_tiocgwinsz = getWindowSize
+
+          // Monkey patch stdin get_char.
+          function getChar(tty: any) {
+            const charCode = stdin.readCharCode()
+            if (charCode === 4) {  // EOT
+              return null
+            } else {
+              return charCode
+            }
+          }
+          const stdinDeviceId = module.FS.makedev(5, 0)
+          const stdinTty = module.TTY.ttys[stdinDeviceId]
+          stdinTty.ops.get_char = getChar
         }
       },
     })

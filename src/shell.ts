@@ -100,8 +100,19 @@ export class Shell {
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
-    //this._env.set("COLUMNS", columns.toString())
-    //this._env.set("LINES", rows.toString())
+    const { environment } = this
+
+    if (rows >= 1) {
+      environment.set("LINES", rows.toString())
+    } else {
+      environment.delete("LINES")
+    }
+
+    if (columns >= 1) {
+      environment.set("COLUMNS", columns.toString())
+    } else {
+      environment.delete("COLUMNS")
+    }
   }
 
   async start(): Promise<void> {
