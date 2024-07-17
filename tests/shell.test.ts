@@ -86,6 +86,12 @@ describe("Shell", () => {
       await shell.inputs(["u", "n", "k", "\t"])
       expect(output.text).toEqual("unk")
     })
+
+    it("should include aliases", async () => {
+      const { shell, output } = await shell_setup_empty()
+      await shell.inputs(["l", "\t"])
+      expect(output.text).toMatch(/^l\r\nln  logname  ls  ll/)
+    })
   })
 
   describe("setSize", () => {

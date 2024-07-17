@@ -1,3 +1,4 @@
+export { Aliases } from "./aliases"
 export { Context } from "./context"
 export { IFileSystem } from "./file_system"
 export { IOutputCallback } from "./output_callback"

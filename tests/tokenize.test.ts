@@ -1,4 +1,4 @@
-import { tokenize } from "../src"
+import { Aliases, tokenize } from "../src"
 
 describe("Tokenize", () => {
   it("should support no tokens", () => {
@@ -87,6 +87,27 @@ describe("Tokenize", () => {
     expect(tokenize("wc -l < somefile")).toEqual([
       {offset: 0, value: "wc"}, {offset: 3, value: "-l"}, {offset: 6, value: "<"},
       {offset: 8, value: "somefile"},
+    ])
+  })
+
+  it("should use aliases", () => {
+    const aliases = new Aliases()
+    expect(tokenize("ll", aliases)).toEqual([
+      {offset: 0, value: "ls"}, {offset: 3, value: "--color=auto"},
+    ])
+    expect(tokenize("ll;", aliases)).toEqual([
+      {offset: 0, value: "ls"}, {offset: 3, value: "--color=auto"}, {offset: 15, value: ";"},
+    ])
+    expect(tokenize(" ll ", aliases)).toEqual([
+      {offset: 1, value: "ls"}, {offset: 4, value: "--color=auto"},
+    ])
+    expect(tokenize("cat; ll", aliases)).toEqual([
+      {offset: 0, value: "cat"}, {offset: 3, value: ";"}, {offset: 5, value: "ls"},
+      {offset: 8, value: "--color=auto"}
+    ])
+    expect(tokenize("ll; cat", aliases)).toEqual([
+      {offset: 0, value: "ls"}, {offset: 3, value: "--color=auto"}, {offset: 15, value: ";"},
+      {offset: 17, value: "cat"},
     ])
   })
 })

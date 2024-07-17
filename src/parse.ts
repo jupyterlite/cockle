@@ -1,3 +1,4 @@
+import { Aliases } from "./aliases"
 import { Token, tokenize } from "./tokenize"
 
 const endOfCommand = ";&"
@@ -26,8 +27,8 @@ export class RedirectNode extends Node {
 }
 
 
-export function parse(source: string): Node[] {
-  const tokens = tokenize(source)
+export function parse(source: string, aliases?: Aliases): Node[] {
+  const tokens = tokenize(source, aliases)
 
   const ret: Node[] = []
   const stack: CommandNode[] = []
