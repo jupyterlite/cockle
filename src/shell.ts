@@ -168,7 +168,7 @@ export class Shell {
     commandNode: CommandNode,
     input: IInput,
     output: IOutput,
-): Promise<void> {
+  ): Promise<void> {
     const name = commandNode.name.value
     const runner = CommandRegistry.instance().get(name)
     if (runner === null) {
