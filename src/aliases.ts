@@ -7,7 +7,7 @@ export class Aliases extends Map<string, string> {
     this.set("dir", "dir --color=auto")
     this.set("grep", "grep --color=auto")
     this.set("ls", "ls --color=auto")
-    this.set("ll", "ls -F")
+    this.set("ll", "ls -lF")
     this.set("vdir", "vdir --color=auto")
   }
 
@@ -19,8 +19,9 @@ export class Aliases extends Map<string, string> {
         // Avoid infinite recursion.
         break
       }
+      const newAlias = this.get(newKey)
+      alias = (newAlias === undefined) ? newAlias : newAlias + alias!.slice(newKey.length)
       key = newKey
-      alias = this.get(key)
     }
     return alias
   }

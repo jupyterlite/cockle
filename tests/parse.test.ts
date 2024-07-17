@@ -88,10 +88,16 @@ describe("parse", () => {
   it("should use aliases", () => {
     const aliases = new Aliases()
     expect(parse("ll", aliases)).toEqual([
-      new CommandNode({offset: 0, value: "ls"}, [{offset: 3, value: "--color=auto"}])
+      new CommandNode(
+        {offset: 0, value: "ls"},
+        [{offset: 3, value: "--color=auto"}, {offset: 16, value: "-lF"}],
+      )
     ])
     expect(parse(" ll;", aliases)).toEqual([
-      new CommandNode({offset: 1, value: "ls"}, [{offset: 4, value: "--color=auto"}])
+      new CommandNode(
+        {offset: 1, value: "ls"},
+        [{offset: 4, value: "--color=auto"}, {offset: 17, value: "-lF"}],
+      )
     ])
   })
 })

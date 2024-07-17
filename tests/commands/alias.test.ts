@@ -9,7 +9,7 @@ describe("alias command", () => {
       "dir='dir --color=auto'\r\n" +
       "grep='grep --color=auto'\r\n" +
       "ls='ls --color=auto'\r\n" +
-      "ll='ls -F'\r\n" +
+      "ll='ls -lF'\r\n" +
       "vdir='vdir --color=auto'\r\n"
     )
   })

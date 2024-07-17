@@ -31,7 +31,7 @@ describe("aliases", () => {
     it("should lookup ll", async () => {
       const { shell } = await shell_setup_empty()
       const { aliases } = shell
-      expect(aliases.getRecursive("ll")).toEqual("ls --color=auto")
+      expect(aliases.getRecursive("ll")).toEqual("ls --color=auto -lF")
     })
 
     it("should lookup grep", async () => {
