@@ -29,8 +29,21 @@ export class Environment {
     }
   }
 
+  delete(key: string) {
+    this._env.delete(key)
+  }
+
   get(key: string): string | null {
     return this._env.get(key) ?? null
+  }
+
+  getNumber(key: string): number | null {
+    const str = this.get(key)
+    if (str === null) {
+      return null
+    }
+    const number = Number(str)
+    return isNaN(number) ? null : number
   }
 
   getPrompt(): string {

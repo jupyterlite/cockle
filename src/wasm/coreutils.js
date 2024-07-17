@@ -5678,6 +5678,8 @@ var Module = (() => {
 
     Module['PROXYFS'] = PROXYFS;
 
+    Module['TTY'] = TTY;
+
     var calledRun;
 
     dependenciesFulfilled = function runCaller() {
