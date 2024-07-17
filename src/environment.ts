@@ -5,7 +5,8 @@
 export class Environment extends Map<string, string> {
   constructor() {
     super()
-    this.set("PS1", "\x1b[1;31mjs-shell:$\x1b[1;0m ")  // red color
+    this.set("PS1", "\x1b[1;32mjs-shell:$\x1b[1;0m ")
+    this.set("TERM", "xterm-256color")
   }
 
   /**
