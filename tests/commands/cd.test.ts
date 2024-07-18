@@ -38,7 +38,7 @@ describe("cd command", () => {
     const { shell } = await shell_setup_simple()
     const { environment } = shell
 
-    expect(environment.get("OLDPWD")).toBeNull()
+    expect(environment.get("OLDPWD")).toBeUndefined()
     await shell._runCommands("cd dirA")
     expect(environment.get("PWD")).toEqual("/drive/dirA")
     expect(environment.get("OLDPWD")).toEqual("/drive")

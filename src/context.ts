@@ -1,3 +1,4 @@
+import { Aliases } from "./aliases"
 import { Environment } from "./environment"
 import { History } from "./history"
 import { IFileSystem } from "./file_system"
@@ -11,6 +12,7 @@ export class Context {
     readonly args: string[],
     readonly fileSystem: IFileSystem,
     readonly mountpoint: string,
+    readonly aliases: Aliases,
     readonly environment: Environment,
     readonly history: History,
     readonly stdin: IInput,

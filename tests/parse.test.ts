@@ -1,3 +1,4 @@
+import { Aliases } from "../src/aliases"
 import { CommandNode, PipeNode, RedirectNode, parse } from "../src/parse"
 
 describe("parse", () => {
@@ -81,6 +82,22 @@ describe("parse", () => {
         {offset: 0, value: "wc"},
         [{offset: 3, value: "-l"}],
         [new RedirectNode({offset: 6, value: "<"}, {offset: 8, value: "file"})])
+    ])
+  })
+
+  it("should use aliases", () => {
+    const aliases = new Aliases()
+    expect(parse("ll", aliases)).toEqual([
+      new CommandNode(
+        {offset: 0, value: "ls"},
+        [{offset: 3, value: "--color=auto"}, {offset: 16, value: "-lF"}],
+      )
+    ])
+    expect(parse(" ll;", aliases)).toEqual([
+      new CommandNode(
+        {offset: 1, value: "ls"},
+        [{offset: 4, value: "--color=auto"}, {offset: 17, value: "-lF"}],
+      )
     ])
   })
 })

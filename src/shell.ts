@@ -1,3 +1,4 @@
+import { Aliases } from "./aliases"
 import { CommandRegistry } from "./command_registry"
 import { Context } from "./context"
 import { Environment } from "./environment"
@@ -16,8 +17,13 @@ export class Shell {
     this._outputCallback = outputCallback
     this._mountpoint = mountpoint;
     this._currentLine = ""
+    this._aliases = new Aliases()
     this._environment = new Environment()
     this._history = new History()
+  }
+
+  get aliases(): Aliases {
+    return this._aliases
   }
 
   get environment(): Environment {
@@ -138,7 +144,7 @@ export class Shell {
     const stdin = new TerminalInput()
     const stdout = new TerminalOutput(this._outputCallback)
     try {
-      const nodes = parse(cmdText)
+      const nodes = parse(cmdText, this._aliases)
 
       for (const node of nodes) {
         if (node instanceof CommandNode) {
@@ -195,7 +201,8 @@ export class Shell {
 
     const args = commandNode.suffix.map((token) => token.value)
     const context = new Context(
-      args, this._fileSystem!, this._mountpoint, this._environment, this._history, input, output,
+      args, this._fileSystem!, this._mountpoint, this._aliases, this._environment, this._history,
+      input, output,
     )
     await runner.run(name, context)
 
@@ -204,11 +211,16 @@ export class Shell {
 
   private async _tabComplete(text: string): Promise<[number, string[]]> {
     // Assume tab completing command.
-    return [text.length, CommandRegistry.instance().match(text)]
+    const commandMatches = CommandRegistry.instance().match(text)
+    const aliasMatches = this._aliases.match(text)
+    // Combine, removing duplicates, and sort.
+    const matches = [...new Set([...commandMatches, ...aliasMatches])]
+    return [text.length, matches]
   }
 
   private readonly _outputCallback: IOutputCallback
   private _currentLine: string
+  private _aliases: Aliases
   private _environment: Environment
   private _history: History
 
