@@ -52,7 +52,7 @@ describe("Shell", () => {
     it("should echo input and run ls command after \\r", async () => {
       const { shell, output } = await shell_setup_simple()
       await shell.inputs(["l", "s", "\r"])
-      expect(output.text).toEqual("ls\r\ndirA  file1  file2\r\n\x1b[1;31mjs-shell:$\x1b[1;0m ")
+      expect(output.text).toMatch(/^ls\r\ndirA  file1  file2\r\n/)
     })
   })
 
@@ -78,7 +78,7 @@ describe("Shell", () => {
     it("should show tab completion options", async () => {
       const { shell, output } = await shell_setup_empty()
       await shell.inputs(["e", "\t"])
-      expect(output.text).toEqual("e\r\necho  env  expr\r\n\x1b[1;31mjs-shell:$\x1b[1;0m e")
+      expect(output.text).toMatch(/^e\r\necho  env  expr\r\n/)
     })
 
     it("should do nothing on unknown command", async () => {

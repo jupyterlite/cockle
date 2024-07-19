@@ -19,7 +19,7 @@ export class FileOutput extends BufferedOutput {
       }
     }
 
-    FS.writeFile(this.path, content)
+    FS.writeFile(this.path, content, { mode: 0o664 })
     this.clear()
   }
 }
