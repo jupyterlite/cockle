@@ -30,10 +30,22 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          set -eux
+          npm install
 
       - name: Build
-        run: npm run build
+        run: |
+          set -eux
+          npm run build
+
+      - name: Lint
+        run: |
+          set -eux
+          npm
+          npm run lint:check
 
       - name: Run tests
-        run: npm t
+        run: |
+          set -eux
+          npm t

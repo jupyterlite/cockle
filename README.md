@@ -7,6 +7,7 @@ Intended for use in [JupyterLite](https://github.com/jupyterlite/jupyterlite).
 ```bash
 npm install
 npm run build
+npm run lint:check
 npm t
 ```
 
