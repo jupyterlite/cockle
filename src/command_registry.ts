@@ -2,6 +2,7 @@ import { ICommandRunner } from "./commands/command_runner"
 import { BuiltinCommandRunner } from "./commands/builtin_command_runner"
 import { CoreutilsCommandRunner } from "./commands/coreutils_command_runner"
 import { GrepCommandRunner } from "./commands/grep_command_runner"
+import { LuaCommandRunner } from "./commands/lua_command_runner"
 
 export class CommandRegistry {
   private constructor() {
@@ -9,6 +10,7 @@ export class CommandRegistry {
       new BuiltinCommandRunner(),
       new CoreutilsCommandRunner(),
       new GrepCommandRunner(),
+      new LuaCommandRunner(),
     ]
 
     // Command name -> runner mapping

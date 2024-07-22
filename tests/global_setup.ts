@@ -5,10 +5,10 @@
 let originalProcess: any
 
 beforeAll(() => {
-  originalProcess = process
-  global.process = {...originalProcess, versions: undefined}
+  //originalProcess = process
+ // global.process = {...originalProcess, versions: undefined}
 })
 
 afterAll(() => {
-  global.process = originalProcess
+ // global.process = originalProcess
 })
