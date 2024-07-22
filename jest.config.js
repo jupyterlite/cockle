@@ -11,10 +11,7 @@ module.exports = {
   verbose: true,
   collectCoverage: true,
   coverageDirectory: '.coverage',
-  coveragePathIgnorePatterns: [
-    "<rootDir>/node_modules/",
-    "<rootDir>/src/wasm/",
-  ],
-  testEnvironment: "jsdom",
-  setupFilesAfterEnv: ["<rootDir>/tests/global_setup.ts"]
+  coveragePathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/src/wasm/'],
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['<rootDir>/tests/global_setup.ts']
 };

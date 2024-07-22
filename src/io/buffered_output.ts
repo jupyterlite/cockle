@@ -1,19 +1,19 @@
-import { IOutput } from "./output"
+import { IOutput } from './output';
 
 export abstract class BufferedOutput implements IOutput {
   get allContent(): string {
-    return this.data.join("")
+    return this.data.join('');
   }
 
   clear() {
-    this.data = []
+    this.data = [];
   }
 
-  abstract flush(): Promise<void>
+  abstract flush(): Promise<void>;
 
   async write(text: string): Promise<void> {
-    this.data.push(text)
+    this.data.push(text);
   }
 
-  protected data: string[] = []
+  protected data: string[] = [];
 }

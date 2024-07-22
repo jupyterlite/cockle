@@ -12,6 +12,7 @@ npm t
 ```
 
 To run single test file
+
 ```bash
 npm t -- tests/whatever.ts
 ```
