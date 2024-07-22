@@ -31,21 +31,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          set -eux
           npm install
 
       - name: Build
         run: |
-          set -eux
           npm run build
 
       - name: Lint
         run: |
-          set -eux
-          npm
           npm run lint:check
 
       - name: Run tests
         run: |
-          set -eux
           npm t
