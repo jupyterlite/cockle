@@ -1,6 +1,5 @@
 import { MockTerminalOutput } from "./util"
-import { IFileSystem } from "../src/file_system"
-import { Shell } from "../src/shell"
+import { IEnableBufferedStdinCallback, IFileSystem, IStdinCallback, Shell } from "../src"
 
 export interface IShellSetup {
   shell: Shell
@@ -9,20 +8,31 @@ export interface IShellSetup {
   FS: any
 }
 
-export async function shell_setup_empty(wantColor: boolean = false): Promise<IShellSetup> {
-  return await _shell_setup_common(wantColor, 0)
+export interface IOptions {
+  wantColor?: boolean
+  enableBufferedStdinCallback?: IEnableBufferedStdinCallback
+  stdinCallback?: IStdinCallback
 }
 
-export async function shell_setup_simple(wantColor: boolean = false): Promise<IShellSetup> {
-  return await _shell_setup_common(wantColor, 1)
+export async function shell_setup_empty(options: IOptions = {}): Promise<IShellSetup> {
+  return await _shell_setup_common(options, 0)
 }
 
-async function _shell_setup_common(wantColor: boolean, level: number): Promise<IShellSetup> {
+export async function shell_setup_simple(options: IOptions = {}): Promise<IShellSetup> {
+  return await _shell_setup_common(options, 1)
+}
+
+async function _shell_setup_common(options: IOptions, level: number): Promise<IShellSetup> {
   const output = new MockTerminalOutput(false)
-  const shell = new Shell(output.callback)
+  const shell = new Shell({
+    outputCallback: output.callback,
+    enableBufferedStdinCallback: options.enableBufferedStdinCallback,
+    stdinCallback: options.stdinCallback,
+  })
   const fileSystem = await shell.initFilesystem()
   const { FS } = fileSystem
 
+  const wantColor = options.wantColor ?? false
   if (!wantColor) {
     // TODO: disable color in the prompt.
     const { environment } = shell

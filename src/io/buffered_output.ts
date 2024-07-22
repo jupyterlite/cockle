@@ -1,11 +1,11 @@
 import { IOutput } from "./output"
 
 export abstract class BufferedOutput implements IOutput {
-  protected get allContent(): string {
+  get allContent(): string {
     return this.data.join("")
   }
 
-  protected clear() {
+  clear() {
     this.data = []
   }
 
