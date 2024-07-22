@@ -4,7 +4,10 @@ import { Token, tokenize } from './tokenize';
 const endOfCommand = ';&';
 //const ignore_trailing = ";"
 
-export abstract class Node {}
+export abstract class Node {
+  // Return last token and whether it is a command or not.
+  abstract lastToken(): [Token | null, boolean];
+}
 
 export class CommandNode extends Node {
   constructor(
@@ -14,12 +17,30 @@ export class CommandNode extends Node {
   ) {
     super();
   }
+
+  lastToken(): [Token | null, boolean] {
+    if (this.redirects && this.redirects.length > 0) {
+      return this.redirects[this.redirects.length - 1].lastToken();
+    } else if (this.suffix.length > 0) {
+      return [this.suffix[this.suffix.length - 1], false];
+    } else {
+      return [this.name, true];
+    }
+  }
 }
 
 export class PipeNode extends Node {
   // Must be at least 2 commands
   constructor(readonly commands: CommandNode[]) {
     super();
+  }
+
+  lastToken(): [Token | null, boolean] {
+    if (this.commands.length > 0) {
+      return this.commands[this.commands.length - 1].lastToken();
+    } else {
+      return [null, false];
+    }
   }
 }
 
@@ -30,10 +51,14 @@ export class RedirectNode extends Node {
   ) {
     super();
   }
+
+  lastToken(): [Token | null, boolean] {
+    return [this.target, false];
+  }
 }
 
-export function parse(source: string, aliases?: Aliases): Node[] {
-  const tokens = tokenize(source, aliases);
+export function parse(source: string, throwErrors: boolean = true, aliases?: Aliases): Node[] {
+  const tokens = tokenize(source, throwErrors, aliases);
 
   const ret: Node[] = [];
   const stack: CommandNode[] = [];

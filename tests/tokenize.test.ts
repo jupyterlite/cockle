@@ -131,30 +131,30 @@ describe('Tokenize', () => {
 
   it('should use aliases', () => {
     const aliases = new Aliases();
-    expect(tokenize('ll', aliases)).toEqual([
+    expect(tokenize('ll', true, aliases)).toEqual([
       { offset: 0, value: 'ls' },
       { offset: 3, value: '--color=auto' },
       { offset: 16, value: '-lF' }
     ]);
-    expect(tokenize('ll;', aliases)).toEqual([
+    expect(tokenize('ll;', true, aliases)).toEqual([
       { offset: 0, value: 'ls' },
       { offset: 3, value: '--color=auto' },
       { offset: 16, value: '-lF' },
       { offset: 19, value: ';' }
     ]);
-    expect(tokenize(' ll ', aliases)).toEqual([
+    expect(tokenize(' ll ', true, aliases)).toEqual([
       { offset: 1, value: 'ls' },
       { offset: 4, value: '--color=auto' },
       { offset: 17, value: '-lF' }
     ]);
-    expect(tokenize('cat; ll', aliases)).toEqual([
+    expect(tokenize('cat; ll', true, aliases)).toEqual([
       { offset: 0, value: 'cat' },
       { offset: 3, value: ';' },
       { offset: 5, value: 'ls' },
       { offset: 8, value: '--color=auto' },
       { offset: 21, value: '-lF' }
     ]);
-    expect(tokenize('ll; cat', aliases)).toEqual([
+    expect(tokenize('ll; cat', true, aliases)).toEqual([
       { offset: 0, value: 'ls' },
       { offset: 3, value: '--color=auto' },
       { offset: 16, value: '-lF' },

@@ -76,7 +76,7 @@ describe('Shell', () => {
     });
   });
 
-  describe('input tab complete', () => {
+  describe('input tab complete commands', () => {
     it('should complete ec', async () => {
       const { shell, output } = await shell_setup_empty();
       await shell.inputs(['e', 'c', '\t']);
@@ -107,10 +107,32 @@ describe('Shell', () => {
       expect(output.text).toEqual('unk');
     });
 
+    it('should arrange in columns', async () => {
+      const { shell, output } = await shell_setup_empty();
+      await shell.setSize(40, 10);
+      await shell.inputs(['t', '\t']);
+      expect(output.text).toMatch(/^t\r\ntail\r\ntouch\r\ntr\r\ntty\r\n/);
+      output.clear();
+
+      await shell.setSize(40, 20);
+      await shell.inputs(['\t']);
+      expect(output.text).toMatch(/^\r\ntail   tr\r\ntouch  tty\r\n/);
+    });
+
+    it('should add common startsWith', async () => {
+      const { shell, output } = await shell_setup_empty();
+      await shell.inputs(['s', 'h', '\t']);
+      expect(output.text).toEqual('sha');
+      output.clear();
+
+      await shell.inputs(['\t']);
+      expect(output.text).toMatch(/sha1sum  sha224sum  sha256sum  sha384sum  sha512sum/);
+    });
+
     it('should include aliases', async () => {
       const { shell, output } = await shell_setup_empty();
       await shell.inputs(['l', '\t']);
-      expect(output.text).toMatch(/^l\r\nln  logname  ls  ll/);
+      expect(output.text).toMatch(/^l\r\nll  ln  logname  ls/);
     });
   });
 
