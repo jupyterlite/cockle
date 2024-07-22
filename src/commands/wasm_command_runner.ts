@@ -1,19 +1,16 @@
 import { ICommandRunner } from "./command_runner"
 import { Context } from "../context"
-import { SingleCharInput } from "../io"
 
 export abstract class WasmCommandRunner implements ICommandRunner {
   abstract names(): string[]
 
   async run(cmdName: string, context: Context): Promise<void> {
-    const { args, fileSystem, mountpoint, stdout} = context
+    const { args, fileSystem, mountpoint, stdin, stdout } = context
 
     const start = Date.now()
     if (!this._wasmModule) {
       this._wasmModule = this._getWasmModule()
     }
-
-    const stdin = new SingleCharInput(context.stdin)
 
     const wasm = await this._wasmModule({
       thisProgram: cmdName,
@@ -46,11 +43,13 @@ export abstract class WasmCommandRunner implements ICommandRunner {
 
           // Monkey patch stdin get_char.
           function getChar(tty: any) {
-            const charCode = stdin.readCharCode()
-            if (charCode === 4) {  // EOT
+            const utf16codes = stdin.readChar()
+            // What to do with length other than 1?
+            const utf16 = utf16codes[0]
+            if (utf16 === 4) {  // EOT
               return null
             } else {
-              return charCode
+              return utf16
             }
           }
           const stdinDeviceId = module.FS.makedev(5, 0)

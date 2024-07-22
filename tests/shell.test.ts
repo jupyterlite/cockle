@@ -1,4 +1,5 @@
 import { shell_setup_empty, shell_setup_simple } from "./shell_setup"
+import { MockTerminalStdin } from "./util"
 
 describe("Shell", () => {
   describe("._runCommands", () => {
@@ -39,6 +40,19 @@ describe("Shell", () => {
 
       await shell._runCommands("ls -1|sort -r|uniq -c")
       expect(output.text).toEqual("      1 file2\r\n      1 file1\r\n      1 dirA\r\n")
+    })
+
+    it("should support terminal stdin", async () => {
+      const mockStdin = new MockTerminalStdin()
+      const { shell, output } = await shell_setup_empty({
+        stdinCallback: mockStdin.stdinCallback.bind(mockStdin),
+        enableBufferedStdinCallback: mockStdin.enableBufferedStdinCallback.bind(mockStdin),
+      })
+      await shell._runCommands("wc")
+      expect(output.text).toEqual("      0       2       5\r\n")
+      expect(mockStdin.callCount).toEqual(6)
+      expect(mockStdin.enableCallCount).toEqual(1)
+      expect(mockStdin.disableCallCount).toEqual(1)
     })
   })
 

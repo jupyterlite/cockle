@@ -1,13 +1,16 @@
 import { BufferedOutput } from "./buffered_output"
-import { IInput } from "./input"
+import { PipeInput } from "./pipe_input"
 
-export class Pipe extends BufferedOutput implements IInput {
+/**
+ * A Pipe provides IOutput and IInput, accepting output and passing it to the input.
+ * To obtain the input interface PipeInput, call the .input attribute.
+ */
+export class Pipe extends BufferedOutput {
   override async flush(): Promise<void> {
   }
 
-  read(): string {
-    const ret = this.allContent
-    this.clear()
-    return ret
+  get input(): PipeInput {
+    // Should restrict this to just one?
+    return new PipeInput(this)
   }
 }

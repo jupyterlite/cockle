@@ -1,21 +1,29 @@
 import { Aliases } from "./aliases"
+import { IOutputCallback, IEnableBufferedStdinCallback, IStdinCallback } from "./callback"
 import { CommandRegistry } from "./command_registry"
 import { Context } from "./context"
 import { Environment } from "./environment"
 import { IFileSystem } from "./file_system"
 import { History } from "./history"
 import { FileInput, FileOutput, IInput, IOutput, Pipe, TerminalInput, TerminalOutput } from "./io"
-import { IOutputCallback } from "./output_callback"
 import { CommandNode, PipeNode, parse } from "./parse"
 import * as FsModule from './wasm/fs'
 
+export namespace IShell {
+  export interface IOptions {
+    mountpoint?: string
+    outputCallback: IOutputCallback
+    enableBufferedStdinCallback?: IEnableBufferedStdinCallback
+    stdinCallback?: IStdinCallback
+  }
+}
+
 export class Shell {
-  constructor(
-    outputCallback: IOutputCallback,
-    mountpoint: string = '/drive',
-  ) {
-    this._outputCallback = outputCallback
-    this._mountpoint = mountpoint;
+  constructor(options: IShell.IOptions) {
+    this._outputCallback = options.outputCallback
+    this._mountpoint = options.mountpoint ?? "/drive"
+    this._enableBufferedStdinCallback = options.enableBufferedStdinCallback
+    this._stdinCallback = options.stdinCallback
     this._currentLine = ""
     this._aliases = new Aliases()
     this._environment = new Environment()
@@ -96,6 +104,8 @@ export class Shell {
   }
 
   async inputs(chars: string[]): Promise<void> {
+    // Might be best to not have this as it implies each input fron frontend in a single char when
+    // it can be multiple chars for escape sequences.
     for (let i = 0; i < chars.length; ++i) {
       await this.input(chars[i])
     }
@@ -127,6 +137,10 @@ export class Shell {
 
   // Keeping this public for tests.
   async _runCommands(cmdText: string): Promise<void> {
+    if (this._enableBufferedStdinCallback) {
+      this._enableBufferedStdinCallback(true)
+    }
+
     if (cmdText.startsWith("!")) {
       // Get command from history and run that.
       const index = parseInt(cmdText.slice(1))
@@ -141,7 +155,7 @@ export class Shell {
 
     this._history.add(cmdText)
 
-    const stdin = new TerminalInput()
+    const stdin = new TerminalInput(this._stdinCallback)
     const stdout = new TerminalOutput(this._outputCallback)
     try {
       const nodes = parse(cmdText, this._aliases)
@@ -154,7 +168,7 @@ export class Shell {
           const n = commands.length
           let prevPipe: Pipe
           for (let i = 0; i < n; i++) {
-            const input = i == 0 ? stdin : prevPipe!
+            const input = i == 0 ? stdin : prevPipe!.input
             const output = i < n-1 ? (prevPipe = new Pipe()) : stdout
             await this._runCommand(commands[i], input, output)
           }
@@ -167,6 +181,10 @@ export class Shell {
       // Send result via output??????  With color.  Should be to stderr.
       stdout.write("\x1b[1;31m" + error + "\x1b[1;0m\r\n")
       await stdout.flush()
+    } finally {
+      if (this._enableBufferedStdinCallback) {
+        this._enableBufferedStdinCallback(false)
+      }
     }
   }
 
@@ -219,6 +237,9 @@ export class Shell {
   }
 
   private readonly _outputCallback: IOutputCallback
+  private readonly _enableBufferedStdinCallback?: IEnableBufferedStdinCallback
+  private readonly _stdinCallback?: IStdinCallback
+
   private _currentLine: string
   private _aliases: Aliases
   private _environment: Environment

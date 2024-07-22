@@ -1,5 +1,5 @@
 import { BufferedOutput } from "./buffered_output"
-import { IOutputCallback } from "../output_callback"
+import { IOutputCallback } from "../callback"
 
 export class TerminalOutput extends BufferedOutput {
 
