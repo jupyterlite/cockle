@@ -10,4 +10,13 @@ describe('env command', () => {
     expect(environment.get('MYENV')).toBeUndefined();
     expect(output.text.trim().split('\r\n').at(-1)).toEqual('MYENV=23');
   });
+
+  it('should support quotes', async () => {
+    const { shell, output } = await shell_setup_simple();
+    const { environment } = shell;
+
+    await shell._runCommands('env MYENV="ls -alF"');
+    expect(environment.get('MYENV')).toBeUndefined();
+    expect(output.text.trim().split('\r\n').at(-1)).toEqual('MYENV=ls -alF');
+  });
 });
