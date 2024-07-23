@@ -23,7 +23,13 @@
     "fetch:wasm:copy": "cp -r cockle_wasm_env/bin/*.{js,wasm} src/wasm",
     "fetch:wasm" : "npm run fetch:wasm:create-env && npm run fetch:wasm:copy",
     "build": "tsc",
+    "eslint": "npm run eslint:check -- --fix",
+    "eslint:check": "eslint . --cache --ext .ts,.tsx",
+    "lint": "npm run prettier && npm run eslint",
+    "lint:check": "npm run prettier:check && npm run eslint:check",
     "prepack": "npm install && npm run build",
+    "prettier": "prettier --list-different --write \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md,.yml}\"",
+    "prettier:check": "prettier --list-different \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md,.yml}\"",
     "test": "jest"
   },
   "dependencies": {

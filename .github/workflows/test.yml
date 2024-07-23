@@ -39,7 +39,13 @@ jobs:
         run: npm run fetch:wasm
 
       - name: Build
-        run: npm run build
+        run: |
+          npm run build
+
+      - name: Lint
+        run: |
+          npm run lint:check
 
       - name: Run tests
-        run: npm t
+        run: |
+          npm t

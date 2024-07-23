@@ -16,30 +16,28 @@ export class CommandRegistry {
     // Command name -> runner mapping
     for (const runner of this._commandRunners) {
       for (const name of runner.names()) {
-        this._map.set(name, runner)
+        this._map.set(name, runner);
       }
     }
   }
 
   get(name: string): ICommandRunner | null {
-      return this._map.get(name) ?? null
+    return this._map.get(name) ?? null;
   }
 
   static instance(): CommandRegistry {
     if (!CommandRegistry._instance) {
-      CommandRegistry._instance = new CommandRegistry()
+      CommandRegistry._instance = new CommandRegistry();
     }
-    return CommandRegistry._instance
+    return CommandRegistry._instance;
   }
 
   match(start: string): string[] {
-    return [...this._map.keys()].filter((name) => {
-      return name.startsWith(start)
-    })
+    return [...this._map.keys()].filter(name => name.startsWith(start));
   }
 
   private _commandRunners: ICommandRunner[];
-  private _map: Map<string, ICommandRunner> = new Map()
+  private _map: Map<string, ICommandRunner> = new Map();
 
-  private static _instance: CommandRegistry
+  private static _instance: CommandRegistry;
 }

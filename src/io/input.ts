@@ -1,6 +1,8 @@
 export interface IInput {
   /**
-   * Read and return the entire contents of this input.
+   * Read and return a single character as a sequence of ASCII character codes. Note this might be
+   * more than one actual character such as \n or escape code for up arrow, etc. No further input is
+   * indicated by a single-width character with an ASCII code of 4 (EOT = End Of Transmission).
    */
-  read(): string
+  readChar(): number[];
 }

@@ -1,12 +1,17 @@
-import { IFileSystem } from "../file_system"
-import { IInput } from "./input"
+import { IFileSystem } from '../file_system';
+import { InputAll } from './input_all';
 
-export class FileInput implements IInput {
-  constructor(readonly fileSystem: IFileSystem, readonly path: string) {}
+export class FileInput extends InputAll {
+  constructor(
+    readonly fileSystem: IFileSystem,
+    readonly path: string
+  ) {
+    super();
+  }
 
-  read(): string {
-    const { FS } = this.fileSystem
-    const contents = FS.readFile(this.path, { "encoding": "utf8" })
-    return contents
+  readAll(): string {
+    const { FS } = this.fileSystem;
+    const contents = FS.readFile(this.path, { encoding: 'utf8' });
+    return contents;
   }
 }
