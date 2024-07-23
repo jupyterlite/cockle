@@ -18,16 +18,10 @@ export function tokenize(source: string, aliases?: Aliases): Token[] {
 enum CharType {
   None,
   Delimiter,
+  DoubleQuote,
+  SingleQuote,
   Whitespace,
   Other
-}
-
-class State {
-  prevChar: string = '';
-  prevCharType: CharType = CharType.None;
-  index: number = -1; // Index into source string.
-  offset: number = -1; // Offset of start of current token, -1 if not in token.
-  aliasOffset: number = -1;
 }
 
 class Tokenizer {
@@ -37,12 +31,15 @@ class Tokenizer {
   ) {
     this._source = source;
     this._tokens = [];
-    this._state = new State();
   }
 
   run() {
-    while (this._state.index <= this._source.length) {
+    while (this._index <= this._source.length) {
       this._next();
+    }
+
+    if (this._endQuote !== '') {
+      throw new Error('Tokenize error, expected end quote ' + this._endQuote);
     }
   }
 
@@ -50,8 +47,11 @@ class Tokenizer {
     return this._tokens;
   }
 
-  private _addToken(offset: number, value: string): boolean {
-    if (this.aliases !== undefined && offset !== this._state.aliasOffset) {
+  private _addToken(): boolean {
+    const offset = this._offset;
+    const value = this._value;
+
+    if (this.aliases !== undefined && offset !== this._aliasOffset) {
       const isCommand =
         this._tokens.length === 0 || ';&|'.includes(this._tokens.at(-1)!.value.at(-1)!);
 
@@ -60,18 +60,21 @@ class Tokenizer {
         if (alias !== undefined) {
           // Replace token with its alias and set state to beginning of it to re-tokenize.
           const n = value.length;
-          this._state.offset = -1;
-          this._state.index = offset - 1;
-          this._state.aliasOffset = offset; // Do not attempt to alias this token again.
+          this._offset = -1;
+          this._index = offset - 1;
+          this._aliasOffset = offset; // Do not attempt to alias this token again.
           this._source = this._source.slice(0, offset) + alias + this._source.slice(offset + n);
-          this._state.prevChar = '';
-          this._state.prevCharType = CharType.None;
+          this._prevChar = '';
+          this._prevCharType = CharType.None;
+          this._value = '';
+          this._endQuote = '';
           return false;
         }
       }
     }
 
     this._tokens.push({ offset, value });
+    this._endQuote = '';
     return true;
   }
 
@@ -80,44 +83,84 @@ class Tokenizer {
       return CharType.Whitespace;
     } else if (delimiters.includes(char)) {
       return CharType.Delimiter;
+    } else if (char === "'") {
+      return CharType.SingleQuote;
+    } else if (char === '"') {
+      return CharType.DoubleQuote;
     } else {
       return CharType.Other;
     }
   }
 
-  private _next() {
-    const i = ++this._state.index;
+  private _endQuoteFromCharType(charType: CharType): string {
+    if (charType === CharType.DoubleQuote) {
+      return '"';
+    } else if (charType === CharType.SingleQuote) {
+      return "'";
+    } else {
+      return '';
+    }
+  }
 
+  private _next() {
+    const i = ++this._index;
     const char = i < this._source.length ? this._source[i] : ' ';
-    const charType = this._getCharType(char);
-    if (this._state.offset >= 0) {
+    let charType = this._getCharType(char);
+    const endQuote = this._endQuoteFromCharType(charType);
+
+    if (this._offset >= 0) {
       // In token.
-      if (charType === CharType.Whitespace) {
+      if (this._endQuote) {
+        // In quoted section, continue until reach end quote.
+        if (char !== this._endQuote) {
+          this._value += char;
+        } else {
+          this._endQuote = '';
+          charType = CharType.Other;
+        }
+      } else if (endQuote) {
+        // Start quoted section within current token.
+        this._endQuote = endQuote;
+      } else if (charType === CharType.Whitespace) {
         // Finish current token.
-        if (this._addToken(this._state.offset, this._source.slice(this._state.offset, i))) {
-          this._state.offset = -1;
+        if (this._addToken()) {
+          this._offset = -1;
         }
       } else if (
-        charType !== this._state.prevCharType ||
-        (charType === CharType.Delimiter && char !== this._state.prevChar)
+        charType !== this._prevCharType ||
+        (charType === CharType.Delimiter && char !== this._prevChar)
       ) {
         // Finish current token and start new one.
-        if (this._addToken(this._state.offset, this._source.slice(this._state.offset, i))) {
-          this._state.offset = i;
+        if (this._addToken()) {
+          this._offset = i;
+          this._value = char;
         }
+      } else {
+        // Continue in current token.
+        this._value += char;
       }
     } else {
       // Not in token.
       if (charType !== CharType.Whitespace) {
         // Start new token.
-        this._state.offset = i;
+        this._offset = i;
+        this._endQuote = this._endQuoteFromCharType(charType);
+        this._value = this._endQuote === '' ? char : '';
       }
     }
-    this._state.prevChar = char;
-    this._state.prevCharType = charType;
+    this._prevChar = char;
+    this._prevCharType = charType;
   }
 
   private _source: string;
   private _tokens: Token[];
-  private _state: State;
+
+  // Tokenizer state.
+  private _prevChar: string = '';
+  private _prevCharType: CharType = CharType.None;
+  private _index: number = -1; // Index into source string.
+  private _offset: number = -1; // Offset of start of current token, -1 if not in token.
+  private _aliasOffset: number = -1;
+  private _value: string = ''; // Current token.
+  private _endQuote: string = ''; // End quote if in quoted section, otherwise emptry string.
 }
