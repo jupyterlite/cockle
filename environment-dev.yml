@@ -3,4 +3,4 @@ channels:
   - conda-forge
 dependencies:
   - micromamba
-  - nodejs ==20.0.9
+  - nodejs =20
