@@ -19,9 +19,9 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "create_wasm_env": "micromamba create -p $(pwd)/cockle_wasm_env -y lua cockle_fs grep coreutils --platform=emscripten-wasm32",
-    "copy_wasm": "cp -r cockle_wasm_env/bin/*.{js,wasm} src/wasm",
-    "prepare_wasm" : "npm run create_wasm_env && npm run copy_wasm",
+    "fetch:wasm:create-env": "micromamba create -p $(pwd)/cockle_wasm_env -y lua cockle_fs grep coreutils --platform=emscripten-wasm32",
+    "fetch:wasm:copy": "cp -r cockle_wasm_env/bin/*.{js,wasm} src/wasm",
+    "fetch:wasm" : "npm run fetch:wasm:create-env && npm run fetch:wasm:copy",
     "build": "tsc",
     "prepack": "npm install && npm run build",
     "test": "jest"

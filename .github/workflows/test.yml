@@ -11,7 +11,7 @@ on:
 
 defaults:
   run:
-    shell: bash
+    shell: bash -e -l {0}
 
 jobs:
   test:
@@ -24,13 +24,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install node
-        uses: actions/setup-node@v4
+      - name: Set conda environment
+        uses: mamba-org/setup-micromamba@main
         with:
-          node-version: 20
+          environment-name: cockle
+          environment-file: environment-dev.yml
+          init-shell: bash
+          cache-downloads: true
 
       - name: Install dependencies
         run: npm install
+      
+      - name: Fetch wasm dependencies
+        run: npm run fetch:wasm
 
       - name: Build
         run: npm run build
