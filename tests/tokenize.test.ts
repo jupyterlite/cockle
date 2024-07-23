@@ -162,4 +162,53 @@ describe('Tokenize', () => {
       { offset: 21, value: 'cat' }
     ]);
   });
+
+  describe('quote handling', () => {
+    it('should support matching single and double quotes', () => {
+      expect(tokenize("'ls -l'")).toEqual([{ offset: 0, value: 'ls -l' }]);
+      expect(tokenize('"ls -l"')).toEqual([{ offset: 0, value: 'ls -l' }]);
+    });
+
+    it('should throw if end quotes missing', () => {
+      expect(() => tokenize('"ls')).toThrow();
+      expect(() => tokenize("'ls")).toThrow();
+    });
+
+    it('should work next to whitespace', () => {
+      expect(tokenize('ls "a b"')).toEqual([
+        { offset: 0, value: 'ls' },
+        { offset: 3, value: 'a b' }
+      ]);
+      expect(tokenize('"a b" ls')).toEqual([
+        { offset: 0, value: 'a b' },
+        { offset: 6, value: 'ls' }
+      ]);
+    });
+
+    it('should support containing the other quote type', () => {
+      expect(tokenize('"xy\'s"')).toEqual([{ offset: 0, value: "xy's" }]);
+      expect(tokenize("'xy\"s'")).toEqual([{ offset: 0, value: 'xy"s' }]);
+    });
+
+    it('should join adjacent quoted sections', () => {
+      expect(tokenize('"ls -l""h"')).toEqual([{ offset: 0, value: 'ls -lh' }]);
+    });
+
+    it('should join a preceding non-quoted section', () => {
+      expect(tokenize('ABC="ab c"')).toEqual([{ offset: 0, value: 'ABC=ab c' }]);
+    });
+
+    it('should join a following non-quoted section', () => {
+      expect(tokenize('"ab c"d')).toEqual([{ offset: 0, value: 'ab cd' }]);
+    });
+
+    it('should support a complicated example', () => {
+      expect(tokenize('lua -e "A=3; B=7" -v')).toEqual([
+        { offset: 0, value: 'lua' },
+        { offset: 4, value: '-e' },
+        { offset: 7, value: 'A=3; B=7' },
+        { offset: 18, value: '-v' }
+      ]);
+    });
+  });
 });

@@ -101,4 +101,19 @@ describe('parse', () => {
       ])
     ]);
   });
+
+  it('should support quotes', () => {
+    expect(parse('alias ll="ls -lF"')).toEqual([
+      new CommandNode({ offset: 0, value: 'alias' }, [{ offset: 6, value: 'll=ls -lF' }])
+    ]);
+    expect(parse('alias ll="ls ""-lF"')).toEqual([
+      new CommandNode({ offset: 0, value: 'alias' }, [{ offset: 6, value: 'll=ls -lF' }])
+    ]);
+    expect(parse('lua -e "A=3;B=9"')).toEqual([
+      new CommandNode({ offset: 0, value: 'lua' }, [
+        { offset: 4, value: '-e' },
+        { offset: 7, value: 'A=3;B=9' }
+      ])
+    ]);
+  });
 });

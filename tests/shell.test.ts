@@ -54,6 +54,12 @@ describe('Shell', () => {
       expect(mockStdin.enableCallCount).toEqual(1);
       expect(mockStdin.disableCallCount).toEqual(1);
     });
+
+    it('should support quotes', async () => {
+      const { shell, output } = await shell_setup_empty();
+      await shell._runCommands('echo "Hello    x;   yz"');
+      expect(output.text).toEqual('Hello    x;   yz\r\n');
+    });
   });
 
   describe('input', () => {
