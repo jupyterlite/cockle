@@ -20,7 +20,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
       "fetch:wasm:create-env": "micromamba create -p $(pwd)/cockle_wasm_env -y lua cockle_fs grep coreutils --platform=emscripten-wasm32 -c https://repo.mamba.pm/emscripten-forge -c https://repo.mamba.pm/conda-forge",
-      "fetch:wasm:copy": "cp -r cockle_wasm_env/bin/*.{js,wasm} src/wasm",
+      "fetch:wasm:copy": "cp -r $(pwd)/cockle_wasm_env/bin/*.js src/wasm && cp -r $(pwd)/cockle_wasm_env/bin/*.wasm src/wasm",
       "fetch:wasm" : "npm run fetch:wasm:create-env && npm run fetch:wasm:copy",
       "build": "tsc",
       "eslint": "npm run eslint:check -- --fix",
