@@ -5,7 +5,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
   abstract names(): string[];
 
   async run(cmdName: string, context: Context): Promise<void> {
-    const { args, fileSystem, mountpoint, stdin, stdout } = context;
+    const { args, fileSystem, mountpoint, stdin, stdout, stderr } = context;
 
     const start = Date.now();
     if (!this._wasmModule) {
@@ -36,7 +36,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
       thisProgram: cmdName,
       noInitialRun: true,
       print: (text: string) => stdout.write(`${text}\n`),
-      printErr: (text: string) => stdout.write(`${text}\n`), // Should be stderr
+      printErr: (text: string) => stderr.write(`${text}\n`),
       preRun: (module: any) => {
         if (Object.prototype.hasOwnProperty.call(module, 'FS')) {
           // Use PROXYFS so that command sees the shared FS.
