@@ -9,8 +9,8 @@ export type Token = {
   value: string;
 };
 
-export function tokenize(source: string, aliases?: Aliases): Token[] {
-  const tokenizer = new Tokenizer(source, aliases);
+export function tokenize(source: string, throwErrors: boolean = true, aliases?: Aliases): Token[] {
+  const tokenizer = new Tokenizer(source, throwErrors, aliases);
   tokenizer.run();
   return tokenizer.tokens;
 }
@@ -27,6 +27,7 @@ enum CharType {
 class Tokenizer {
   constructor(
     source: string,
+    readonly throwErrors: boolean,
     readonly aliases?: Aliases
   ) {
     this._source = source;
@@ -38,8 +39,10 @@ class Tokenizer {
       this._next();
     }
 
-    if (this._endQuote !== '') {
-      throw new Error('Tokenize error, expected end quote ' + this._endQuote);
+    if (this.throwErrors) {
+      if (this._endQuote !== '') {
+        throw new Error('Tokenize error, expected end quote ' + this._endQuote);
+      }
     }
   }
 

@@ -7,6 +7,7 @@ import { IFileSystem } from './file_system';
 import { History } from './history';
 import { FileInput, FileOutput, IInput, IOutput, Pipe, TerminalInput, TerminalOutput } from './io';
 import { CommandNode, PipeNode, parse } from './parse';
+import { longestStartsWith, toColumns } from './utils';
 import * as FsModule from './wasm/fs';
 
 export namespace IShell {
@@ -62,22 +63,7 @@ export class Shell {
       }
     } else if (code === 9) {
       // Tab \t
-      const trimmedLine = this._currentLine.trimStart();
-      if (trimmedLine.length === 0) {
-        return;
-      }
-
-      // This tab complete needs to be improved.
-      const [offset, possibles] = await this._tabComplete(trimmedLine);
-      if (possibles.length === 1) {
-        const n = this._currentLine.length;
-        this._currentLine = this._currentLine + possibles[0].slice(offset) + ' ';
-        await this.output(this._currentLine.slice(n));
-      } else if (possibles.length > 1) {
-        const line = possibles.join('  ');
-        // Note keep leading whitespace on current line.
-        await this.output(`\r\n${line}\r\n${this._environment.getPrompt()}${this._currentLine}`);
-      }
+      await this._tabComplete(this._currentLine);
     } else if (code === 27) {
       // Escape following by 1+ more characters
       const remainder = char.slice(1);
@@ -165,7 +151,7 @@ export class Shell {
     const stdin = new TerminalInput(this._stdinCallback);
     const stdout = new TerminalOutput(this._outputCallback);
     try {
-      const nodes = parse(cmdText, this._aliases);
+      const nodes = parse(cmdText, true, this._aliases);
 
       for (const node of nodes) {
         if (node instanceof CommandNode) {
@@ -240,13 +226,48 @@ export class Shell {
     await context.flush();
   }
 
-  private async _tabComplete(text: string): Promise<[number, string[]]> {
-    // Assume tab completing command.
-    const commandMatches = CommandRegistry.instance().match(text);
-    const aliasMatches = this._aliases.match(text);
-    // Combine, removing duplicates, and sort.
-    const matches = [...new Set([...commandMatches, ...aliasMatches])];
-    return [text.length, matches];
+  private async _tabComplete(text: string): Promise<void> {
+    if (text.endsWith(' ') && text.trim().length > 0) {
+      return;
+    }
+
+    const parsed = parse(text, false);
+    const [lastToken, isCommand] =
+      parsed.length > 0 ? parsed[parsed.length - 1].lastToken() : [null, true];
+    const lookup = lastToken?.value ?? '';
+
+    let possibles: string[] = [];
+    if (isCommand) {
+      const commandMatches = CommandRegistry.instance().match(lookup);
+      const aliasMatches = this._aliases.match(lookup);
+      // Combine, removing duplicates, and sort.
+      possibles = [...new Set([...commandMatches, ...aliasMatches])].sort();
+    } else {
+      // Is filename, not yet implemented.
+    }
+
+    if (possibles.length === 0) {
+      return;
+    } else if (possibles.length === 1) {
+      const extra = possibles[0].slice(lookup.length) + ' ';
+      this._currentLine += extra;
+      await this.output(extra);
+      return;
+    }
+
+    // Multiple possibles.
+    const startsWith = longestStartsWith(possibles, lookup.length);
+    if (startsWith.length > lookup.length) {
+      // Complete up to the longest common startsWith.
+      const extra = startsWith.slice(lookup.length);
+      this._currentLine += extra;
+      await this.output(extra);
+    } else {
+      // Write all the possibles in columns across the terminal.
+      const lines = toColumns(possibles, this._environment.getNumber('COLUMNS') ?? 0);
+      const output = `\r\n${lines.join('\r\n')}\r\n${this._environment.getPrompt()}${this._currentLine}`;
+      await this.output(output);
+    }
   }
 
   private readonly _outputCallback: IOutputCallback;
