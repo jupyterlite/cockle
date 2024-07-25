@@ -150,12 +150,13 @@ export class Shell {
 
     const stdin = new TerminalInput(this._stdinCallback);
     const stdout = new TerminalOutput(this._outputCallback);
+    const stderr = new TerminalOutput(this._outputCallback, '\x1b[1;31m!', '\x1b[1;0m');
     try {
       const nodes = parse(cmdText, true, this._aliases);
 
       for (const node of nodes) {
         if (node instanceof CommandNode) {
-          await this._runCommand(node, stdin, stdout);
+          await this._runCommand(node, stdin, stdout, stderr);
         } else if (node instanceof PipeNode) {
           const { commands } = node;
           const n = commands.length;
@@ -163,7 +164,7 @@ export class Shell {
           for (let i = 0; i < n; i++) {
             const input = i === 0 ? stdin : prevPipe!.input;
             const output = i < n - 1 ? (prevPipe = new Pipe()) : stdout;
-            await this._runCommand(commands[i], input, output);
+            await this._runCommand(commands[i], input, output, stderr);
           }
         } else {
           // This should not occur.
@@ -171,8 +172,7 @@ export class Shell {
         }
       }
     } catch (error: any) {
-      // Send result via output??????  With color.  Should be to stderr.
-      stdout.write('\x1b[1;31m' + error + '\x1b[1;0m\r\n');
+      stderr.write(error + '\r\n');
       await stdout.flush();
     } finally {
       if (this._enableBufferedStdinCallback) {
@@ -184,7 +184,8 @@ export class Shell {
   private async _runCommand(
     commandNode: CommandNode,
     input: IInput,
-    output: IOutput
+    output: IOutput,
+    error: IOutput
   ): Promise<void> {
     const name = commandNode.name.value;
     const runner = CommandRegistry.instance().get(name);
@@ -219,7 +220,8 @@ export class Shell {
       this._environment,
       this._history,
       input,
-      output
+      output,
+      error
     );
     await runner.run(name, context);
 

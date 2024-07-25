@@ -12,7 +12,7 @@ export class BuiltinCommandRunner implements ICommandRunner {
         await this._alias(context);
         break;
       case 'cd':
-        this._cd(context);
+        await this._cd(context);
         break;
       case 'history':
         await this._history(context);
@@ -28,20 +28,22 @@ export class BuiltinCommandRunner implements ICommandRunner {
     }
   }
 
-  private _cd(context: Context) {
-    const { args } = context;
+  private async _cd(context: Context) {
+    const { args, stderr } = context;
     if (args.length < 1) {
       // Do nothing.
       return;
     } else if (args.length > 1) {
-      throw new Error('cd: too many arguments');
+      await stderr.write('cd: too many arguments\r\n');
+      return;
     }
 
     let path = args[0];
     if (path === '-') {
       const oldPwd = context.environment.get('OLDPWD');
       if (oldPwd === undefined) {
-        throw new Error('cd: OLDPWD not set');
+        await stderr.write('cd: OLDPWD not set\r\n');
+        return;
       }
       path = oldPwd;
     }

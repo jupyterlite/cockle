@@ -16,10 +16,12 @@ export class Context {
     readonly environment: Environment,
     readonly history: History,
     readonly stdin: IInput,
-    readonly stdout: IOutput
+    readonly stdout: IOutput,
+    readonly stderr: IOutput
   ) {}
 
   async flush(): Promise<void> {
+    await this.stderr.flush();
     await this.stdout.flush();
   }
 }
