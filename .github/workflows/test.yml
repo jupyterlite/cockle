@@ -45,5 +45,6 @@ jobs:
         working-directory: test
         run: |
           npm install
+          npx playwright install
           npm run build
           npm run test

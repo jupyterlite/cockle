@@ -17,6 +17,7 @@ To run tests:
 ```bash
 cd test
 npm install
+npx playwright install
 npm run build
 npm run test
 npm run test:report
