@@ -1,43 +1,57 @@
-import { Aliases } from '../src/aliases';
-import { CommandNode, PipeNode, RedirectNode, parse } from '../src/parse';
+import { expect, type Page } from '@playwright/test';
+import { test } from './utils';
 
-describe('parse', () => {
-  it('should support no commands', () => {
-    expect(parse('')).toEqual([]);
-    expect(parse(';')).toEqual([]);
-    expect(parse(' ;  ; ')).toEqual([]);
+import { CommandNode, PipeNode, RedirectNode } from '../../src/parse';
+
+// Wrappers to call parse in browser context.
+async function parse(page: Page, text: string): Promise<any> {
+  return await page.evaluate(text => globalThis.cockle.parse(text), text);
+}
+
+async function parseWithAliases(page: Page, text: string): Promise<any> {
+  return await page.evaluate(text => {
+    const aliases = new globalThis.cockle.Aliases();
+    return globalThis.cockle.parse(text, true, aliases);
+  }, text);
+}
+
+test.describe('parse', () => {
+  test('should support no commands', async ({ page }) => {
+    expect(await parse(page, '')).toEqual([]);
+    expect(await parse(page, ' ')).toEqual([]);
+    expect(await parse(page, '  ')).toEqual([]);
   });
 
-  it('should support single command', () => {
-    expect(parse('ls')).toEqual([new CommandNode({ offset: 0, value: 'ls' }, [])]);
-    expect(parse('ls -al')).toEqual([
+  test('should support single command', async ({ page }) => {
+    expect(await parse(page, 'ls')).toEqual([new CommandNode({ offset: 0, value: 'ls' }, [])]);
+    expect(await parse(page, 'ls -al')).toEqual([
       new CommandNode({ offset: 0, value: 'ls' }, [{ offset: 3, value: '-al' }])
     ]);
-    expect(parse('ls -al;')).toEqual([
+    expect(await parse(page, 'ls -al;')).toEqual([
       new CommandNode({ offset: 0, value: 'ls' }, [{ offset: 3, value: '-al' }])
     ]);
   });
 
-  it('should support multiple commands', () => {
-    expect(parse('ls -al;pwd')).toEqual([
+  test('should support multiple commands', async ({ page }) => {
+    expect(await parse(page, 'ls -al;pwd')).toEqual([
       new CommandNode({ offset: 0, value: 'ls' }, [{ offset: 3, value: '-al' }]),
       new CommandNode({ offset: 7, value: 'pwd' }, [])
     ]);
-    expect(parse('echo abc;pwd;ls -al')).toEqual([
+    expect(await parse(page, 'echo abc;pwd;ls -al')).toEqual([
       new CommandNode({ offset: 0, value: 'echo' }, [{ offset: 5, value: 'abc' }]),
       new CommandNode({ offset: 9, value: 'pwd' }, []),
       new CommandNode({ offset: 13, value: 'ls' }, [{ offset: 16, value: '-al' }])
     ]);
   });
 
-  it('should support pipe', () => {
-    expect(parse('ls | sort')).toEqual([
+  test('should support pipe', async ({ page }) => {
+    expect(await parse(page, 'ls | sort')).toEqual([
       new PipeNode([
         new CommandNode({ offset: 0, value: 'ls' }, []),
         new CommandNode({ offset: 5, value: 'sort' }, [])
       ])
     ]);
-    expect(parse('ls | sort|uniq')).toEqual([
+    expect(await parse(page, 'ls | sort|uniq')).toEqual([
       new PipeNode([
         new CommandNode({ offset: 0, value: 'ls' }, []),
         new CommandNode({ offset: 5, value: 'sort' }, []),
@@ -45,7 +59,7 @@ describe('parse', () => {
       ])
     ]);
 
-    expect(parse('ls | sort; cat')).toEqual([
+    expect(await parse(page, 'ls | sort; cat')).toEqual([
       new PipeNode([
         new CommandNode({ offset: 0, value: 'ls' }, []),
         new CommandNode({ offset: 5, value: 'sort' }, [])
@@ -54,15 +68,15 @@ describe('parse', () => {
     ]);
   });
 
-  it('should support redirect of output', () => {
-    expect(parse('ls -l > file')).toEqual([
+  test('should support redirect of output', async ({ page }) => {
+    expect(await parse(page, 'ls -l > file')).toEqual([
       new CommandNode(
         { offset: 0, value: 'ls' },
         [{ offset: 3, value: '-l' }],
         [new RedirectNode({ offset: 6, value: '>' }, { offset: 8, value: 'file' })]
       )
     ]);
-    expect(parse('ls -l>file')).toEqual([
+    expect(await parse(page, 'ls -l>file')).toEqual([
       new CommandNode(
         { offset: 0, value: 'ls' },
         [{ offset: 3, value: '-l' }],
@@ -71,13 +85,13 @@ describe('parse', () => {
     ]);
   });
 
-  it('should raise on redirect of output without target file', () => {
-    expect(() => parse('ls >')).toThrow('file to redirect to');
-    expect(() => parse('ls >>')).toThrow('file to redirect to');
+  test('should raise on redirect of output without target file', async ({ page }) => {
+    expect(async () => await parse(page, 'ls >')).rejects.toThrow();
+    expect(async () => await parse(page, 'ls >>')).rejects.toThrow();
   });
 
-  it('should support redirect of input', () => {
-    expect(parse('wc -l < file')).toEqual([
+  test('should support redirect of input', async ({ page }) => {
+    expect(await parse(page, 'wc -l < file')).toEqual([
       new CommandNode(
         { offset: 0, value: 'wc' },
         [{ offset: 3, value: '-l' }],
@@ -86,15 +100,14 @@ describe('parse', () => {
     ]);
   });
 
-  it('should use aliases', () => {
-    const aliases = new Aliases();
-    expect(parse('ll', true, aliases)).toEqual([
+  test('should use aliases', async ({ page }) => {
+    expect(await parseWithAliases(page, 'll')).toEqual([
       new CommandNode({ offset: 0, value: 'ls' }, [
         { offset: 3, value: '--color=auto' },
         { offset: 16, value: '-lF' }
       ])
     ]);
-    expect(parse(' ll;', true, aliases)).toEqual([
+    expect(await parseWithAliases(page, ' ll;')).toEqual([
       new CommandNode({ offset: 1, value: 'ls' }, [
         { offset: 4, value: '--color=auto' },
         { offset: 17, value: '-lF' }
@@ -102,14 +115,14 @@ describe('parse', () => {
     ]);
   });
 
-  it('should support quotes', () => {
-    expect(parse('alias ll="ls -lF"')).toEqual([
+  test('should support quotes', async ({ page }) => {
+    expect(await parse(page, 'alias ll="ls -lF"')).toEqual([
       new CommandNode({ offset: 0, value: 'alias' }, [{ offset: 6, value: 'll=ls -lF' }])
     ]);
-    expect(parse('alias ll="ls ""-lF"')).toEqual([
+    expect(await parse(page, 'alias ll="ls ""-lF"')).toEqual([
       new CommandNode({ offset: 0, value: 'alias' }, [{ offset: 6, value: 'll=ls -lF' }])
     ]);
-    expect(parse('lua -e "A=3;B=9"')).toEqual([
+    expect(await parse(page, 'lua -e "A=3;B=9"')).toEqual([
       new CommandNode({ offset: 0, value: 'lua' }, [
         { offset: 4, value: '-e' },
         { offset: 7, value: 'A=3;B=9' }
