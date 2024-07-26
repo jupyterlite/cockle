@@ -45,6 +45,6 @@ jobs:
         working-directory: test
         run: |
           npm install
-          npx playwright install
+          npx playwright install --with-deps chromium
           npm run build
           npm run test

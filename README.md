@@ -17,7 +17,7 @@ To run tests:
 ```bash
 cd test
 npm install
-npx playwright install
+npx playwright install --with-deps chromium
 npm run build
 npm run test
 npm run test:report
