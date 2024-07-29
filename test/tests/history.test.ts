@@ -17,6 +17,13 @@ test.describe('history', () => {
     expect(output.at(-1)).toEqual('    0  history\r\n');
   });
 
+  test('should clear using -c flag', async ({ page }) => {
+    const output = await shellRunSimpleN(page, ['cat', 'history', 'history -c', 'ls', 'history']);
+    expect(output[1]).toEqual('    0  cat\r\n    1  history\r\n');
+    expect(output[2]).toEqual('');
+    expect(output[4]).toEqual('    0  ls\r\n    1  history\r\n');
+  });
+
   test('should limit storage to max size', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { shell, output } = await globalThis.cockle.shell_setup_empty();
