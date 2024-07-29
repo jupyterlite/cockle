@@ -14,8 +14,7 @@ test.describe('alias command', () => {
 
   test('should write individual aliases to stdout', async ({ page }) => {
     expect(await shellRunSimple(page, 'alias vdir ls')).toEqual(
-      "vdir='vdir --color=auto'\r\n" +
-        "ls='ls --color=auto'\r\n"
+      "vdir='vdir --color=auto'\r\nls='ls --color=auto'\r\n"
     );
   });
 
