@@ -42,5 +42,9 @@ jobs:
           npm run lint:check
 
       - name: Run tests
+        working-directory: test
         run: |
-          npm t
+          npm install
+          npx playwright install --with-deps chromium
+          npm run build
+          npm run test

@@ -1,18 +1,26 @@
 # cockle
 
-In-browser bash-like shell implemented in TypeScript.
+In-browser bash-like shell implemented in a combination of TypeScript and WebAssembly.
 
-Intended for use in [JupyterLite](https://github.com/jupyterlite/jupyterlite).
+Used in the [JupyterLite terminal extension](https://github.com/jupyterlite/terminal).
+
+To build:
 
 ```bash
 npm install
 npm run build
 npm run lint:check
-npm t
 ```
 
-To run single test file
+To run tests:
 
 ```bash
-npm t -- tests/whatever.ts
+cd test
+npm install
+npx playwright install --with-deps chromium
+npm run build
+npm run test
+npm run test:report
 ```
+
+You can interactively run individual tests using `npm run test:ui`.

@@ -1,5 +1,5 @@
-import { MockTerminalOutput } from './util';
-import { IEnableBufferedStdinCallback, IFileSystem, IStdinCallback, Shell } from '../src';
+import { MockTerminalOutput } from './output_setup';
+import { IEnableBufferedStdinCallback, IFileSystem, IStdinCallback, Shell } from '../../src';
 
 export interface IShellSetup {
   shell: Shell;
