@@ -62,6 +62,56 @@ test.describe('Shell', () => {
     test('should support quotes', async ({ page }) => {
       expect(await shellRunSimple(page, 'echo "Hello    x;   yz"')).toEqual('Hello    x;   yz\r\n');
     });
+
+    test('should set $? (exit code)', async ({ page }) => {
+      const { exitCodes, outputs } = await page.evaluate(async () => {
+        const { shell, output } = await globalThis.cockle.shell_setup_simple();
+        const { environment } = shell;
+        const exitCodes: (number | null)[] = [];
+        const outputs: string[] = [];
+
+        // WASM command success.
+        await shell._runCommands('ls unknown');
+        exitCodes.push(environment.getNumber('?'));
+
+        // WASM command error.
+        await shell._runCommands('ls file2');
+        exitCodes.push(environment.getNumber('?'));
+
+        // Built-in command success.
+        await shell._runCommands('cd unknown');
+        exitCodes.push(environment.getNumber('?'));
+
+        // Built-in command error.
+        await shell._runCommands('cd dirA');
+        exitCodes.push(environment.getNumber('?'));
+
+        // Parse error.
+        await shell._runCommands('ls "blah ');
+        exitCodes.push(environment.getNumber('?'));
+
+        // Command does not exist.
+        await shell._runCommands('abcde');
+        exitCodes.push(environment.getNumber('?'));
+
+        // Multiple commands success.
+        output.clear();
+        await shell._runCommands('echo Hello; pwd');
+        exitCodes.push(environment.getNumber('?'));
+        outputs.push(output.text);
+
+        // Multiple commands failure.
+        output.clear();
+        await shell._runCommands('cd a b; pwd');
+        exitCodes.push(environment.getNumber('?'));
+        outputs.push(output.text);
+
+        return { exitCodes, outputs };
+      });
+      expect(exitCodes).toEqual([2, 0, 1, 0, 1, 127, 0, 1]);
+      expect(outputs[0]).toEqual('Hello\r\n/drive/dirA\r\n');
+      expect(outputs[1]).toMatch(/Error: cd: too many arguments/);
+    });
   });
 
   test.describe('input', () => {

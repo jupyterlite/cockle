@@ -1,4 +1,5 @@
 import { Aliases } from './aliases';
+import { GeneralError } from './error_exit_code';
 import { Token, tokenize } from './tokenize';
 
 const endOfCommand = ';&';
@@ -119,7 +120,7 @@ function _createCommandNode(tokens: Token[]) {
     // Must support multiple redirects for a single command.
     if (args.length !== index + 2) {
       // Need better error handling here.
-      throw new Error('Redirect should be followed by file to redirect to');
+      throw new GeneralError('Redirect should be followed by file to redirect to');
     }
     const redirect = new RedirectNode(args[index], args[index + 1]);
     args = args.slice(0, index);

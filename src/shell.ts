@@ -3,6 +3,8 @@ import { IOutputCallback, IEnableBufferedStdinCallback, IStdinCallback } from '.
 import { CommandRegistry } from './command_registry';
 import { Context } from './context';
 import { Environment } from './environment';
+import { ErrorExitCode, FindCommandError, GeneralError } from './error_exit_code';
+import { ExitCode } from './exit_code';
 import { IFileSystem } from './file_system';
 import { History } from './history';
 import { FileInput, FileOutput, IInput, IOutput, Pipe, TerminalInput, TerminalOutput } from './io';
@@ -139,6 +141,7 @@ export class Shell {
       const index = parseInt(cmdText.slice(1));
       const possibleCmd = this._history.at(index);
       if (possibleCmd === null) {
+        // Does not set exit code.
         await this.output('\x1b[1;31m!' + index + ': event not found\x1b[1;0m\r\n');
         await this.output(this._environment.getPrompt());
         return;
@@ -148,6 +151,7 @@ export class Shell {
 
     this._history.add(cmdText);
 
+    let exitCode!: number;
     const stdin = new TerminalInput(this._stdinCallback);
     const stdout = new TerminalOutput(this._outputCallback);
     const stderr = new TerminalOutput(this._outputCallback, '\x1b[1;31m!', '\x1b[1;0m');
@@ -156,7 +160,7 @@ export class Shell {
 
       for (const node of nodes) {
         if (node instanceof CommandNode) {
-          await this._runCommand(node, stdin, stdout, stderr);
+          exitCode = await this._runCommand(node, stdin, stdout, stderr);
         } else if (node instanceof PipeNode) {
           const { commands } = node;
           const n = commands.length;
@@ -168,13 +172,19 @@ export class Shell {
           }
         } else {
           // This should not occur.
-          throw new Error(`Expected CommandNode or PipeNode not ${node}`);
+          throw new GeneralError(`Expected CommandNode or PipeNode not ${node}`);
         }
       }
     } catch (error: any) {
+      if (error instanceof ErrorExitCode) {
+        exitCode = error.exitCode;
+      }
       stderr.write(error + '\r\n');
-      await stdout.flush();
+      await stderr.flush();
     } finally {
+      exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
+      this.environment.set('?', `${exitCode}`);
+
       if (this._enableBufferedStdinCallback) {
         this._enableBufferedStdinCallback(false);
       }
@@ -186,18 +196,18 @@ export class Shell {
     input: IInput,
     output: IOutput,
     error: IOutput
-  ): Promise<void> {
+  ): Promise<number> {
     const name = commandNode.name.value;
     const runner = CommandRegistry.instance().get(name);
     if (runner === null) {
       // Give location of command in input?
-      throw new Error(`Unknown command: '${name}'`);
+      throw new FindCommandError(`Unknown command: '${name}'`);
     }
 
     if (commandNode.redirects) {
       // Support single redirect only, write or append to file.
       if (commandNode.redirects.length > 1) {
-        throw new Error('Only implemented a single redirect per command');
+        throw new GeneralError('Only implemented a single redirect per command');
       }
       const redirect = commandNode.redirects[0];
       const redirectChars = redirect.token.value;
@@ -207,7 +217,7 @@ export class Shell {
       } else if (redirectChars === '<') {
         input = new FileInput(this._fileSystem!, path);
       } else {
-        throw new Error('Unrecognised redirect ' + redirectChars);
+        throw new GeneralError('Unrecognised redirect ' + redirectChars);
       }
     }
 
@@ -223,9 +233,10 @@ export class Shell {
       output,
       error
     );
-    await runner.run(name, context);
+    const exitCode = await runner.run(name, context);
 
     await context.flush();
+    return exitCode;
   }
 
   private async _tabComplete(text: string): Promise<void> {

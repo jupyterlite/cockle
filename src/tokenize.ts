@@ -1,4 +1,5 @@
 import { Aliases } from './aliases';
+import { GeneralError } from './error_exit_code';
 
 const delimiters = ';&|><';
 const whitespace = ' ';
@@ -41,7 +42,7 @@ class Tokenizer {
 
     if (this.throwErrors) {
       if (this._endQuote !== '') {
-        throw new Error('Tokenize error, expected end quote ' + this._endQuote);
+        throw new GeneralError('Tokenize error, expected end quote ' + this._endQuote);
       }
     }
   }

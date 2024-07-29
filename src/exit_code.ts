@@ -1,0 +1,7 @@
+export const ExitCode = {
+  SUCCESS: 0,
+  GENERAL_ERROR: 1,
+  IMPROPER_USE: 2,
+  CANNOT_RUN_COMMAND: 126,
+  CANNOT_FIND_COMMAND: 127
+} as const;

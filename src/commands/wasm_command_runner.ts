@@ -1,10 +1,11 @@
 import { ICommandRunner } from './command_runner';
 import { Context } from '../context';
+import { RunCommandError } from '../error_exit_code';
 
 export abstract class WasmCommandRunner implements ICommandRunner {
   abstract names(): string[];
 
-  async run(cmdName: string, context: Context): Promise<void> {
+  async run(cmdName: string, context: Context): Promise<number> {
     const { args, fileSystem, mountpoint, stdin, stdout, stderr } = context;
 
     const start = Date.now();
@@ -65,10 +66,13 @@ export abstract class WasmCommandRunner implements ICommandRunner {
     const loaded = Date.now();
 
     if (!Object.prototype.hasOwnProperty.call(wasm, 'callMain')) {
-      throw new Error("WASM module does not export 'callMain' so it cannot be called");
+      throw new RunCommandError(
+        cmdName,
+        "WASM module does not export 'callMain' so it cannot be called"
+      );
     }
 
-    wasm.callMain(args);
+    const exitCode = wasm.callMain(args);
 
     if (Object.prototype.hasOwnProperty.call(wasm, 'FS')) {
       const FS = wasm.FS;
@@ -83,6 +87,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
 
     const end = Date.now();
     console.log(`${cmdName} load time ${loaded - start} ms, run time ${end - loaded} ms`);
+    return exitCode;
   }
 
   protected abstract _getWasmModule(): any;
