@@ -175,6 +175,117 @@ test.describe('Shell', () => {
     });
   });
 
+  test.describe('input tab complete filenames', () => {
+    test('should do nothing with unrecognised filename', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['l', 's', ' ', 'z', '\t'])).toEqual('ls z');
+    });
+
+    test('should show tab completion options', async ({ page }) => {
+      const output = await shellInputsSimple(page, ['l', 's', ' ', 'f', 'i', 'l', 'e', '\t']);
+      expect(output).toMatch(/^ls file\r\nfile1 {2}file2\r\n/);
+    });
+
+    test('should add common startsWith', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['l', 's', ' ', 'f', '\t'])).toEqual('ls file');
+    });
+
+    test('should complete single filename, adding trailing space', async ({ page }) => {
+      const output = await shellInputsSimple(page, ['l', 's', ' ', 'f', 'i', 'l', 'e', '1', '\t']);
+      expect(output).toEqual('ls file1 ');
+    });
+
+    test('should complete single directory, adding trailing slash', async ({ page }) => {
+      const output = await shellInputsSimple(page, ['l', 's', ' ', 'd', '\t']);
+      expect(output).toEqual('ls dirA/');
+    });
+
+    test('should list contents if match directory with trailing slash', async ({ page }) => {
+      const output = await shellInputsSimple(page, [
+        'l',
+        's',
+        ' ',
+        '/',
+        'd',
+        'r',
+        'i',
+        'v',
+        'e',
+        '/',
+        '\t'
+      ]);
+      expect(output).toMatch(/^ls \/drive\/\r\nfile1 {2}file2 {2}dirA/);
+      expect(output).toMatch(/ls \/drive\/$/);
+    });
+
+    test('should list contents if match directory without trailing slash', async ({ page }) => {
+      const output = await shellInputsSimple(page, [
+        'l',
+        's',
+        ' ',
+        '/',
+        'd',
+        'r',
+        'i',
+        'v',
+        'e',
+        '\t'
+      ]);
+      expect(output).toMatch(/^ls \/drive\r\nfile1 {2}file2 {2}dirA/);
+      expect(output).toMatch(/ls \/drive\/$/);
+    });
+
+    test('should support . for current directory', async ({ page }) => {
+      const output = await shellInputsSimple(page, ['l', 's', ' ', '.', '\t']);
+      expect(output).toMatch(/^ls .\r\n.\/ {2}..\//);
+      expect(output).toMatch(/ls .$/);
+    });
+
+    test('should support . for current directory 2', async ({ page }) => {
+      const output = await shellInputsSimple(page, [
+        'l',
+        's',
+        ' ',
+        '.',
+        '/',
+        'f',
+        'i',
+        'l',
+        'e',
+        '\t'
+      ]);
+      expect(output).toMatch(/^ls .\/file\r\nfile1 {2}file2\r\n/);
+      expect(output).toMatch(/ls .\/file$/);
+    });
+
+    test('should support .. for parent directory', async ({ page }) => {
+      const output = await shellInputsSimple(page, ['l', 's', ' ', '.', '.', '/', 'd', 'r', '\t']);
+      expect(output).toEqual('ls ../drive/');
+    });
+
+    test('should show dot files/directories', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { shell, output, FS } = await globalThis.cockle.shell_setup_simple();
+        FS.mkdir('.adir');
+        FS.writeFile('.afile1', '');
+        FS.writeFile('.afile2', '');
+        await shell.inputs(['l', 's', ' ', '.', '\t']);
+        const ret = [output.text];
+        output.clear();
+
+        await shell.inputs(['l', 's', ' ', '.', 'a', '\t']);
+        ret.push(output.text);
+        output.clear();
+
+        await shell.inputs(['l', 's', ' ', '.', 'a', 'f', '\t']);
+        ret.push(output.text);
+        return ret;
+      });
+      expect(output[0]).toMatch(/^ls .\r\n.\/ {2}..\/ {2}.adir\/ {2}.afile1 {2}.afile2\r\n/);
+      expect(output[1]).toMatch(/^ls .a\r\n.adir\/ {2}.afile1 {2}.afile2\r\n/);
+      expect(output[2]).toEqual('ls .afile');
+    });
+  });
+
   test.describe('setSize', () => {
     test('should set envVars', async ({ page }) => {
       const output = await page.evaluate(async () => {
