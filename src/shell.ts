@@ -154,7 +154,7 @@ export class Shell {
     let exitCode!: number;
     const stdin = new TerminalInput(this._stdinCallback);
     const stdout = new TerminalOutput(this._outputCallback);
-    const stderr = new TerminalOutput(this._outputCallback, '\x1b[1;31m!', '\x1b[1;0m');
+    const stderr = new TerminalOutput(this._outputCallback, '\x1b[1;31m', '\x1b[1;0m');
     try {
       const nodes = parse(cmdText, true, this._aliases);
 
