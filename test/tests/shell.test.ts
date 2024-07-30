@@ -140,7 +140,9 @@ test.describe('Shell', () => {
     });
 
     test('should show tab completion options', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['e', '\t'])).toMatch(/^e\r\necho {2}env {2}expr\r\n/);
+      expect(await shellInputsSimple(page, ['e', '\t'])).toMatch(
+        /^e\r\necho {2}env {2}export {2}expr\r\n/
+      );
     });
 
     test('should do nothing on unknown command', async ({ page }) => {
