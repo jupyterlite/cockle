@@ -247,22 +247,65 @@ export class Shell {
     const parsed = parse(text, false);
     const [lastToken, isCommand] =
       parsed.length > 0 ? parsed[parsed.length - 1].lastToken() : [null, true];
-    const lookup = lastToken?.value ?? '';
+    let lookup = lastToken?.value ?? '';
 
     let possibles: string[] = [];
+    //let prefix = '';
     if (isCommand) {
       const commandMatches = CommandRegistry.instance().match(lookup);
       const aliasMatches = this._aliases.match(lookup);
       // Combine, removing duplicates, and sort.
       possibles = [...new Set([...commandMatches, ...aliasMatches])].sort();
     } else {
-      // Is filename, not yet implemented.
+      // Is filename.
+      const { FS } = this._fileSystem!;
+      const analyze = FS.analyzePath(lookup, false);
+      if (!analyze.parentExists) {
+        return;
+      }
+
+      const initialLookup = lookup;
+      lookup = analyze.name;
+      const { exists } = analyze;
+      if (exists && !FS.isDir(FS.stat(analyze.path).mode)) {
+        // Exactly matches a filename.
+        possibles = [lookup];
+      } else {
+        const lookupPath = exists ? analyze.path : analyze.parentPath;
+        possibles = FS.readdir(lookupPath);
+
+        if (exists) {
+          const wantDot =
+            initialLookup === '.' ||
+            initialLookup === '..' ||
+            initialLookup.endsWith('/.') ||
+            initialLookup.endsWith('/..');
+          if (wantDot) {
+            possibles = possibles.filter((path: string) => path.startsWith('.'));
+          } else {
+            possibles = possibles.filter((path: string) => !path.startsWith('.'));
+            if (!initialLookup.endsWith('/')) {
+              this._currentLine += '/';
+            }
+          }
+        } else {
+          possibles = possibles.filter((path: string) => path.startsWith(lookup));
+        }
+
+        // Directories are displayed with appended /
+        possibles = possibles.map((path: string) =>
+          FS.isDir(FS.stat(lookupPath + '/' + path).mode) ? path + '/' : path
+        );
+      }
     }
 
     if (possibles.length === 0) {
       return;
     } else if (possibles.length === 1) {
-      const extra = possibles[0].slice(lookup.length) + ' ';
+      let extra = possibles[0].slice(lookup.length);
+      if (!extra.endsWith('/')) {
+        extra += ' ';
+      }
       this._currentLine += extra;
       await this.output(extra);
       return;
