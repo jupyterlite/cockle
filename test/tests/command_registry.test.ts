@@ -27,6 +27,6 @@ test.describe('CommandRegistry', () => {
     });
     expect(output[0]).toEqual([]);
     expect(output[1]).toEqual(['echo']);
-    expect(output[2]).toEqual(['echo', 'env', 'expr']);
+    expect(output[2]).toEqual(['echo', 'env', 'export', 'expr']);
   });
 });

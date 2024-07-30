@@ -27,7 +27,7 @@ export class CommandRegistry {
   }
 
   match(start: string): string[] {
-    return [...this._map.keys()].filter(name => name.startsWith(start));
+    return [...this._map.keys()].filter(name => name.startsWith(start)).sort();
   }
 
   /**
