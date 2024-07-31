@@ -1,3 +1,5 @@
+import { ansi } from './ansi';
+
 /**
  * Collection of environment variables that are known to a shell and are passed in and out of
  * commands.
@@ -5,7 +7,7 @@
 export class Environment extends Map<string, string> {
   constructor() {
     super();
-    this.set('PS1', '\x1b[1;32mjs-shell:$\x1b[1;0m ');
+    this.set('PS1', ansi.styleBoldGreen + 'js-shell:' + ansi.styleReset + ' ');
     this.set('TERM', 'xterm-256color');
   }
 
