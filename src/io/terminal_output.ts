@@ -17,6 +17,10 @@ export class TerminalOutput extends BufferedOutput {
     this.clear();
   }
 
+  override supportsAnsiEscapes(): boolean {
+    return true;
+  }
+
   override async write(text: string): Promise<void> {
     if (text.endsWith('\n')) {
       text = text.slice(0, -1) + '\r\n';

@@ -9,7 +9,10 @@ export const ansi = {
   cursorDown: (count = 1) => (count > 0 ? ESC + count + 'B' : ''),
   cursorRight: (count = 1) => (count > 0 ? ESC + count + 'C' : ''),
   cursorLeft: (count = 1) => (count > 0 ? ESC + count + 'D' : ''),
+  cursorHome: ESC + 'H',
 
+  eraseScreen: ESC + '2J',
+  eraseSavedLines: ESC + '3J',
   eraseEndLine: ESC + 'K',
   eraseStartLine: ESC + '1K',
 
