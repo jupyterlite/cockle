@@ -3,5 +3,6 @@
 export * from './alias_command';
 export * from './builtin_command';
 export * from './cd_command';
+export * from './clear_command';
 export * from './export_command';
 export * from './history_command';

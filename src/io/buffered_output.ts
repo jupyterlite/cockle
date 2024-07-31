@@ -11,6 +11,10 @@ export abstract class BufferedOutput implements IOutput {
 
   abstract flush(): Promise<void>;
 
+  supportsAnsiEscapes(): boolean {
+    return false;
+  }
+
   async write(text: string): Promise<void> {
     this.data.push(text);
   }
