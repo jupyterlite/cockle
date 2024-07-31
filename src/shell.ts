@@ -1,4 +1,5 @@
 import { Aliases } from './aliases';
+import { ansi } from './ansi';
 import { IOutputCallback, IEnableBufferedStdinCallback, IStdinCallback } from './callback';
 import { CommandRegistry } from './command_registry';
 import { Context } from './context';
@@ -60,8 +61,7 @@ export class Shell {
       // Backspace
       if (this._currentLine.length > 0) {
         this._currentLine = this._currentLine.slice(0, -1);
-        const backspace = '\x1B[1D';
-        await this.output(backspace + ' ' + backspace);
+        await this.output(ansi.cursorLeft() + ansi.eraseEndLine);
       }
     } else if (code === 9) {
       // Tab \t
@@ -78,7 +78,7 @@ export class Shell {
         const cmdText = this._history.scrollCurrent(remainder.endsWith('B'));
         this._currentLine = cmdText !== null ? cmdText : '';
         // Re-output whole line.
-        this.output(`\x1B[1K\r${this._environment.getPrompt()}${this._currentLine}`);
+        this.output(ansi.eraseStartLine + `\r${this._environment.getPrompt()}${this._currentLine}`);
       }
     } else if (code === 4) {
       // EOT, usually = Ctrl-D
@@ -142,7 +142,9 @@ export class Shell {
       const possibleCmd = this._history.at(index);
       if (possibleCmd === null) {
         // Does not set exit code.
-        await this.output('\x1b[1;31m!' + index + ': event not found\x1b[1;0m\r\n');
+        await this.output(
+          ansi.styleBoldRed + '!' + index + ': event not found' + ansi.styleReset + '\r\n'
+        );
         await this.output(this._environment.getPrompt());
         return;
       }
@@ -154,7 +156,7 @@ export class Shell {
     let exitCode!: number;
     const stdin = new TerminalInput(this._stdinCallback);
     const stdout = new TerminalOutput(this._outputCallback);
-    const stderr = new TerminalOutput(this._outputCallback, '\x1b[1;31m', '\x1b[1;0m');
+    const stderr = new TerminalOutput(this._outputCallback, ansi.styleBoldRed, ansi.styleReset);
     try {
       const nodes = parse(cmdText, true, this._aliases);
 
@@ -201,7 +203,7 @@ export class Shell {
     const runner = CommandRegistry.instance().get(name);
     if (runner === null) {
       // Give location of command in input?
-      throw new FindCommandError(`Unknown command: '${name}'`);
+      throw new FindCommandError(name);
     }
 
     if (commandNode.redirects) {
