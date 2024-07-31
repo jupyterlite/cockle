@@ -7,6 +7,14 @@ import {
   test
 } from './utils';
 
+const left = '\x1B[D';
+const backspace = '\x7F';
+const delete_ = '\x1B[3~';
+const home = '\x1B[H';
+const end = '\x1B[F';
+const prev = '\x1B[1;2D';
+const next = '\x1B[1;2C';
+
 test.describe('Shell', () => {
   test.describe('_runCommands', () => {
     test('should run ls command', async ({ page }) => {
@@ -175,6 +183,11 @@ test.describe('Shell', () => {
     test('should include aliases', async ({ page }) => {
       expect(await shellInputsSimple(page, ['l', '\t'])).toMatch(/^l\r\nll {2}ln {2}logname {2}ls/);
     });
+
+    test('should complete within a command preserving suffix', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [['e', 'c', 'X', left, '\t'], ['\r']]);
+      expect(output[1]).toMatch(/^\r\nX\r\n/);
+    });
   });
 
   test.describe('input tab complete filenames', () => {
@@ -315,6 +328,51 @@ test.describe('Shell', () => {
 
       expect(output['LINES2']).toEqual(14);
       expect(output['COLUMNS2']).toBeNull();
+    });
+  });
+
+  test.describe('command line editing', () => {
+    // We can't explicitly check the cursor position without performing a visual test or decoding
+    // the ANSI escape sequences, so here we use an echo command that will write to stdout and
+    // insert an easily identified character at the cursor location.
+    test('should delete forward and backward', async ({ page }) => {
+      const common = ['e', 'c', 'h', 'o', ' ', 'A', 'B', 'C', 'D'];
+      const output = await shellInputsSimpleN(page, [
+        [...common, left, left, backspace, '\r'],
+        [...common, left, left, delete_, '\r']
+      ]);
+      expect(output[0]).toMatch(/\r\nACD\r\n/);
+      expect(output[1]).toMatch(/\r\nABD\r\n/);
+    });
+
+    test('should support home and end', async ({ page }) => {
+      const common = ['c', 'h', 'o', ' ', 'A', 'B', 'C'];
+      const output = await shellInputsSimpleN(page, [
+        [...common, left, left, home, 'e', '\r'],
+        ['e', ...common, left, left, end, 'D', '\r']
+      ]);
+      expect(output[0]).toMatch(/\r\nABC\r\n/);
+      expect(output[1]).toMatch(/\r\nABCD\r\n/);
+    });
+
+    test('should support prev word', async ({ page }) => {
+      const common = ['e', 'c', 'h', 'o', ' ', 'A', 'B', ' ', ' ', 'C', 'D'];
+      const output = await shellInputsSimpleN(page, [
+        [...common, prev, 'Z', '\r'],
+        [...common, prev, prev, 'Y', '\r']
+      ]);
+      expect(output[0]).toMatch(/\r\nAB ZCD\r\n/);
+      expect(output[1]).toMatch(/\r\nYAB CD\r\n/);
+    });
+
+    test('should support next word', async ({ page }) => {
+      const common = ['e', 'c', 'h', 'o', ' ', 'A', 'B', ' ', ' ', 'C', 'D'];
+      const output = await shellInputsSimpleN(page, [
+        [...common, home, next, next, 'Z', '\r'],
+        [...common, home, next, next, next, 'Y', '\r']
+      ]);
+      expect(output[0]).toMatch(/\r\nABZ CD\r\n/);
+      expect(output[1]).toMatch(/\r\nAB CDY\r\n/);
     });
   });
 });
