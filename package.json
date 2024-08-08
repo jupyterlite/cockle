@@ -19,17 +19,20 @@
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "scripts": {
+        "fetch:wasm:create-env": "micromamba create -p $(pwd)/cockle_wasm_env -y cockle_fs grep coreutils --platform=emscripten-wasm32 -c https://repo.mamba.pm/emscripten-forge -c https://repo.mamba.pm/conda-forge",
+        "fetch:wasm:copy": "mkdir -p src/wasm && cp -r $(pwd)/cockle_wasm_env/bin/*.js src/wasm",
+        "fetch:wasm": "npm run fetch:wasm:create-env && npm run fetch:wasm:copy",
         "build": "tsc",
         "eslint": "npm run eslint:check -- --fix",
         "eslint:check": "eslint . --cache --ext .ts,.tsx",
         "lint": "npm run prettier && npm run eslint",
         "lint:check": "npm run prettier:check && npm run eslint:check",
-        "prepack": "npm install && npm run build",
+        "prepack": "npm install && npm run fetch:wasm && npm run build",
         "prettier": "prettier --list-different --write \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md,.yml}\"",
         "prettier:check": "prettier --list-different \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md,.yml}\""
     },
     "dependencies": {
-        "@jupyterlab/services": "^7.1.6",
+        "@jupyterlab/services": "^7.2.4",
         "@jupyterlite/contents": "^0.4.0"
     },
     "devDependencies": {
