@@ -29,7 +29,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - name: Install micromamba executable
+        uses: mamba-org/setup-micromamba@main
+
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
       - name: Prep Release
         id: prep-release
