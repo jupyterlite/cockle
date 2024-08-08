@@ -5,3 +5,7 @@ tsconfig.tsbuildinfo
 .eslintcache
 playwright-report/
 test-results/
+test/package-lock.json
+*.js
+*.wasm
+cockle_wasm_env/
