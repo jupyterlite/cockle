@@ -13,7 +13,7 @@ import { History } from './history';
 import { FileInput, FileOutput, IInput, IOutput, Pipe, TerminalInput, TerminalOutput } from './io';
 import { CommandNode, PipeNode, parse } from './parse';
 import { longestStartsWith, toColumns } from './utils';
-import * as FsModule from './wasm/fs';
+import { WasmLoader } from './wasm_loader';
 
 /**
  * Shell implementation.
@@ -21,6 +21,8 @@ import * as FsModule from './wasm/fs';
 export class ShellImpl implements IShell {
   constructor(readonly options: IShellImpl.IOptions) {
     this._environment = new Environment(options.color ?? true);
+    this._wasmLoader = new WasmLoader(options.wasmBaseUrl);
+    this._commandRegistry = new CommandRegistry(this._wasmLoader);
   }
 
   get aliases(): Aliases {
@@ -178,8 +180,10 @@ export class ShellImpl implements IShell {
   }
 
   private async _initFilesystem(): Promise<void> {
-    this._fsModule = await FsModule.default();
-    const { FS, PATH, ERRNO_CODES, PROXYFS } = this._fsModule;
+    const fsModule = this._wasmLoader.getModule('fs');
+    const module = await fsModule({});
+    const { FS, PATH, ERRNO_CODES, PROXYFS } = module;
+
     const { mountpoint } = this;
     FS.mkdir(mountpoint, 0o777);
     this._fileSystem = { FS, PATH, ERRNO_CODES, PROXYFS };
@@ -276,7 +280,7 @@ export class ShellImpl implements IShell {
     error: IOutput
   ): Promise<number> {
     const name = commandNode.name.value;
-    const runner = CommandRegistry.instance().get(name);
+    const runner = this._commandRegistry.get(name);
     if (runner === null) {
       // Give location of command in input?
       throw new FindCommandError(name);
@@ -331,7 +335,7 @@ export class ShellImpl implements IShell {
 
     let possibles: string[] = [];
     if (isCommand) {
-      const commandMatches = CommandRegistry.instance().match(lookup);
+      const commandMatches = this._commandRegistry.match(lookup);
       const aliasMatches = this._aliases.match(lookup);
       // Combine, removing duplicates, and sort.
       possibles = [...new Set([...commandMatches, ...aliasMatches])].sort();
@@ -407,10 +411,11 @@ export class ShellImpl implements IShell {
   private _currentLine: string = '';
   private _cursorIndex: number = 0;
   private _aliases = new Aliases();
+  private _commandRegistry: CommandRegistry;
   private _environment: Environment;
   private _history = new History();
+  private _wasmLoader: WasmLoader;
 
-  private _fsModule: any;
   private _fileSystem?: IFileSystem;
   private _driveFS?: DriveFS;
 }

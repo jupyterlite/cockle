@@ -5,6 +5,7 @@ import { ProxyMarked, Remote } from 'comlink';
 interface IOptionsCommon {
   color?: boolean;
   mountpoint?: string;
+  wasmBaseUrl?: string;
   driveFsBaseUrl?: string;
   // Initial directories and files to create, for testing purposes.
   initialDirectories?: string[];

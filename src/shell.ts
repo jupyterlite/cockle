@@ -17,10 +17,19 @@ export class Shell implements IShell {
     this._worker = new Worker(new URL('./shell_worker.js', import.meta.url), { type: 'module' });
 
     this._remote = wrap(this._worker);
-    const { color, mountpoint, driveFsBaseUrl, initialDirectories, initialFiles } = options;
+    const { color, mountpoint, wasmBaseUrl, driveFsBaseUrl, initialDirectories, initialFiles } =
+      options;
     const { sharedArrayBuffer } = this._bufferedStdin;
     await this._remote.initialize(
-      { color, mountpoint, driveFsBaseUrl, sharedArrayBuffer, initialDirectories, initialFiles },
+      {
+        color,
+        mountpoint,
+        wasmBaseUrl,
+        driveFsBaseUrl,
+        sharedArrayBuffer,
+        initialDirectories,
+        initialFiles
+      },
       proxy(options.outputCallback),
       proxy(this.enableBufferedStdinCallback.bind(this))
     );

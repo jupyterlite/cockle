@@ -1,7 +1,15 @@
-import * as CoreutilsModule from '../wasm/coreutils';
 import { WasmCommandRunner } from './wasm_command_runner';
+import { WasmLoader } from '../wasm_loader';
 
 export class CoreutilsCommandRunner extends WasmCommandRunner {
+  constructor(wasmLoader: WasmLoader) {
+    super(wasmLoader);
+  }
+
+  moduleName(): string {
+    return 'coreutils';
+  }
+
   names(): string[] {
     return [
       'basename',
@@ -49,9 +57,5 @@ export class CoreutilsCommandRunner extends WasmCommandRunner {
       'vdir',
       'wc'
     ];
-  }
-
-  protected _getWasmModule(): any {
-    return CoreutilsModule.default;
   }
 }

@@ -1,17 +1,20 @@
 import { ICommandRunner } from './command_runner';
 import { Context } from '../context';
 import { RunCommandError } from '../error_exit_code';
+import { WasmLoader } from '../wasm_loader';
 
 export abstract class WasmCommandRunner implements ICommandRunner {
+  constructor(readonly wasmLoader: WasmLoader) {}
+
+  abstract moduleName(): string;
+
   abstract names(): string[];
 
   async run(cmdName: string, context: Context): Promise<number> {
     const { args, fileSystem, mountpoint, stdin, stdout, stderr } = context;
 
     const start = Date.now();
-    if (!this._wasmModule) {
-      this._wasmModule = this._getWasmModule();
-    }
+    const wasmModule = this.wasmLoader.getModule(this.moduleName());
 
     // Functions for monkey-patching.
     function getChar(tty: any) {
@@ -33,7 +36,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
       ];
     }
 
-    const wasm = await this._wasmModule({
+    const wasm = await wasmModule({
       thisProgram: cmdName,
       noInitialRun: true,
       print: (text: string) => stdout.write(`${text}\n`),
@@ -89,8 +92,4 @@ export abstract class WasmCommandRunner implements ICommandRunner {
     console.log(`${cmdName} load time ${loaded - start} ms, run time ${end - loaded} ms`);
     return exitCode;
   }
-
-  protected abstract _getWasmModule(): any;
-
-  private _wasmModule: any;
 }
