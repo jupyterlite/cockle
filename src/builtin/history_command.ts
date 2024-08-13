@@ -19,11 +19,11 @@ export class HistoryCommand extends BuiltinCommand {
     const options = Options.fromArgs(args, HistoryOptions);
 
     if (options.help.isSet) {
-      await options.writeHelp(stdout);
+      options.writeHelp(stdout);
     } else if (options.clear.isSet) {
       history.clear();
     } else {
-      await history.write(stdout);
+      history.write(stdout);
     }
     return ExitCode.SUCCESS;
   }

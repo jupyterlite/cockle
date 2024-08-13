@@ -22,7 +22,7 @@ export class AliasCommand extends BuiltinCommand {
         const index = name.indexOf('=');
         if (index === -1) {
           // Print alias.
-          await stdout.write(`${name}='${aliases.get(name)}'\n`);
+          stdout.write(`${name}='${aliases.get(name)}'\n`);
         } else {
           // Set alias.
           aliases.set(name.slice(0, index), name.slice(index + 1));
@@ -31,7 +31,7 @@ export class AliasCommand extends BuiltinCommand {
     } else {
       // Write all aliases.
       for (const [key, value] of aliases.entries()) {
-        await stdout.write(`${key}='${value}'\n`);
+        stdout.write(`${key}='${value}'\n`);
       }
     }
     return ExitCode.SUCCESS;

@@ -7,7 +7,7 @@ export class ConsoleOutput implements IOutput {
     return false;
   }
 
-  async write(text: string): Promise<void> {
+  write(text: string): void {
     console.log(text);
   }
 }

@@ -15,6 +15,7 @@
         "test:report": "playwright show-report"
     },
     "devDependencies": {
+        "@jupyterlite/cockle": "file:../",
         "@playwright/test": "^1.45.3",
         "@rspack/cli": "^0.7.5",
         "@rspack/core": "^0.7.5",

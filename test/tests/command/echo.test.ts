@@ -1,8 +1,8 @@
 import { expect } from '@playwright/test';
-import { shellRunSimple, test } from '../utils';
+import { shellLineSimple, test } from '../utils';
 
 test.describe('echo command', () => {
   test('should write to stdout', async ({ page }) => {
-    expect(await shellRunSimple(page, 'echo some text')).toEqual('some text\r\n');
+    expect(await shellLineSimple(page, 'echo some text')).toMatch('\r\nsome text\r\n');
   });
 });

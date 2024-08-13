@@ -61,7 +61,7 @@ export class History {
   async write(output: IOutput): Promise<void> {
     for (let i = 0; i < this._history.length; i++) {
       const index = String(i).padStart(5, ' ');
-      await output.write(`${index}  ${this._history[i]}\n`);
+      output.write(`${index}  ${this._history[i]}\n`);
     }
   }
 

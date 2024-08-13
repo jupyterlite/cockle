@@ -1,53 +1,41 @@
 import { expect } from '@playwright/test';
-import { shellRunSimple, shellRunSimpleN, test } from '../utils';
+import { shellLineSimple, shellLineSimpleN, test } from '../utils';
 
 test.describe('cd command', () => {
   test('should do nothing if no arguments', async ({ page }) => {
-    expect(await shellRunSimple(page, 'cd')).toEqual('');
+    const output = await shellLineSimpleN(page, ['pwd', 'cd', 'pwd']);
+    expect(output[0]).toMatch('\r\n/drive\r\n');
+    expect(output[2]).toMatch('\r\n/drive\r\n');
   });
 
   test('should error if more than one argument', async ({ page }) => {
-    expect(await shellRunSimple(page, 'cd a b')).toMatch(/cd: too many arguments/);
+    expect(await shellLineSimple(page, 'cd a b')).toMatch(/cd: too many arguments/);
   });
 
   test('should change directory', async ({ page }) => {
-    const output = await shellRunSimpleN(page, ['pwd', 'cd dirA', 'pwd']);
-    expect(output).toEqual(['/drive\r\n', '', '/drive/dirA\r\n']);
+    const output = await shellLineSimpleN(page, ['pwd', 'cd dirA', 'pwd']);
+    expect(output[0]).toMatch('\r\n/drive\r\n');
+    expect(output[2]).toMatch('\r\n/drive/dirA\r\n');
   });
 
   test('should update PWD', async ({ page }) => {
-    const output = await page.evaluate(async () => {
-      const { shell } = await globalThis.cockle.shell_setup_simple();
-      const { environment } = shell;
-      const pwd0 = environment.get('PWD');
-      await shell._runCommands('cd dirA');
-      const pwd1 = environment.get('PWD');
-      return [pwd0, pwd1];
-    });
-    expect(output).toEqual(['/drive', '/drive/dirA']);
+    const output = await shellLineSimpleN(page, ['env|grep PWD', 'cd dirA', 'env|grep PWD']);
+    expect(output[0]).toMatch('\r\nPWD=/drive\r\n');
+    expect(output[2]).toMatch('\r\nPWD=/drive/dirA\r\n');
   });
 
   test('should support cd -', async ({ page }) => {
-    const output = await page.evaluate(async () => {
-      const { shell } = await globalThis.cockle.shell_setup_simple();
-      const { environment } = shell;
-      const OLDPWD0 = environment.get('OLDPWD');
-      await shell._runCommands('cd dirA');
-      const OLDPWD1 = environment.get('OLDPWD');
-      const PWD1 = environment.get('PWD');
-      await shell._runCommands('cd -');
-      const OLDPWD2 = environment.get('OLDPWD');
-      const PWD2 = environment.get('PWD');
-      return { OLDPWD0, OLDPWD1, PWD1, OLDPWD2, PWD2 };
-    });
-    expect(output['OLDPWD0']).toBeUndefined();
-    expect(output['OLDPWD1']).toEqual('/drive');
-    expect(output['PWD1']).toEqual('/drive/dirA');
-    expect(output['OLDPWD2']).toEqual('/drive/dirA');
-    expect(output['PWD2']).toEqual('/drive');
+    const output = await shellLineSimpleN(page, [
+      'cd dirA',
+      'env|grep PWD',
+      'cd -',
+      'env|grep PWD'
+    ]);
+    expect(output[1]).toMatch('\r\nPWD=/drive/dirA\r\nOLDPWD=/drive\r\n');
+    expect(output[3]).toMatch('\r\nPWD=/drive\r\nOLDPWD=/drive/dirA\r\n');
   });
 
   test('should error if use cd - and OLDPWD not set', async ({ page }) => {
-    expect(await shellRunSimple(page, 'cd -')).toMatch(/cd: OLDPWD not set/);
+    expect(await shellLineSimple(page, 'cd -')).toMatch(/cd: OLDPWD not set/);
   });
 });

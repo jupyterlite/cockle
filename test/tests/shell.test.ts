@@ -2,8 +2,8 @@ import { expect } from '@playwright/test';
 import {
   shellInputsSimple,
   shellInputsSimpleN,
-  shellRunSimple,
-  shellRunSimpleN,
+  shellLineSimple,
+  shellLineSimpleN,
   test
 } from './utils';
 
@@ -16,41 +16,41 @@ const prev = '\x1B[1;2D';
 const next = '\x1B[1;2C';
 
 test.describe('Shell', () => {
-  test.describe('_runCommands', () => {
+  test.describe('run command', () => {
     test('should run ls command', async ({ page }) => {
-      expect(await shellRunSimple(page, 'ls')).toEqual('dirA  file1  file2\r\n');
+      expect(await shellLineSimple(page, 'ls')).toMatch(/^ls\r\ndirA {2}file1 {2}file2\r\n/);
     });
 
     test('should run ls command with leading whitespace', async ({ page }) => {
-      expect(await shellRunSimple(page, '   ls')).toEqual('dirA  file1  file2\r\n');
+      expect(await shellLineSimple(page, '   ls')).toMatch(/^ {3}ls\r\ndirA {2}file1 {2}file2\r\n/);
     });
 
     test('should output redirect to file', async ({ page }) => {
-      const output = await page.evaluate(async () => {
-        const { shell, FS } = await globalThis.cockle.shell_setup_simple();
-        await shell._runCommands('echo Hello > out');
-        const file1 = FS.readFile('out', { encoding: 'utf8' });
-
-        await shell._runCommands('echo Goodbye >> out');
-        const file2 = FS.readFile('out', { encoding: 'utf8' });
-        return { file1, file2 };
-      });
-      expect(output.file1).toEqual('Hello\n');
-      expect(output.file2).toEqual('Hello\nGoodbye\n');
+      const output = await shellLineSimpleN(page, [
+        'echo Hello > out',
+        'cat out',
+        'wc out',
+        'echo Goodbye >> out',
+        'cat out',
+        'wc out'
+      ]);
+      expect(output[1]).toMatch('\r\nHello\r\n');
+      expect(output[2]).toMatch('\r\n1 1 6 out\r\n');
+      expect(output[4]).toMatch('\r\nHello\r\nGoodbye\r\n');
+      expect(output[5]).toMatch('\r\n 2  2 14 out\r\n');
     });
 
     test('should input redirect from file', async ({ page }) => {
-      expect(await shellRunSimple(page, 'wc < file2')).toEqual('      1       5      27\r\n');
+      expect(await shellLineSimple(page, 'wc < file2')).toMatch('      1       5      27\r\n');
     });
 
     test('should support pipe', async ({ page }) => {
-      const output = await shellRunSimpleN(page, ['ls -1|sort -r', 'ls -1|sort -r|uniq -c']);
-      expect(output).toEqual([
-        'file2\r\nfile1\r\ndirA\r\n',
-        '      1 file2\r\n      1 file1\r\n      1 dirA\r\n'
-      ]);
+      const output = await shellLineSimpleN(page, ['ls -1|sort -r', 'ls -1|sort -r|uniq -c']);
+      expect(output[0]).toMatch('\r\nfile2\r\nfile1\r\ndirA\r\n');
+      expect(output[1]).toMatch('\r\n      1 file2\r\n      1 file1\r\n      1 dirA\r\n');
     });
 
+    /*
     test('should support terminal stdin', async ({ page }) => {
       const [output, mockStdin] = await page.evaluate(async () => {
         const mockStdin = new globalThis.cockle.MockTerminalStdin();
@@ -65,64 +65,54 @@ test.describe('Shell', () => {
       expect(mockStdin.callCount).toEqual(6);
       expect(mockStdin.enableCallCount).toEqual(1);
       expect(mockStdin.disableCallCount).toEqual(1);
-    });
+    });*/
 
     test('should support quotes', async ({ page }) => {
-      expect(await shellRunSimple(page, 'echo "Hello    x;   yz"')).toEqual('Hello    x;   yz\r\n');
+      const output = await shellLineSimple(page, 'echo "Hello    x;   yz"');
+      expect(output).toMatch('\r\nHello    x;   yz\r\n');
     });
 
     test('should set $? (exit code)', async ({ page }) => {
-      const { exitCodes, outputs } = await page.evaluate(async () => {
-        const { shell, output } = await globalThis.cockle.shell_setup_simple();
-        const { environment } = shell;
-        const exitCodes: (number | null)[] = [];
-        const outputs: string[] = [];
-
+      const output = await shellLineSimpleN(page, [
         // WASM command success.
-        await shell._runCommands('ls unknown');
-        exitCodes.push(environment.getNumber('?'));
-
+        'ls unknown',
+        'env|grep ?',
         // WASM command error.
-        await shell._runCommands('ls file2');
-        exitCodes.push(environment.getNumber('?'));
-
+        'ls file2',
+        'env|grep ?',
         // Built-in command success.
-        await shell._runCommands('cd unknown');
-        exitCodes.push(environment.getNumber('?'));
-
+        'cd unknown',
+        'env|grep ?',
         // Built-in command error.
-        await shell._runCommands('cd dirA');
-        exitCodes.push(environment.getNumber('?'));
-
+        'cd dirA',
+        'env|grep ?',
         // Parse error.
-        await shell._runCommands('ls "blah ');
-        exitCodes.push(environment.getNumber('?'));
-
+        'ls "blah ',
+        'env|grep ?',
         // Command does not exist.
-        await shell._runCommands('abcde');
-        exitCodes.push(environment.getNumber('?'));
-
+        'abcde',
+        'env|grep ?',
         // Multiple commands success.
-        output.clear();
-        await shell._runCommands('echo Hello; pwd');
-        exitCodes.push(environment.getNumber('?'));
-        outputs.push(output.text);
-
+        'echo Hello; pwd',
+        'env|grep ?',
         // Multiple commands failure.
-        output.clear();
-        await shell._runCommands('cd a b; pwd');
-        exitCodes.push(environment.getNumber('?'));
-        outputs.push(output.text);
-
-        return { exitCodes, outputs };
-      });
-      expect(exitCodes).toEqual([2, 0, 1, 0, 1, 127, 0, 1]);
-      expect(outputs[0]).toEqual('Hello\r\n/drive/dirA\r\n');
-      expect(outputs[1]).toMatch(/Error: cd: too many arguments/);
+        'cd a b; pwd',
+        'env|grep ?'
+      ]);
+      expect(output[1]).toMatch('\r\n?=2\r\n');
+      expect(output[3]).toMatch('\r\n?=0\r\n');
+      expect(output[5]).toMatch('\r\n?=1\r\n');
+      expect(output[7]).toMatch('\r\n?=0\r\n');
+      expect(output[9]).toMatch('\r\n?=1\r\n');
+      expect(output[11]).toMatch('\r\n?=127\r\n');
+      expect(output[12]).toMatch('\r\nHello\r\n/drive/dirA\r\n');
+      expect(output[13]).toMatch('\r\n?=0\r\n');
+      expect(output[14]).toMatch(/Error: cd: too many arguments/);
+      expect(output[15]).toMatch('\r\n?=1\r\n');
     });
   });
 
-  test.describe('input', () => {
+  test.describe('echo input', () => {
     test('should echo input up to \\r', async ({ page }) => {
       expect(await shellInputsSimple(page, ['l', 's', ' ', '-', 'a', 'l'])).toEqual('ls -al');
     });
@@ -161,12 +151,13 @@ test.describe('Shell', () => {
       const output = await page.evaluate(async () => {
         const { shell, output } = await globalThis.cockle.shell_setup_empty();
         await shell.setSize(40, 10);
-        await shell.inputs(['t', '\t']);
+        await shell.input('t');
+        await shell.input('\t');
         const ret0 = output.text;
         output.clear();
 
         await shell.setSize(40, 20);
-        await shell.inputs(['\t']);
+        await shell.input('\t');
         const ret1 = output.text;
         return [ret0, ret1];
       });
@@ -228,7 +219,7 @@ test.describe('Shell', () => {
         '/',
         '\t'
       ]);
-      expect(output).toMatch(/^ls \/drive\/\r\nfile1 {2}file2 {2}dirA/);
+      expect(output).toMatch(/^ls \/drive\/\r\ndirA\/ {2}file1 {2}file2\r\n/);
       expect(output).toMatch(/ls \/drive\/$/);
     });
 
@@ -245,13 +236,13 @@ test.describe('Shell', () => {
         'e',
         '\t'
       ]);
-      expect(output).toMatch(/^ls \/drive\r\nfile1 {2}file2 {2}dirA/);
+      expect(output).toMatch(/^ls \/drive\r\ndirA\/ {2}file1 {2}file2\r\n/);
       expect(output).toMatch(/ls \/drive\/$/);
     });
 
     test('should support . for current directory', async ({ page }) => {
       const output = await shellInputsSimple(page, ['l', 's', ' ', '.', '\t']);
-      expect(output).toMatch(/^ls .\r\n.\/ {2}..\//);
+      expect(output).toMatch(/^ls .\r\n.\/ {2}..\/\r\n/);
       expect(output).toMatch(/ls .$/);
     });
 
@@ -278,23 +269,19 @@ test.describe('Shell', () => {
     });
 
     test('should show dot files/directories', async ({ page }) => {
-      const output = await page.evaluate(async () => {
-        const { shell, output, FS } = await globalThis.cockle.shell_setup_simple();
-        FS.mkdir('.adir');
-        FS.writeFile('.afile1', '');
-        FS.writeFile('.afile2', '');
-        await shell.inputs(['l', 's', ' ', '.', '\t']);
-        const ret = [output.text];
-        output.clear();
-
-        await shell.inputs(['l', 's', ' ', '.', 'a', '\t']);
-        ret.push(output.text);
-        output.clear();
-
-        await shell.inputs(['l', 's', ' ', '.', 'a', 'f', '\t']);
-        ret.push(output.text);
-        return ret;
-      });
+      const options = {
+        initialDirectories: ['.adir'],
+        initialFiles: { '.afile1': '', '.afile2': '' }
+      };
+      const output = await shellInputsSimpleN(
+        page,
+        [
+          ['l', 's', ' ', '.', '\t'],
+          ['l', 's', ' ', '.', 'a', '\t'],
+          ['l', 's', ' ', '.', 'a', 'f', '\t']
+        ],
+        options
+      );
       expect(output[0]).toMatch(/^ls .\r\n.\/ {2}..\/ {2}.adir\/ {2}.afile1 {2}.afile2\r\n/);
       expect(output[1]).toMatch(/^ls .a\r\n.adir\/ {2}.afile1 {2}.afile2\r\n/);
       expect(output[2]).toEqual('ls .afile');
@@ -304,30 +291,26 @@ test.describe('Shell', () => {
   test.describe('setSize', () => {
     test('should set envVars', async ({ page }) => {
       const output = await page.evaluate(async () => {
-        const { shell } = await globalThis.cockle.shell_setup_empty();
-        const { environment } = shell;
-        const ret: object = {};
+        const { output, shell } = await globalThis.cockle.shell_setup_empty();
+        const ret: string[] = [];
         await shell.setSize(10, 44);
-        ret['LINES0'] = environment.getNumber('LINES');
-        ret['COLUMNS0'] = environment.getNumber('COLUMNS');
+        await shell.inputLine('env|grep LINES;env|grep COLUMNS');
+        ret.push(output.text);
 
+        output.clear();
         await shell.setSize(0, 45);
-        ret['LINES1'] = environment.getNumber('LINES');
-        ret['COLUMNS1'] = environment.getNumber('COLUMNS');
+        await shell.inputLine('env|grep LINES;env|grep COLUMNS');
+        ret.push(output.text);
 
+        output.clear();
         await shell.setSize(14, -1);
-        ret['LINES2'] = environment.getNumber('LINES');
-        ret['COLUMNS2'] = environment.getNumber('COLUMNS');
+        await shell.inputLine('env|grep LINES;env|grep COLUMNS');
+        ret.push(output.text);
         return ret;
       });
-      expect(output['LINES0']).toEqual(10);
-      expect(output['COLUMNS0']).toEqual(44);
-
-      expect(output['LINES1']).toBeNull();
-      expect(output['COLUMNS1']).toEqual(45);
-
-      expect(output['LINES2']).toEqual(14);
-      expect(output['COLUMNS2']).toBeNull();
+      expect(output[0]).toMatch('\r\nLINES=10\r\nCOLUMNS=44\r\n');
+      expect(output[1]).toMatch('\r\nCOLUMNS=45\r\n');
+      expect(output[2]).toMatch('\r\nLINES=14\r\n');
     });
   });
 

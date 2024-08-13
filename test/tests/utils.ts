@@ -1,4 +1,5 @@
 import { test as base, type Page } from '@playwright/test';
+import { IOptions } from '../serve/shell_setup';
 
 // Override page fixture to navigate to specific page.
 export const test = base.extend({
@@ -10,46 +11,63 @@ export const test = base.extend({
 
 // Wrappers to call shell functions in browser context.
 
-// Shell.inputs
-export async function shellInputsSimpleN(page: Page, charsArray: string[][]): Promise<string[]> {
-  return await page.evaluate(async charsArray => {
-    const { shell, output } = await globalThis.cockle.shell_setup_simple();
-    const ret: string[] = [];
-    for (const chars of charsArray) {
-      await shell.inputs(chars);
-      ret.push(output.text);
-      output.clear();
-    }
-    return ret;
-  }, charsArray);
+// Input multiple characters, one at a time. Support multi-character ANSI escape sequences.
+export async function shellInputsSimpleN(
+  page: Page,
+  charsArray: string[][],
+  options: IOptions = {}
+): Promise<string[]> {
+  return await page.evaluate(
+    async ({ charsArray, options }) => {
+      const { shell, output } = await globalThis.cockle.shell_setup_simple(options);
+      const ret: string[] = [];
+      for (const chars of charsArray) {
+        for (const char of chars) {
+          await shell.input(char);
+        }
+        ret.push(output.text);
+        output.clear();
+      }
+      return ret;
+    },
+    { charsArray, options }
+  );
 }
 
-export async function shellInputsSimple(page: Page, chars: string[]): Promise<string> {
-  return (await shellInputsSimpleN(page, [chars]))[0];
+export async function shellInputsSimple(
+  page: Page,
+  chars: string[],
+  options: IOptions = {}
+): Promise<string> {
+  return (await shellInputsSimpleN(page, [chars], options))[0];
 }
 
-// Shell._runCommands.
-export async function shellRunEmpty(page: Page, text: string): Promise<string[]> {
-  return await page.evaluate(async text => {
-    const { shell, output } = await globalThis.cockle.shell_setup_empty();
-    await shell._runCommands(text);
-    return output.text;
-  }, text);
+// Accepts multiple lines of input, cannot accept ANSI escape sequences which are multi-character.
+// Append '\r' to each line of text to enter.
+export async function shellLineSimpleN(
+  page: Page,
+  lines: string[],
+  options: IOptions = {}
+): Promise<string[]> {
+  return await page.evaluate(
+    async ({ lines, options }) => {
+      const { shell, output } = await globalThis.cockle.shell_setup_simple(options);
+      const ret: string[] = [];
+      for (const line of lines) {
+        await shell.inputLine(line);
+        ret.push(output.text);
+        output.clear();
+      }
+      return ret;
+    },
+    { lines, options }
+  );
 }
 
-export async function shellRunSimpleN(page: Page, texts: string[]): Promise<string[]> {
-  return await page.evaluate(async texts => {
-    const { shell, output } = await globalThis.cockle.shell_setup_simple();
-    const ret: string[] = [];
-    for (const text of texts) {
-      await shell._runCommands(text);
-      ret.push(output.text);
-      output.clear();
-    }
-    return ret;
-  }, texts);
-}
-
-export async function shellRunSimple(page: Page, text: string): Promise<string> {
-  return (await shellRunSimpleN(page, [text]))[0];
+export async function shellLineSimple(
+  page: Page,
+  line: string,
+  options: IOptions = {}
+): Promise<string> {
+  return (await shellLineSimpleN(page, [line], options))[0];
 }
