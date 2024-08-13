@@ -10,7 +10,7 @@ export interface IOutputCallback {
 }
 
 /**
- * Enable/disable buffered stdin in the terminal.
+ * Enable/disable buffered stdin.
  */
 export interface IEnableBufferedStdinCallback {
   (enable: boolean): void;

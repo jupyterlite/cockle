@@ -11,7 +11,7 @@ export class ClearCommand extends BuiltinCommand {
   protected async _run(context: Context): Promise<number> {
     const { stdout } = context;
     if (stdout.supportsAnsiEscapes()) {
-      await stdout.write(ansi.eraseScreen + ansi.eraseSavedLines + ansi.cursorHome);
+      stdout.write(ansi.eraseScreen + ansi.eraseSavedLines + ansi.cursorHome);
     }
     return ExitCode.SUCCESS;
   }

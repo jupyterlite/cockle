@@ -5,10 +5,14 @@ import { ansi } from './ansi';
  * commands.
  */
 export class Environment extends Map<string, string> {
-  constructor() {
+  constructor(color: boolean) {
     super();
-    this.set('PS1', ansi.styleBoldGreen + 'js-shell:' + ansi.styleReset + ' ');
-    this.set('TERM', 'xterm-256color');
+    if (color) {
+      this.set('PS1', ansi.styleBoldGreen + 'js-shell:' + ansi.styleReset + ' ');
+      this.set('TERM', 'xterm-256color');
+    } else {
+      this.set('PS1', 'js-shell: ');
+    }
   }
 
   /**

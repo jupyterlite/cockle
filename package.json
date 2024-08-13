@@ -33,7 +33,8 @@
     },
     "dependencies": {
         "@jupyterlab/services": "^7.2.4",
-        "@jupyterlite/contents": "^0.4.0"
+        "@jupyterlite/contents": "^0.4.0",
+        "comlink": "^4.4.1"
     },
     "devDependencies": {
         "@types/json-schema": "^7.0.15",

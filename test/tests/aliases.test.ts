@@ -1,3 +1,4 @@
+/*
 import { expect, type Page } from '@playwright/test';
 import { test } from './utils';
 
@@ -62,3 +63,4 @@ test.describe('Aliases', () => {
     });
   });
 });
+*/

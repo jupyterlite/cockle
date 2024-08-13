@@ -39,9 +39,9 @@ export abstract class Options {
     return options;
   }
 
-  async writeHelp(output: IOutput): Promise<void> {
+  writeHelp(output: IOutput): void {
     for (const line of this._help()) {
-      await output.write(`${line}\n`);
+      output.write(`${line}\n`);
     }
   }
 

@@ -15,7 +15,7 @@ export abstract class BufferedOutput implements IOutput {
     return false;
   }
 
-  async write(text: string): Promise<void> {
+  write(text: string): void {
     this.data.push(text);
   }
 

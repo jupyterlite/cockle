@@ -1,30 +1,21 @@
 import { expect } from '@playwright/test';
-import { shellRunSimple, test } from '../utils';
+import { shellLineSimple, shellLineSimpleN, test } from '../utils';
 
 test.describe('grep command', () => {
   test('should write to stdout', async ({ page }) => {
-    expect(await shellRunSimple(page, 'grep cond file2')).toEqual('Second line\r\n');
+    const output = await shellLineSimple(page, 'grep cond file2');
+    expect(output).toMatch(/^grep cond file2\r\nSecond line\r\n/);
   });
 
   test('should support ^ and $', async ({ page }) => {
-    const output = await page.evaluate(async () => {
-      const { shell, output, FS } = await globalThis.cockle.shell_setup_simple();
-      FS.writeFile('file3', ' hello\nhello ');
-      await shell._runCommands('grep hello file3');
-      const output0 = output.text;
-      output.clear();
-
-      await shell._runCommands('grep ^hello file3');
-      const output1 = output.text;
-      output.clear();
-
-      await shell._runCommands('grep hello$ file3');
-      return [output0, output1, output.text];
-    });
-    const line0 = ' hello';
-    const line1 = 'hello ';
-    expect(output[0]).toEqual(line0 + '\r\n' + line1 + '\r\n');
-    expect(output[1]).toEqual(line1 + '\r\n');
-    expect(output[2]).toEqual(line0 + '\r\n');
+    const options = { initialFiles: { file3: ' hello\nhello ' } };
+    const output = await shellLineSimpleN(
+      page,
+      ['grep hello file3', 'grep ^hello file3', 'grep hello$ file3'],
+      options
+    );
+    expect(output[0]).toMatch(/^grep hello file3\r\n hello\r\nhello \r\n/);
+    expect(output[1]).toMatch(/^grep \^hello file3\r\nhello \r\n/);
+    expect(output[2]).toMatch(/^grep hello\$ file3\r\n hello\r\n/);
   });
 });

@@ -1,8 +1,8 @@
 import { expect } from '@playwright/test';
-import { shellRunSimple, test } from '../utils';
+import { shellLineSimple, test } from '../utils';
 
 test.describe('tty command', () => {
   test('should write to stdout', async ({ page }) => {
-    expect(await shellRunSimple(page, 'tty')).toEqual('/dev/tty\r\n');
+    expect(await shellLineSimple(page, 'tty')).toMatch(/^tty\r\n\/dev\/tty\r\n/);
   });
 });
