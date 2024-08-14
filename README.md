@@ -9,8 +9,7 @@ commands compiled into .js and .wasm files. The latter are built by
 [Emscripten-forge](https://emscripten-forge.org/) and are added to the `cockle` NPM package using
 a `micromamba` environment as part of the `npm prepack` process.
 
-Build
------
+## Build
 
 ```bash
 micromamba env create -f environment-dev.yml -y
@@ -21,8 +20,7 @@ npm run build
 npm run lint:check
 ```
 
-Run tests
----------
+## Run tests
 
 ```bash
 cd test
@@ -35,11 +33,10 @@ npm run test:report
 
 You can interactively run individual tests using `npm run test:ui`.
 
-Demo
-----
+## Demo
 
 The `cockle` repository includes a demo so that you can easily try it out interactively in a web
-browser.  Once you have built `cockle`, build and run the demo using:
+browser. Once you have built `cockle`, build and run the demo using:
 
 ```bash
 cd demo
@@ -47,6 +44,7 @@ npm install
 npm run build
 npm run serve
 ```
+
 then open a browser at the specified URL:
 
 <img alt="Demo" src="demo.png" width="500px">
