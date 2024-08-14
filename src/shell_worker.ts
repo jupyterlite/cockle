@@ -17,10 +17,12 @@ export class ShellWorker implements IShell {
     this._outputCallback = outputCallback;
     this._enableBufferedStdinCallback = enableBufferedStdinCallback;
 
-    const { color, mountpoint, driveFsBaseUrl, initialDirectories, initialFiles } = options;
+    const { color, mountpoint, wasmBaseUrl, driveFsBaseUrl, initialDirectories, initialFiles } =
+      options;
     this._shellImpl = new ShellImpl({
       color,
       mountpoint,
+      wasmBaseUrl,
       driveFsBaseUrl,
       initialDirectories,
       initialFiles,

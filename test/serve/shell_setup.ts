@@ -40,8 +40,7 @@ async function _shell_setup_common(options: IOptions, level: number): Promise<IS
 
   // Monkey patch an inputLine function to enter a sequence of characters and append a '\r'.
   // Cannot be used for multi-character ANSI escape codes.
-  // @ts-expect-error Function not in interface.
-  shell.inputLine = async (line: string) => {
+  (shell as any).inputLine = async (line: string) => {
     for (const char of line) {
       await shell.input(char);
     }

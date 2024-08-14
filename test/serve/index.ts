@@ -10,8 +10,7 @@ async function setup() {
     tokenize
   };
 
-  // @ts-expect-error Assigning to globalThis.
-  globalThis.cockle = cockle;
+  (globalThis as any).cockle = cockle;
 }
 
 setup();

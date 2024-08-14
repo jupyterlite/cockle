@@ -1,12 +1,16 @@
-import * as GrepModule from '../wasm/grep';
 import { WasmCommandRunner } from './wasm_command_runner';
+import { WasmLoader } from '../wasm_loader';
 
 export class GrepCommandRunner extends WasmCommandRunner {
-  names(): string[] {
-    return ['grep'];
+  constructor(wasmLoader: WasmLoader) {
+    super(wasmLoader);
   }
 
-  protected _getWasmModule(): any {
-    return GrepModule.default;
+  moduleName(): string {
+    return 'grep';
+  }
+
+  names(): string[] {
+    return ['grep'];
   }
 }
