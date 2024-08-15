@@ -1,0 +1,26 @@
+{
+    "name": "cockle-demo",
+    "version": "1.0.0",
+    "description": "Cockle demo",
+    "license": "BSD-3-Clause",
+    "author": "Ian Thomas",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "private": true,
+    "scripts": {
+        "build": "npm run build:wasm && rspack build",
+        "build:wasm": "cp node_modules/@jupyterlite/cockle/src/wasm/*.js assets/",
+        "serve": "rspack serve"
+    },
+    "devDependencies": {
+        "@jupyterlite/cockle": "file:../",
+        "@rspack/cli": "^0.7.5",
+        "@rspack/core": "^0.7.5",
+        "@xterm/addon-fit": "^0.10.0",
+        "@xterm/xterm": "^5.5.0",
+        "css-loader": "^7.1.2",
+        "style-loader": "^4.0.0",
+        "ts-loader": "^9.5.1",
+        "typescript": "^5.5.4"
+    }
+}

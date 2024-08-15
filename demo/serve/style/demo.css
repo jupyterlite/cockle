@@ -1,0 +1,10 @@
+@import '~@xterm/xterm/css/xterm.css';
+
+body {
+  background-color: dimgrey;
+}
+
+#targetdiv {
+  border: 2px solid black;
+  height: 100%;
+}

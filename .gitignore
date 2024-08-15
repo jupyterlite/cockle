@@ -9,3 +9,4 @@ test/package-lock.json
 *.js
 *.wasm
 cockle_wasm_env/
+demo/package-lock.json
