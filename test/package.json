@@ -9,7 +9,7 @@
     "private": true,
     "scripts": {
         "build": "npm run build:wasm && rspack build",
-        "build:wasm": "cp node_modules/@jupyterlite/cockle/src/wasm/*.js assets",
+        "build:wasm": "cp node_modules/@jupyterlite/cockle/src/wasm/*.{js,wasm} assets/",
         "serve": "rspack serve",
         "test": "playwright test",
         "test:ui": "playwright test --ui",

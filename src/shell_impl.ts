@@ -69,7 +69,6 @@ export class ShellImpl implements IShell {
     } else if (code === 27) {
       // Escape following by 1+ more characters
       const remainder = char.slice(1);
-      console.log('Escape code', char);
       if (
         remainder === '[A' || // Up arrow
         remainder === '[1A' ||

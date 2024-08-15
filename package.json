@@ -13,14 +13,14 @@
         "url": "https://github.com/jupyterlite/cockle/issues"
     },
     "files": [
-        "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+        "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,wasm,woff2,ttf}",
         "src/**/*.ts"
     ],
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "scripts": {
         "fetch:wasm:create-env": "micromamba create -p $(pwd)/cockle_wasm_env -y cockle_fs grep coreutils --platform=emscripten-wasm32 -c https://repo.mamba.pm/emscripten-forge -c https://repo.mamba.pm/conda-forge",
-        "fetch:wasm:copy": "mkdir -p src/wasm && cp -r $(pwd)/cockle_wasm_env/bin/*.js src/wasm",
+        "fetch:wasm:copy": "mkdir -p src/wasm && cp -r $(pwd)/cockle_wasm_env/bin/*.{js,wasm} src/wasm/",
         "fetch:wasm": "npm run fetch:wasm:create-env && npm run fetch:wasm:copy",
         "build": "tsc",
         "eslint": "npm run eslint:check -- --fix",
@@ -53,6 +53,7 @@
         "dist",
         "coverage",
         "**/*.d.ts",
+        "**/*.wasm",
         "**/package-lock.json"
     ],
     "eslintConfig": {
