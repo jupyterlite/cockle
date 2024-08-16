@@ -1,6 +1,6 @@
 import { ICommandRunner } from './command_runner';
 import { Context } from '../context';
-import { RunCommandError } from '../error_exit_code';
+import { ExitCode } from '../exit_code';
 import { WasmLoader } from '../wasm_loader';
 
 export abstract class WasmCommandRunner implements ICommandRunner {
@@ -36,11 +36,18 @@ export abstract class WasmCommandRunner implements ICommandRunner {
       ];
     }
 
+    let exitCode: number | undefined;
+
     const wasm = await wasmModule({
       thisProgram: cmdName,
-      noInitialRun: true,
+      arguments: args,
       print: (text: string) => stdout.write(`${text}\n`),
       printErr: (text: string) => stderr.write(`${text}\n`),
+      quit: (moduleExitCode: number, toThrow: any) => {
+        if (exitCode === undefined) {
+          exitCode = moduleExitCode;
+        }
+      },
       preRun: (module: any) => {
         if (Object.prototype.hasOwnProperty.call(module, 'FS')) {
           // Use PROXYFS so that command sees the shared FS.
@@ -66,30 +73,24 @@ export abstract class WasmCommandRunner implements ICommandRunner {
         }
       }
     });
-    const loaded = Date.now();
 
-    if (!Object.prototype.hasOwnProperty.call(wasm, 'callMain')) {
-      throw new RunCommandError(
-        cmdName,
-        "WASM module does not export 'callMain' so it cannot be called"
-      );
-    }
+    if (exitCode === undefined) {
+      exitCode = ExitCode.CANNOT_RUN_COMMAND;
+    } else {
+      if (Object.prototype.hasOwnProperty.call(wasm, 'FS')) {
+        const FS = wasm.FS;
+        FS.close(FS.streams[1]);
+        FS.close(FS.streams[2]);
+      }
 
-    const exitCode = wasm.callMain(args);
-
-    if (Object.prototype.hasOwnProperty.call(wasm, 'FS')) {
-      const FS = wasm.FS;
-      FS.close(FS.streams[1]);
-      FS.close(FS.streams[2]);
-    }
-
-    if (Object.prototype.hasOwnProperty.call(wasm, 'getEnvStrings')) {
-      // Copy environment variables back from command.
-      context.environment.copyFromCommand(wasm.getEnvStrings());
+      if (Object.prototype.hasOwnProperty.call(wasm, 'getEnvStrings')) {
+        // Copy environment variables back from command.
+        context.environment.copyFromCommand(wasm.getEnvStrings());
+      }
     }
 
     const end = Date.now();
-    console.log(`${cmdName} load time ${loaded - start} ms, run time ${end - loaded} ms`);
+    console.log(`${cmdName} load and run time ${end - start} ms`);
     return exitCode;
   }
 }

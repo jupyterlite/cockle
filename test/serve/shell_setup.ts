@@ -34,6 +34,7 @@ async function _shell_setup_common(options: IOptions, level: number): Promise<IS
   const shell = new Shell({
     color: options.color ?? false,
     outputCallback: output.callback,
+    wasmBaseUrl: 'http://localhost:8000/',
     initialDirectories,
     initialFiles
   });
