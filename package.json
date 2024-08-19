@@ -22,7 +22,7 @@
         "fetch:wasm:create-env": "micromamba create -p $(pwd)/cockle_wasm_env -y cockle_fs grep coreutils --platform=emscripten-wasm32 -c https://repo.mamba.pm/emscripten-forge -c https://repo.mamba.pm/conda-forge",
         "fetch:wasm:copy": "mkdir -p src/wasm && cp $(pwd)/cockle_wasm_env/bin/*.js src/wasm/ && cp $(pwd)/cockle_wasm_env/bin/*.wasm src/wasm/",
         "fetch:wasm": "npm run fetch:wasm:create-env && npm run fetch:wasm:copy",
-        "build": "tsc",
+        "build": "tsc && cp src/wasm/*.wasm lib/wasm/",
         "eslint": "npm run eslint:check -- --fix",
         "eslint:check": "eslint . --cache --ext .ts,.tsx",
         "lint": "npm run prettier && npm run eslint",
