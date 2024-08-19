@@ -2,6 +2,43 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.6
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.5...1fac256426fd3e98835e7e2132c1534b5487b939))
+
+### Enhancements made
+
+- Support separate WASM/JS files and remove use of callMain [#44](https://github.com/jupyterlite/cockle/pull/44) ([@ianthomas23](https://github.com/ianthomas23))
+- Add browser-based interactive demo [#43](https://github.com/jupyterlite/cockle/pull/43) ([@ianthomas23](https://github.com/ianthomas23))
+- Load WASM/JS modules dynamically using importScripts [#40](https://github.com/jupyterlite/cockle/pull/40) ([@ianthomas23](https://github.com/ianthomas23))
+- Use WebWorker [#38](https://github.com/jupyterlite/cockle/pull/38) ([@ianthomas23](https://github.com/ianthomas23))
+- Obtain WASM/JS files from emscripten-forge [#37](https://github.com/jupyterlite/cockle/pull/37) ([@ianthomas23](https://github.com/ianthomas23))
+- Add clear built-in command [#36](https://github.com/jupyterlite/cockle/pull/36) ([@ianthomas23](https://github.com/ianthomas23))
+- Support command-line editing [#35](https://github.com/jupyterlite/cockle/pull/35) ([@ianthomas23](https://github.com/ianthomas23))
+- Separate module for ANSI escape sequences [#34](https://github.com/jupyterlite/cockle/pull/34) ([@ianthomas23](https://github.com/ianthomas23))
+- Add export command [#33](https://github.com/jupyterlite/cockle/pull/33) ([@ianthomas23](https://github.com/ianthomas23))
+- Tab complete file and directory names [#32](https://github.com/jupyterlite/cockle/pull/32) ([@ianthomas23](https://github.com/ianthomas23))
+- Add options/flags for built-in commands [#31](https://github.com/jupyterlite/cockle/pull/31) ([@ianthomas23](https://github.com/ianthomas23))
+- Return exit codes from commands and set $? [#30](https://github.com/jupyterlite/cockle/pull/30) ([@ianthomas23](https://github.com/ianthomas23))
+- Use separate TerminalOutput for stderr [#28](https://github.com/jupyterlite/cockle/pull/28) ([@ianthomas23](https://github.com/ianthomas23))
+- Improvements to command/alias tab completion [#27](https://github.com/jupyterlite/cockle/pull/27) ([@ianthomas23](https://github.com/ianthomas23))
+- Support quotes in command line [#26](https://github.com/jupyterlite/cockle/pull/26) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Pre-install micromamba in release actions [#45](https://github.com/jupyterlite/cockle/pull/45) ([@ianthomas23](https://github.com/ianthomas23))
+- Update releaser artifact name [#39](https://github.com/jupyterlite/cockle/pull/39) ([@jtpio](https://github.com/jtpio))
+- Use playwright and rspack for testing [#29](https://github.com/jupyterlite/cockle/pull/29) ([@ianthomas23](https://github.com/ianthomas23))
+- Add linting [#24](https://github.com/jupyterlite/cockle/pull/24) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-07-22&to=2024-08-19&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-07-22..2024-08-19&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Ajtpio+updated%3A2024-07-22..2024-08-19&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.5
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.4...77129154f8963528fdd7254e835002be04c10865))
@@ -27,8 +64,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-07-04&to=2024-07-22&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-07-04..2024-07-22&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.4
 
