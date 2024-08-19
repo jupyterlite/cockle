@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.7
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.6...e6f58e3778e92e0bd77aef40c7ae8b18b3346be0))
+
+### Maintenance and upkeep improvements
+
+- Fix packaging of wasm files [#46](https://github.com/jupyterlite/cockle/pull/46) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-08-19&to=2024-08-19&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-08-19..2024-08-19&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.6
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.5...1fac256426fd3e98835e7e2132c1534b5487b939))
@@ -36,8 +52,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-07-22&to=2024-08-19&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-07-22..2024-08-19&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Ajtpio+updated%3A2024-07-22..2024-08-19&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.5
 
