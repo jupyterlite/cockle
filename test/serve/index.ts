@@ -1,4 +1,5 @@
 import { Aliases, parse, tokenize } from '@jupyterlite/cockle';
+import { terminalInput } from './input_setup';
 import { shell_setup_empty, shell_setup_simple } from './shell_setup';
 
 async function setup() {
@@ -7,6 +8,7 @@ async function setup() {
     parse,
     shell_setup_empty,
     shell_setup_simple,
+    terminalInput,
     tokenize
   };
 

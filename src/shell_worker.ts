@@ -27,10 +27,26 @@ export class ShellWorker implements IShell {
       initialDirectories,
       initialFiles,
       outputCallback: this._outputCallback,
-      enableBufferedStdinCallback: this._enableBufferedStdinCallback!,
+      enableBufferedStdinCallback: this.enableBufferedStdin.bind(this),
       stdinCallback: this._bufferedStdin.get.bind(this._bufferedStdin)
     });
     await this._shellImpl.initialize();
+  }
+
+  async enableBufferedStdin(enable: boolean): Promise<void> {
+    // Enable/disable webworker's buffered stdin.
+    if (this._bufferedStdin) {
+      if (enable) {
+        await this._bufferedStdin.enable();
+      } else {
+        await this._bufferedStdin.disable();
+      }
+    }
+
+    // Enable/disable main worker's buffered stdin.
+    if (this._enableBufferedStdinCallback) {
+      this._enableBufferedStdinCallback(enable);
+    }
   }
 
   async input(char: string): Promise<void> {
