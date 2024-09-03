@@ -50,22 +50,40 @@ test.describe('Shell', () => {
       expect(output[1]).toMatch('\r\n      1 file2\r\n      1 file1\r\n      1 dirA\r\n');
     });
 
-    /*
     test('should support terminal stdin', async ({ page }) => {
-      const [output, mockStdin] = await page.evaluate(async () => {
-        const mockStdin = new globalThis.cockle.MockTerminalStdin();
-        const { shell, output } = await globalThis.cockle.shell_setup_empty({
-          stdinCallback: mockStdin.stdinCallback.bind(mockStdin),
-          enableBufferedStdinCallback: mockStdin.enableBufferedStdinCallback.bind(mockStdin)
-        });
-        await shell._runCommands('wc');
-        return [output.text, mockStdin];
+      const output = await page.evaluate(async () => {
+        const { shell, output } = await globalThis.cockle.shell_setup_empty();
+        const EOT = String.fromCharCode(4);
+        await Promise.all([
+          shell.inputLine('wc'),
+          globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', '\n', 'c', EOT])
+        ]);
+        return output.text;
       });
-      expect(output).toEqual('      0       2       5\r\n');
-      expect(mockStdin.callCount).toEqual(6);
-      expect(mockStdin.enableCallCount).toEqual(1);
-      expect(mockStdin.disableCallCount).toEqual(1);
-    });*/
+      expect(output).toMatch(/^wc\r\n {6}1 {7}3 {7}5\r\n/);
+    });
+
+    test('should support terminal stdin more than once', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { shell, output } = await globalThis.cockle.shell_setup_empty();
+        const EOT = String.fromCharCode(4);
+        await Promise.all([
+          shell.inputLine('wc'),
+          globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', '\n', 'c', EOT])
+        ]);
+        const ret0 = output.text;
+        output.clear();
+
+        await Promise.all([
+          shell.inputLine('wc'),
+          globalThis.cockle.terminalInput(shell, ['d', 'e', ' ', 'f', EOT])
+        ]);
+        const ret1 = output.text;
+        return [ret0, ret1];
+      });
+      expect(output[0]).toMatch(/^wc\r\n {6}1 {7}3 {7}5\r\n/);
+      expect(output[1]).toMatch(/^wc\r\n {6}0 {7}2 {7}4\r\n/);
+    });
 
     test('should support quotes', async ({ page }) => {
       const output = await shellLineSimple(page, 'echo "Hello    x;   yz"');
