@@ -9,7 +9,7 @@ import { Shell } from '@jupyterlite/cockle';
 export async function terminalInput(
   shell: Shell,
   chars: string[],
-  initialDelayMs: number = 10
+  initialDelayMs: number = 100
 ): Promise<void> {
   if (initialDelayMs > 0) {
     await new Promise(f => setTimeout(f, initialDelayMs));
