@@ -20,9 +20,6 @@ export class TerminalOutput extends BufferedOutput {
   }
 
   override write(text: string): void {
-    if (text.endsWith('\n')) {
-      text = text.slice(0, -1) + '\r\n';
-    }
     if (this.prefix !== null) {
       text = this.prefix + text;
     }
