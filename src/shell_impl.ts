@@ -47,7 +47,7 @@ export class ShellImpl implements IShell {
     //console.log("CODE", code)
     if (code === 13) {
       // \r
-      await this.output('\r\n');
+      await this.output('\n');
       const cmdText = this._currentLine;
       this._currentLine = '';
       this._cursorIndex = 0;
@@ -155,6 +155,8 @@ export class ShellImpl implements IShell {
   }
 
   async output(text: string): Promise<void> {
+    // Ensure each linefeed \n is preceded by a carriage return \r.
+    text = text.replace(/(?<!\r)\n/g, '\r\n');
     await this.options.outputCallback(text);
   }
 
@@ -224,7 +226,7 @@ export class ShellImpl implements IShell {
       if (possibleCmd === null) {
         // Does not set exit code.
         await this.output(
-          ansi.styleBoldRed + '!' + index + ': event not found' + ansi.styleReset + '\r\n'
+          ansi.styleBoldRed + '!' + index + ': event not found' + ansi.styleReset + '\n'
         );
         await this.output(this._environment.getPrompt());
         return;
@@ -262,7 +264,7 @@ export class ShellImpl implements IShell {
       if (error instanceof ErrorExitCode) {
         exitCode = error.exitCode;
       }
-      stderr.write(error + '\r\n');
+      stderr.write(error + '\n');
       await stderr.flush();
     } finally {
       exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
@@ -401,7 +403,7 @@ export class ShellImpl implements IShell {
       } else {
         // Write all the possibles in columns across the terminal.
         const lines = toColumns(possibles, this._environment.getNumber('COLUMNS') ?? 0);
-        const output = `\r\n${lines.join('\r\n')}\r\n${this._environment.getPrompt()}${this._currentLine}`;
+        const output = `\n${lines.join('\n')}\n${this._environment.getPrompt()}${this._currentLine}`;
         await this.output(output + ansi.cursorLeft(suffix.length));
       }
     }

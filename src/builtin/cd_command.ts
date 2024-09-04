@@ -33,7 +33,7 @@ export class CdCommand extends BuiltinCommand {
         throw new GeneralError('cd: OLDPWD not set');
       }
       path = oldPwd;
-      context.stdout.write(`${path}\r\n`);
+      context.stdout.write(`${path}\n`);
     }
 
     const { FS } = context.fileSystem;
