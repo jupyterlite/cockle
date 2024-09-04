@@ -4,6 +4,10 @@ import { IStdinCallback } from '../callback';
 export class TerminalInput implements IInput {
   constructor(readonly stdinCallback?: IStdinCallback) {}
 
+  isTerminal(): boolean {
+    return true;
+  }
+
   readChar(): number[] {
     if (this._finished || this.stdinCallback === undefined) {
       return [4]; // EOT

@@ -1,4 +1,6 @@
 export interface IInput {
+  isTerminal(): boolean;
+
   /**
    * Read and return a single character as a sequence of ASCII character codes. Note this might be
    * more than one actual character such as \n or escape code for up arrow, etc. No further input is
