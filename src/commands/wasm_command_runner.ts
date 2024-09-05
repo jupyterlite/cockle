@@ -53,7 +53,17 @@ export abstract class WasmCommandRunner implements ICommandRunner {
       thisProgram: cmdName,
       arguments: args,
       print: (text: string) => stdout.write(`${text}\n`),
-      printErr: (text: string) => stderr.write(`${text}\n`),
+      printErr: (text: string) => {
+        if (
+          cmdName === 'touch' &&
+          text === `touch: failed to close '${args[1]}': Bad file descriptor`
+        ) {
+          // Temporarily ignore bad file descriptor error in touch command until have proper fix.
+          // Command will still return an exit code of 1.
+          return;
+        }
+        stderr.write(`${text}\n`);
+      },
       quit: (moduleExitCode: number, toThrow: any) => {
         if (exitCode === undefined) {
           exitCode = moduleExitCode;
