@@ -1,6 +1,10 @@
 import { IInput } from './input';
 
 export abstract class InputAll implements IInput {
+  isTerminal(): boolean {
+    return false;
+  }
+
   /**
    * Read and return the entire contents of this input. No special character is required to indicate
    * the end of the input, it is just the end of the string. Should only be called once per object.

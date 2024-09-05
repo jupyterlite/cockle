@@ -60,7 +60,7 @@ test.describe('Shell', () => {
         ]);
         return output.text;
       });
-      expect(output).toMatch(/^wc\r\n {6}1 {7}3 {7}5\r\n/);
+      expect(output).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
     });
 
     test('should support terminal stdin more than once', async ({ page }) => {
@@ -81,8 +81,8 @@ test.describe('Shell', () => {
         const ret1 = output.text;
         return [ret0, ret1];
       });
-      expect(output[0]).toMatch(/^wc\r\n {6}1 {7}3 {7}5\r\n/);
-      expect(output[1]).toMatch(/^wc\r\n {6}0 {7}2 {7}4\r\n/);
+      expect(output[0]).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
+      expect(output[1]).toMatch(/^wc\r\nde f {6}0 {7}2 {7}4\r\n/);
     });
 
     test('should support quotes', async ({ page }) => {
