@@ -32,7 +32,6 @@
         "prettier:check": "prettier --list-different \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md,.yml}\""
     },
     "dependencies": {
-        "@jupyterlab/services": "^7.2.5",
         "@jupyterlite/contents": "^0.4.1",
         "comlink": "^4.4.1"
     },
