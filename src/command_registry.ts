@@ -1,6 +1,7 @@
 import { ICommandRunner } from './commands/command_runner';
 import { CoreutilsCommandRunner } from './commands/coreutils_command_runner';
 import { GrepCommandRunner } from './commands/grep_command_runner';
+import { LuaCommandRunner } from './commands/lua_command_runner';
 import * as AllBuiltinCommands from './builtin';
 import { WasmLoader } from './wasm_loader';
 
@@ -10,7 +11,8 @@ export class CommandRegistry {
 
     this._commandRunners = [
       new CoreutilsCommandRunner(wasmLoader),
-      new GrepCommandRunner(wasmLoader)
+      new GrepCommandRunner(wasmLoader),
+      new LuaCommandRunner(wasmLoader)
     ];
 
     // Command name -> runner mapping
