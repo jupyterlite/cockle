@@ -2,6 +2,35 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.8
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.7...c226ca913081827957862d27697b3c122ecafb0e))
+
+### Enhancements made
+
+- Prebuild worker bundle and import WASM files from same directory as JS wrappers [#57](https://github.com/jupyterlite/cockle/pull/57) ([@ianthomas23](https://github.com/ianthomas23))
+- Add lua WASM command [#56](https://github.com/jupyterlite/cockle/pull/56) ([@ianthomas23](https://github.com/ianthomas23))
+- Echo buffered stdin (whilst running a command) back to stdout [#52](https://github.com/jupyterlite/cockle/pull/52) ([@ianthomas23](https://github.com/ianthomas23))
+- Standardise linefeed/newline handling [#51](https://github.com/jupyterlite/cockle/pull/51) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Ignore touch bad file descriptor, but still have incorrect exit code [#53](https://github.com/jupyterlite/cockle/pull/53) ([@ianthomas23](https://github.com/ianthomas23))
+- Support repeat use of BufferedStdin [#49](https://github.com/jupyterlite/cockle/pull/49) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Remove @jupyterlab/services as a dependency [#54](https://github.com/jupyterlite/cockle/pull/54) ([@ianthomas23](https://github.com/ianthomas23))
+- Update to jupyterlab 7.2.5 and jupyterlite 0.4.1 [#47](https://github.com/jupyterlite/cockle/pull/47) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-08-19&to=2024-09-11&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-08-19..2024-09-11&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.7
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.6...e6f58e3778e92e0bd77aef40c7ae8b18b3346be0))
@@ -15,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-08-19&to=2024-08-19&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-08-19..2024-08-19&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.6
 
