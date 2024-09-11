@@ -12,6 +12,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
 
   async run(cmdName: string, context: Context): Promise<number> {
     const { args, fileSystem, mountpoint, stdin, stdout, stderr } = context;
+    const { wasmBaseUrl } = this.wasmLoader;
 
     const start = Date.now();
     const wasmModule = this.wasmLoader.getModule(this.moduleName());
@@ -52,6 +53,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
     const wasm = await wasmModule({
       thisProgram: cmdName,
       arguments: args,
+      locateFile: (path: string) => wasmBaseUrl + path,
       print: (text: string) => stdout.write(`${text}\n`),
       printErr: (text: string) => {
         if (

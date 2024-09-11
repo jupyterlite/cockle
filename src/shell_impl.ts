@@ -181,8 +181,11 @@ export class ShellImpl implements IShell {
   }
 
   private async _initFilesystem(): Promise<void> {
+    const { wasmBaseUrl } = this.options;
     const fsModule = this._wasmLoader.getModule('fs');
-    const module = await fsModule({});
+    const module = await fsModule({
+      locateFile: (path: string) => wasmBaseUrl + path
+    });
     const { FS, PATH, ERRNO_CODES, PROXYFS } = module;
 
     const { mountpoint } = this;

@@ -3,15 +3,13 @@
  * Must be run in a WebWorker.
  */
 export class WasmLoader {
-  constructor(wasmBaseUrl?: string) {
-    this._wasmBaseUrl = wasmBaseUrl ?? '';
-  }
+  constructor(readonly wasmBaseUrl: string) {}
 
   public getModule(name: string): any {
     let module = this._cache.get(name);
     if (module === undefined) {
       // Maybe should use @jupyterlab/coreutils.URLExt to combine URL components.
-      const url = this._wasmBaseUrl + name + '.js';
+      const url = this.wasmBaseUrl + name + '.js';
       console.log('Importing JS/WASM from ' + url);
       importScripts(url);
       module = (self as any).Module;
@@ -20,6 +18,5 @@ export class WasmLoader {
     return module;
   }
 
-  private _wasmBaseUrl: string;
   private _cache = new Map<string, any>();
 }
