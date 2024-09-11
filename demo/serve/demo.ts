@@ -28,7 +28,16 @@ export class Demo {
         'file.txt': 'This is the contents of the file',
         'other.txt': 'Some other file\nSecond line',
         'months.txt':
-          'January\nFebruary\nMarch\nApril\nMay\nJune\nJuly\nAugust\nSeptember\nOctober\nNovember\nDecember\n'
+          'January\nFebruary\nMarch\nApril\nMay\nJune\nJuly\nAugust\nSeptember\nOctober\nNovember\nDecember\n',
+        'factorial.lua':
+          'function factorial(n)\n' +
+          '  if n == 0 then\n' +
+          '    return 1\n' +
+          '  else\n' +
+          '    return n * factorial(n-1)\n' +
+          '  end\n' +
+          'end\n' +
+          'print(factorial(tonumber(arg[1])))\n'
       }
     });
   }
