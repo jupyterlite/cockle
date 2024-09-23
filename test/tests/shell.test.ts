@@ -40,6 +40,20 @@ test.describe('Shell', () => {
       expect(output[5]).toMatch('\r\n 2  2 14 out\r\n');
     });
 
+    test('should output redirect to file without ansi escapes', async ({ page }) => {
+      // grep to terminal is colored
+      const output_direct = await shellLineSimple(page, 'grep of file1', { color: true });
+      const start = '\x1B[01;31m\x1B[K';
+      const end = '\x1B[m\x1B[K';
+      expect(output_direct).toMatch(`\r\nContents ${start}of${end} the file\r\n`);
+
+      // grep to file is not colored
+      const output_file = await shellLineSimpleN(page, ['grep of file1 > output', 'cat output'], {
+        color: false
+      });
+      expect(output_file[1]).toMatch(/^cat output\r\nContents of the file\r\n/);
+    });
+
     test('should input redirect from file', async ({ page }) => {
       expect(await shellLineSimple(page, 'wc < file2')).toMatch('      1       5      27\r\n');
     });
