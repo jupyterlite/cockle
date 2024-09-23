@@ -82,7 +82,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
 
         if (Object.prototype.hasOwnProperty.call(module, 'ENV')) {
           // Copy environment variables into command.
-          context.environment.copyIntoCommand(module.ENV);
+          context.environment.copyIntoCommand(module.ENV, stdout.supportsAnsiEscapes());
         }
 
         if (Object.prototype.hasOwnProperty.call(module, 'TTY')) {
