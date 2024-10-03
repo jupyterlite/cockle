@@ -59,7 +59,8 @@
         "coverage",
         "**/*.d.ts",
         "**/*.wasm",
-        "**/package-lock.json"
+        "**/package-lock.json",
+        "src/version.ts"
     ],
     "eslintConfig": {
         "extends": [
