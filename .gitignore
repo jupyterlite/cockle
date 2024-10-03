@@ -10,3 +10,4 @@ test/package-lock.json
 *.wasm
 cockle_wasm_env/
 demo/package-lock.json
+src/version.ts
