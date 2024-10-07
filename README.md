@@ -18,7 +18,6 @@ a `micromamba` environment as part of the `npm prepack` process.
 micromamba env create -f environment-dev.yml -y
 micromamba activate cockle
 npm install
-npm run fetch:wasm
 npm run build
 npm run lint:check
 ```

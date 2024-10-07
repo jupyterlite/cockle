@@ -14,6 +14,7 @@ import { FileInput, FileOutput, IInput, IOutput, Pipe, TerminalInput, TerminalOu
 import { CommandNode, PipeNode, parse } from './parse';
 import { longestStartsWith, toColumns } from './utils';
 import { WasmLoader } from './wasm_loader';
+import { WasmCommandRunner } from './commands/wasm_command_runner';
 
 /**
  * Shell implementation.
@@ -38,6 +39,7 @@ export class ShellImpl implements IShell {
   }
 
   async initialize() {
+    await this._initWasmPackages();
     await this._initFilesystem();
   }
 
@@ -216,6 +218,38 @@ export class ShellImpl implements IShell {
       Object.entries(initialFiles).forEach(([filename, contents]) =>
         FS.writeFile(filename, contents, { mode: 0o664 })
       );
+    }
+  }
+
+  private async _initWasmPackages(): Promise<void> {
+    const url = this.options.wasmBaseUrl + 'cockle-config.json';
+    const response = await fetch(url);
+    if (!response.ok) {
+      // Would be nice to report this via the terminal.
+      console.error(`Failed to fetch ${url}, terminal cannot function without it`);
+    }
+
+    const cockleConfig = await response.json();
+    // Check JSON follows schema?
+    // May want to store JSON config.
+
+    const packageNames = cockleConfig.map((x: any) => x.package);
+    const fsPackage = 'cockle_fs';
+    if (!packageNames.includes(fsPackage)) {
+      console.error(`cockle-config.json does not include required package '${fsPackage}'`);
+    }
+
+    // Create a command runners for each wasm module of each emscripten-forge package.
+    for (const pkgConfig of cockleConfig) {
+      if (pkgConfig.package === fsPackage) {
+        continue;
+      }
+
+      for (const module of pkgConfig.modules) {
+        const commands = module.commands.split(',');
+        const runner = new WasmCommandRunner(this._wasmLoader, module.name, commands);
+        this._commandRegistry.register(runner);
+      }
     }
   }
 

@@ -14,15 +14,13 @@
     },
     "files": [
         "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,wasm,woff2,ttf}",
-        "src/**/*.ts"
+        "src/**/*.ts",
+        "cockle-config-base.json"
     ],
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "scripts": {
-        "fetch:wasm:create-env": "micromamba create -p $(pwd)/cockle_wasm_env -y cockle_fs grep coreutils lua --platform=emscripten-wasm32 -c https://repo.mamba.pm/emscripten-forge -c https://repo.mamba.pm/conda-forge",
-        "fetch:wasm:copy": "mkdir -p src/wasm && cp $(pwd)/cockle_wasm_env/bin/*.js src/wasm/ && cp $(pwd)/cockle_wasm_env/bin/*.wasm src/wasm/",
-        "fetch:wasm": "npm run fetch:wasm:create-env && npm run fetch:wasm:copy",
-        "build": "tsc && npm run build:worker && cp src/wasm/*.wasm lib/wasm/",
+        "build": "tsc && npm run build:worker",
         "build:worker": "rspack --config worker.rspack.config.js --mode=development",
         "eslint": "npm run eslint:check -- --fix",
         "eslint:check": "eslint . --cache --ext .ts,.tsx",

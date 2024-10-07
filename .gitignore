@@ -9,5 +9,8 @@ test/package-lock.json
 *.js
 *.wasm
 cockle_wasm_env/
+cockle-config.json
 demo/package-lock.json
+demo/assets/*.json
+test/assets/*.json
 src/version.ts
