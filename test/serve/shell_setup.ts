@@ -50,5 +50,10 @@ async function _shell_setup_common(options: IOptions, level: number): Promise<IS
 
   await shell.start();
   output.start();
+
+  // Add a small sleep to avoid timing problems loading wasm modules.
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  await sleep(20);
+
   return { shell, output };
 }

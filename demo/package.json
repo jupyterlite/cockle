@@ -8,8 +8,8 @@
     "types": "lib/index.d.ts",
     "private": true,
     "scripts": {
-        "build": "npm run build:wasm && rspack build",
-        "build:wasm": "cp node_modules/@jupyterlite/cockle/lib/wasm/*.js assets/ && cp node_modules/@jupyterlite/cockle/lib/wasm/*.wasm assets/",
+        "build": "rspack build",
+        "postbuild": "node node_modules/@jupyterlite/cockle/lib/tools/prepare_wasm.js --copy assets",
         "serve": "rspack serve"
     },
     "devDependencies": {
