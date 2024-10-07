@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.9
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.8...b981d692a28755b1c9329a65206c9f2ef3139b42))
+
+### Enhancements made
+
+- Obtain wasm packages from emscripten-forge when building deployment [#61](https://github.com/jupyterlite/cockle/pull/61) ([@ianthomas23](https://github.com/ianthomas23))
+- Add new cockle-config command that prints cockle version [#60](https://github.com/jupyterlite/cockle/pull/60) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Prevent use of color in command output to file [#59](https://github.com/jupyterlite/cockle/pull/59) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-09-11&to=2024-10-07&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-09-11..2024-10-07&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.8
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.7...c226ca913081827957862d27697b3c122ecafb0e))
@@ -28,8 +49,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-08-19&to=2024-09-11&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-08-19..2024-09-11&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.7
 
