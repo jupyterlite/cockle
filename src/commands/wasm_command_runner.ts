@@ -3,20 +3,12 @@ import { Context } from '../context';
 import { ExitCode } from '../exit_code';
 import { WasmLoader } from '../wasm_loader';
 
-export class WasmCommandRunner implements ICommandRunner {
-  constructor(
-    readonly wasmLoader: WasmLoader,
-    readonly _moduleName: string,
-    readonly _commandNames: string[]
-  ) {}
+export abstract class WasmCommandRunner implements ICommandRunner {
+  constructor(readonly wasmLoader: WasmLoader) {}
 
-  moduleName(): string {
-    return this._moduleName;
-  }
+  abstract moduleName(): string;
 
-  names(): string[] {
-    return this._commandNames;
-  }
+  abstract names(): string[];
 
   async run(cmdName: string, context: Context): Promise<number> {
     const { args, fileSystem, mountpoint, stdin, stdout, stderr } = context;

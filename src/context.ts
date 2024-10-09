@@ -1,4 +1,5 @@
 import { Aliases } from './aliases';
+import { CommandRegistry } from './command_registry';
 import { Environment } from './environment';
 import { History } from './history';
 import { IFileSystem } from './file_system';
@@ -13,6 +14,7 @@ export class Context {
     readonly fileSystem: IFileSystem,
     readonly mountpoint: string,
     readonly aliases: Aliases,
+    readonly commandRegistry: CommandRegistry,
     readonly environment: Environment,
     readonly history: History,
     readonly stdin: IInput,

@@ -1,4 +1,5 @@
 import { ICommandRunner } from './commands/command_runner';
+import { WasmCommandPackage } from './commands/wasm_command_package';
 import * as AllBuiltinCommands from './builtin';
 import { WasmLoader } from './wasm_loader';
 
@@ -15,16 +16,6 @@ export class CommandRegistry {
     return [...this._map.keys()].filter(name => name.startsWith(start)).sort();
   }
 
-  /**
-   * Register a command runner under all of its names.
-   */
-  register(commandRunner: ICommandRunner) {
-    // Should probably check not overwriting any command names
-    for (const name of commandRunner.names()) {
-      this._map.set(name, commandRunner);
-    }
-  }
-
   registerBuiltinCommands(commands: any) {
     for (const [key, cls] of Object.entries(commands)) {
       if (!key.endsWith('Command') || key.startsWith('Builtin')) {
@@ -33,7 +24,7 @@ export class CommandRegistry {
       try {
         const obj = new (cls as any)();
         if (obj instanceof AllBuiltinCommands.BuiltinCommand) {
-          this.register(obj);
+          this._register(obj);
         }
       } catch {
         // If there is any problem registering a command runner this way, silently fail.
@@ -41,5 +32,27 @@ export class CommandRegistry {
     }
   }
 
+  registerWasmCommandPackage(wasmCommandPackage: WasmCommandPackage) {
+    // Check for duplicates?????
+    this.wasmPackageMap.set(wasmCommandPackage.name, wasmCommandPackage);
+    for (const module of wasmCommandPackage.modules) {
+      this._register(module);
+    }
+  }
+
+  /**
+   * Register a command runner under all of its names.
+   */
+  private _register(commandRunner: ICommandRunner) {
+    // Should probably check not overwriting any command names
+    for (const name of commandRunner.names()) {
+      this._map.set(name, commandRunner);
+    }
+  }
+
+  // Map of command name to runner.
   private _map: Map<string, ICommandRunner> = new Map();
+
+  // WasmCommandPackages indexed by package name.
+  wasmPackageMap: Map<string, WasmCommandPackage> = new Map();
 }

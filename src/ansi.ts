@@ -18,5 +18,17 @@ export const ansi = {
 
   styleReset: ESC + '1;0m',
   styleBoldRed: ESC + '1;31m',
-  styleBoldGreen: ESC + '1;32m'
+  styleBoldGreen: ESC + '1;32m',
+  styleBrightRed: ESC + '0;91m',
+  styleBrightGreen: ESC + '0;92m',
+  styleBrightYellow: ESC + '0;93m',
+  styleBrightBlue: ESC + '0;94m',
+  styleBrightPurple: ESC + '0;95m',
+  styleBrightCyan: ESC + '0;96m',
+  styleRed: ESC + '0;31m',
+  styleGreen: ESC + '0;32m',
+  styleYellow: ESC + '0;33m',
+  styleBlue: ESC + '0;34m',
+  stylePurple: ESC + '0;35m',
+  styleCyan: ESC + '0;36m'
 };

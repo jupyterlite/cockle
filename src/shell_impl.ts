@@ -14,7 +14,8 @@ import { FileInput, FileOutput, IInput, IOutput, Pipe, TerminalInput, TerminalOu
 import { CommandNode, PipeNode, parse } from './parse';
 import { longestStartsWith, toColumns } from './utils';
 import { WasmLoader } from './wasm_loader';
-import { WasmCommandRunner } from './commands/wasm_command_runner';
+import { WasmCommandModule } from './commands/wasm_command_module';
+import { WasmCommandPackage } from './commands/wasm_command_package';
 
 /**
  * Shell implementation.
@@ -239,17 +240,25 @@ export class ShellImpl implements IShell {
       console.error(`cockle-config.json does not include required package '${fsPackage}'`);
     }
 
-    // Create a command runners for each wasm module of each emscripten-forge package.
+    // Create command runners for each wasm module of each emscripten-forge package.
     for (const pkgConfig of cockleConfig) {
-      if (pkgConfig.package === fsPackage) {
-        continue;
-      }
-
-      for (const module of pkgConfig.modules) {
-        const commands = module.commands.split(',');
-        const runner = new WasmCommandRunner(this._wasmLoader, module.name, commands);
-        this._commandRegistry.register(runner);
-      }
+      const commandModules = pkgConfig.modules.map(
+        (moduleConfig: any) =>
+          new WasmCommandModule(
+            this._wasmLoader,
+            moduleConfig.name,
+            moduleConfig.commands ? moduleConfig.commands.split(',') : []
+          )
+      );
+      const commandPackage = new WasmCommandPackage(
+        pkgConfig.package,
+        pkgConfig.version,
+        pkgConfig.build_string,
+        pkgConfig.channel,
+        pkgConfig.platform,
+        commandModules
+      );
+      this._commandRegistry.registerWasmCommandPackage(commandPackage);
     }
   }
 
@@ -347,6 +356,7 @@ export class ShellImpl implements IShell {
       this._fileSystem!,
       this.mountpoint,
       this._aliases,
+      this._commandRegistry,
       this._environment,
       this._history,
       input,
