@@ -70,7 +70,7 @@ for (const packageConfig of cockleConfig) {
   }
 
   console.log(`Add package info to ${packageName}`);
-  for (const prop of ['build_string', 'platform', 'version']) {
+  for (const prop of ['build_string', 'platform', 'version', 'channel']) {
     packageConfig[prop] = info[prop];
   }
 
