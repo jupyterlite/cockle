@@ -202,6 +202,71 @@ export class ShellImpl implements IShellWorker {
     this.options.terminateCallback();
   }
 
+  _filenameExpansion(args: string[]): string[] {
+    let ret: string[] = []
+    let nFlags = 0;
+
+    // ToDo:
+    // - Handling of absolute paths
+    // - Handling of . and .. and hidden files
+    // - Wildcards in quoted strings should be ignored
+    // - [ab] syntax
+    // - Multiple wildcards in different directory levels in the same arg
+    for (const arg of args) {
+      if (arg.startsWith('-')) {
+        nFlags++;
+        ret.push(arg);
+        continue;
+      } else if (!(arg.includes('*') || arg.includes('?'))) {
+        ret.push(arg);
+        continue;
+      }
+
+      const { FS } = this._fileSystem!;
+      const analyze = FS.analyzePath(arg, false);
+      if (!analyze.parentExists) {
+        ret.push(arg);
+        continue;
+      }
+      const parentPath = analyze.parentPath;
+
+      // Assume relative path.
+      let relativePath = parentPath;
+      const pwd = FS.cwd();
+      if (relativePath.startsWith(pwd)) {
+        relativePath = relativePath.slice(pwd.length);
+        if (relativePath.startsWith('/')) {
+          relativePath = relativePath.slice(1);
+        }
+      }
+
+      let possibles = FS.readdir(parentPath);
+
+      // Transform match string to a regex.
+      // Escape special characters, * and ? dealt with separately.
+      let match = analyze.name.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+      match = match.replaceAll('*', '.*');
+      match = match.replaceAll('?', '.');
+      const regex = new RegExp(`^${match}$`);
+      possibles = possibles.filter((path: string) => path.match(regex));
+
+      // Remove all . files/directories; need to fix this.
+      possibles = possibles.filter((path: string) => !path.startsWith('.'));
+
+      if (relativePath.length > 0) {
+          possibles = possibles.map((path: string) => relativePath + '/' + path);
+      }
+      ret = ret.concat(possibles);
+    }
+
+    if (ret.length == nFlags) {
+      // If no matches return initial arguments.
+      ret = args;
+    }
+
+    return ret;
+  }
+
   private async _initFilesystem(): Promise<void> {
     const { wasmBaseUrl } = this.options;
     const fsModule = this._wasmLoader.getModule('fs');
@@ -369,7 +434,8 @@ export class ShellImpl implements IShellWorker {
       }
     }
 
-    const args = commandNode.suffix.map(token => token.value);
+    let args = commandNode.suffix.map(token => token.value);
+    args = this._filenameExpansion(args);
     const context = new Context(
       args,
       this._fileSystem!,
