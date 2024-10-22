@@ -11,6 +11,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { execSync } = require('node:child_process');
+const zod = require('zod');
 /* eslint-enable */
 
 const ENV_NAME = 'cockle_wasm_env';
@@ -38,6 +39,26 @@ if (fs.existsSync(otherConfigFilename)) {
   const extraConfig = JSON.parse(fs.readFileSync(otherConfigFilename, 'utf-8'));
   cockleConfig = cockleConfig.concat(extraConfig);
 }
+
+// Validate input schema, raising ZodError if fails.
+const inputSchema = zod.array(
+  zod
+    .object({
+      package: zod.string(),
+      modules: zod.optional(
+        zod.array(
+          zod
+            .object({
+              name: zod.string(),
+              commands: zod.optional(zod.string())
+            })
+            .strict()
+        )
+      )
+    })
+    .strict()
+);
+inputSchema.parse(cockleConfig);
 
 // Required emscripten-wasm32 packages.
 const packageNames = cockleConfig.map((item: any) => item.package);
@@ -86,6 +107,28 @@ for (const packageConfig of cockleConfig) {
     }
   }
 }
+
+// Validate output schema, raising ZodError if fails.
+const outputSchema = zod.array(
+  zod
+    .object({
+      package: zod.string(),
+      build_string: zod.string(),
+      platform: zod.string(),
+      version: zod.string(),
+      channel: zod.string(),
+      modules: zod.array(
+        zod
+          .object({
+            name: zod.string(),
+            commands: zod.string()
+          })
+          .strict()
+      )
+    })
+    .strict()
+);
+outputSchema.parse(cockleConfig);
 
 // Output config file.
 let targetConfigFile = 'cockle-config.json';
