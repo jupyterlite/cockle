@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.10
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.9...c0e5440f4fb4963c2cd433b07f9936c42097beeb))
+
+### Enhancements made
+
+- Validate JSON config files [#63](https://github.com/jupyterlite/cockle/pull/63) ([@ianthomas23](https://github.com/ianthomas23))
+- Show wasm package info in cockle-config command [#62](https://github.com/jupyterlite/cockle/pull/62) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-10-07&to=2024-10-23&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-10-07..2024-10-23&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.9
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.8...b981d692a28755b1c9329a65206c9f2ef3139b42))
@@ -20,8 +37,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-09-11&to=2024-10-07&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-09-11..2024-10-07&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.8
 
