@@ -22,3 +22,10 @@ export interface IEnableBufferedStdinCallback {
 export interface IStdinCallback {
   (): number[];
 }
+
+/**
+ * Request to terminate the shell.
+ */
+export interface ITerminateCallback {
+  (): void;
+}

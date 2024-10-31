@@ -4,7 +4,7 @@ import { Aliases } from './aliases';
 import { ansi } from './ansi';
 import { CommandRegistry } from './command_registry';
 import { Context } from './context';
-import { IShell, IShellImpl } from './defs';
+import { IShellImpl, IShellWorker } from './defs';
 import { Environment } from './environment';
 import { ErrorExitCode, FindCommandError, GeneralError } from './error_exit_code';
 import { ExitCode } from './exit_code';
@@ -20,7 +20,7 @@ import { WasmCommandPackage } from './commands/wasm_command_package';
 /**
  * Shell implementation.
  */
-export class ShellImpl implements IShell {
+export class ShellImpl implements IShellWorker {
   constructor(readonly options: IShellImpl.IOptions) {
     this._environment = new Environment(options.color ?? true);
     this._wasmLoader = new WasmLoader(options.wasmBaseUrl);
@@ -45,6 +45,10 @@ export class ShellImpl implements IShell {
   }
 
   async input(char: string): Promise<void> {
+    if (!this._isRunning) {
+      return;
+    }
+
     // Might be a multi-char string if begins with escape code.
     const code = char.charCodeAt(0);
     //console.log("CODE", code)
@@ -158,12 +162,20 @@ export class ShellImpl implements IShell {
   }
 
   async output(text: string): Promise<void> {
+    if (!this._isRunning) {
+      return;
+    }
+
     // Ensure each linefeed \n is preceded by a carriage return \r.
     text = text.replace(/(?<!\r)\n/g, '\r\n');
     await this.options.outputCallback(text);
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
+    if (!this._isRunning) {
+      return;
+    }
+
     const { environment } = this;
 
     if (rows >= 1) {
@@ -180,7 +192,14 @@ export class ShellImpl implements IShell {
   }
 
   async start(): Promise<void> {
+    this._isRunning = true;
     await this.output(this._environment.getPrompt());
+  }
+
+  terminate() {
+    console.log('ShellImpl.terminate');
+    this._isRunning = false;
+    this.options.terminateCallback();
   }
 
   private async _initFilesystem(): Promise<void> {
@@ -359,6 +378,7 @@ export class ShellImpl implements IShell {
       this._commandRegistry,
       this._environment,
       this._history,
+      this.terminate.bind(this),
       input,
       output,
       error
@@ -458,6 +478,7 @@ export class ShellImpl implements IShell {
 
   private _currentLine: string = '';
   private _cursorIndex: number = 0;
+  private _isRunning = false;
   private _aliases = new Aliases();
   private _commandRegistry: CommandRegistry;
   private _environment: Environment;

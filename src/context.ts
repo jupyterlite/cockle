@@ -1,4 +1,5 @@
 import { Aliases } from './aliases';
+import { ITerminateCallback } from './callback';
 import { CommandRegistry } from './command_registry';
 import { Environment } from './environment';
 import { History } from './history';
@@ -17,6 +18,7 @@ export class Context {
     readonly commandRegistry: CommandRegistry,
     readonly environment: Environment,
     readonly history: History,
+    readonly terminate: ITerminateCallback,
     readonly stdin: IInput,
     readonly stdout: IOutput,
     readonly stderr: IOutput

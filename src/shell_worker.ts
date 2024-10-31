@@ -1,21 +1,23 @@
 import { expose } from 'comlink';
 
 import { WorkerBufferedStdin } from './buffered_stdin';
-import { IShell, IShellWorker } from './defs';
+import { IShellWorker } from './defs';
 import { ShellImpl } from './shell_impl';
 
 /**
  * WebWorker running ShellImpl.
  */
-export class ShellWorker implements IShell {
+export class ShellWorker implements IShellWorker {
   async initialize(
     options: IShellWorker.IOptions,
     outputCallback: IShellWorker.IProxyOutputCallback,
-    enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback
+    enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
+    terminateCallback: IShellWorker.IProxyTerminateCallback
   ) {
     this._bufferedStdin = new WorkerBufferedStdin(options.sharedArrayBuffer);
     this._outputCallback = outputCallback;
     this._enableBufferedStdinCallback = enableBufferedStdinCallback;
+    this._terminateCallback = terminateCallback;
 
     const { color, mountpoint, wasmBaseUrl, driveFsBaseUrl, initialDirectories, initialFiles } =
       options;
@@ -28,6 +30,7 @@ export class ShellWorker implements IShell {
       initialFiles,
       outputCallback: this._outputCallback,
       enableBufferedStdinCallback: this.enableBufferedStdin.bind(this),
+      terminateCallback: this._terminateCallback.bind(this),
       stdinCallback: this._bufferedStdin.get.bind(this._bufferedStdin)
     });
     await this._shellImpl.initialize();
@@ -71,6 +74,7 @@ export class ShellWorker implements IShell {
   private _bufferedStdin?: WorkerBufferedStdin;
   private _outputCallback?: IShellWorker.IProxyOutputCallback;
   private _enableBufferedStdinCallback?: IShellWorker.IProxyEnableBufferedStdinCallback;
+  private _terminateCallback?: IShellWorker.IProxyTerminateCallback;
 }
 
 const obj = new ShellWorker();

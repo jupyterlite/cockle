@@ -1,4 +1,11 @@
-import { IEnableBufferedStdinCallback, IOutputCallback, IStdinCallback } from './callback';
+import { IObservableDisposable } from '@lumino/disposable';
+
+import {
+  IEnableBufferedStdinCallback,
+  IOutputCallback,
+  IStdinCallback,
+  ITerminateCallback
+} from './callback';
 
 import { ProxyMarked, Remote } from 'comlink';
 
@@ -12,11 +19,13 @@ interface IOptionsCommon {
   initialFiles?: IShell.IFiles;
 }
 
-export interface IShell {
+export interface IShellCommon {
   input(char: string): Promise<void>;
   setSize(rows: number, columns: number): Promise<void>;
   start(): Promise<void>;
 }
+
+export interface IShell extends IObservableDisposable, IShellCommon {}
 
 export namespace IShell {
   export interface IOptions extends IOptionsCommon {
@@ -26,13 +35,14 @@ export namespace IShell {
   export type IFiles = { [key: string]: string };
 }
 
-export interface IShellWorker extends IShell {
+export interface IShellWorker extends IShellCommon {
   // Handle any lazy initialization activities.
   // Callback proxies need to be separate arguments, they cannot be in IOptions.
   initialize(
     options: IShellWorker.IOptions,
     outputCallback: IShellWorker.IProxyOutputCallback,
-    enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback
+    enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
+    terminateCallback: IShellWorker.IProxyTerminateCallback
   ): void;
 }
 
@@ -41,6 +51,7 @@ export namespace IShellWorker {
   export interface IProxyEnableBufferedStdinCallback
     extends IEnableBufferedStdinCallback,
       ProxyMarked {}
+  export interface IProxyTerminateCallback extends ITerminateCallback, ProxyMarked {}
 
   export interface IOptions extends IOptionsCommon {
     sharedArrayBuffer: SharedArrayBuffer;
@@ -54,5 +65,6 @@ export namespace IShellImpl {
     outputCallback: IOutputCallback;
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;
     stdinCallback: IStdinCallback;
+    terminateCallback: IShellWorker.IProxyTerminateCallback;
   }
 }
