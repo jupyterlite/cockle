@@ -10,10 +10,14 @@
     "scripts": {
         "build": "rspack build",
         "postbuild": "node node_modules/@jupyterlite/cockle/lib/tools/prepare_wasm.js --copy assets",
-        "serve": "rspack serve"
+        "serve": "rspack serve",
+        "test": "playwright test",
+        "test:ui": "playwright test --ui",
+        "test:report": "playwright show-report"
     },
     "devDependencies": {
         "@jupyterlite/cockle": "file:../",
+        "@playwright/test": "^1.45.3",
         "@rspack/cli": "^0.7.5",
         "@rspack/core": "^0.7.5",
         "@xterm/addon-fit": "^0.10.0",
