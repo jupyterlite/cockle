@@ -171,7 +171,7 @@ test.describe('Shell', () => {
 
     test('should show tab completion options', async ({ page }) => {
       expect(await shellInputsSimple(page, ['e', '\t'])).toMatch(
-        /^e\r\necho {2}env {2}export {2}expr\r\n/
+        /^e\r\necho {2}env {2}exit {2}export {2}expr\r\n/
       );
     });
 
@@ -388,6 +388,37 @@ test.describe('Shell', () => {
       ]);
       expect(output[0]).toMatch(/\r\nABZ CD\r\n/);
       expect(output[1]).toMatch(/\r\nAB CDY\r\n/);
+    });
+  });
+
+  test.describe('dispose', () => {
+    test('should set isDisposed', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { shell } = await globalThis.cockle.shell_setup_empty();
+        const isDisposed0 = shell.isDisposed;
+        shell.dispose();
+        const isDisposed1 = shell.isDisposed;
+        return { isDisposed0, isDisposed1 };
+      });
+      expect(output['isDisposed0']).toBeFalsy();
+      expect(output['isDisposed1']).toBeTruthy();
+    });
+
+    test('should emit signal', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { shell } = await globalThis.cockle.shell_setup_empty();
+        let signalled = false;
+        shell.disposed.connect(() => {
+          signalled = true;
+        });
+        const isDisposed0 = shell.isDisposed;
+        shell.dispose();
+        const isDisposed1 = shell.isDisposed;
+        return { isDisposed0, isDisposed1, signalled };
+      });
+      expect(output['isDisposed0']).toBeFalsy();
+      expect(output['isDisposed1']).toBeTruthy();
+      expect(output['signalled']).toBeTruthy();
     });
   });
 });
