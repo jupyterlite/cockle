@@ -19,7 +19,7 @@ test('visual test', async ({ page }) => {
   await page.keyboard.press('Enter');
   await page.waitForTimeout(wait);
 
-  await page.keyboard.type('coc');
+  await page.keyboard.type('una');
   await page.keyboard.press('Tab'); // tab complete command name
   await page.keyboard.press('Enter');
   await page.waitForTimeout(wait);

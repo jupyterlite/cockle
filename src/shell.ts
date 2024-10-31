@@ -1,3 +1,5 @@
+import { ISignal, Signal } from '@lumino/signaling';
+
 import { proxy, wrap } from 'comlink';
 
 import { MainBufferedStdin } from './buffered_stdin';
@@ -31,14 +33,43 @@ export class Shell implements IShell {
         initialFiles
       },
       proxy(options.outputCallback),
-      proxy(this.enableBufferedStdinCallback.bind(this))
+      proxy(this.enableBufferedStdinCallback.bind(this)),
+      proxy(this.dispose.bind(this))
     );
 
     // Register sendStdinNow callback only after this._remote has been initialized.
     this._bufferedStdin.registerSendStdinNow(this._remote.input);
   }
 
+  dispose(): void {
+    if (this._isDisposed) {
+      return;
+    }
+
+    console.log('Shell.dispose');
+    this._isDisposed = true;
+
+    this._remote = undefined;
+    this._worker!.terminate();
+    this._worker = undefined;
+    (this._bufferedStdin as any) = null;
+
+    this._disposed.emit();
+  }
+
+  get disposed(): ISignal<this, void> {
+    return this._disposed;
+  }
+
+  get isDisposed(): boolean {
+    return this._isDisposed;
+  }
+
   private async enableBufferedStdinCallback(enable: boolean) {
+    if (this.isDisposed) {
+      return;
+    }
+
     if (enable) {
       await this._bufferedStdin.enable();
     } else {
@@ -47,6 +78,10 @@ export class Shell implements IShell {
   }
 
   async input(char: string): Promise<void> {
+    if (this.isDisposed) {
+      return;
+    }
+
     if (this._bufferedStdin.enabled) {
       await this._bufferedStdin.push(char);
     } else {
@@ -55,14 +90,24 @@ export class Shell implements IShell {
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
+    if (this.isDisposed) {
+      return;
+    }
+
     await this._remote!.setSize(rows, columns);
   }
 
   async start(): Promise<void> {
+    if (this.isDisposed) {
+      return;
+    }
+
     await this._remote!.start();
   }
 
   private _worker?: Worker;
   private _remote?: IRemoteShell;
   private _bufferedStdin: MainBufferedStdin;
+  private _disposed = new Signal<this, void>(this);
+  private _isDisposed = false;
 }
