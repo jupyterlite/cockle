@@ -14,10 +14,9 @@ defaults:
     shell: bash
 
 jobs:
-  test:
-    name: Build and test
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -32,17 +31,32 @@ jobs:
           init-shell: bash
           cache-downloads: true
 
-      - name: Install dependencies
+      - name: Lint
         run: |
           npm install
+          npm run lint:check
+
+  test:
+    name: End-to-end tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set conda environment
+        uses: mamba-org/setup-micromamba@main
+        with:
+          environment-name: cockle
+          environment-file: environment-dev.yml
+          init-shell: bash
+          cache-downloads: true
 
       - name: Build
         run: |
+          npm install
           npm run build
-
-      - name: Lint
-        run: |
-          npm run lint:check
 
       - name: Run tests
         working-directory: test
@@ -51,3 +65,42 @@ jobs:
           npx playwright install --with-deps chromium
           npm run build
           npm run test
+
+  ui-test:
+    name: Visual tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set conda environment
+        uses: mamba-org/setup-micromamba@main
+        with:
+          environment-name: cockle
+          environment-file: environment-dev.yml
+          init-shell: bash
+          cache-downloads: true
+
+      - name: Build
+        run: |
+          npm install
+          npm run build
+
+      - name: Run visual tests
+        working-directory: demo
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+          npm run build
+          npm run test
+
+      - name: Upload Playwright Test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cockle-visual-tests
+          path: |
+            demo/test-results
+            demo/playwright-report
