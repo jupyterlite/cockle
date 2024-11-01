@@ -19,7 +19,7 @@ export async function shellInputsSimpleN(
 ): Promise<string[]> {
   return await page.evaluate(
     async ({ charsArray, options }) => {
-      const { shell, output } = await globalThis.cockle.shell_setup_simple(options);
+      const { shell, output } = await globalThis.cockle.shellSetupSimple(options);
       const ret: string[] = [];
       for (const chars of charsArray) {
         for (const char of chars) {
@@ -51,7 +51,7 @@ export async function shellLineSimpleN(
 ): Promise<string[]> {
   return await page.evaluate(
     async ({ lines, options }) => {
-      const { shell, output } = await globalThis.cockle.shell_setup_simple(options);
+      const { shell, output } = await globalThis.cockle.shellSetupSimple(options);
       const ret: string[] = [];
       for (const line of lines) {
         await shell.inputLine(line);
@@ -71,7 +71,7 @@ export async function shellLineComplexN(
 ): Promise<string[]> {
   return await page.evaluate(
     async ({ lines, options }) => {
-      const { shell, output } = await globalThis.cockle.shell_setup_complex(options);
+      const { shell, output } = await globalThis.cockle.shellSetupComplex(options);
       const ret: string[] = [];
       for (const line of lines) {
         await shell.inputLine(line);

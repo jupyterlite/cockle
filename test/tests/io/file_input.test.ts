@@ -5,7 +5,7 @@ import { test } from '../utils';
 test.describe('FileInput', () => {
   test('should read from file', async ({ page }) => {
     const output = await page.evaluate(async () => {
-      const { fileSystem } = await globalThis.cockle.shell_setup_simple();
+      const { fileSystem } = await globalThis.cockle.shellSetupSimple();
       const fileInput = new globalThis.cockle.FileInput(fileSystem, 'file2');
       return fileInput.readAll();
     });
@@ -14,7 +14,7 @@ test.describe('FileInput', () => {
 
   test('should read from file a character at a time', async ({ page }) => {
     const charCodes = await page.evaluate(async () => {
-      const { fileSystem } = await globalThis.cockle.shell_setup_simple();
+      const { fileSystem } = await globalThis.cockle.shellSetupSimple();
       const fileInput = new globalThis.cockle.FileInput(fileSystem, 'file2');
       const ret: number[][] = [];
       for (let i = 0; i < 35; i++) {

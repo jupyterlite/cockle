@@ -4,7 +4,7 @@ import { test } from '../utils';
 test.describe('touch command', () => {
   test('should create file', async ({ page }) => {
     const output = await page.evaluate(async () => {
-      const { shell, output } = await globalThis.cockle.shell_setup_empty();
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
       await shell.inputLine('ls abc');
       const ret = [output.text];
 

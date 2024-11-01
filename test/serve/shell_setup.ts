@@ -12,19 +12,19 @@ export interface IOptions {
   initialFiles?: IShell.IFiles;
 }
 
-export async function shell_setup_empty(options: IOptions = {}): Promise<IShellSetup> {
-  return await _shell_setup_common(options, 0);
+export async function shellSetupEmpty(options: IOptions = {}): Promise<IShellSetup> {
+  return await _shellSetupCommon(options, 0);
 }
 
-export async function shell_setup_simple(options: IOptions = {}): Promise<IShellSetup> {
-  return await _shell_setup_common(options, 1);
+export async function shellSetupSimple(options: IOptions = {}): Promise<IShellSetup> {
+  return await _shellSetupCommon(options, 1);
 }
 
-export async function shell_setup_complex(options: IOptions = {}): Promise<IShellSetup> {
-  return await _shell_setup_common(options, 2);
+export async function shellSetupComplex(options: IOptions = {}): Promise<IShellSetup> {
+  return await _shellSetupCommon(options, 2);
 }
 
-async function _shell_setup_common(options: IOptions, level: number): Promise<IShellSetup> {
+async function _shellSetupCommon(options: IOptions, level: number): Promise<IShellSetup> {
   const output = new MockTerminalOutput(false);
 
   const initialDirectories = options.initialDirectories ?? [];
