@@ -203,7 +203,7 @@ export class ShellImpl implements IShellWorker {
   }
 
   _filenameExpansion(args: string[]): string[] {
-    let ret: string[] = []
+    let ret: string[] = [];
     let nFlags = 0;
 
     // ToDo:
@@ -254,12 +254,12 @@ export class ShellImpl implements IShellWorker {
       possibles = possibles.filter((path: string) => !path.startsWith('.'));
 
       if (relativePath.length > 0) {
-          possibles = possibles.map((path: string) => relativePath + '/' + path);
+        possibles = possibles.map((path: string) => relativePath + '/' + path);
       }
       ret = ret.concat(possibles);
     }
 
-    if (ret.length == nFlags) {
+    if (ret.length === nFlags) {
       // If no matches return initial arguments.
       ret = args;
     }

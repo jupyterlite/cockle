@@ -438,7 +438,9 @@ test.describe('Shell', () => {
 
     test('should include directory contents in match', async ({ page }) => {
       const output = await shellLineComplex(page, 'ls *');
-      expect(output).toMatch('\r\nfile1.txt  file2.txt  otherfile\r\n\r\ndir:\r\nsubdir	subfile.md  subfile.txt\r\n');
+      expect(output).toMatch(
+        '\r\nfile1.txt  file2.txt  otherfile\r\n\r\ndir:\r\nsubdir	subfile.md  subfile.txt\r\n'
+      );
     });
 
     test('should expand ? in pwd', async ({ page }) => {
@@ -458,11 +460,7 @@ test.describe('Shell', () => {
     });
 
     test('should match special characters', async ({ page }) => {
-      const output = await shellLineComplexN(page, [
-        'touch ab+c',
-        'ls a*',
-        'ls *+c',
-      ]);
+      const output = await shellLineComplexN(page, ['touch ab+c', 'ls a*', 'ls *+c']);
       expect(output[1]).toMatch('\r\nab+c\r\n');
       expect(output[2]).toMatch('\r\nab+c\r\n');
     });
@@ -470,7 +468,6 @@ test.describe('Shell', () => {
     test('should expand * in subdirectory', async ({ page }) => {
       const output0 = await shellLineComplex(page, 'ls dir/subf*');
       expect(output0).toMatch(/\r\ndir\/subfile\.md\s+dir\/subfile\.txt\r\n/);
-
     });
   });
 });
