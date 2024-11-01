@@ -20,15 +20,39 @@ export async function shell_setup_simple(options: IOptions = {}): Promise<IShell
   return await _shell_setup_common(options, 1);
 }
 
+export async function shell_setup_complex(options: IOptions = {}): Promise<IShellSetup> {
+  return await _shell_setup_common(options, 2);
+}
+
 async function _shell_setup_common(options: IOptions, level: number): Promise<IShellSetup> {
   const output = new MockTerminalOutput(false);
 
   const initialDirectories = options.initialDirectories ?? [];
   const initialFiles = options.initialFiles ?? {};
-  if (level > 0) {
+  if (level === 1) {
+    // 📁 dirA
+    // 📄 file1
+    // 📄 file2
     initialDirectories.push('dirA');
     initialFiles['file1'] = 'Contents of the file';
     initialFiles['file2'] = 'Some other file\nSecond line';
+  } else if (level === 2) {
+    // 📄 file1.txt
+    // 📄 file2.txt
+    // 📄 otherfile
+    // 📁 dir
+    // ├── 📄 subfile.txt
+    // ├── 📄 subfile.md
+    // └── 📁 subdir
+    //     └── 📄 nestedfile
+    initialDirectories.push('dir');
+    initialDirectories.push('dir/subdir');
+    initialFiles['file1.txt'] = '';
+    initialFiles['file2.txt'] = '';
+    initialFiles['otherfile'] = '';
+    initialFiles['dir/subfile.txt'] = '';
+    initialFiles['dir/subfile.md'] = '';
+    initialFiles['dir/subdir/nestedfile'] = '';
   }
 
   const shell = new Shell({

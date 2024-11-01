@@ -2,6 +2,8 @@ import { expect } from '@playwright/test';
 import {
   shellInputsSimple,
   shellInputsSimpleN,
+  shellLineComplex,
+  shellLineComplexN,
   shellLineSimple,
   shellLineSimpleN,
   test
@@ -419,6 +421,53 @@ test.describe('Shell', () => {
       expect(output['isDisposed0']).toBeFalsy();
       expect(output['isDisposed1']).toBeTruthy();
       expect(output['signalled']).toBeTruthy();
+    });
+  });
+
+  test.describe('filename expansion', () => {
+    test('should expand * in pwd', async ({ page }) => {
+      const output0 = await shellLineComplex(page, 'ls file*');
+      expect(output0).toMatch('\r\nfile1.txt  file2.txt\r\n');
+
+      const output1 = await shellLineComplex(page, 'ls *file');
+      expect(output1).toMatch('\r\notherfile\r\n');
+
+      const output2 = await shellLineComplex(page, 'ls *file*');
+      expect(output2).toMatch('\r\nfile1.txt  file2.txt  otherfile\r\n');
+    });
+
+    test('should include directory contents in match', async ({ page }) => {
+      const output = await shellLineComplex(page, 'ls *');
+      expect(output).toMatch(
+        '\r\nfile1.txt  file2.txt  otherfile\r\n\r\ndir:\r\nsubdir	subfile.md  subfile.txt\r\n'
+      );
+    });
+
+    test('should expand ? in pwd', async ({ page }) => {
+      const output0 = await shellLineComplex(page, 'ls file?.txt');
+      expect(output0).toMatch('\r\nfile1.txt  file2.txt\r\n');
+
+      const output1 = await shellLineComplex(page, 'ls file2?txt');
+      expect(output1).toMatch('\r\nfile2.txt\r\n');
+    });
+
+    test('should use original pattern if no matches', async ({ page }) => {
+      const output0 = await shellLineComplex(page, 'ls z*');
+      expect(output0).toMatch("ls: cannot access 'z*': No such file or directory");
+
+      const output1 = await shellLineComplex(page, 'ls z?');
+      expect(output1).toMatch("ls: cannot access 'z?': No such file or directory");
+    });
+
+    test('should match special characters', async ({ page }) => {
+      const output = await shellLineComplexN(page, ['touch ab+c', 'ls a*', 'ls *+c']);
+      expect(output[1]).toMatch('\r\nab+c\r\n');
+      expect(output[2]).toMatch('\r\nab+c\r\n');
+    });
+
+    test('should expand * in subdirectory', async ({ page }) => {
+      const output0 = await shellLineComplex(page, 'ls dir/subf*');
+      expect(output0).toMatch(/\r\ndir\/subfile\.md\s+dir\/subfile\.txt\r\n/);
     });
   });
 });

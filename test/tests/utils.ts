@@ -64,10 +64,38 @@ export async function shellLineSimpleN(
   );
 }
 
+export async function shellLineComplexN(
+  page: Page,
+  lines: string[],
+  options: IOptions = {}
+): Promise<string[]> {
+  return await page.evaluate(
+    async ({ lines, options }) => {
+      const { shell, output } = await globalThis.cockle.shell_setup_complex(options);
+      const ret: string[] = [];
+      for (const line of lines) {
+        await shell.inputLine(line);
+        ret.push(output.text);
+        output.clear();
+      }
+      return ret;
+    },
+    { lines, options }
+  );
+}
+
 export async function shellLineSimple(
   page: Page,
   line: string,
   options: IOptions = {}
 ): Promise<string> {
   return (await shellLineSimpleN(page, [line], options))[0];
+}
+
+export async function shellLineComplex(
+  page: Page,
+  line: string,
+  options: IOptions = {}
+): Promise<string> {
+  return (await shellLineComplexN(page, [line], options))[0];
 }
