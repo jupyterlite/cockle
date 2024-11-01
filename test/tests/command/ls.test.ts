@@ -25,7 +25,7 @@ test.describe('ls command', () => {
           k: ''
         }
       };
-      const { shell, output } = await globalThis.cockle.shell_setup_simple(options);
+      const { shell, output } = await globalThis.cockle.shellSetupSimple(options);
       await shell.setSize(10, 50);
       await shell.inputLine('ls');
       const ret = [output.text];

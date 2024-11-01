@@ -4,7 +4,7 @@ import { test } from '../utils';
 test.describe('stty command', () => {
   test('should return default size', async ({ page }) => {
     const output = await page.evaluate(async () => {
-      const { shell, output } = await globalThis.cockle.shell_setup_empty();
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
       await shell.inputLine('stty size');
       const output0 = output.text;
       output.clear();

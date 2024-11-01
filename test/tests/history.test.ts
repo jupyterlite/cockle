@@ -34,7 +34,7 @@ test.describe('history', () => {
   /*
   test('should limit storage to max size', async ({ page }) => {
     const output = await page.evaluate(async () => {
-      const { shell, output } = await globalThis.cockle.shell_setup_empty();
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
       const { history } = shell;
       history.setMaxSize(5);
 
@@ -56,7 +56,7 @@ test.describe('history', () => {
   /*
   test('should clip history when reduce max size', async ({ page }) => {
     const output = await page.evaluate(async () => {
-      const { shell, output } = await globalThis.cockle.shell_setup_empty();
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
       const { history } = shell;
       history.setMaxSize(5);
 
@@ -89,7 +89,7 @@ test.describe('history', () => {
 
   test('should scroll up and down', async ({ page }) => {
     const output = await page.evaluate(async () => {
-      const { shell, output } = await globalThis.cockle.shell_setup_empty();
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
       await shell.inputLine('cat a');
       await shell.inputLine('echo hello');
       await shell.inputLine('ls');

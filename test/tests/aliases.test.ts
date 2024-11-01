@@ -5,21 +5,21 @@ import { test } from './utils';
 // Wrappers to call Aliases functions in browser context.
 async function get(page: Page, text: string): Promise<any> {
   return await page.evaluate(async text => {
-    const { shell } = await globalThis.cockle.shell_setup_empty();
+    const { shell } = await globalThis.cockle.shellSetupEmpty();
     return shell.aliases.get(text);
   }, text);
 }
 
 async function getRecursive(page: Page, text: string): Promise<any> {
   return await page.evaluate(async text => {
-    const { shell } = await globalThis.cockle.shell_setup_empty();
+    const { shell } = await globalThis.cockle.shellSetupEmpty();
     return shell.aliases.getRecursive(text);
   }, text);
 }
 
 async function match(page: Page, text: string): Promise<any> {
   return await page.evaluate(async text => {
-    const { shell } = await globalThis.cockle.shell_setup_empty();
+    const { shell } = await globalThis.cockle.shellSetupEmpty();
     return shell.aliases.match(text);
   }, text);
 }

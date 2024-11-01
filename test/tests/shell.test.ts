@@ -68,7 +68,7 @@ test.describe('Shell', () => {
 
     test('should support terminal stdin', async ({ page }) => {
       const output = await page.evaluate(async () => {
-        const { shell, output } = await globalThis.cockle.shell_setup_empty();
+        const { shell, output } = await globalThis.cockle.shellSetupEmpty();
         const EOT = String.fromCharCode(4);
         await Promise.all([
           shell.inputLine('wc'),
@@ -81,7 +81,7 @@ test.describe('Shell', () => {
 
     test('should support terminal stdin more than once', async ({ page }) => {
       const output = await page.evaluate(async () => {
-        const { shell, output } = await globalThis.cockle.shell_setup_empty();
+        const { shell, output } = await globalThis.cockle.shellSetupEmpty();
         const EOT = String.fromCharCode(4);
         await Promise.all([
           shell.inputLine('wc'),
@@ -183,7 +183,7 @@ test.describe('Shell', () => {
 
     test('should arrange in columns', async ({ page }) => {
       const output = await page.evaluate(async () => {
-        const { shell, output } = await globalThis.cockle.shell_setup_empty();
+        const { shell, output } = await globalThis.cockle.shellSetupEmpty();
         await shell.setSize(40, 10);
         await shell.input('t');
         await shell.input('\t');
@@ -325,7 +325,7 @@ test.describe('Shell', () => {
   test.describe('setSize', () => {
     test('should set envVars', async ({ page }) => {
       const output = await page.evaluate(async () => {
-        const { output, shell } = await globalThis.cockle.shell_setup_empty();
+        const { output, shell } = await globalThis.cockle.shellSetupEmpty();
         const ret: string[] = [];
         await shell.setSize(10, 44);
         await shell.inputLine('env|grep LINES;env|grep COLUMNS');
@@ -396,7 +396,7 @@ test.describe('Shell', () => {
   test.describe('dispose', () => {
     test('should set isDisposed', async ({ page }) => {
       const output = await page.evaluate(async () => {
-        const { shell } = await globalThis.cockle.shell_setup_empty();
+        const { shell } = await globalThis.cockle.shellSetupEmpty();
         const isDisposed0 = shell.isDisposed;
         shell.dispose();
         const isDisposed1 = shell.isDisposed;
@@ -408,7 +408,7 @@ test.describe('Shell', () => {
 
     test('should emit signal', async ({ page }) => {
       const output = await page.evaluate(async () => {
-        const { shell } = await globalThis.cockle.shell_setup_empty();
+        const { shell } = await globalThis.cockle.shellSetupEmpty();
         let signalled = false;
         shell.disposed.connect(() => {
           signalled = true;
