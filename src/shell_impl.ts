@@ -4,7 +4,7 @@ import { Aliases } from './aliases';
 import { ansi } from './ansi';
 import { CommandRegistry } from './command_registry';
 import { Context } from './context';
-import { IShellImpl, IShellWorker } from './defs';
+import { IShellImpl, IShellWorker } from './defs_internal';
 import { Environment } from './environment';
 import { ErrorExitCode, FindCommandError, GeneralError } from './error_exit_code';
 import { ExitCode } from './exit_code';

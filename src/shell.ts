@@ -3,7 +3,8 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { proxy, wrap } from 'comlink';
 
 import { MainBufferedStdin } from './buffered_stdin';
-import { IRemoteShell, IShell } from './defs';
+import { IShell } from './defs';
+import { IRemoteShell } from './defs_internal';
 
 /**
  * External-facing Shell class that external libraries use.  It communicates with the real shell
