@@ -1,7 +1,7 @@
 import { expose } from 'comlink';
 
 import { WorkerBufferedStdin } from './buffered_stdin';
-import { IShellWorker } from './defs';
+import { IShellWorker } from './defs_internal';
 import { ShellImpl } from './shell_impl';
 
 /**
