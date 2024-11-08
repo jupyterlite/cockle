@@ -81,7 +81,9 @@ if (fs.existsSync(envPath)) {
   if (haveAllPackages) {
     console.log(`Using existing environment in ${envPath}`);
   } else {
-    console.log(`Deleting environment in ${envPath} as it does not contain all the required packages`);
+    console.log(
+      `Deleting environment in ${envPath} as it does not contain all the required packages`
+    );
     rimrafSync(envPath);
     wasmPackageInfo = undefined;
   }
