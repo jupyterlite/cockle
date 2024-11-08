@@ -11,6 +11,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { execSync } = require('node:child_process');
+const { rimrafSync } = require('rimraf');
 const zod = require('zod');
 /* eslint-enable */
 
@@ -26,6 +27,11 @@ if (process.argv.length !== 4 || (process.argv[2] !== '--list' && process.argv[2
 }
 const wantCopy = process.argv[2] === '--copy';
 const target = process.argv[3];
+
+function getWasmPackageInfo(envPath: string): any {
+  const cmd = `${MICROMAMBA_COMMAND} run -p ${envPath} ${MICROMAMBA_COMMAND} list --json`;
+  return JSON.parse(execSync(cmd).toString());
+}
 
 // Base cockle config file from this repo.
 const baseConfigFilename = path.join(__dirname, '..', '..', 'cockle-config-base.json');
@@ -66,21 +72,32 @@ console.log('Required package names', packageNames);
 
 // Create or reuse existing mamba environment for the wasm packages.
 const envPath = `./${ENV_NAME}`;
+let wasmPackageInfo: any;
 if (fs.existsSync(envPath)) {
-  console.log(`Using existing environment in ${envPath}`);
-  // Should really check that env contents are what we want.
-} else {
+  wasmPackageInfo = getWasmPackageInfo(envPath);
+  const envPackageNames = wasmPackageInfo.map((x: any) => x.name);
+  const haveAllPackages = packageNames.every((name: string) => envPackageNames.includes(name));
+
+  if (haveAllPackages) {
+    console.log(`Using existing environment in ${envPath}`);
+  } else {
+    console.log(
+      `Deleting environment in ${envPath} as it does not contain all the required packages`
+    );
+    rimrafSync(envPath);
+    wasmPackageInfo = undefined;
+  }
+}
+
+if (wasmPackageInfo === undefined) {
   const suffix = `--platform=${PLATFORM} ${REPOS}`;
   console.log(`Creating new environment in ${envPath}`);
   const createEnvCmd = `${MICROMAMBA_COMMAND} create -p ${envPath} -y ${packageNames.join(' ')} ${suffix}`;
   console.log(execSync(createEnvCmd).toString());
-}
 
-// Obtain wasm package info such as version and build string.
-const wasmPackageInfo = JSON.parse(
-  execSync(`${MICROMAMBA_COMMAND} run -p ${envPath} ${MICROMAMBA_COMMAND} list --json`).toString()
-);
-//console.log('Wasm package info:', wasmPackageInfo);
+  // Obtain wasm package info such as version and build string.
+  wasmPackageInfo = getWasmPackageInfo(envPath);
+}
 
 // Insert package info into cockle config.
 for (const packageConfig of cockleConfig) {
