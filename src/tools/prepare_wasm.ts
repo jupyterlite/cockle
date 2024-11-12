@@ -28,6 +28,10 @@ if (process.argv.length !== 4 || (process.argv[2] !== '--list' && process.argv[2
 const wantCopy = process.argv[2] === '--copy';
 const target = process.argv[3];
 
+function isLocalPackage(packageConfig: object): boolean {
+  return Object.hasOwn(packageConfig, 'local_directory');
+}
+
 function getWasmPackageInfo(envPath: string): any {
   const cmd = `${MICROMAMBA_COMMAND} run -p ${envPath} ${MICROMAMBA_COMMAND} list --json`;
   return JSON.parse(execSync(cmd).toString());
@@ -51,6 +55,7 @@ const inputSchema = zod.array(
   zod
     .object({
       package: zod.string(),
+      local_directory: zod.optional(zod.string()),
       modules: zod.optional(
         zod.array(
           zod
@@ -67,7 +72,9 @@ const inputSchema = zod.array(
 inputSchema.parse(cockleConfig);
 
 // Required emscripten-wasm32 packages.
-const packageNames = cockleConfig.map((item: any) => item.package);
+const packageNames = cockleConfig
+  .filter((item: any) => !isLocalPackage(item))
+  .map((item: any) => item.package);
 console.log('Required package names', packageNames);
 
 // Create or reuse existing mamba environment for the wasm packages.
@@ -99,16 +106,25 @@ if (wasmPackageInfo === undefined) {
   wasmPackageInfo = getWasmPackageInfo(envPath);
 }
 
+const outputProps = ['build_string', 'platform', 'version', 'channel'];
+
 // Insert package info into cockle config.
 for (const packageConfig of cockleConfig) {
   const packageName = packageConfig.package;
-  const info = wasmPackageInfo.find((x: any) => x.name === packageName);
+  const localPackage = isLocalPackage(packageConfig);
+
+  const info = !localPackage
+    ? wasmPackageInfo.find((x: any) => x.name === packageName)
+    : Object.fromEntries(outputProps.map(prop => [prop, '']));
   if (info === undefined) {
     throw Error(`Do not have package info for ${packageName}`);
   }
+  if (localPackage) {
+    info.channel = `local_directory: ${packageConfig.local_directory}`;
+  }
 
   console.log(`Add package info to ${packageName}`);
-  for (const prop of ['build_string', 'platform', 'version', 'channel']) {
+  for (const prop of outputProps) {
     packageConfig[prop] = info[prop];
   }
 
@@ -130,6 +146,7 @@ const outputSchema = zod.array(
   zod
     .object({
       package: zod.string(),
+      local_directory: zod.optional(zod.string()),
       build_string: zod.string(),
       platform: zod.string(),
       version: zod.string(),
@@ -156,16 +173,19 @@ fs.writeFileSync(targetConfigFile, JSON.stringify(cockleConfig, null, 2));
 const filenames = [targetConfigFile];
 
 // Output wasm files and their javascript wrappers.
-const moduleNames = cockleConfig.flatMap((x: any) => x.modules).map((x: any) => x.name);
-for (const moduleName of moduleNames) {
-  for (const suffix of ['.js', '.wasm']) {
-    const filename = moduleName + suffix;
-    const srcFilename = path.join(envPath, 'bin', filename);
-    if (wantCopy) {
-      const targetFileName = path.join(target, filename);
-      fs.copyFileSync(srcFilename, targetFileName);
-    } else {
-      filenames.push(path.join(envPath, 'bin', moduleName + suffix));
+for (const packageConfig of cockleConfig) {
+  const sourceDirectory = packageConfig.local_directory ?? path.join(envPath, 'bin');
+  const moduleNames = packageConfig.modules.map((x: any) => x.name);
+  for (const moduleName of moduleNames) {
+    for (const suffix of ['.js', '.wasm']) {
+      const filename = moduleName + suffix;
+      const srcFilename = path.join(sourceDirectory, filename);
+      if (wantCopy) {
+        const targetFileName = path.join(target, filename);
+        fs.copyFileSync(srcFilename, targetFileName);
+      } else {
+        filenames.push(path.join(envPath, 'bin', moduleName + suffix));
+      }
     }
   }
 }
