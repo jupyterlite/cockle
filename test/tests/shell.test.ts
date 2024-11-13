@@ -206,7 +206,9 @@ test.describe('Shell', () => {
     });
 
     test('should include aliases', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['l', '\t'])).toMatch(/^l\r\nll {2}ln {2}logname {2}ls/);
+      expect(await shellInputsSimple(page, ['l', '\t'])).toMatch(
+        /^l\r\nll {2}ln {2}local-cmd {2}logname {2}ls/
+      );
     });
 
     test('should complete within a command preserving suffix', async ({ page }) => {
