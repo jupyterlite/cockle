@@ -1,5 +1,19 @@
 import { test, expect } from '@playwright/test';
 
+async function inputLine(page, text: string, appendEnter: boolean = true) {
+  for (const char of text) {
+    if (char === '\t') {
+      await page.keyboard.press('Tab');
+    } else {
+      await page.keyboard.type(char);
+    }
+    await page.waitForTimeout(10);
+  }
+  if (appendEnter) {
+    await page.keyboard.press('Enter');
+  }
+}
+
 test('visual test', async ({ page }) => {
   await page.goto('/');
 
@@ -7,33 +21,25 @@ test('visual test', async ({ page }) => {
 
   await page.locator('div.xterm-screen').click(); // sets focus for keyboard input
 
-  await page.keyboard.type('ls'); // avoid timestamps
-  await page.keyboard.press('Enter');
+  await inputLine(page, 'ls'); // avoid timestamps
   await page.waitForTimeout(wait);
 
-  await page.keyboard.type('cp file.txt file2.txt');
-  await page.keyboard.press('Enter');
+  await inputLine(page, 'cp file.txt file2.txt');
   await page.waitForTimeout(wait);
 
-  await page.keyboard.type('ls'); // avoid timestamps
-  await page.keyboard.press('Enter');
+  await inputLine(page, 'ls'); // avoid timestamps
   await page.waitForTimeout(wait);
 
-  await page.keyboard.type('una');
-  await page.keyboard.press('Tab'); // tab complete command name
-  await page.keyboard.press('Enter');
+  await inputLine(page, 'una\t'); // tab complete command name
   await page.waitForTimeout(wait);
 
-  await page.keyboard.type('grep ember mon');
-  await page.keyboard.press('Tab'); // tab complete filename
-  await page.keyboard.press('Enter');
+  await inputLine(page, 'grep ember mon\t'); // tab complete filename
   await page.waitForTimeout(wait);
 
-  await page.keyboard.press('Tab'); // list all commands
+  await inputLine(page, '\t', false); // list all commands
   await page.waitForTimeout(wait);
 
-  await page.keyboard.type('abc');
-  await page.keyboard.press('Enter'); // no such command
+  await inputLine(page, 'abc'); // no such command
   await page.waitForTimeout(wait);
 
   await expect(page).toHaveScreenshot();
