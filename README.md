@@ -14,12 +14,16 @@ commands compiled into `.js` and `.wasm` files. The latter are built by
 ## Build
 
 ```bash
-micromamba env create -f environment-dev.yml -y
+micromamba env create -f environment-dev.yml
 micromamba activate cockle
 npm install
 npm run build
 npm run lint:check
 ```
+
+You can use ``conda``, ``mamba`` or ``pixi`` instead of ``micromamba`` here. A copy of
+``micromamba`` is installed into the ``cockle`` environment; this is needed to support the
+``emscripten-wasm32`` platform in the demo and tests.
 
 ## Demo
 
