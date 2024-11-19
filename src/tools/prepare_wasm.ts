@@ -16,7 +16,6 @@ const zod = require('zod');
 /* eslint-enable */
 
 const ENV_NAME = 'cockle_wasm_env';
-const MICROMAMBA_COMMAND = 'micromamba';
 const PLATFORM = 'emscripten-wasm32';
 const REPOS = '-c https://repo.mamba.pm/emscripten-forge -c https://repo.mamba.pm/conda-forge';
 
@@ -32,8 +31,8 @@ function isLocalPackage(packageConfig: object): boolean {
   return Object.hasOwn(packageConfig, 'local_directory');
 }
 
-function getWasmPackageInfo(envPath: string): any {
-  const cmd = `${MICROMAMBA_COMMAND} run -p ${envPath} ${MICROMAMBA_COMMAND} list --json`;
+function getWasmPackageInfo(micromambaCmd: string, envPath: string): any {
+  const cmd = `${micromambaCmd} -p ${envPath} list --json`;
   return JSON.parse(execSync(cmd).toString());
 }
 
@@ -77,11 +76,29 @@ const packageNames = cockleConfig
   .map((item: any) => item.package);
 console.log('Required package names', packageNames);
 
+// Find micromamba.
+let micromambaCmd: string | undefined;
+const cmds = ['micromamba', '$CONDA_PREFIX/bin/micromamba', '$MAMBA_EXE'];
+for (const cmd of cmds) {
+  try {
+    execSync(`${cmd} --version`);
+    micromambaCmd = cmd;
+    break;
+  } catch (e) {
+    // Try next cmd
+  }
+}
+if (micromambaCmd === undefined) {
+  throw new Error('Unable to find micromamba, aborting');
+} else {
+  console.log(`Found micromamba: ${micromambaCmd}`);
+}
+
 // Create or reuse existing mamba environment for the wasm packages.
 const envPath = `./${ENV_NAME}`;
 let wasmPackageInfo: any;
 if (fs.existsSync(envPath)) {
-  wasmPackageInfo = getWasmPackageInfo(envPath);
+  wasmPackageInfo = getWasmPackageInfo(micromambaCmd!, envPath);
   const envPackageNames = wasmPackageInfo.map((x: any) => x.name);
   const haveAllPackages = packageNames.every((name: string) => envPackageNames.includes(name));
 
@@ -99,11 +116,11 @@ if (fs.existsSync(envPath)) {
 if (wasmPackageInfo === undefined) {
   const suffix = `--platform=${PLATFORM} ${REPOS}`;
   console.log(`Creating new environment in ${envPath}`);
-  const createEnvCmd = `${MICROMAMBA_COMMAND} create -p ${envPath} -y ${packageNames.join(' ')} ${suffix}`;
+  const createEnvCmd = `${micromambaCmd} create -p ${envPath} -y ${packageNames.join(' ')} ${suffix}`;
   console.log(execSync(createEnvCmd).toString());
 
   // Obtain wasm package info such as version and build string.
-  wasmPackageInfo = getWasmPackageInfo(envPath);
+  wasmPackageInfo = getWasmPackageInfo(micromambaCmd!, envPath);
 }
 
 const outputProps = ['build_string', 'platform', 'version', 'channel'];
