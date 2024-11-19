@@ -21,9 +21,9 @@ npm run build
 npm run lint:check
 ```
 
-You can use ``conda``, ``mamba`` or ``pixi`` instead of ``micromamba`` here. A copy of
-``micromamba`` is installed into the ``cockle`` environment; this is needed to support the
-``emscripten-wasm32`` platform in the demo and tests.
+You can use `conda`, `mamba` or `pixi` instead of `micromamba` here. A copy of
+`micromamba` is installed into the `cockle` environment; this is needed to support the
+`emscripten-wasm32` platform in the demo and tests.
 
 ## Demo
 
