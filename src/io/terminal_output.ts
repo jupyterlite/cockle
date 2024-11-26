@@ -20,6 +20,10 @@ export class TerminalOutput extends BufferedOutput {
   }
 
   override write(text: string): void {
+    if (text.length < 1) {
+      return;
+    }
+
     if (this.prefix !== null) {
       text = this.prefix + text;
     }

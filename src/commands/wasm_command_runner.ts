@@ -48,24 +48,40 @@ export abstract class WasmCommandRunner implements ICommandRunner {
       ];
     }
 
+    function write(
+      stream: any,
+      buffer: Int8Array,
+      offset: number,
+      length: number,
+      pos: any
+    ): number {
+      if (length === 0) {
+        return 0;
+      }
+
+      const chars = buffer.slice(offset, offset + length);
+      const text = String.fromCharCode(...chars);
+      const isStderr = stream.path === '/dev/tty1';
+
+      if (isStderr && cmdName === 'touch' && args.length > 1) {
+        // Crude hiding of many errors in touch command, really only want to hide
+        // `touch: failed to close '${args[1]}': Bad file descriptor`
+        // but that is sent as multiple write() calls.
+        // The correct fix can be reintroduced when BufferedIO correctly line buffers output.
+        return length;
+      }
+
+      const output = isStderr ? stderr : stdout;
+      output.write(text);
+      return length;
+    }
+
     let exitCode: number | undefined;
 
     const wasm = await wasmModule({
       thisProgram: cmdName,
       arguments: args,
       locateFile: (path: string) => wasmBaseUrl + path,
-      print: (text: string) => stdout.write(`${text}\n`),
-      printErr: (text: string) => {
-        if (
-          cmdName === 'touch' &&
-          text === `touch: failed to close '${args[1]}': Bad file descriptor`
-        ) {
-          // Temporarily ignore bad file descriptor error in touch command until have proper fix.
-          // Command will still return an exit code of 1.
-          return;
-        }
-        stderr.write(`${text}\n`);
-      },
       quit: (moduleExitCode: number, toThrow: any) => {
         if (exitCode === undefined) {
           exitCode = moduleExitCode;
@@ -88,6 +104,9 @@ export abstract class WasmCommandRunner implements ICommandRunner {
         if (Object.prototype.hasOwnProperty.call(module, 'TTY')) {
           // Monkey patch window size.
           module.TTY.default_tty_ops.ioctl_tiocgwinsz = getWindowSize;
+
+          // Monkey patch write.
+          module.TTY.stream_ops.write = write;
 
           // Monkey patch stdin get_char.
           const stdinDeviceId = module.FS.makedev(5, 0);

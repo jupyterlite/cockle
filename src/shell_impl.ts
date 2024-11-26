@@ -22,7 +22,7 @@ import { WasmCommandPackage } from './commands/wasm_command_package';
  */
 export class ShellImpl implements IShellWorker {
   constructor(readonly options: IShellImpl.IOptions) {
-    this._environment = new Environment(options.color ?? true);
+    this._environment = new Environment(options.color);
     this._wasmLoader = new WasmLoader(options.wasmBaseUrl);
     this._commandRegistry = new CommandRegistry(this._wasmLoader);
   }
@@ -59,7 +59,7 @@ export class ShellImpl implements IShellWorker {
       this._currentLine = '';
       this._cursorIndex = 0;
       await this._runCommands(cmdText);
-      await this.output(this._environment.getPrompt());
+      await this._outputPrompt();
     } else if (code === 127) {
       // Backspace
       if (this._cursorIndex > 0) {
@@ -165,10 +165,7 @@ export class ShellImpl implements IShellWorker {
     if (!this._isRunning) {
       return;
     }
-
-    // Ensure each linefeed \n is preceded by a carriage return \r.
-    text = text.replace(/(?<!\r)\n/g, '\r\n');
-    await this.options.outputCallback(text);
+    this.options.bufferedIO.write(text);
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
@@ -193,7 +190,7 @@ export class ShellImpl implements IShellWorker {
 
   async start(): Promise<void> {
     this._isRunning = true;
-    await this.output(this._environment.getPrompt());
+    await this._outputPrompt();
   }
 
   terminate() {
@@ -346,8 +343,16 @@ export class ShellImpl implements IShellWorker {
     }
   }
 
+  private async _outputPrompt(): Promise<void> {
+    if (!this._isRunning) {
+      return;
+    }
+    this.options.bufferedIO.write(`\n${this.environment.getPrompt()}`);
+  }
+
   private async _runCommands(cmdText: string): Promise<void> {
     this.options.enableBufferedStdinCallback(true);
+    this.options.bufferedIO.allowAdjacentNewline(true);
 
     if (cmdText.startsWith('!')) {
       // Get command from history and run that.
@@ -355,10 +360,12 @@ export class ShellImpl implements IShellWorker {
       const possibleCmd = this._history.at(index);
       if (possibleCmd === null) {
         // Does not set exit code.
-        await this.output(
-          ansi.styleBoldRed + '!' + index + ': event not found' + ansi.styleReset + '\n'
-        );
-        await this.output(this._environment.getPrompt());
+        let text = '!' + index + ': event not found';
+        if (this.options.color) {
+          text = ansi.styleBoldRed + text + ansi.styleReset;
+        }
+        await this.output(`${text}\n`);
+        await this._outputPrompt();
         return;
       }
       cmdText = possibleCmd;
@@ -369,7 +376,11 @@ export class ShellImpl implements IShellWorker {
     let exitCode!: number;
     const stdin = new TerminalInput(this.options.stdinCallback);
     const stdout = new TerminalOutput(this.output.bind(this));
-    const stderr = new TerminalOutput(this.output.bind(this), ansi.styleBoldRed, ansi.styleReset);
+    const stderr = new TerminalOutput(
+      this.output.bind(this),
+      this.options.color ? ansi.styleBoldRed : null,
+      this.options.color ? ansi.styleReset : null
+    );
     try {
       const nodes = parse(cmdText, true, this._aliases);
 
@@ -400,6 +411,7 @@ export class ShellImpl implements IShellWorker {
       exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
       this.environment.set('?', `${exitCode}`);
 
+      this.options.bufferedIO.allowAdjacentNewline(false);
       this.options.enableBufferedStdinCallback(false);
     }
   }

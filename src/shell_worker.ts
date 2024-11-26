@@ -1,6 +1,6 @@
 import { expose } from 'comlink';
 
-import { WorkerBufferedStdin } from './buffered_stdin';
+import { WorkerBufferedIO } from './buffered_io';
 import { IShellWorker } from './defs_internal';
 import { ShellImpl } from './shell_impl';
 
@@ -10,12 +10,10 @@ import { ShellImpl } from './shell_impl';
 export class ShellWorker implements IShellWorker {
   async initialize(
     options: IShellWorker.IOptions,
-    outputCallback: IShellWorker.IProxyOutputCallback,
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ) {
-    this._bufferedStdin = new WorkerBufferedStdin(options.sharedArrayBuffer);
-    this._outputCallback = outputCallback;
+    this._bufferedIO = new WorkerBufferedIO(options.sharedArrayBuffer);
     this._enableBufferedStdinCallback = enableBufferedStdinCallback;
     this._terminateCallback = terminateCallback;
 
@@ -28,21 +26,21 @@ export class ShellWorker implements IShellWorker {
       driveFsBaseUrl,
       initialDirectories,
       initialFiles,
-      outputCallback: this._outputCallback,
       enableBufferedStdinCallback: this.enableBufferedStdin.bind(this),
       terminateCallback: this._terminateCallback.bind(this),
-      stdinCallback: this._bufferedStdin.get.bind(this._bufferedStdin)
+      stdinCallback: this._bufferedIO.read.bind(this._bufferedIO),
+      bufferedIO: this._bufferedIO
     });
     await this._shellImpl.initialize();
   }
 
   async enableBufferedStdin(enable: boolean): Promise<void> {
     // Enable/disable webworker's buffered stdin.
-    if (this._bufferedStdin) {
+    if (this._bufferedIO) {
       if (enable) {
-        await this._bufferedStdin.enable();
+        await this._bufferedIO.enable();
       } else {
-        await this._bufferedStdin.disable();
+        await this._bufferedIO.disable();
       }
     }
 
@@ -71,8 +69,7 @@ export class ShellWorker implements IShellWorker {
   }
 
   private _shellImpl?: ShellImpl;
-  private _bufferedStdin?: WorkerBufferedStdin;
-  private _outputCallback?: IShellWorker.IProxyOutputCallback;
+  private _bufferedIO?: WorkerBufferedIO;
   private _enableBufferedStdinCallback?: IShellWorker.IProxyEnableBufferedStdinCallback;
   private _terminateCallback?: IShellWorker.IProxyTerminateCallback;
 }
