@@ -201,7 +201,7 @@ for (const packageConfig of cockleConfig) {
         const targetFileName = path.join(target, filename);
         fs.copyFileSync(srcFilename, targetFileName);
       } else {
-        filenames.push(path.join(envPath, 'bin', moduleName + suffix));
+        filenames.push(srcFilename);
       }
     }
   }
