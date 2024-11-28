@@ -1,28 +1,23 @@
-import { BufferedOutput } from './buffered_output';
+import { IOutput } from './output';
 
-interface OutputCallback {
+interface IOutputCallback {
   (output: string): void;
 }
 
-export class TerminalOutput extends BufferedOutput {
+export class TerminalOutput implements IOutput {
   constructor(
-    readonly outputCallback: OutputCallback,
+    readonly outputCallback: IOutputCallback,
     readonly prefix: string | null = null,
     readonly suffix: string | null = null
-  ) {
-    super();
-  }
+  ) {}
 
-  override flush(): void {
-    this.data.forEach(line => this.outputCallback(line));
-    this.clear();
-  }
+  flush(): void {}
 
-  override supportsAnsiEscapes(): boolean {
+  supportsAnsiEscapes(): boolean {
     return true;
   }
 
-  override write(text: string): void {
+  write(text: string): void {
     if (text.length < 1) {
       return;
     }
@@ -33,6 +28,6 @@ export class TerminalOutput extends BufferedOutput {
     if (this.suffix !== null) {
       text = text + this.suffix;
     }
-    super.write(text);
+    this.outputCallback(text);
   }
 }
