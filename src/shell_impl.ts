@@ -22,7 +22,7 @@ import { WasmCommandPackage } from './commands/wasm_command_package';
  */
 export class ShellImpl implements IShellWorker {
   constructor(readonly options: IShellImpl.IOptions) {
-    this._environment = new Environment(options.color ?? true);
+    this._environment = new Environment(options.color);
     this._wasmLoader = new WasmLoader(options.wasmBaseUrl);
     this._commandRegistry = new CommandRegistry(this._wasmLoader);
   }
@@ -54,19 +54,19 @@ export class ShellImpl implements IShellWorker {
     //console.log("CODE", code)
     if (code === 13) {
       // \r
-      await this.output('\n');
+      this.output('\n');
       const cmdText = this._currentLine;
       this._currentLine = '';
       this._cursorIndex = 0;
       await this._runCommands(cmdText);
-      await this.output(this._environment.getPrompt());
+      await this._outputPrompt();
     } else if (code === 127) {
       // Backspace
       if (this._cursorIndex > 0) {
         const suffix = this._currentLine.slice(this._cursorIndex);
         this._currentLine = this._currentLine.slice(0, this._cursorIndex - 1) + suffix;
         this._cursorIndex--;
-        await this.output(
+        this.output(
           ansi.cursorLeft(1) + suffix + ansi.eraseEndLine + ansi.cursorLeft(suffix.length)
         );
       }
@@ -91,32 +91,32 @@ export class ShellImpl implements IShellWorker {
         // Left arrow
         if (this._cursorIndex > 0) {
           this._cursorIndex--;
-          await this.output(ansi.cursorLeft());
+          this.output(ansi.cursorLeft());
         }
       } else if (remainder === '[C' || remainder === '[1C') {
         // Right arrow
         if (this._cursorIndex < this._currentLine.length) {
           this._cursorIndex++;
-          await this.output(ansi.cursorRight());
+          this.output(ansi.cursorRight());
         }
       } else if (remainder === '[3~') {
         // Delete
         if (this._cursorIndex < this._currentLine.length) {
           const suffix = this._currentLine.slice(this._cursorIndex + 1);
           this._currentLine = this._currentLine.slice(0, this._cursorIndex) + suffix;
-          await this.output(ansi.eraseEndLine + suffix + ansi.cursorLeft(suffix.length));
+          this.output(ansi.eraseEndLine + suffix + ansi.cursorLeft(suffix.length));
         }
       } else if (remainder === '[H' || remainder === '[1;2H') {
         // Home
         if (this._cursorIndex > 0) {
-          await this.output(ansi.cursorLeft(this._cursorIndex));
+          this.output(ansi.cursorLeft(this._cursorIndex));
           this._cursorIndex = 0;
         }
       } else if (remainder === '[F' || remainder === '[1;2F') {
         // End
         const { length } = this._currentLine;
         if (this._cursorIndex < length) {
-          await this.output(ansi.cursorRight(length - this._cursorIndex));
+          this.output(ansi.cursorRight(length - this._cursorIndex));
           this._cursorIndex = length;
         }
       } else if (remainder === '[1;2D' || remainder === '[1;5D') {
@@ -146,12 +146,12 @@ export class ShellImpl implements IShellWorker {
       if (this._cursorIndex === this._currentLine.length) {
         // Append char.
         this._currentLine += char;
-        await this.output(char);
+        this.output(char);
       } else {
         // Insert char.
         const suffix = this._currentLine.slice(this._cursorIndex);
         this._currentLine = this._currentLine.slice(0, this._cursorIndex) + char + suffix;
-        await this.output(ansi.eraseEndLine + char + suffix + ansi.cursorLeft(suffix.length));
+        this.output(ansi.eraseEndLine + char + suffix + ansi.cursorLeft(suffix.length));
       }
       this._cursorIndex++;
     }
@@ -161,14 +161,11 @@ export class ShellImpl implements IShellWorker {
     return this.options.mountpoint ?? '/drive';
   }
 
-  async output(text: string): Promise<void> {
+  output(text: string): void {
     if (!this._isRunning) {
       return;
     }
-
-    // Ensure each linefeed \n is preceded by a carriage return \r.
-    text = text.replace(/(?<!\r)\n/g, '\r\n');
-    await this.options.outputCallback(text);
+    this.options.bufferedIO.write(text);
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
@@ -193,7 +190,7 @@ export class ShellImpl implements IShellWorker {
 
   async start(): Promise<void> {
     this._isRunning = true;
-    await this.output(this._environment.getPrompt());
+    await this._outputPrompt();
   }
 
   terminate() {
@@ -346,8 +343,16 @@ export class ShellImpl implements IShellWorker {
     }
   }
 
+  private _outputPrompt(): void {
+    if (!this._isRunning) {
+      return;
+    }
+    this.options.bufferedIO.write(`\n${this.environment.getPrompt()}`);
+  }
+
   private async _runCommands(cmdText: string): Promise<void> {
     this.options.enableBufferedStdinCallback(true);
+    this.options.bufferedIO.allowAdjacentNewline(true);
 
     if (cmdText.startsWith('!')) {
       // Get command from history and run that.
@@ -355,10 +360,12 @@ export class ShellImpl implements IShellWorker {
       const possibleCmd = this._history.at(index);
       if (possibleCmd === null) {
         // Does not set exit code.
-        await this.output(
-          ansi.styleBoldRed + '!' + index + ': event not found' + ansi.styleReset + '\n'
-        );
-        await this.output(this._environment.getPrompt());
+        let text = '!' + index + ': event not found';
+        if (this.options.color) {
+          text = ansi.styleBoldRed + text + ansi.styleReset;
+        }
+        this.output(`${text}\n`);
+        this._outputPrompt();
         return;
       }
       cmdText = possibleCmd;
@@ -369,7 +376,11 @@ export class ShellImpl implements IShellWorker {
     let exitCode!: number;
     const stdin = new TerminalInput(this.options.stdinCallback);
     const stdout = new TerminalOutput(this.output.bind(this));
-    const stderr = new TerminalOutput(this.output.bind(this), ansi.styleBoldRed, ansi.styleReset);
+    const stderr = new TerminalOutput(
+      this.output.bind(this),
+      this.options.color ? ansi.styleBoldRed : null,
+      this.options.color ? ansi.styleReset : null
+    );
     try {
       const nodes = parse(cmdText, true, this._aliases);
 
@@ -400,6 +411,7 @@ export class ShellImpl implements IShellWorker {
       exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
       this.environment.set('?', `${exitCode}`);
 
+      this.options.bufferedIO.allowAdjacentNewline(false);
       this.options.enableBufferedStdinCallback(false);
     }
   }
@@ -523,7 +535,7 @@ export class ShellImpl implements IShellWorker {
       }
       this._currentLine = this._currentLine.slice(0, this._cursorIndex) + extra + suffix;
       this._cursorIndex += extra.length;
-      await this.output(extra + suffix + ansi.cursorLeft(suffix.length));
+      this.output(extra + suffix + ansi.cursorLeft(suffix.length));
     } else if (possibles.length > 1) {
       // Multiple possibles.
       const startsWith = longestStartsWith(possibles, lookup.length);
@@ -532,12 +544,12 @@ export class ShellImpl implements IShellWorker {
         const extra = startsWith.slice(lookup.length);
         this._currentLine = this._currentLine.slice(0, this._cursorIndex) + extra + suffix;
         this._cursorIndex += extra.length;
-        await this.output(extra + suffix + ansi.cursorLeft(suffix.length));
+        this.output(extra + suffix + ansi.cursorLeft(suffix.length));
       } else {
         // Write all the possibles in columns across the terminal.
         const lines = toColumns(possibles, this._environment.getNumber('COLUMNS') ?? 0);
         const output = `\n${lines.join('\n')}\n${this._environment.getPrompt()}${this._currentLine}`;
-        await this.output(output + ansi.cursorLeft(suffix.length));
+        this.output(output + ansi.cursorLeft(suffix.length));
       }
     }
   }

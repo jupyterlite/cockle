@@ -1,16 +1,12 @@
-import {
-  IEnableBufferedStdinCallback,
-  IOutputCallback,
-  IStdinCallback,
-  ITerminateCallback
-} from './callback';
+import { WorkerBufferedIO } from './buffered_io';
+import { IEnableBufferedStdinCallback, IStdinCallback, ITerminateCallback } from './callback';
 
 import { IShell } from './defs';
 
 import { ProxyMarked, Remote } from 'comlink';
 
 interface IOptionsCommon {
-  color?: boolean;
+  color: boolean;
   mountpoint?: string;
   wasmBaseUrl: string;
   driveFsBaseUrl?: string;
@@ -30,14 +26,12 @@ export interface IShellWorker extends IShellCommon {
   // Callback proxies need to be separate arguments, they cannot be in IOptions.
   initialize(
     options: IShellWorker.IOptions,
-    outputCallback: IShellWorker.IProxyOutputCallback,
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ): void;
 }
 
 export namespace IShellWorker {
-  export interface IProxyOutputCallback extends IOutputCallback, ProxyMarked {}
   export interface IProxyEnableBufferedStdinCallback
     extends IEnableBufferedStdinCallback,
       ProxyMarked {}
@@ -52,9 +46,9 @@ export type IRemoteShell = Remote<IShellWorker>;
 
 export namespace IShellImpl {
   export interface IOptions extends IOptionsCommon {
-    outputCallback: IOutputCallback;
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;
     stdinCallback: IStdinCallback;
     terminateCallback: IShellWorker.IProxyTerminateCallback;
+    bufferedIO: WorkerBufferedIO;
   }
 }

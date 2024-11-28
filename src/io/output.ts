@@ -1,5 +1,5 @@
 export interface IOutput {
-  flush(): Promise<void>;
+  flush(): void;
   supportsAnsiEscapes(): boolean;
   write(text: string): void;
 }

@@ -10,7 +10,7 @@ export class FileOutput extends BufferedOutput {
     super();
   }
 
-  override async flush(): Promise<void> {
+  override flush(): void {
     const { FS } = this.fileSystem;
     let content = this.allContent;
 
