@@ -1,17 +1,20 @@
 import { BufferedOutput } from './buffered_output';
-import { IOutputCallback } from '../callback';
+
+interface OutputCallback {
+  (output: string): void;
+}
 
 export class TerminalOutput extends BufferedOutput {
   constructor(
-    readonly outputCallback: IOutputCallback,
+    readonly outputCallback: OutputCallback,
     readonly prefix: string | null = null,
     readonly suffix: string | null = null
   ) {
     super();
   }
 
-  override async flush(): Promise<void> {
-    this.data.forEach(async line => await this.outputCallback(line));
+  override flush(): void {
+    this.data.forEach(line => this.outputCallback(line));
     this.clear();
   }
 

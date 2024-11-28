@@ -7,10 +7,10 @@ export class RedirectOutput extends BufferedOutput {
     this.target = target;
   }
 
-  override async flush(): Promise<void> {
-    this.data.forEach(async line => this.target.write(line));
+  override flush(): void {
+    this.data.forEach(line => this.target.write(line));
     this.clear();
-    await this.target.flush();
+    this.target.flush();
   }
 
   private readonly target: IOutput;

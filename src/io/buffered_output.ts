@@ -9,7 +9,7 @@ export abstract class BufferedOutput implements IOutput {
     this.data = [];
   }
 
-  abstract flush(): Promise<void>;
+  abstract flush(): void;
 
   supportsAnsiEscapes(): boolean {
     return false;

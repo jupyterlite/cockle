@@ -6,7 +6,7 @@ import { PipeInput } from './pipe_input';
  * To obtain the input interface PipeInput, call the .input attribute.
  */
 export class Pipe extends BufferedOutput {
-  override async flush(): Promise<void> {}
+  override flush(): void {}
 
   get input(): PipeInput {
     // Should restrict this to just one?

@@ -1,7 +1,7 @@
 import { IOutput } from './output';
 
 export class ConsoleOutput implements IOutput {
-  async flush(): Promise<void> {}
+  flush(): void {}
 
   supportsAnsiEscapes(): boolean {
     return false;
