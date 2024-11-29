@@ -2,6 +2,40 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.11
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.10...d473de0953b751083e50cfb7177473a76602ac06))
+
+### Enhancements made
+
+- Use xtermjs onData rather than onKey [#78](https://github.com/jupyterlite/cockle/pull/78) ([@ianthomas23](https://github.com/ianthomas23))
+- Always use buffered output via SharedArrayBuffer [#77](https://github.com/jupyterlite/cockle/pull/77) ([@ianthomas23](https://github.com/ianthomas23))
+- Support wasm commands from a local directory as well as emscripten-forge [#73](https://github.com/jupyterlite/cockle/pull/73) ([@ianthomas23](https://github.com/ianthomas23))
+- Check and recreate cockle_wasm_env if it does not contain all required packages [#72](https://github.com/jupyterlite/cockle/pull/72) ([@ianthomas23](https://github.com/ianthomas23))
+- Separate external and internal defs [#70](https://github.com/jupyterlite/cockle/pull/70) ([@ianthomas23](https://github.com/ianthomas23))
+- Add tests for cp and mv [#68](https://github.com/jupyterlite/cockle/pull/68) ([@ianthomas23](https://github.com/ianthomas23))
+- Support filename expansion of * and ? [#67](https://github.com/jupyterlite/cockle/pull/67) ([@ianthomas23](https://github.com/ianthomas23))
+- Add Shell.dispose and new exit command [#66](https://github.com/jupyterlite/cockle/pull/66) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Support local_directory wasm install in JupyterLite Terminal [#76](https://github.com/jupyterlite/cockle/pull/76) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Be more tolerant of how micromamba is installed [#75](https://github.com/jupyterlite/cockle/pull/75) ([@ianthomas23](https://github.com/ianthomas23))
+- Ensure function names are camelCase [#69](https://github.com/jupyterlite/cockle/pull/69) ([@ianthomas23](https://github.com/ianthomas23))
+- Run end-to-end tests on macos as well as ubuntu [#65](https://github.com/jupyterlite/cockle/pull/65) ([@ianthomas23](https://github.com/ianthomas23))
+- Add playwright visual test using demo [#64](https://github.com/jupyterlite/cockle/pull/64) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-10-23&to=2024-11-29&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-10-23..2024-11-29&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.10
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.9...c0e5440f4fb4963c2cd433b07f9936c42097beeb))
@@ -16,8 +50,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-10-07&to=2024-10-23&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-10-07..2024-10-23&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.9
 
