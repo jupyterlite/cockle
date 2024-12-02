@@ -17,7 +17,7 @@ const zod = require('zod');
 
 const ENV_NAME = 'cockle_wasm_env';
 const PLATFORM = 'emscripten-wasm32';
-const REPOS = '-c https://repo.mamba.pm/emscripten-forge -c https://repo.mamba.pm/conda-forge';
+const CHANNELS = ['https://repo.mamba.pm/emscripten-forge', 'https://repo.mamba.pm/conda-forge'];
 
 if (process.argv.length !== 4 || (process.argv[2] !== '--list' && process.argv[2] !== '--copy')) {
   console.log('Usage: prepare_wasm --list list-filename');
@@ -31,9 +31,22 @@ function isLocalPackage(packageConfig: object): boolean {
   return Object.hasOwn(packageConfig, 'local_directory');
 }
 
+function getChannelsString(): string {
+  console.log('Using channels:');
+  CHANNELS.map(channel => console.log(`  ${channel}`));
+  return CHANNELS.map(channel => `-c ${channel}`).join(' ');
+}
+
 function getWasmPackageInfo(micromambaCmd: string, envPath: string): any {
   const cmd = `${micromambaCmd} -p ${envPath} list --json`;
   return JSON.parse(execSync(cmd).toString());
+}
+
+// Handle environment variables.
+const COCKLE_WASM_EXTRA_CHANNEL = process.env.COCKLE_WASM_EXTRA_CHANNEL;
+if (COCKLE_WASM_EXTRA_CHANNEL !== undefined) {
+  // Prepend so used first.
+  CHANNELS.unshift(COCKLE_WASM_EXTRA_CHANNEL);
 }
 
 // Base cockle config file from this repo.
@@ -114,7 +127,7 @@ if (fs.existsSync(envPath)) {
 }
 
 if (wasmPackageInfo === undefined) {
-  const suffix = `--platform=${PLATFORM} ${REPOS}`;
+  const suffix = `--platform=${PLATFORM} ${getChannelsString()}`;
   console.log(`Creating new environment in ${envPath}`);
   const createEnvCmd = `${micromambaCmd} create -p ${envPath} -y ${packageNames.join(' ')} ${suffix}`;
   console.log(execSync(createEnvCmd).toString());
