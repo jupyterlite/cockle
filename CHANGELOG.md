@@ -14,7 +14,7 @@
 - Check and recreate cockle_wasm_env if it does not contain all required packages [#72](https://github.com/jupyterlite/cockle/pull/72) ([@ianthomas23](https://github.com/ianthomas23))
 - Separate external and internal defs [#70](https://github.com/jupyterlite/cockle/pull/70) ([@ianthomas23](https://github.com/ianthomas23))
 - Add tests for cp and mv [#68](https://github.com/jupyterlite/cockle/pull/68) ([@ianthomas23](https://github.com/ianthomas23))
-- Support filename expansion of * and ? [#67](https://github.com/jupyterlite/cockle/pull/67) ([@ianthomas23](https://github.com/ianthomas23))
+- Support filename expansion of \* and ? [#67](https://github.com/jupyterlite/cockle/pull/67) ([@ianthomas23](https://github.com/ianthomas23))
 - Add Shell.dispose and new exit command [#66](https://github.com/jupyterlite/cockle/pull/66) ([@ianthomas23](https://github.com/ianthomas23))
 
 ### Bugs fixed
