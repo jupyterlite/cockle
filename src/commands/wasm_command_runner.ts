@@ -17,10 +17,19 @@ export abstract class WasmCommandRunner implements ICommandRunner {
     const start = Date.now();
     const wasmModule = this.wasmLoader.getModule(this.moduleName());
 
+    let _getCharBuffer: number[] = [];
+
     // Functions for monkey-patching.
     function getChar(tty: any) {
+      if (_getCharBuffer.length > 0) {
+        return _getCharBuffer.shift()!;
+      }
+
       const utf16codes = stdin.readChar();
       const utf16 = utf16codes[0];
+      if (utf16codes.length > 1) {
+        _getCharBuffer = utf16codes.slice(1);
+      }
 
       if (stdin.isTerminal()) {
         if (utf16 === 10) {
