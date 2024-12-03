@@ -79,6 +79,20 @@ test.describe('Shell', () => {
       expect(output).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
     });
 
+    test('should support terminal stdin of an ansi escape sequence', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+        const EOT = String.fromCharCode(4);
+        const downArrow = '\x1B[B';
+        await Promise.all([
+          shell.inputLine('wc'),
+          globalThis.cockle.terminalInput(shell, ['a', downArrow, 'b', EOT])
+        ]);
+        return output.text;
+      });
+      expect(output).toMatch(/^wc\r\nab {6}0 {7}1 {7}5\r\n/);
+    });
+
     test('should support terminal stdin more than once', async ({ page }) => {
       const output = await page.evaluate(async () => {
         const { shell, output } = await globalThis.cockle.shellSetupEmpty();
