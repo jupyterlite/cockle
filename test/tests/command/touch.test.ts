@@ -11,21 +11,18 @@ test.describe('touch command', () => {
       await shell.inputLine('touch abc');
       output.clear();
       await shell.inputLine('env | grep ^?=');
-      ret.push(output.text);
-      output.clear();
+      ret.push(output.textAndClear());
 
       await shell.inputLine('ls abc');
-      ret.push(output.text);
-      output.clear();
+      ret.push(output.textAndClear());
 
       await shell.inputLine('touch abc');
       output.clear();
       await shell.inputLine('env | grep ^?=');
-      ret.push(output.text);
-      output.clear();
+      ret.push(output.textAndClear());
 
       await shell.inputLine('ls abc');
-      ret.push(output.text);
+      ret.push(output.textAndClear());
       return ret;
     });
     expect(output[0]).toMatch("ls: cannot access 'abc': No such file or directory");

@@ -101,8 +101,7 @@ test.describe('Shell', () => {
           shell.inputLine('wc'),
           globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', '\n', 'c', EOT])
         ]);
-        const ret0 = output.text;
-        output.clear();
+        const ret0 = output.textAndClear();
 
         await Promise.all([
           shell.inputLine('wc'),
@@ -201,12 +200,11 @@ test.describe('Shell', () => {
         await shell.setSize(40, 10);
         await shell.input('t');
         await shell.input('\t');
-        const ret0 = output.text;
-        output.clear();
+        const ret0 = output.textAndClear();
 
         await shell.setSize(40, 20);
         await shell.input('\t');
-        const ret1 = output.text;
+        const ret1 = output.textAndClear();
         return [ret0, ret1];
       });
       expect(output[0]).toMatch(/^t\r\ntail\r\ntouch\r\ntr\r\ntty\r\n/);
@@ -345,17 +343,15 @@ test.describe('Shell', () => {
         const ret: string[] = [];
         await shell.setSize(10, 44);
         await shell.inputLine('env|grep LINES;env|grep COLUMNS');
-        ret.push(output.text);
+        ret.push(output.textAndClear());
 
-        output.clear();
         await shell.setSize(0, 45);
         await shell.inputLine('env|grep LINES;env|grep COLUMNS');
-        ret.push(output.text);
+        ret.push(output.textAndClear());
 
-        output.clear();
         await shell.setSize(14, -1);
         await shell.inputLine('env|grep LINES;env|grep COLUMNS');
-        ret.push(output.text);
+        ret.push(output.textAndClear());
         return ret;
       });
       expect(output[0]).toMatch('\r\nLINES=10\r\nCOLUMNS=44\r\n');

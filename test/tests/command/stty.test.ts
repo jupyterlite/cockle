@@ -6,8 +6,7 @@ test.describe('stty command', () => {
     const output = await page.evaluate(async () => {
       const { shell, output } = await globalThis.cockle.shellSetupEmpty();
       await shell.inputLine('stty size');
-      const output0 = output.text;
-      output.clear();
+      const output0 = output.textAndClear();
 
       await shell.setSize(10, 43);
       await shell.inputLine('stty size');

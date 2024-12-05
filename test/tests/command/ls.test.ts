@@ -28,17 +28,15 @@ test.describe('ls command', () => {
       const { shell, output } = await globalThis.cockle.shellSetupSimple(options);
       await shell.setSize(10, 50);
       await shell.inputLine('ls');
-      const ret = [output.text];
-      output.clear();
+      const ret = [output.textAndClear()];
 
       await shell.setSize(10, 40);
       await shell.inputLine('ls');
-      ret.push(output.text);
-      output.clear();
+      ret.push(output.textAndClear());
 
       await shell.setSize(10, 20);
       await shell.inputLine('ls');
-      ret.push(output.text);
+      ret.push(output.textAndClear());
       return ret;
     });
     expect(output[0]).toMatch(

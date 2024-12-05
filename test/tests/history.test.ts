@@ -100,27 +100,22 @@ test.describe('history', () => {
 
       await shell.input(upArrow);
       await shell.input(upArrow);
-      const ret = [output.text];
-      output.clear();
+      const ret = [output.textAndClear()];
 
       await shell.input(upArrow);
-      ret.push(output.text);
-      output.clear();
+      ret.push(output.textAndClear());
 
       await shell.input(upArrow);
-      ret.push(output.text);
-      output.clear();
+      ret.push(output.textAndClear());
 
       await shell.input(downArrow);
-      ret.push(output.text);
-      output.clear();
+      ret.push(output.textAndClear());
 
       await shell.input(downArrow);
-      ret.push(output.text);
-      output.clear();
+      ret.push(output.textAndClear());
 
       await shell.input(downArrow);
-      ret.push(output.text);
+      ret.push(output.textAndClear());
       return ret;
     });
     expect(output[0]).toMatch(/echo hello$/);

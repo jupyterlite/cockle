@@ -26,6 +26,12 @@ export class MockTerminalOutput {
     return this._text;
   }
 
+  textAndClear(): string {
+    const ret = this.text;
+    this.clear();
+    return ret;
+  }
+
   private _started: boolean;
   private _text: string = '';
 }
