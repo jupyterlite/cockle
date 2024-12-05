@@ -24,8 +24,8 @@ export class Context {
     readonly stderr: IOutput
   ) {}
 
-  async flush(): Promise<void> {
-    await this.stderr.flush();
-    await this.stdout.flush();
+  flush(): void {
+    this.stderr.flush();
+    this.stdout.flush();
   }
 }

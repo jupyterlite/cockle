@@ -11,7 +11,7 @@ export class ExitCommand extends BuiltinCommand {
     const { stdout, terminate } = context;
 
     stdout.write('Terminating shell...\n');
-    await stdout.flush();
+    stdout.flush();
 
     terminate();
 

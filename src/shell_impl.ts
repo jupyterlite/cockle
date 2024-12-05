@@ -406,7 +406,7 @@ export class ShellImpl implements IShellWorker {
         exitCode = error.exitCode;
       }
       stderr.write(error + '\n');
-      await stderr.flush();
+      stderr.flush();
     } finally {
       exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
       this.environment.set('?', `${exitCode}`);
@@ -463,7 +463,7 @@ export class ShellImpl implements IShellWorker {
     );
     const exitCode = await runner.run(name, context);
 
-    await context.flush();
+    context.flush();
     return exitCode;
   }
 
