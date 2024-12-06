@@ -459,7 +459,8 @@ export class ShellImpl implements IShellWorker {
       this.terminate.bind(this),
       input,
       output,
-      error
+      error,
+      this.options.bufferedIO
     );
     const exitCode = await runner.run(name, context);
 

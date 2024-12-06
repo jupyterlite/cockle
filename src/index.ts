@@ -8,4 +8,5 @@ export { IFileSystem } from './file_system';
 export * from './io';
 export { parse } from './parse';
 export { Shell } from './shell';
+export * from './termios';
 export { tokenize, Token } from './tokenize';

@@ -1,4 +1,5 @@
 import { IOutputCallback } from './callback';
+import { OutputFlag, Termios } from './termios';
 
 /**
  * Classes to deal with buffered IO between main worker and web worker. Both have access to the same
@@ -338,8 +339,11 @@ export class WorkerBufferedIO extends BufferedIO {
             break;
           }
           this._writeColumn = 0;
-          ret.push(CR, NL);
-          //ret.push(NL, CR); // Other way round?
+          if ((this.termios.c_oflag & OutputFlag.ONLCR) > 0) {
+            ret.push(CR, NL);
+          } else {
+            ret.push(NL);
+          }
           break;
         default:
           if (!inEscape) {
@@ -362,6 +366,7 @@ export class WorkerBufferedIO extends BufferedIO {
     return ret;
   }
 
+  public termios: Termios = Termios.newDefaultWasm();
   private _allowAdjacentNewline = false;
   private _writeColumn = 0;
 }
