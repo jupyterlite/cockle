@@ -1,4 +1,5 @@
 import { Aliases } from './aliases';
+import { WorkerBufferedIO } from './buffered_io';
 import { ITerminateCallback } from './callback';
 import { CommandRegistry } from './command_registry';
 import { Environment } from './environment';
@@ -21,7 +22,8 @@ export class Context {
     readonly terminate: ITerminateCallback,
     readonly stdin: IInput,
     readonly stdout: IOutput,
-    readonly stderr: IOutput
+    readonly stderr: IOutput,
+    readonly bufferedIO: WorkerBufferedIO
   ) {}
 
   flush(): void {

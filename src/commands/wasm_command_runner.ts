@@ -1,6 +1,7 @@
 import { ICommandRunner } from './command_runner';
 import { Context } from '../context';
 import { ExitCode } from '../exit_code';
+import { ITermios } from '../termios';
 import { WasmLoader } from '../wasm_loader';
 
 export abstract class WasmCommandRunner implements ICommandRunner {
@@ -11,7 +12,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
   abstract names(): string[];
 
   async run(cmdName: string, context: Context): Promise<number> {
-    const { args, fileSystem, mountpoint, stdin, stdout, stderr } = context;
+    const { args, bufferedIO, fileSystem, mountpoint, stdin, stdout, stderr } = context;
     const { wasmBaseUrl } = this.wasmLoader;
 
     const start = Date.now();
@@ -48,6 +49,16 @@ export abstract class WasmCommandRunner implements ICommandRunner {
       } else {
         return utf16;
       }
+    }
+
+    function getTermios(tty: any): ITermios {
+      return bufferedIO.termios.clone();
+    }
+
+    function setTermios(tty: any, optional_actions: any, data: ITermios) {
+      // TODO: handle optional_actions
+      bufferedIO.termios.set(data);
+      return 0;
     }
 
     function getWindowSize(tty: any): [number, number] {
@@ -111,7 +122,9 @@ export abstract class WasmCommandRunner implements ICommandRunner {
         }
 
         if (Object.prototype.hasOwnProperty.call(module, 'TTY')) {
-          // Monkey patch window size.
+          // Monkey patch get/set termios and get window size.
+          module.TTY.default_tty_ops.ioctl_tcgets = getTermios;
+          module.TTY.default_tty_ops.ioctl_tcsets = setTermios;
           module.TTY.default_tty_ops.ioctl_tiocgwinsz = getWindowSize;
 
           // Monkey patch write.
