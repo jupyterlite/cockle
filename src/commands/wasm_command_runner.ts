@@ -32,16 +32,6 @@ export abstract class WasmCommandRunner implements ICommandRunner {
         _getCharBuffer = utf16codes.slice(1);
       }
 
-      if (stdin.isTerminal()) {
-        if (utf16 === 10) {
-          context.stdout.write('\n');
-          context.stdout.flush();
-        } else if (utf16 > 31 && utf16 !== 127) {
-          context.stdout.write(String.fromCharCode(...utf16codes));
-          context.stdout.flush();
-        }
-      }
-
       // What to do with length other than 1?
       if (utf16 === 4) {
         // EOT

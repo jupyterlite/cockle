@@ -1,5 +1,5 @@
 import { IOutputCallback } from './callback';
-import { OutputFlag, Termios } from './termios';
+import { InputFlag, LocalFlag, OutputFlag, Termios } from './termios';
 
 /**
  * Classes to deal with buffered IO between main worker and web worker. Both have access to the same
@@ -280,13 +280,15 @@ export class WorkerBufferedIO extends BufferedIO {
 
   read(): number[] {
     Atomics.wait(this._readArray, READ_MAIN, this._readCount);
-    const ret = this._loadFromSharedArrayBuffer();
+    const read = this._loadFromSharedArrayBuffer();
     this._readCount++;
 
     // Notify main worker that character has been read and a new one can be stored.
     Atomics.store(this._readArray, READ_WORKER, this._readCount);
     Atomics.notify(this._readArray, READ_WORKER, 1);
 
+    const ret = this._processReadChars(read);
+    this._maybeEchoToOutput(ret);
     return ret;
   }
 
@@ -316,6 +318,66 @@ export class WorkerBufferedIO extends BufferedIO {
       length -= this._maxWriteChars;
       offset += this._maxWriteChars;
     }
+  }
+
+  _maybeEchoToOutput(chars: number[]): void {
+    const NL = 10; // Linefeed \n
+    const echo = (this.termios.c_lflag & LocalFlag.ECHO) > 0;
+    const echoNL = (this.termios.c_lflag & LocalFlag.ECHONL) > 0;
+    if (!echo && !echoNL) {
+      return;
+    }
+
+    const ret: number[] = [];
+    for (const char of chars) {
+      switch (char) {
+        case NL:
+          ret.push(NL);
+          break;
+        case 4:
+          break;
+        default:
+          if (echo) {
+            ret.push(char);
+          }
+          break;
+      }
+    }
+
+    if (ret.length > 0) {
+      this.write(ret);
+    }
+  }
+
+  private _processReadChars(chars: number[]): number[] {
+    const NL = 10; // Linefeed \n
+    const CR = 13; // Carriage return \r
+
+    const ret: number[] = [];
+    for (const char of chars) {
+      switch (char) {
+        case CR:
+          if ((this.termios.c_iflag & InputFlag.IGNCR) === 0) {
+            if ((this.termios.c_iflag & InputFlag.ICRNL) > 0) {
+              ret.push(NL);
+            } else {
+              ret.push(CR);
+            }
+          }
+          break;
+        case NL:
+          if ((this.termios.c_iflag & InputFlag.INLCR) > 0) {
+            ret.push(CR);
+          } else {
+            ret.push(NL);
+          }
+          break;
+        default:
+          ret.push(char);
+          break;
+      }
+    }
+    return ret;
   }
 
   private _processWriteChars(chars: Int8Array | number[]): number[] {
