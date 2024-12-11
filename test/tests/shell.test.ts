@@ -90,7 +90,7 @@ test.describe('Shell', () => {
         ]);
         return output.text;
       });
-      expect(output).toMatch(/^wc\r\nab {6}0 {7}1 {7}5\r\n/);
+      expect(output).toMatch('wc\r\na\x1B[Bb      0       1       5\r\n');
     });
 
     test('should support terminal stdin more than once', async ({ page }) => {
