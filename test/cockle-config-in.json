@@ -1,6 +1,7 @@
 {
   "packages": {
     "lua": {},
+    "nano": {},
     "tree": {},
     "util-js": {
       "modules": {

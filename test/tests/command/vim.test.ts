@@ -11,20 +11,16 @@ test.describe('vim command', () => {
     await page.evaluate(async () => {
       // Use color: true to ensure TERM env var is set.
       const { shell } = await globalThis.cockle.shellSetupEmpty({ color: true });
-      await Promise.all([
-        shell.inputLine('vim'),
-        globalThis.cockle.terminalInput(shell, ['\x1b', ':', 'q', '\r'])
-      ]);
+      const { terminalInput } = globalThis.cockle;
+      await Promise.all([shell.inputLine('vim'), terminalInput(shell, ['\x1b', ':', 'q', '\r'])]);
     });
   });
 
   test('should create new file', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { shell, output } = await globalThis.cockle.shellSetupEmpty({ color: true });
-      await Promise.all([
-        shell.inputLine('vim'),
-        globalThis.cockle.terminalInput(shell, [...'ihi QW\x1b:wq out\r'])
-      ]);
+      const { terminalInput } = globalThis.cockle;
+      await Promise.all([shell.inputLine('vim'), terminalInput(shell, [...'ihi QW\x1b:wq out\r'])]);
       // New file should exist.
       output.clear();
       await shell.inputLine('cat out');

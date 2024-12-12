@@ -303,35 +303,45 @@ export class WorkerBufferedIO extends BufferedIO {
     const POLLIN = 1;
     const POLLOUT = 4;
 
+    const writable = true;
+
+    if (this._readBuffer.length > 0) {
+      return POLLIN | (writable ? POLLOUT : 0);
+    }
+
     const t = timeoutMs > 0 ? timeoutMs : 0;
     const readableCheck = Atomics.wait(this._readArray, READ_MAIN, this._readCount, t);
     const readable = readableCheck === 'not-equal';
-
-    const writable = true;
     return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
   }
 
   read(): number[] {
-    if ((this.termios.c_iflag & InputFlag.IXON) > 0) {
-      // Wait for main worker to store a new input characters.
-      Atomics.wait(this._readArray, READ_MAIN, this._readCount);
+    if (this._readBuffer.length > 0) {
+      return [this._readBuffer.shift()!];
     }
+
+    Atomics.wait(this._readArray, READ_MAIN, this._readCount);
 
     const readCount = Atomics.load(this._readArray, READ_MAIN);
     if (readCount === this._readCount) {
       return [];
     }
 
-    const read = this._loadFromSharedArrayBuffer();
+    let read = this._loadFromSharedArrayBuffer();
     this._readCount++;
 
     // Notify main worker that character has been read and a new one can be stored.
     Atomics.store(this._readArray, READ_WORKER, this._readCount);
     Atomics.notify(this._readArray, READ_WORKER, 1);
 
-    const ret = this._processReadChars(read);
-    this._maybeEchoToOutput(ret);
-    return ret;
+    read = this._processReadChars(read);
+    this._maybeEchoToOutput(read);
+    if (read.length > 1) {
+      this._readBuffer = read.slice(1);
+      read = [read[0]];
+    }
+
+    return read;
   }
 
   get termios(): Termios {
@@ -477,4 +487,5 @@ export class WorkerBufferedIO extends BufferedIO {
   private _termios: Termios = Termios.newDefaultWasm();
   private _allowAdjacentNewline = false;
   private _writeColumn = 0;
+  private _readBuffer: number[] = [];
 }
