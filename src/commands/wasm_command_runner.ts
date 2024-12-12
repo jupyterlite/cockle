@@ -74,7 +74,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
       }
 
       const chars = buffer.slice(offset, offset + length);
-      const text = String.fromCharCode(...chars);
+      const text = bufferedIO.utf8ArrayToString(chars);
       const isStderr = stream.path === '/dev/tty1';
 
       if (isStderr && cmdName === 'touch' && args.length > 1) {

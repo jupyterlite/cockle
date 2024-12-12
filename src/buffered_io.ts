@@ -65,6 +65,13 @@ abstract class BufferedIO {
     return this._enabled;
   }
 
+  utf8ArrayToString(chars: Int8Array): string {
+    if (this._utf8Decoder === undefined) {
+      this._utf8Decoder = new TextDecoder('utf8');
+    }
+    return this._utf8Decoder.decode(chars);
+  }
+
   protected _clear() {
     this._readArray[READ_MAIN] = 0;
     this._readArray[READ_WORKER] = 0;
@@ -92,6 +99,8 @@ abstract class BufferedIO {
 
   protected _maxWriteChars: number = 256; // Multiples of this can be sent consecutively.
   protected _writeArray: Int32Array;
+
+  private _utf8Decoder?: TextDecoder;
 }
 
 export namespace MainBufferedIO {

@@ -7,6 +7,9 @@
     "local_directory": "../test/local-packages"
   },
   {
+    "package": "tree"
+  },
+  {
     "package": "vim"
   }
 ]

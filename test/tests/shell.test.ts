@@ -157,6 +157,11 @@ test.describe('Shell', () => {
       expect(output[14]).toMatch(/Error: cd: too many arguments/);
       expect(output[15]).toMatch('\r\n?=1\r\n');
     });
+
+    test('should support unicode', async ({ page }) => {
+      const output = await shellLineSimple(page, 'echo 🚀');
+      expect(output).toMatch(/^echo 🚀\r\n🚀\r\n/);
+    });
   });
 
   test.describe('echo input', () => {
@@ -207,8 +212,8 @@ test.describe('Shell', () => {
         const ret1 = output.textAndClear();
         return [ret0, ret1];
       });
-      expect(output[0]).toMatch(/^t\r\ntail\r\ntouch\r\ntr\r\ntty\r\n/);
-      expect(output[1]).toMatch(/^\r\ntail {3}tr\r\ntouch {2}tty\r\n/);
+      expect(output[0]).toMatch(/^t\r\ntail\r\ntouch\r\ntr\r\ntree\r\ntty\r\n/);
+      expect(output[1]).toMatch(/^\r\ntail {3}tree\r\ntouch {2}tty\r\ntr\r\n/);
     });
 
     test('should add common startsWith', async ({ page }) => {
