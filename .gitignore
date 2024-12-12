@@ -6,6 +6,7 @@ tsconfig.tsbuildinfo
 playwright-report/
 test-results/
 test/package-lock.json
+*.data
 *.js
 *.wasm
 cockle_wasm_env/

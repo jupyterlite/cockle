@@ -213,13 +213,26 @@ fs.writeFileSync(targetConfigFile, JSON.stringify(cockleConfig, null, 2));
 const filenames = [targetConfigFile];
 
 // Output wasm files and their javascript wrappers.
+const requiredSuffixes = {
+  '.js': true,
+  '.wasm': true,
+  '.data': false,
+  '-fs.js': false,
+  '-fs.data': false
+};
 for (const packageConfig of cockleConfig) {
   const sourceDirectory = packageConfig.local_directory ?? path.join(envPath, 'bin');
   const moduleNames = packageConfig.modules.map((x: any) => x.name);
   for (const moduleName of moduleNames) {
-    for (const suffix of ['.js', '.wasm']) {
+    for (const [suffix, required] of Object.entries(requiredSuffixes)) {
       const filename = moduleName + suffix;
       const srcFilename = path.join(sourceDirectory, filename);
+      if (!fs.existsSync(srcFilename)) {
+        if (required) {
+          throw new Error(`No such file: ${srcFilename}`);
+        }
+        continue;
+      }
       if (wantCopy) {
         const targetFileName = path.join(target, filename);
         fs.copyFileSync(srcFilename, targetFileName);

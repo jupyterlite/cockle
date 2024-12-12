@@ -86,11 +86,11 @@ abstract class BufferedIO {
   protected _enabled: boolean = false;
   protected _sharedArrayBuffer: SharedArrayBuffer;
 
-  protected _maxReadChars: number = 8; // Max number of actual characters in a token.
+  protected _maxReadChars: number = 64; // Max number of actual characters in a token.
   protected _readArray: Int32Array;
   protected _readCount: number = 0;
 
-  protected _maxWriteChars: number = 128; // Multiples of this can be sent consecutively.
+  protected _maxWriteChars: number = 256; // Multiples of this can be sent consecutively.
   protected _writeArray: Int32Array;
 }
 
@@ -278,8 +278,34 @@ export class WorkerBufferedIO extends BufferedIO {
     this._allowAdjacentNewline = set;
   }
 
+  /**
+   * Poll for whether readable (there is input ready to read) and/or writable.
+   * Currently assumes always writable.
+   */
+  poll(timeoutMs: number): number {
+    // Constants.
+    const POLLIN = 1;
+    const POLLOUT = 4;
+
+    const t = timeoutMs > 0 ? timeoutMs : 0;
+    const readableCheck = Atomics.wait(this._readArray, READ_MAIN, this._readCount, t);
+    const readable = readableCheck === 'not-equal';
+
+    const writable = true;
+    return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
+  }
+
   read(): number[] {
-    Atomics.wait(this._readArray, READ_MAIN, this._readCount);
+    if ((this.termios.c_iflag & InputFlag.IXON) > 0) {
+      // Wait for main worker to store a new input characters.
+      Atomics.wait(this._readArray, READ_MAIN, this._readCount);
+    }
+
+    const readCount = Atomics.load(this._readArray, READ_MAIN);
+    if (readCount === this._readCount) {
+      return [];
+    }
+
     const read = this._loadFromSharedArrayBuffer();
     this._readCount++;
 
@@ -290,6 +316,10 @@ export class WorkerBufferedIO extends BufferedIO {
     const ret = this._processReadChars(read);
     this._maybeEchoToOutput(ret);
     return ret;
+  }
+
+  get termios(): Termios {
+    return this._termios;
   }
 
   write(text: string | Int8Array | number[]): void {
@@ -428,7 +458,7 @@ export class WorkerBufferedIO extends BufferedIO {
     return ret;
   }
 
-  public termios: Termios = Termios.newDefaultWasm();
+  private _termios: Termios = Termios.newDefaultWasm();
   private _allowAdjacentNewline = false;
   private _writeColumn = 0;
 }

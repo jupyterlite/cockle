@@ -34,7 +34,7 @@ export enum LocalFlag {
   ECHOCTL = 0x0200, // Terminal special characters are echoed
   ECHOPRT = 0x0400, // Characters are printed as they are erased
   ECHOKE = 0x0800, // KILL is echoed by erasing each character on the line
-  IEXTEN = 0x8000 // Enable implementation-dewfined input processing
+  IEXTEN = 0x8000 // Enable implementation-defined input processing
 }
 
 export enum ControlCharacter {
@@ -77,6 +77,27 @@ export class Termios implements ITermios {
     };
   }
 
+  // Log to console for debug purposes.
+  log() {
+    const enumHelper = (enumType: any, name: string, enumValue: any) => {
+      const s: string[] = [];
+      for (const [k, v] of Object.entries(enumType).filter(([k, v]) => k[0].match(/\D/))) {
+        if ((enumValue & (v as number)) > 0) {
+          s.push(k);
+        }
+      }
+      return `  ${name} = ${enumValue} 0x${enumValue.toString(16)} = ${s.join(' ')}`;
+    };
+
+    const log: string[] = ['Termios:'];
+    log.push(enumHelper(InputFlag, 'c_iflag', this.c_iflag));
+    log.push(enumHelper(OutputFlag, 'c_oflag', this.c_oflag));
+    log.push(`  c_cflag = ${this.c_cflag} 0x${this.c_cflag.toString(16)}`);
+    log.push(enumHelper(LocalFlag, 'c_lflag', this.c_lflag));
+    log.push(`  c_cc = ${this.c_cc}`);
+    console.log(log.join('\n'));
+  }
+
   static newDefaultWasm(): Termios {
     const ret = new Termios();
     ret.setDefaultWasm();
@@ -89,6 +110,7 @@ export class Termios implements ITermios {
     this.c_cflag = iTermios.c_cflag;
     this.c_lflag = iTermios.c_lflag;
     this.c_cc = [...iTermios.c_cc]; // Shallow copy.
+    this.log();
   }
 
   setDefaultWasm(): void {
@@ -139,6 +161,7 @@ export class Termios implements ITermios {
       0,
       0
     ];
+    this.log();
   }
 
   c_iflag: InputFlag = 0 as InputFlag;
