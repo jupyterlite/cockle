@@ -11,6 +11,15 @@ The commands used here are either built-in commands implemented in TypeScript, o
 commands compiled into `.js` and `.wasm` files. The latter are built by
 [Emscripten-forge](https://emscripten-forge.org/) and are added to a deployment during the build process.
 
+[Emscripten-forge](https://emscripten-forge.org/) packages containing WebAssembly commands that are
+currently supported and tested are as follows. Each package contains a single commmand with the same
+name as the package unless otherwise specified:
+
+- `coreutils`: multiple core commands including `cat`, `cp`, `echo`, `ls`, `mkdir`, `mv`, `rm`, `touch`, `uname`, and `wc`
+- `grep`
+- `lua`
+- `vim`
+
 ## Build
 
 ```bash

@@ -21,7 +21,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
     let _getCharBuffer: number[] = [];
 
     // Functions for monkey-patching.
-    function getChar(tty: any) {
+    function getChar(tty: any): number | null {
       if (_getCharBuffer.length > 0) {
         return _getCharBuffer.shift()!;
       }
@@ -56,6 +56,10 @@ export abstract class WasmCommandRunner implements ICommandRunner {
         context.environment.getNumber('LINES') ?? 24,
         context.environment.getNumber('COLUMNS') ?? 80
       ];
+    }
+
+    function poll(stream: any, timeoutMs: number): number {
+      return bufferedIO.poll(timeoutMs);
     }
 
     function write(
@@ -97,35 +101,38 @@ export abstract class WasmCommandRunner implements ICommandRunner {
           exitCode = moduleExitCode;
         }
       },
-      preRun: (module: any) => {
-        if (Object.prototype.hasOwnProperty.call(module, 'FS')) {
-          // Use PROXYFS so that command sees the shared FS.
-          const FS = module.FS;
-          FS.mkdir(mountpoint, 0o777);
-          FS.mount(fileSystem.PROXYFS, { root: mountpoint, fs: fileSystem.FS }, mountpoint);
-          FS.chdir(fileSystem.FS.cwd());
+      preRun: [
+        (module: any) => {
+          if (Object.prototype.hasOwnProperty.call(module, 'FS')) {
+            // Use PROXYFS so that command sees the shared FS.
+            const FS = module.FS;
+            FS.mkdir(mountpoint, 0o777);
+            FS.mount(fileSystem.PROXYFS, { root: mountpoint, fs: fileSystem.FS }, mountpoint);
+            FS.chdir(fileSystem.FS.cwd());
+          }
+
+          if (Object.prototype.hasOwnProperty.call(module, 'ENV')) {
+            // Copy environment variables into command.
+            context.environment.copyIntoCommand(module.ENV, stdout.supportsAnsiEscapes());
+          }
+
+          if (Object.prototype.hasOwnProperty.call(module, 'TTY')) {
+            // Monkey patch get/set termios and get window size.
+            module.TTY.default_tty_ops.ioctl_tcgets = getTermios;
+            module.TTY.default_tty_ops.ioctl_tcsets = setTermios;
+            module.TTY.default_tty_ops.ioctl_tiocgwinsz = getWindowSize;
+
+            // May only need to be for some TTYs?
+            module.TTY.stream_ops.write = write;
+            module.TTY.stream_ops.poll = poll;
+
+            // Monkey patch stdin get_char.
+            const stdinDeviceId = module.FS.makedev(5, 0);
+            const stdinTty = module.TTY.ttys[stdinDeviceId];
+            stdinTty.ops.get_char = getChar;
+          }
         }
-
-        if (Object.prototype.hasOwnProperty.call(module, 'ENV')) {
-          // Copy environment variables into command.
-          context.environment.copyIntoCommand(module.ENV, stdout.supportsAnsiEscapes());
-        }
-
-        if (Object.prototype.hasOwnProperty.call(module, 'TTY')) {
-          // Monkey patch get/set termios and get window size.
-          module.TTY.default_tty_ops.ioctl_tcgets = getTermios;
-          module.TTY.default_tty_ops.ioctl_tcsets = setTermios;
-          module.TTY.default_tty_ops.ioctl_tiocgwinsz = getWindowSize;
-
-          // Monkey patch write.
-          module.TTY.stream_ops.write = write;
-
-          // Monkey patch stdin get_char.
-          const stdinDeviceId = module.FS.makedev(5, 0);
-          const stdinTty = module.TTY.ttys[stdinDeviceId];
-          stdinTty.ops.get_char = getChar;
-        }
-      }
+      ]
     });
 
     if (exitCode === undefined) {

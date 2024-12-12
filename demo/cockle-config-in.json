@@ -5,5 +5,8 @@
   {
     "package": "local-cmd",
     "local_directory": "../test/local-packages"
+  },
+  {
+    "package": "vim"
   }
 ]

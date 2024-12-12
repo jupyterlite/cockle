@@ -3,6 +3,9 @@
     "package": "lua"
   },
   {
+    "package": "vim"
+  },
+  {
     "package": "local-cmd",
     "local_directory": "local-packages"
   },
