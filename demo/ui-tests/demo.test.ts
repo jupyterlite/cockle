@@ -21,9 +21,6 @@ test('visual test', async ({ page }) => {
 
   await page.locator('div.xterm-screen').click(); // sets focus for keyboard input
 
-  await inputLine(page, 'ls'); // avoid timestamps
-  await page.waitForTimeout(wait);
-
   await inputLine(page, 'cp file.txt file2.txt');
   await page.waitForTimeout(wait);
 
