@@ -147,10 +147,20 @@ for (const packageConfig of cockleConfig) {
     ? wasmPackageInfo.find((x: any) => x.name === packageName)
     : Object.fromEntries(outputProps.map(prop => [prop, '']));
   if (info === undefined) {
-    throw Error(`Do not have package info for ${packageName}`);
+    throw new Error(`Do not have package info for ${packageName}`);
   }
   if (localPackage) {
     info.channel = `local_directory: ${packageConfig.local_directory}`;
+
+    // Convert ~ to HOME.
+    const found = packageConfig.local_directory.match(/^~(.*)$/);
+    if (found) {
+      const home = process.env.HOME;
+      if (home === undefined) {
+        throw new Error(`No HOME envvar found to replace ~ in ${packageConfig.local_directory}`);
+      }
+      packageConfig.local_directory = path.join(home, found[1]);
+    }
   }
 
   console.log(`Add package info to ${packageName}`);
