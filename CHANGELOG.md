@@ -2,6 +2,30 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.12
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.11...e7c7ec3ee256595d13ab4a26e5c18a957bc9a1e8))
+
+### Enhancements made
+
+- Support unicode output from commands [#87](https://github.com/jupyterlite/cockle/pull/87) ([@ianthomas23](https://github.com/ianthomas23))
+- Add support for vim [#86](https://github.com/jupyterlite/cockle/pull/86) ([@ianthomas23](https://github.com/ianthomas23))
+- Convert ~ to HOME in local package config [#85](https://github.com/jupyterlite/cockle/pull/85) ([@ianthomas23](https://github.com/ianthomas23))
+- Move stdin echoing to BufferedIO [#84](https://github.com/jupyterlite/cockle/pull/84) ([@ianthomas23](https://github.com/ianthomas23))
+- Add basic termios support [#83](https://github.com/jupyterlite/cockle/pull/83) ([@ianthomas23](https://github.com/ianthomas23))
+- Remove some missed async flush calls [#82](https://github.com/jupyterlite/cockle/pull/82) ([@ianthomas23](https://github.com/ianthomas23))
+- Add MockTerminalOutput.textAndClear function [#81](https://github.com/jupyterlite/cockle/pull/81) ([@ianthomas23](https://github.com/ianthomas23))
+- Support multi-character inputs (escape sequences) whilst command running [#80](https://github.com/jupyterlite/cockle/pull/80) ([@ianthomas23](https://github.com/ianthomas23))
+- Add COCKLE_WASM_EXTRA_CHANNEL env var to get wasm command packages from an extra channel [#79](https://github.com/jupyterlite/cockle/pull/79) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-11-29&to=2024-12-13&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-11-29..2024-12-13&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.11
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.10...d473de0953b751083e50cfb7177473a76602ac06))
@@ -33,8 +57,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-10-23&to=2024-11-29&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-10-23..2024-11-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.10
 
