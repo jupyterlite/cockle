@@ -1,7 +1,7 @@
 
 var Module = (() => {
   var _scriptName = typeof document != 'undefined' ? document.currentScript?.src : undefined;
-  
+  if (typeof __filename != 'undefined') _scriptName ||= __filename;
   return (
 function(moduleArg = {}) {
   var moduleRtn;
@@ -20,6 +20,8 @@ var ENVIRONMENT_IS_WEB = typeof window == "object";
 var ENVIRONMENT_IS_WORKER = typeof importScripts == "function";
 
 var ENVIRONMENT_IS_NODE = typeof process == "object" && typeof process.versions == "object" && typeof process.versions.node == "string";
+
+if (ENVIRONMENT_IS_NODE) {}
 
 var moduleOverrides = Object.assign({}, Module);
 
@@ -42,7 +44,40 @@ function locateFile(path) {
 
 var read_, readAsync, readBinary;
 
-if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
+if (ENVIRONMENT_IS_NODE) {
+ var fs = require("fs");
+ var nodePath = require("path");
+ if (ENVIRONMENT_IS_WORKER) {
+  scriptDirectory = nodePath.dirname(scriptDirectory) + "/";
+ } else {
+  scriptDirectory = __dirname + "/";
+ }
+ read_ = (filename, binary) => {
+  filename = isFileURI(filename) ? new URL(filename) : nodePath.normalize(filename);
+  return fs.readFileSync(filename, binary ? undefined : "utf8");
+ };
+ readBinary = filename => {
+  var ret = read_(filename, true);
+  if (!ret.buffer) {
+   ret = new Uint8Array(ret);
+  }
+  return ret;
+ };
+ readAsync = (filename, onload, onerror, binary = true) => {
+  filename = isFileURI(filename) ? new URL(filename) : nodePath.normalize(filename);
+  fs.readFile(filename, binary ? undefined : "utf8", (err, data) => {
+   if (err) onerror(err); else onload(binary ? data.buffer : data);
+  });
+ };
+ if (!Module["thisProgram"] && process.argv.length > 1) {
+  thisProgram = process.argv[1].replace(/\\/g, "/");
+ }
+ arguments_ = process.argv.slice(2);
+ quit_ = (status, toThrow) => {
+  process.exitCode = status;
+  throw toThrow;
+ };
+} else if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
  if (ENVIRONMENT_IS_WORKER) {
   scriptDirectory = self.location.href;
  } else if (typeof document != "undefined" && document.currentScript) {
@@ -231,6 +266,11 @@ var dataURIPrefix = "data:application/octet-stream;base64,";
  * @noinline
  */ var isDataURI = filename => filename.startsWith(dataURIPrefix);
 
+/**
+ * Indicates whether filename is delivered via file protocol (as opposed to http/https)
+ * @noinline
+ */ var isFileURI = filename => filename.startsWith("file://");
+
 var wasmBinaryFile;
 
 wasmBinaryFile = "check_termios.wasm";
@@ -251,7 +291,7 @@ function getBinarySync(file) {
 
 function getBinaryPromise(binaryFile) {
  if (!wasmBinary && (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER)) {
-  if (typeof fetch == "function") {
+  if (typeof fetch == "function" && !isFileURI(binaryFile)) {
    return fetch(binaryFile, {
     credentials: "same-origin"
    }).then(response => {
@@ -260,6 +300,10 @@ function getBinaryPromise(binaryFile) {
     }
     return response["arrayBuffer"]();
    }).catch(() => getBinarySync(binaryFile));
+  } else if (readAsync) {
+   return new Promise((resolve, reject) => {
+    readAsync(binaryFile, response => resolve(new Uint8Array(/** @type{!ArrayBuffer} */ (response))), reject);
+   });
   }
  }
  return Promise.resolve().then(() => getBinarySync(binaryFile));
@@ -273,7 +317,7 @@ function instantiateArrayBuffer(binaryFile, imports, receiver) {
 }
 
 function instantiateAsync(binary, binaryFile, imports, callback) {
- if (!binary && typeof WebAssembly.instantiateStreaming == "function" && !isDataURI(binaryFile) && typeof fetch == "function") {
+ if (!binary && typeof WebAssembly.instantiateStreaming == "function" && !isDataURI(binaryFile) && !isFileURI(binaryFile) && !ENVIRONMENT_IS_NODE && typeof fetch == "function") {
   return fetch(binaryFile, {
    credentials: "same-origin"
   }).then(response => {
@@ -409,7 +453,18 @@ var PATH = {
 var initRandomFill = () => {
  if (typeof crypto == "object" && typeof crypto["getRandomValues"] == "function") {
   return view => crypto.getRandomValues(view);
- } else abort("initRandomDevice");
+ } else if (ENVIRONMENT_IS_NODE) {
+  try {
+   var crypto_module = require("crypto");
+   var randomFillSync = crypto_module["randomFillSync"];
+   if (randomFillSync) {
+    return view => crypto_module["randomFillSync"](view);
+   }
+   var randomBytes = crypto_module["randomBytes"];
+   return view => (view.set(randomBytes(view.byteLength)), view);
+  } catch (e) {}
+ }
+ abort("initRandomDevice");
 };
 
 var randomFill = view => (randomFill = initRandomFill())(view);
@@ -574,7 +629,22 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
 var FS_stdin_getChar = () => {
  if (!FS_stdin_getChar_buffer.length) {
   var result = null;
-  if (typeof window != "undefined" && typeof window.prompt == "function") {
+  if (ENVIRONMENT_IS_NODE) {
+   var BUFSIZE = 256;
+   var buf = Buffer.alloc(BUFSIZE);
+   var bytesRead = 0;
+   /** @suppress {missingProperties} */ var fd = process.stdin.fd;
+   try {
+    bytesRead = fs.readSync(fd, buf);
+   } catch (e) {
+    if (e.toString().includes("EOF")) bytesRead = 0; else throw e;
+   }
+   if (bytesRead > 0) {
+    result = buf.slice(0, bytesRead).toString("utf-8");
+   } else {
+    result = null;
+   }
+  } else if (typeof window != "undefined" && typeof window.prompt == "function") {
    result = window.prompt("Input: ");
    if (result !== null) {
     result += "\n";

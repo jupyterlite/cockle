@@ -25,4 +25,4 @@ In the docker image:
 ./build.sh
 ```
 
-which will build new files `wasm/check_termios.js` and `wasm/check_termios.wasm`.
+which will build new `.js` and `.wasm` files in the `wasm` directory.
