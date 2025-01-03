@@ -144,8 +144,8 @@ export class MainBufferedIO extends BufferedIO {
 
     // Stop listening for writes.
     this._disposing = true;
-    Atomics.store(this._writeArray, 0, 999); // Sentinel value, anything not 0 or 1.
-    Atomics.notify(this._writeArray, 0);
+    Atomics.store(this._writeArray, WRITE_CONTROL, 999); // Sentinel value, anything not 0 or 1.
+    Atomics.notify(this._writeArray, WRITE_CONTROL);
 
     this._isDisposed = true;
   }
@@ -182,6 +182,10 @@ export class MainBufferedIO extends BufferedIO {
   }
 
   async _afterListenWrite() {
+    if (this._disabling) {
+      return;
+    }
+
     let text = '';
     let moreToFollow = true;
     do {
@@ -197,17 +201,20 @@ export class MainBufferedIO extends BufferedIO {
       }
       text += String.fromCharCode(...chars);
 
-      if (!moreToFollow && text.length > 0 && !this._disposing) {
-        this.outputCallback(text);
-      }
-
       Atomics.store(this._writeArray, WRITE_CONTROL, 0); // reset
       Atomics.notify(this._writeArray, WRITE_CONTROL, 1);
 
       if (moreToFollow && !this._disposing) {
-        await Atomics.waitAsync(this._writeArray, WRITE_CONTROL, 0).value;
+        const { async, value } = Atomics.waitAsync(this._writeArray, WRITE_CONTROL, 0);
+        if (async) {
+          await value;
+        }
       }
     } while (moreToFollow);
+
+    if (text.length > 0 && !this._disposing) {
+      this.outputCallback(text);
+    }
 
     if (!this._disposing) {
       this._listenForWrite();
@@ -239,11 +246,9 @@ export class MainBufferedIO extends BufferedIO {
   private _listenForWrite() {
     const { async, value } = Atomics.waitAsync(this._writeArray, WRITE_CONTROL, 0);
     if (async) {
-      value.then(() => {
-        if (!this._disabling) {
-          this._afterListenWrite();
-        }
-      });
+      value.then(() => this._afterListenWrite());
+    } else {
+      this._afterListenWrite();
     }
   }
 
@@ -266,6 +271,8 @@ export class MainBufferedIO extends BufferedIO {
     const { async, value } = Atomics.waitAsync(this._readArray, READ_WORKER, this._readCount);
     if (async) {
       value.then(() => this._afterRead());
+    } else {
+      this._afterRead();
     }
   }
 
