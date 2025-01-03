@@ -1,7 +1,7 @@
 
 var Module = (() => {
   var _scriptName = typeof document != 'undefined' ? document.currentScript?.src : undefined;
-  
+  if (typeof __filename != 'undefined') _scriptName ||= __filename;
   return (
 function(moduleArg = {}) {
   var moduleRtn;
@@ -20,6 +20,8 @@ var ENVIRONMENT_IS_WEB = typeof window == "object";
 var ENVIRONMENT_IS_WORKER = typeof importScripts == "function";
 
 var ENVIRONMENT_IS_NODE = typeof process == "object" && typeof process.versions == "object" && typeof process.versions.node == "string";
+
+if (ENVIRONMENT_IS_NODE) {}
 
 var moduleOverrides = Object.assign({}, Module);
 
@@ -42,7 +44,40 @@ function locateFile(path) {
 
 var read_, readAsync, readBinary;
 
-if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
+if (ENVIRONMENT_IS_NODE) {
+ var fs = require("fs");
+ var nodePath = require("path");
+ if (ENVIRONMENT_IS_WORKER) {
+  scriptDirectory = nodePath.dirname(scriptDirectory) + "/";
+ } else {
+  scriptDirectory = __dirname + "/";
+ }
+ read_ = (filename, binary) => {
+  filename = isFileURI(filename) ? new URL(filename) : nodePath.normalize(filename);
+  return fs.readFileSync(filename, binary ? undefined : "utf8");
+ };
+ readBinary = filename => {
+  var ret = read_(filename, true);
+  if (!ret.buffer) {
+   ret = new Uint8Array(ret);
+  }
+  return ret;
+ };
+ readAsync = (filename, onload, onerror, binary = true) => {
+  filename = isFileURI(filename) ? new URL(filename) : nodePath.normalize(filename);
+  fs.readFile(filename, binary ? undefined : "utf8", (err, data) => {
+   if (err) onerror(err); else onload(binary ? data.buffer : data);
+  });
+ };
+ if (!Module["thisProgram"] && process.argv.length > 1) {
+  thisProgram = process.argv[1].replace(/\\/g, "/");
+ }
+ arguments_ = process.argv.slice(2);
+ quit_ = (status, toThrow) => {
+  process.exitCode = status;
+  throw toThrow;
+ };
+} else if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
  if (ENVIRONMENT_IS_WORKER) {
   scriptDirectory = self.location.href;
  } else if (typeof document != "undefined" && document.currentScript) {
@@ -87,7 +122,7 @@ if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
    xhr.send(null);
   };
  }
-} else  {}
+} else {}
 
 var out = Module["print"] || console.log.bind(console);
 
@@ -106,15 +141,6 @@ if (Module["quit"]) quit_ = Module["quit"];
 var wasmBinary;
 
 if (Module["wasmBinary"]) wasmBinary = Module["wasmBinary"];
-
-function intArrayFromBase64(s) {
- var decoded = atob(s);
- var bytes = new Uint8Array(decoded.length);
- for (var i = 0; i < decoded.length; ++i) {
-  bytes[i] = decoded.charCodeAt(i);
- }
- return bytes;
-}
 
 var wasmMemory;
 
@@ -240,6 +266,11 @@ var dataURIPrefix = "data:application/octet-stream;base64,";
  * @noinline
  */ var isDataURI = filename => filename.startsWith(dataURIPrefix);
 
+/**
+ * Indicates whether filename is delivered via file protocol (as opposed to http/https)
+ * @noinline
+ */ var isFileURI = filename => filename.startsWith("file://");
+
 var wasmBinaryFile;
 
 wasmBinaryFile = "local-cmd.wasm";
@@ -260,7 +291,7 @@ function getBinarySync(file) {
 
 function getBinaryPromise(binaryFile) {
  if (!wasmBinary && (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER)) {
-  if (typeof fetch == "function") {
+  if (typeof fetch == "function" && !isFileURI(binaryFile)) {
    return fetch(binaryFile, {
     credentials: "same-origin"
    }).then(response => {
@@ -269,6 +300,10 @@ function getBinaryPromise(binaryFile) {
     }
     return response["arrayBuffer"]();
    }).catch(() => getBinarySync(binaryFile));
+  } else if (readAsync) {
+   return new Promise((resolve, reject) => {
+    readAsync(binaryFile, response => resolve(new Uint8Array(/** @type{!ArrayBuffer} */ (response))), reject);
+   });
   }
  }
  return Promise.resolve().then(() => getBinarySync(binaryFile));
@@ -282,7 +317,7 @@ function instantiateArrayBuffer(binaryFile, imports, receiver) {
 }
 
 function instantiateAsync(binary, binaryFile, imports, callback) {
- if (!binary && typeof WebAssembly.instantiateStreaming == "function" && !isDataURI(binaryFile) && typeof fetch == "function") {
+ if (!binary && typeof WebAssembly.instantiateStreaming == "function" && !isDataURI(binaryFile) && !isFileURI(binaryFile) && !ENVIRONMENT_IS_NODE && typeof fetch == "function") {
   return fetch(binaryFile, {
    credentials: "same-origin"
   }).then(response => {
@@ -299,8 +334,7 @@ function instantiateAsync(binary, binaryFile, imports, callback) {
 
 function getWasmImports() {
  return {
-  "env": wasmImports,
-  "wasi_snapshot_preview1": wasmImports
+  "a": wasmImports
  };
 }
 
@@ -308,9 +342,9 @@ function createWasm() {
  var info = getWasmImports();
  /** @param {WebAssembly.Module=} module*/ function receiveInstance(instance, module) {
   wasmExports = instance.exports;
-  wasmMemory = wasmExports["memory"];
+  wasmMemory = wasmExports["c"];
   updateMemoryViews();
-  addOnInit(wasmExports["__wasm_call_ctors"]);
+  addOnInit(wasmExports["d"]);
   removeRunDependency("wasm-instantiate");
   return wasmExports;
  }
@@ -429,7 +463,18 @@ var PATH = {
 var initRandomFill = () => {
  if (typeof crypto == "object" && typeof crypto["getRandomValues"] == "function") {
   return view => crypto.getRandomValues(view);
- } else  abort("initRandomDevice");
+ } else if (ENVIRONMENT_IS_NODE) {
+  try {
+   var crypto_module = require("crypto");
+   var randomFillSync = crypto_module["randomFillSync"];
+   if (randomFillSync) {
+    return view => crypto_module["randomFillSync"](view);
+   }
+   var randomBytes = crypto_module["randomBytes"];
+   return view => (view.set(randomBytes(view.byteLength)), view);
+  } catch (e) {}
+ }
+ abort("initRandomDevice");
 };
 
 var randomFill = view => (randomFill = initRandomFill())(view);
@@ -594,7 +639,22 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
 var FS_stdin_getChar = () => {
  if (!FS_stdin_getChar_buffer.length) {
   var result = null;
-  if (typeof window != "undefined" && typeof window.prompt == "function") {
+  if (ENVIRONMENT_IS_NODE) {
+   var BUFSIZE = 256;
+   var buf = Buffer.alloc(BUFSIZE);
+   var bytesRead = 0;
+   /** @suppress {missingProperties} */ var fd = process.stdin.fd;
+   try {
+    bytesRead = fs.readSync(fd, buf);
+   } catch (e) {
+    if (e.toString().includes("EOF")) bytesRead = 0; else throw e;
+   }
+   if (bytesRead > 0) {
+    result = buf.slice(0, bytesRead).toString("utf-8");
+   } else {
+    result = null;
+   }
+  } else if (typeof window != "undefined" && typeof window.prompt == "function") {
    result = window.prompt("Input: ");
    if (result !== null) {
     result += "\n";
@@ -1413,7 +1473,7 @@ var FS = {
   if (FS.isLink(node.mode)) {
    return 32;
   } else if (FS.isDir(node.mode)) {
-   if (FS.flagsToPermissionString(flags) !== "r" ||  (flags & 512)) {
+   if (FS.flagsToPermissionString(flags) !== "r" || (flags & 512)) {
     return 31;
    }
   }
@@ -2740,23 +2800,21 @@ Module["FS_createLazyFile"] = FS.createLazyFile;
 Module["FS_createDevice"] = FS.createDevice;
 
 var wasmImports = {
- /** @export */ _emscripten_memcpy_js: __emscripten_memcpy_js,
- /** @export */ fd_write: _fd_write
+ /** @export */ b: __emscripten_memcpy_js,
+ /** @export */ a: _fd_write
 };
 
 var wasmExports = createWasm();
 
-var ___wasm_call_ctors = () => (___wasm_call_ctors = wasmExports["__wasm_call_ctors"])();
+var ___wasm_call_ctors = () => (___wasm_call_ctors = wasmExports["d"])();
 
-var _main = Module["_main"] = (a0, a1) => (_main = Module["_main"] = wasmExports["__main_argc_argv"])(a0, a1);
+var _main = Module["_main"] = (a0, a1) => (_main = Module["_main"] = wasmExports["e"])(a0, a1);
 
 var __emscripten_stack_restore = a0 => (__emscripten_stack_restore = wasmExports["_emscripten_stack_restore"])(a0);
 
-var __emscripten_stack_alloc = a0 => (__emscripten_stack_alloc = wasmExports["_emscripten_stack_alloc"])(a0);
+var __emscripten_stack_alloc = a0 => (__emscripten_stack_alloc = wasmExports["g"])(a0);
 
 var _emscripten_stack_get_current = () => (_emscripten_stack_get_current = wasmExports["emscripten_stack_get_current"])();
-
-var dynCall_jiji = Module["dynCall_jiji"] = (a0, a1, a2, a3, a4) => (dynCall_jiji = Module["dynCall_jiji"] = wasmExports["dynCall_jiji"])(a0, a1, a2, a3, a4);
 
 Module["addRunDependency"] = addRunDependency;
 

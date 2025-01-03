@@ -10,7 +10,7 @@
   },
   {
     "package": "local-cmd",
-    "local_directory": "local-packages"
+    "local_directory": "wasm-util/wasm"
   },
   {
     "package": "check_termios",

@@ -4,7 +4,7 @@
   },
   {
     "package": "local-cmd",
-    "local_directory": "../test/local-packages"
+    "local_directory": "../test/wasm-util/wasm"
   },
   {
     "package": "tree"
