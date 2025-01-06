@@ -6,7 +6,7 @@
  * Send output string to be displayed in terminal.
  */
 export interface IOutputCallback {
-  (output: string): Promise<void>;
+  (output: string): void;
 }
 
 /**

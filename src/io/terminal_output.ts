@@ -1,8 +1,5 @@
 import { IOutput } from './output';
-
-interface IOutputCallback {
-  (output: string): void;
-}
+import { IOutputCallback } from '../callback';
 
 export class TerminalOutput implements IOutput {
   constructor(
