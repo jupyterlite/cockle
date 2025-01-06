@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.13
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.12...1ac07c19492547e5b5769c11f103aa79ff465e98))
+
+### Enhancements made
+
+- Make external IOutputCallback synchronous [#90](https://github.com/jupyterlite/cockle/pull/90) ([@ianthomas23](https://github.com/ianthomas23))
+- Build local-cmd in wasm-util [#88](https://github.com/jupyterlite/cockle/pull/88) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Fix blocking writes by correctly handling Atomics.waitAsync returns [#91](https://github.com/jupyterlite/cockle/pull/91) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-12-13&to=2025-01-06&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-12-13..2025-01-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.12
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.11...e7c7ec3ee256595d13ab4a26e5c18a957bc9a1e8))
@@ -23,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-11-29&to=2024-12-13&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-11-29..2024-12-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.11
 
