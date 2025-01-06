@@ -8,7 +8,7 @@ export class MockTerminalOutput {
     this._started = start;
   }
 
-  callback: IOutputCallback = async (output: string) => {
+  callback: IOutputCallback = (output: string) => {
     if (this._started) {
       this._text = this._text + output;
     }
