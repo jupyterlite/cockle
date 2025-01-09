@@ -6,6 +6,7 @@ import { Environment } from './environment';
 import { History } from './history';
 import { IFileSystem } from './file_system';
 import { IInput, IOutput } from './io';
+import { WasmModuleCache } from './wasm_module_cache';
 
 /**
  * Context used to run commands.
@@ -23,7 +24,8 @@ export class Context {
     readonly stdin: IInput,
     readonly stdout: IOutput,
     readonly stderr: IOutput,
-    readonly bufferedIO: WorkerBufferedIO
+    readonly bufferedIO: WorkerBufferedIO,
+    readonly wasmModuleCache: WasmModuleCache
   ) {}
 
   flush(): void {

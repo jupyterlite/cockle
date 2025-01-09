@@ -15,8 +15,31 @@ export class CockleConfigCommand extends BuiltinCommand {
 
     stdout.write(`cockle ${COCKLE_VERSION}\n`);
     this._writePackageConfig(context);
+    this._writeModuleConfig(context);
 
     return ExitCode.SUCCESS;
+  }
+
+  private _writeModuleConfig(context: Context) {
+    const { commandRegistry, stdout, wasmModuleCache } = context;
+
+    const allModules = commandRegistry.allModules();
+
+    const lines = [['module', 'package', 'cached']];
+    for (const module of allModules) {
+      lines.push([module.name, module.packageName, wasmModuleCache.has(module.name) ? 'yes' : '']);
+    }
+
+    let colorMap: Map<number, string> | null = null;
+    if (stdout.supportsAnsiEscapes()) {
+      colorMap = new Map();
+      colorMap.set(1, ansi.styleBrightBlue);
+      colorMap.set(2, ansi.styleBrightPurple);
+    }
+
+    for (const line of toTable(lines, 1, false, colorMap)) {
+      stdout.write(line + '\n');
+    }
   }
 
   private _writePackageConfig(context: Context) {

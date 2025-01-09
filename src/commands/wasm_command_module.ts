@@ -1,5 +1,5 @@
 import { WasmCommandRunner } from './wasm_command_runner';
-import { WasmLoader } from '../wasm_loader';
+import { WasmModuleLoader } from '../wasm_module_loader';
 
 /**
  * A moduleName.wasm file with its associated moduleName.js wrapper.
@@ -7,11 +7,12 @@ import { WasmLoader } from '../wasm_loader';
  */
 export class WasmCommandModule extends WasmCommandRunner {
   constructor(
-    wasmLoader: WasmLoader,
-    private readonly name: string,
-    private readonly commands: string[]
+    wasmModuleLoader: WasmModuleLoader,
+    readonly name: string,
+    private readonly commands: string[],
+    readonly packageName: string,
   ) {
-    super(wasmLoader);
+    super(wasmModuleLoader);
   }
 
   moduleName(): string {

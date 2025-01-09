@@ -13,7 +13,7 @@ import { History } from './history';
 import { FileInput, FileOutput, IInput, IOutput, Pipe, TerminalInput, TerminalOutput } from './io';
 import { CommandNode, PipeNode, parse } from './parse';
 import { longestStartsWith, toColumns } from './utils';
-import { WasmLoader } from './wasm_loader';
+import { WasmModuleLoader } from './wasm_module_loader';
 import { WasmCommandModule } from './commands/wasm_command_module';
 import { WasmCommandPackage } from './commands/wasm_command_package';
 
@@ -23,8 +23,8 @@ import { WasmCommandPackage } from './commands/wasm_command_package';
 export class ShellImpl implements IShellWorker {
   constructor(readonly options: IShellImpl.IOptions) {
     this._environment = new Environment(options.color);
-    this._wasmLoader = new WasmLoader(options.wasmBaseUrl);
-    this._commandRegistry = new CommandRegistry(this._wasmLoader);
+    this._wasmModuleLoader = new WasmModuleLoader(options.wasmBaseUrl);
+    this._commandRegistry = new CommandRegistry();
   }
 
   get aliases(): Aliases {
@@ -266,7 +266,7 @@ export class ShellImpl implements IShellWorker {
 
   private async _initFilesystem(): Promise<void> {
     const { wasmBaseUrl } = this.options;
-    const fsModule = this._wasmLoader.getModule('fs');
+    const fsModule = this._wasmModuleLoader.getModule('fs');
     const module = await fsModule({
       locateFile: (path: string) => wasmBaseUrl + path
     });
@@ -326,9 +326,10 @@ export class ShellImpl implements IShellWorker {
       const commandModules = pkgConfig.modules.map(
         (moduleConfig: any) =>
           new WasmCommandModule(
-            this._wasmLoader,
+            this._wasmModuleLoader,
             moduleConfig.name,
-            moduleConfig.commands ? moduleConfig.commands.split(',') : []
+            moduleConfig.commands ? moduleConfig.commands.split(',') : [],
+            pkgConfig.package
           )
       );
       const commandPackage = new WasmCommandPackage(
@@ -460,7 +461,8 @@ export class ShellImpl implements IShellWorker {
       input,
       output,
       error,
-      this.options.bufferedIO
+      this.options.bufferedIO,
+      this._wasmModuleLoader.cache
     );
     const exitCode = await runner.run(name, context);
 
@@ -562,7 +564,7 @@ export class ShellImpl implements IShellWorker {
   private _commandRegistry: CommandRegistry;
   private _environment: Environment;
   private _history = new History();
-  private _wasmLoader: WasmLoader;
+  private _wasmModuleLoader: WasmModuleLoader;
 
   private _fileSystem?: IFileSystem;
   private _driveFS?: DriveFS;

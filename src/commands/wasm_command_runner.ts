@@ -2,10 +2,10 @@ import { ICommandRunner } from './command_runner';
 import { Context } from '../context';
 import { ExitCode } from '../exit_code';
 import { ITermios } from '../termios';
-import { WasmLoader } from '../wasm_loader';
+import { WasmModuleLoader } from '../wasm_module_loader';
 
 export abstract class WasmCommandRunner implements ICommandRunner {
-  constructor(readonly wasmLoader: WasmLoader) {}
+  constructor(readonly wasmModuleLoader: WasmModuleLoader) {}
 
   abstract moduleName(): string;
 
@@ -13,10 +13,10 @@ export abstract class WasmCommandRunner implements ICommandRunner {
 
   async run(cmdName: string, context: Context): Promise<number> {
     const { args, bufferedIO, fileSystem, mountpoint, stdin, stdout, stderr } = context;
-    const { wasmBaseUrl } = this.wasmLoader;
+    const { wasmBaseUrl } = this.wasmModuleLoader;
 
     const start = Date.now();
-    const wasmModule = this.wasmLoader.getModule(this.moduleName());
+    const wasmModule = this.wasmModuleLoader.getModule(this.moduleName());
 
     let _getCharBuffer: number[] = [];
 
