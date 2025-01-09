@@ -1,11 +1,23 @@
 import { ICommandRunner } from './commands/command_runner';
+import { WasmCommandModule } from './commands/wasm_command_module';
 import { WasmCommandPackage } from './commands/wasm_command_package';
 import * as AllBuiltinCommands from './builtin';
-import { WasmLoader } from './wasm_loader';
 
 export class CommandRegistry {
-  constructor(wasmLoader: WasmLoader) {
+  constructor() {
     this.registerBuiltinCommands(AllBuiltinCommands);
+  }
+
+  /**
+   * Return sequence of all wasm modules ordered by module name.
+   */
+  allModules(): WasmCommandModule[] {
+    const modules: WasmCommandModule[] = [];
+    for (const pkg of this.wasmPackageMap.values()) {
+      modules.push(...pkg.modules);
+    }
+    modules.sort((a, b) => (a.name < b.name ? -1 : 1));
+    return modules;
   }
 
   get(name: string): ICommandRunner | null {
