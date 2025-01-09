@@ -16,10 +16,9 @@ export class CommandRegistry {
     for (const pkg of this.wasmPackageMap.values()) {
       modules.push(...pkg.modules);
     }
-    modules.sort((a, b) => a.name < b.name ? -1 : 1);
+    modules.sort((a, b) => (a.name < b.name ? -1 : 1));
     return modules;
   }
-
 
   get(name: string): ICommandRunner | null {
     return this._map.get(name) ?? null;

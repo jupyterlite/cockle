@@ -10,7 +10,7 @@ export class WasmCommandModule extends WasmCommandRunner {
     wasmModuleLoader: WasmModuleLoader,
     readonly name: string,
     private readonly commands: string[],
-    readonly packageName: string,
+    readonly packageName: string
   ) {
     super(wasmModuleLoader);
   }
