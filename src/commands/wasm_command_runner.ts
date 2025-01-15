@@ -92,15 +92,18 @@ export abstract class WasmCommandRunner implements ICommandRunner {
 
     let exitCode: number | undefined;
 
+    function setExitCode(moduleExitCode: number) {
+      if (exitCode === undefined) {
+        exitCode = moduleExitCode;
+      }
+    }
+
     const wasm = await wasmModule({
       thisProgram: cmdName,
       arguments: args,
       locateFile: (path: string) => wasmBaseUrl + path,
-      quit: (moduleExitCode: number, toThrow: any) => {
-        if (exitCode === undefined) {
-          exitCode = moduleExitCode;
-        }
-      },
+      onExit: (moduleExitCode: number) => setExitCode(moduleExitCode),
+      quit: (moduleExitCode: number, toThrow: any) => setExitCode(moduleExitCode),
       preRun: [
         (module: any) => {
           if (Object.prototype.hasOwnProperty.call(module, 'FS')) {
@@ -140,8 +143,11 @@ export abstract class WasmCommandRunner implements ICommandRunner {
     } else {
       if (Object.prototype.hasOwnProperty.call(wasm, 'FS')) {
         const FS = wasm.FS;
-        FS.close(FS.streams[1]);
-        FS.close(FS.streams[2]);
+        for (const stream of [FS.streams[1], FS.streams[2]]) {
+          if (stream !== null && !FS.isClosed(stream)) {
+            FS.close(stream);
+          }
+        }
       }
 
       if (Object.prototype.hasOwnProperty.call(wasm, 'getEnvStrings')) {
