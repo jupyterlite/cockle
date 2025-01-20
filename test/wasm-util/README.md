@@ -10,13 +10,13 @@ the C files will need to be recompiled. The recommended process to recompile is 
 [emsdk docker image](https://hub.docker.com/r/emscripten/emsdk) as follows:
 
 ```bash
-docker pull emscripten/emsdk:3.1.58
+docker pull emscripten/emsdk:3.1.73
 ```
 
 then from this directory:
 
 ```bash
-docker run -v $PWD:/src -it emscripten/emsdk:3.1.58 bash
+docker run -v $PWD:/src -it emscripten/emsdk:3.1.73 bash
 ```
 
 In the docker image:
@@ -26,3 +26,6 @@ In the docker image:
 ```
 
 which will build new `.js` and `.wasm` files in the `wasm` directory.
+
+Alternatively install and activate the appropriate version of the
+[emsdk](https://github.com/emscripten-core/emsdk)
