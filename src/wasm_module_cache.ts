@@ -1,14 +1,21 @@
 export class WasmModuleCache {
-  get(moduleName: string): any {
-    return this._cache.get(moduleName) ?? undefined;
+  get(packageName: string, moduleName: string): any {
+    const key = this.key(packageName, moduleName);
+    return this._cache.get(key) ?? undefined;
   }
 
-  has(moduleName: string): boolean {
-    return this._cache.has(moduleName);
+  has(packageName: string, moduleName: string): boolean {
+    const key = this.key(packageName, moduleName);
+    return this._cache.has(key);
   }
 
-  set(moduleName: string, module: any): void {
-    this._cache.set(moduleName, module);
+  key(packageName: string, moduleName: string): string {
+    return [packageName, moduleName].join('/');
+  }
+
+  set(packageName: string, moduleName: string, module: any): void {
+    const key = this.key(packageName, moduleName);
+    this._cache.set(key, module);
   }
 
   private _cache = new Map<string, any>();

@@ -214,7 +214,9 @@ if (wantCopy) {
   targetConfigFile = path.join(target, targetConfigFile);
 }
 fs.writeFileSync(targetConfigFile, JSON.stringify(cockleConfig, null, 2));
-const filenames = [targetConfigFile];
+
+// Alternating filenames and subdirectories, only used if !wantCopy.
+const filenamesAndDirectories = [targetConfigFile, ''];
 
 // Output wasm files and their javascript wrappers.
 const requiredSuffixes = {
@@ -225,12 +227,20 @@ const requiredSuffixes = {
   '-fs.data': false
 };
 for (const packageConfig of cockleConfig) {
+  const packageName = packageConfig.package;
   const sourceDirectory = packageConfig.local_directory ?? path.join(envPath, 'bin');
   const moduleNames = packageConfig.modules.map((x: any) => x.name);
+  const targetDirectory = path.join(target, packageName);
+
+  if (wantCopy && !fs.existsSync(targetDirectory)) {
+    fs.mkdirSync(targetDirectory);
+  }
+
   for (const moduleName of moduleNames) {
     for (const [suffix, required] of Object.entries(requiredSuffixes)) {
       const filename = moduleName + suffix;
       const srcFilename = path.join(sourceDirectory, filename);
+
       if (!fs.existsSync(srcFilename)) {
         if (required) {
           throw new Error(`No such file: ${srcFilename}`);
@@ -238,16 +248,16 @@ for (const packageConfig of cockleConfig) {
         continue;
       }
       if (wantCopy) {
-        const targetFileName = path.join(target, filename);
-        fs.copyFileSync(srcFilename, targetFileName);
+        const targetFilename = path.join(targetDirectory, filename);
+        fs.copyFileSync(srcFilename, targetFilename);
       } else {
-        filenames.push(srcFilename);
+        filenamesAndDirectories.push(srcFilename, packageName);
       }
     }
   }
 }
 
 if (!wantCopy) {
-  console.log('Writing list of required files');
-  fs.writeFileSync(target, filenames.join('\n'));
+  console.log('Writing list of required files to file ' + target);
+  fs.writeFileSync(target, filenamesAndDirectories.join('\n'));
 }

@@ -266,9 +266,9 @@ export class ShellImpl implements IShellWorker {
 
   private async _initFilesystem(): Promise<void> {
     const { wasmBaseUrl } = this.options;
-    const fsModule = this._wasmModuleLoader.getModule('fs');
+    const fsModule = this._wasmModuleLoader.getModule('cockle_fs', 'fs');
     const module = await fsModule({
-      locateFile: (path: string) => wasmBaseUrl + path
+      locateFile: (path: string) => wasmBaseUrl + 'cockle_fs/' + path
     });
     const { FS, PATH, ERRNO_CODES, PROXYFS } = module;
 

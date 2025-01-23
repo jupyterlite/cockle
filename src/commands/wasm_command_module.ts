@@ -15,7 +15,7 @@ export class WasmCommandModule extends WasmCommandRunner {
     super(wasmModuleLoader);
   }
 
-  moduleName(): string {
+  get moduleName(): string {
     return this.name;
   }
 

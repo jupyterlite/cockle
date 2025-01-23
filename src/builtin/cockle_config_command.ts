@@ -27,7 +27,11 @@ export class CockleConfigCommand extends BuiltinCommand {
 
     const lines = [['module', 'package', 'cached']];
     for (const module of allModules) {
-      lines.push([module.name, module.packageName, wasmModuleCache.has(module.name) ? 'yes' : '']);
+      lines.push([
+        module.name,
+        module.packageName,
+        wasmModuleCache.has(module.packageName, module.name) ? 'yes' : ''
+      ]);
     }
 
     let colorMap: Map<number, string> | null = null;
