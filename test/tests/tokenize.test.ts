@@ -9,6 +9,15 @@ async function tokenize(page: Page, text: string): Promise<any> {
 async function tokenizeWithAliases(page: Page, text: string): Promise<any> {
   return await page.evaluate(text => {
     const aliases = new globalThis.cockle.Aliases();
+
+    // Set standard aliases that are normally set in ShellImpl from cockle-config.json
+    aliases.set('dir', 'dir --color=auto');
+    aliases.set('grep', 'grep --color=auto');
+    aliases.set('ls', 'ls --color=auto');
+    aliases.set('ll', 'ls -lF');
+    aliases.set('vdir', 'vdir --color=auto');
+    aliases.set('vi', 'vim');
+
     return globalThis.cockle.tokenize(text, true, aliases);
   }, text);
 }
@@ -172,6 +181,7 @@ test.describe('tokenize', () => {
       { offset: 19, value: ';' },
       { offset: 21, value: 'cat' }
     ]);
+    expect(await tokenizeWithAliases(page, 'vi')).toEqual([{ offset: 0, value: 'vim' }]);
   });
 
   test.describe('quote handling', () => {
