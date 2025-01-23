@@ -20,7 +20,6 @@ const ENV_NAME = 'cockle_wasm_env';
 const PLATFORM = 'emscripten-wasm32';
 const CHANNELS = [
   'https://repo.prefix.dev/emscripten-forge-dev',
-  'https://repo.mamba.pm/emscripten-forge',
   'conda-forge'
 ];
 
