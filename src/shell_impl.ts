@@ -315,25 +315,26 @@ export class ShellImpl implements IShellWorker {
     // Check JSON follows schema?
     // May want to store JSON config.
 
-    const packageNames = cockleConfig.map((x: any) => x.package);
+    const packageNames = Object.keys(cockleConfig.packages);
     const fsPackage = 'cockle_fs';
     if (!packageNames.includes(fsPackage)) {
       console.error(`cockle-config.json does not include required package '${fsPackage}'`);
     }
 
     // Create command runners for each wasm module of each emscripten-forge package.
-    for (const pkgConfig of cockleConfig) {
-      const commandModules = pkgConfig.modules.map(
-        (moduleConfig: any) =>
+    for (const packageName of packageNames) {
+      const pkgConfig = cockleConfig.packages[packageName];
+      const commandModules = Object.entries(pkgConfig.modules).map(
+        ([moduleName, moduleConfig]) =>
           new WasmCommandModule(
             this._wasmModuleLoader,
-            moduleConfig.name,
-            moduleConfig.commands ? moduleConfig.commands.split(',') : [],
-            pkgConfig.package
+            moduleName,
+            (moduleConfig as any).commands ? (moduleConfig as any).commands.split(',') : [],
+            packageName
           )
       );
       const commandPackage = new WasmCommandPackage(
-        pkgConfig.package,
+        packageName,
         pkgConfig.version,
         pkgConfig.build_string,
         pkgConfig.channel,
