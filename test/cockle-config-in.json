@@ -1,19 +1,13 @@
-[
-  {
-    "package": "lua"
-  },
-  {
-    "package": "tree"
-  },
-  {
-    "package": "vim"
-  },
-  {
-    "package": "local-cmd",
-    "local_directory": "wasm-util/wasm"
-  },
-  {
-    "package": "check_termios",
-    "local_directory": "wasm-util/wasm"
+{
+  "packages": {
+    "check_termios": {
+      "local_directory": "../test/wasm-util/wasm"
+    },
+    "lua": {},
+    "local-cmd": {
+      "local_directory": "../test/wasm-util/wasm"
+    },
+    "tree": {},
+    "vim": {}
   }
-]
+}

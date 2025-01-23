@@ -1,15 +1,10 @@
-[
-  {
-    "package": "lua"
-  },
-  {
-    "package": "local-cmd",
-    "local_directory": "../test/wasm-util/wasm"
-  },
-  {
-    "package": "tree"
-  },
-  {
-    "package": "vim"
+{
+  "packages": {
+    "lua": {},
+    "local-cmd": {
+      "local_directory": "../test/wasm-util/wasm"
+    },
+    "tree": {},
+    "vim": {}
   }
-]
+}

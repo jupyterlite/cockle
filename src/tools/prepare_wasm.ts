@@ -8,6 +8,7 @@
  */
 
 /* eslint-disable */
+const { deepmerge } = require('deepmerge-ts');
 const fs = require('node:fs');
 const path = require('node:path');
 const { execSync } = require('node:child_process');
@@ -31,7 +32,7 @@ if (process.argv.length !== 4 || (process.argv[2] !== '--list' && process.argv[2
 const wantCopy = process.argv[2] === '--copy';
 const target = process.argv[3];
 
-function isLocalPackage(packageConfig: object): boolean {
+function isLocalPackage(packageConfig: any): boolean {
   return Object.hasOwn(packageConfig, 'local_directory');
 }
 
@@ -63,34 +64,38 @@ const otherConfigFilename = path.join(process.cwd(), 'cockle-config-in.json');
 if (fs.existsSync(otherConfigFilename)) {
   console.log('Combining with config from', otherConfigFilename);
   const extraConfig = JSON.parse(fs.readFileSync(otherConfigFilename, 'utf-8'));
-  cockleConfig = cockleConfig.concat(extraConfig);
+  cockleConfig = deepmerge(cockleConfig, extraConfig);
 }
 
 // Validate input schema, raising ZodError if fails.
-const inputSchema = zod.array(
-  zod
-    .object({
-      package: zod.string(),
-      local_directory: zod.optional(zod.string()),
-      modules: zod.optional(
-        zod.array(
-          zod
-            .object({
-              name: zod.string(),
-              commands: zod.optional(zod.string())
-            })
-            .strict()
-        )
-      )
-    })
-    .strict()
-);
+const inputSchema = zod
+  .object({
+    packages: zod.record(
+      zod.string(),
+      zod
+        .object({
+          local_directory: zod.optional(zod.string()),
+          modules: zod.optional(
+            zod.record(
+              zod.string(),
+              zod
+                .object({
+                  commands: zod.optional(zod.string())
+                })
+                .strict()
+            )
+          )
+        })
+        .strict()
+    )
+  })
+  .strict();
 inputSchema.parse(cockleConfig);
 
 // Required emscripten-wasm32 packages.
-const packageNames = cockleConfig
-  .filter((item: any) => !isLocalPackage(item))
-  .map((item: any) => item.package);
+const packageNames = Object.entries(cockleConfig.packages)
+  .filter(([key, item]) => !isLocalPackage(item))
+  .map((item: any) => item[0]);
 console.log('Required package names', packageNames);
 
 // Find micromamba.
@@ -143,8 +148,8 @@ if (wasmPackageInfo === undefined) {
 const outputProps = ['build_string', 'platform', 'version', 'channel'];
 
 // Insert package info into cockle config.
-for (const packageConfig of cockleConfig) {
-  const packageName = packageConfig.package;
+for (const packageName in cockleConfig.packages) {
+  const packageConfig = cockleConfig.packages[packageName];
   const localPackage = isLocalPackage(packageConfig);
 
   const info = !localPackage
@@ -175,37 +180,45 @@ for (const packageConfig of cockleConfig) {
   // Fill in defaults.
   if (!Object.hasOwn(packageConfig, 'modules')) {
     console.log(`Adding default module for ${packageName}`);
-    packageConfig.modules = [{ name: packageName }];
+    packageConfig.modules = {};
+    packageConfig.modules[packageName] = {};
   }
-  for (const module of packageConfig.modules) {
+  for (const moduleName in packageConfig.modules) {
+    const module = packageConfig.modules[moduleName];
     if (!Object.hasOwn(module, 'commands')) {
-      console.log(`Adding default commands for ${packageName} module ${module.name}`);
-      module.commands = module.name;
+      module.commands = moduleName;
+      console.log(`Adding default commands for ${packageName} module ${moduleName}`);
     }
   }
 }
 
 // Validate output schema, raising ZodError if fails.
-const outputSchema = zod.array(
-  zod
-    .object({
-      package: zod.string(),
-      local_directory: zod.optional(zod.string()),
-      build_string: zod.string(),
-      platform: zod.string(),
-      version: zod.string(),
-      channel: zod.string(),
-      modules: zod.array(
-        zod
-          .object({
-            name: zod.string(),
-            commands: zod.string()
-          })
-          .strict()
-      )
-    })
-    .strict()
-);
+const outputSchema = zod
+  .object({
+    packages: zod.record(
+      zod.string(),
+      zod
+        .object({
+          local_directory: zod.optional(zod.string()),
+          build_string: zod.string(),
+          platform: zod.string(),
+          version: zod.string(),
+          channel: zod.string(),
+          modules: zod.optional(
+            zod.record(
+              zod.string(),
+              zod
+                .object({
+                  commands: zod.optional(zod.string())
+                })
+                .strict()
+            )
+          )
+        })
+        .strict()
+    )
+  })
+  .strict();
 outputSchema.parse(cockleConfig);
 
 // Output config file.
@@ -226,10 +239,11 @@ const requiredSuffixes = {
   '-fs.js': false,
   '-fs.data': false
 };
-for (const packageConfig of cockleConfig) {
-  const packageName = packageConfig.package;
+
+for (const packageName in cockleConfig.packages) {
+  const packageConfig = cockleConfig.packages[packageName];
   const sourceDirectory = packageConfig.local_directory ?? path.join(envPath, 'bin');
-  const moduleNames = packageConfig.modules.map((x: any) => x.name);
+  const moduleNames = Object.keys(packageConfig.modules);
   const targetDirectory = path.join(target, packageName);
 
   if (wantCopy && !fs.existsSync(targetDirectory)) {

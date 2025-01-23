@@ -1,23 +1,19 @@
-[
-  {
-    "package": "cockle_fs",
-    "modules": [
-      {
-        "name": "fs",
-        "commands": ""
+{
+  "packages": {
+    "cockle_fs": {
+      "modules": {
+        "fs": {
+          "commands": ""
+        }
       }
-    ]
-  },
-  {
-    "package": "coreutils",
-    "modules": [
-      {
-        "name": "coreutils",
-        "commands": "basename,cat,chmod,cp,cut,date,dir,dircolors,dirname,echo,env,expr,head,id,join,ln,logname,ls,md5sum,mkdir,mv,nl,pwd,realpath,rm,rmdir,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,sleep,sort,stat,stty,tail,touch,tr,tty,uname,uniq,vdir,wc"
+    },
+    "coreutils": {
+      "modules": {
+        "coreutils": {
+          "commands": "basename,cat,chmod,cp,cut,date,dir,dircolors,dirname,echo,env,expr,head,id,join,ln,logname,ls,md5sum,mkdir,mv,nl,pwd,realpath,rm,rmdir,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,sleep,sort,stat,stty,tail,touch,tr,tty,uname,uniq,vdir,wc"
+        }
       }
-    ]
-  },
-  {
-    "package": "grep"
+    },
+    "grep": {}
   }
-]
+}
