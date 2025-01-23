@@ -7,15 +7,16 @@ import { WasmModuleCache } from './wasm_module_cache';
 export class WasmModuleLoader {
   constructor(readonly wasmBaseUrl: string) {}
 
-  public getModule(name: string): any {
-    let module = this.cache.get(name);
+  public getModule(packageName: string, moduleName: string): any {
+    let module = this.cache.get(packageName, moduleName);
     if (module === undefined) {
       // Maybe should use @jupyterlab/coreutils.URLExt to combine URL components.
-      const url = this.wasmBaseUrl + name + '.js';
+      const filename = this.cache.key(packageName, moduleName) + '.js';
+      const url = this.wasmBaseUrl + filename;
       console.log('Importing JS/WASM from ' + url);
       importScripts(url);
       module = (self as any).Module;
-      this.cache.set(name, module);
+      this.cache.set(packageName, moduleName, module);
     }
     return module;
   }

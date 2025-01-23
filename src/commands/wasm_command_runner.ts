@@ -7,16 +7,18 @@ import { WasmModuleLoader } from '../wasm_module_loader';
 export abstract class WasmCommandRunner implements ICommandRunner {
   constructor(readonly wasmModuleLoader: WasmModuleLoader) {}
 
-  abstract moduleName(): string;
+  abstract get moduleName(): string;
 
   abstract names(): string[];
+
+  abstract get packageName(): string;
 
   async run(cmdName: string, context: Context): Promise<number> {
     const { args, bufferedIO, fileSystem, mountpoint, stdin, stdout, stderr } = context;
     const { wasmBaseUrl } = this.wasmModuleLoader;
 
     const start = Date.now();
-    const wasmModule = this.wasmModuleLoader.getModule(this.moduleName());
+    const wasmModule = this.wasmModuleLoader.getModule(this.packageName, this.moduleName);
 
     let _getCharBuffer: number[] = [];
 
@@ -101,7 +103,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
     const wasm = await wasmModule({
       thisProgram: cmdName,
       arguments: args,
-      locateFile: (path: string) => wasmBaseUrl + path,
+      locateFile: (path: string) => wasmBaseUrl + this.packageName + '/' + path,
       onExit: (moduleExitCode: number) => setExitCode(moduleExitCode),
       quit: (moduleExitCode: number, toThrow: any) => setExitCode(moduleExitCode),
       preRun: [
