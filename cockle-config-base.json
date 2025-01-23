@@ -15,5 +15,14 @@
       }
     },
     "grep": {}
+  },
+  "aliases": {
+    "dir": "dir --color=auto",
+    "grep": "grep --color=auto",
+    "ls": "ls --color=auto",
+    "ll": "ls -lF",
+    "vdir": "vdir --color=auto"
   }
 }
+
+

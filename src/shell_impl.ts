@@ -343,6 +343,16 @@ export class ShellImpl implements IShellWorker {
       );
       this._commandRegistry.registerWasmCommandPackage(commandPackage);
     }
+
+    // Initialise aliases.
+    if (Object.hasOwn(cockleConfig, 'aliases')) {
+      for (const [key, v] of Object.entries(cockleConfig.aliases)) {
+        const value = v as string;
+        if (value.length > 0) {
+          this._aliases.set(key, value);
+        }
+      }
+    }
   }
 
   private _outputPrompt(): void {

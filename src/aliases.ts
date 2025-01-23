@@ -4,11 +4,6 @@
 export class Aliases extends Map<string, string> {
   constructor() {
     super();
-    this.set('dir', 'dir --color=auto');
-    this.set('grep', 'grep --color=auto');
-    this.set('ls', 'ls --color=auto');
-    this.set('ll', 'ls -lF');
-    this.set('vdir', 'vdir --color=auto');
   }
 
   getRecursive(key: string): string | undefined {
@@ -20,7 +15,11 @@ export class Aliases extends Map<string, string> {
         break;
       }
       const newAlias = this.get(newKey);
-      alias = newAlias === undefined ? newAlias : newAlias + alias!.slice(newKey.length);
+      if (newAlias === undefined) {
+        return alias;
+      } else {
+        alias = newAlias + alias!.slice(newKey.length);
+      }
       key = newKey;
     }
     return alias;

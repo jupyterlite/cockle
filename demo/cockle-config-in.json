@@ -6,5 +6,8 @@
     },
     "tree": {},
     "vim": {}
+  },
+  "aliases": {
+    "vi": "vim"
   }
 }

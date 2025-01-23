@@ -11,6 +11,15 @@ async function parse(page: Page, text: string): Promise<any> {
 async function parseWithAliases(page: Page, text: string): Promise<any> {
   return await page.evaluate(text => {
     const aliases = new globalThis.cockle.Aliases();
+
+    // Set standard aliases that are normally set in ShellImpl from cockle-config.json
+    aliases.set("dir", "dir --color=auto")
+    aliases.set("grep", "grep --color=auto")
+    aliases.set("ls", "ls --color=auto")
+    aliases.set("ll", "ls -lF")
+    aliases.set("vdir", "vdir --color=auto")
+    aliases.set("vi", "vim")
+
     return globalThis.cockle.parse(text, true, aliases);
   }, text);
 }
