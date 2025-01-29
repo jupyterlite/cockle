@@ -44,7 +44,9 @@ export abstract class WasmCommandRunner implements ICommandRunner {
     }
 
     function getTermios(tty: any): ITermios {
-      return bufferedIO.termios.clone();
+      const { termios } = bufferedIO;
+      termios.log('Termios get');
+      return termios.clone();
     }
 
     function setTermios(tty: any, optional_actions: any, data: ITermios) {

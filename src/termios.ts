@@ -78,7 +78,7 @@ export class Termios implements ITermios {
   }
 
   // Log to console for debug purposes.
-  log() {
+  log(title: string) {
     const enumHelper = (enumType: any, name: string, enumValue: any) => {
       const s: string[] = [];
       for (const [k, v] of Object.entries(enumType).filter(([k, v]) => k[0].match(/\D/))) {
@@ -89,7 +89,7 @@ export class Termios implements ITermios {
       return `  ${name} = ${enumValue} 0x${enumValue.toString(16)} = ${s.join(' ')}`;
     };
 
-    const log: string[] = ['Termios:'];
+    const log: string[] = [title + ':'];
     log.push(enumHelper(InputFlag, 'c_iflag', this.c_iflag));
     log.push(enumHelper(OutputFlag, 'c_oflag', this.c_oflag));
     log.push(`  c_cflag = ${this.c_cflag} 0x${this.c_cflag.toString(16)}`);
@@ -110,7 +110,7 @@ export class Termios implements ITermios {
     this.c_cflag = iTermios.c_cflag;
     this.c_lflag = iTermios.c_lflag;
     this.c_cc = [...iTermios.c_cc]; // Shallow copy.
-    this.log();
+    this.log('Termios set');
   }
 
   setDefaultWasm(): void {
@@ -161,7 +161,7 @@ export class Termios implements ITermios {
       0,
       0
     ];
-    this.log();
+    this.log('Termios setDefaultWasm');
   }
 
   c_iflag: InputFlag = 0 as InputFlag;
