@@ -2,6 +2,34 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.14
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.13...124730bc4d052625a02a34ea78b921dedefb206a))
+
+### Enhancements made
+
+- Provide visual feedback when downloading wasm modules [#103](https://github.com/jupyterlite/cockle/pull/103) ([@ianthomas23](https://github.com/ianthomas23))
+- Log termios changes to console [#101](https://github.com/jupyterlite/cockle/pull/101) ([@ianthomas23](https://github.com/ianthomas23))
+- Support aliases in cockle-config.json [#100](https://github.com/jupyterlite/cockle/pull/100) ([@ianthomas23](https://github.com/ianthomas23))
+- Improve config JSON file format [#99](https://github.com/jupyterlite/cockle/pull/99) ([@ianthomas23](https://github.com/ianthomas23))
+- Use separate directories for wasm command packages [#98](https://github.com/jupyterlite/cockle/pull/98) ([@ianthomas23](https://github.com/ianthomas23))
+- Build wasm-util using emsdk 3.1.73 [#96](https://github.com/jupyterlite/cockle/pull/96) ([@ianthomas23](https://github.com/ianthomas23))
+- Add emscripten-forge-dev channel [#95](https://github.com/jupyterlite/cockle/pull/95) ([@ianthomas23](https://github.com/ianthomas23))
+- Handle onExit callback from wasm to set exit code [#94](https://github.com/jupyterlite/cockle/pull/94) ([@ianthomas23](https://github.com/ianthomas23))
+- Display wasm module cache status in cockle-config [#92](https://github.com/jupyterlite/cockle/pull/92) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Remove use of default emscripten-forge channel [#102](https://github.com/jupyterlite/cockle/pull/102) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-01-06&to=2025-02-04&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-01-06..2025-02-04&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.13
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.12...1ac07c19492547e5b5769c11f103aa79ff465e98))
@@ -20,8 +48,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2024-12-13&to=2025-01-06&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2024-12-13..2025-01-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.12
 
