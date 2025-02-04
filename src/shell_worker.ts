@@ -10,10 +10,12 @@ import { ShellImpl } from './shell_impl';
 export class ShellWorker implements IShellWorker {
   async initialize(
     options: IShellWorker.IOptions,
+    downloadWasmModuleCallback: IShellWorker.IProxyDownloadWasmModuleCallback,
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ) {
     this._bufferedIO = new WorkerBufferedIO(options.sharedArrayBuffer);
+    this._downloadWasmModuleCallback = downloadWasmModuleCallback;
     this._enableBufferedStdinCallback = enableBufferedStdinCallback;
     this._terminateCallback = terminateCallback;
 
@@ -26,6 +28,7 @@ export class ShellWorker implements IShellWorker {
       driveFsBaseUrl,
       initialDirectories,
       initialFiles,
+      downloadWasmModuleCallback: this._downloadWasmModuleCallback.bind(this),
       enableBufferedStdinCallback: this.enableBufferedStdin.bind(this),
       terminateCallback: this._terminateCallback.bind(this),
       stdinCallback: this._bufferedIO.read.bind(this._bufferedIO),
@@ -70,6 +73,7 @@ export class ShellWorker implements IShellWorker {
 
   private _shellImpl?: ShellImpl;
   private _bufferedIO?: WorkerBufferedIO;
+  private _downloadWasmModuleCallback?: IShellWorker.IProxyDownloadWasmModuleCallback;
   private _enableBufferedStdinCallback?: IShellWorker.IProxyEnableBufferedStdinCallback;
   private _terminateCallback?: IShellWorker.IProxyTerminateCallback;
 }

@@ -23,7 +23,10 @@ import { WasmCommandPackage } from './commands/wasm_command_package';
 export class ShellImpl implements IShellWorker {
   constructor(readonly options: IShellImpl.IOptions) {
     this._environment = new Environment(options.color);
-    this._wasmModuleLoader = new WasmModuleLoader(options.wasmBaseUrl);
+    this._wasmModuleLoader = new WasmModuleLoader(
+      options.wasmBaseUrl,
+      options.downloadWasmModuleCallback
+    );
     this._commandRegistry = new CommandRegistry();
   }
 

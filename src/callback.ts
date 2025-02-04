@@ -10,6 +10,13 @@ export interface IOutputCallback {
 }
 
 /**
+ * Callback for start and end of downloading a wasm module so that frontend can inform the user.
+ */
+export interface IDownloadWasmModuleCallback {
+  (packageName: string, moduleName: string, start: boolean): void;
+}
+
+/**
  * Enable/disable buffered stdin.
  */
 export interface IEnableBufferedStdinCallback {
