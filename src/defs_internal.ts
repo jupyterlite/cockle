@@ -1,5 +1,10 @@
 import { WorkerBufferedIO } from './buffered_io';
-import { IEnableBufferedStdinCallback, IStdinCallback, ITerminateCallback } from './callback';
+import {
+  IDownloadWasmModuleCallback,
+  IEnableBufferedStdinCallback,
+  IStdinCallback,
+  ITerminateCallback
+} from './callback';
 
 import { IShell } from './defs';
 
@@ -26,12 +31,16 @@ export interface IShellWorker extends IShellCommon {
   // Callback proxies need to be separate arguments, they cannot be in IOptions.
   initialize(
     options: IShellWorker.IOptions,
+    downloadWasmModuleCallback: IShellWorker.IProxyDownloadWasmModuleCallback,
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ): void;
 }
 
 export namespace IShellWorker {
+  export interface IProxyDownloadWasmModuleCallback
+    extends IDownloadWasmModuleCallback,
+      ProxyMarked {}
   export interface IProxyEnableBufferedStdinCallback
     extends IEnableBufferedStdinCallback,
       ProxyMarked {}
@@ -46,6 +55,7 @@ export type IRemoteShell = Remote<IShellWorker>;
 
 export namespace IShellImpl {
   export interface IOptions extends IOptionsCommon {
+    downloadWasmModuleCallback: IShellWorker.IProxyDownloadWasmModuleCallback;
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;
     stdinCallback: IStdinCallback;
     terminateCallback: IShellWorker.IProxyTerminateCallback;

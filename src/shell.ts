@@ -5,6 +5,7 @@ import { proxy, wrap } from 'comlink';
 import { MainBufferedIO } from './buffered_io';
 import { IShell } from './defs';
 import { IRemoteShell } from './defs_internal';
+import { DownloadTracker } from './download_tracker';
 
 /**
  * External-facing Shell class that external libraries use.  It communicates with the real shell
@@ -32,8 +33,9 @@ export class Shell implements IShell {
         initialDirectories,
         initialFiles
       },
+      proxy(this.downloadWasmModuleCallback.bind(this)),
       proxy(this.enableBufferedStdinCallback.bind(this)),
-      proxy(this.dispose.bind(this))
+      proxy(this.dispose.bind(this)) // terminateCallback
     );
 
     // Register sendStdinNow callback only after this._remote has been initialized.
@@ -52,6 +54,11 @@ export class Shell implements IShell {
     this._worker!.terminate();
     this._worker = undefined;
 
+    if (this._downloadTracker !== undefined) {
+      this._downloadTracker!.dispose();
+      this._downloadTracker = undefined;
+    }
+
     this._bufferedIO.dispose();
     (this._bufferedIO as any) = undefined;
 
@@ -60,6 +67,29 @@ export class Shell implements IShell {
 
   get disposed(): ISignal<this, void> {
     return this._disposed;
+  }
+
+  downloadWasmModuleCallback(packageName: string, moduleName: string, start: boolean): void {
+    if (start) {
+      if (this._downloadTracker !== undefined) {
+        this._downloadTracker.dispose();
+      }
+
+      this._downloadTracker = new DownloadTracker(
+        packageName,
+        moduleName,
+        this.options.outputCallback
+      );
+      this._downloadTracker.start();
+    } else {
+      if (
+        this._downloadTracker !== undefined &&
+        packageName === this._downloadTracker.packageName &&
+        moduleName === this._downloadTracker.moduleName
+      ) {
+        this._downloadTracker.stop();
+      }
+    }
   }
 
   get isDisposed(): boolean {
@@ -112,4 +142,5 @@ export class Shell implements IShell {
   private _bufferedIO: MainBufferedIO;
   private _disposed = new Signal<this, void>(this);
   private _isDisposed = false;
+  private _downloadTracker?: DownloadTracker;
 }

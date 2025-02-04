@@ -30,5 +30,7 @@ export const ansi = {
   styleYellow: ESC + '0;33m',
   styleBlue: ESC + '0;34m',
   stylePurple: ESC + '0;35m',
-  styleCyan: ESC + '0;36m'
+  styleCyan: ESC + '0;36m',
+  showCursor: ESC + '?25h',
+  hideCursor: ESC + '?25l'
 };
