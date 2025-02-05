@@ -31,6 +31,8 @@ jobs:
     steps:
       - name: Install micromamba executable
         uses: mamba-org/setup-micromamba@main
+        with:
+          micromamba-version: '2.0.5-0'
 
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
