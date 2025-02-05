@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.15
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.14...0c68d554a20e4ca793245566fb2a8924614d70a1))
+
+### Bugs fixed
+
+- Use service worker based DriveFS [#107](https://github.com/jupyterlite/cockle/pull/107) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Add deepmerge-ts to dependencies [#104](https://github.com/jupyterlite/cockle/pull/104) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-02-04&to=2025-02-05&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-02-04..2025-02-05&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.14
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.13...124730bc4d052625a02a34ea78b921dedefb206a))
@@ -27,8 +47,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-01-06&to=2025-02-04&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-01-06..2025-02-04&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.13
 
