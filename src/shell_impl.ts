@@ -1,7 +1,6 @@
-import { DriveFS } from '@jupyterlite/contents';
-
 import { Aliases } from './aliases';
 import { ansi } from './ansi';
+import { CockleDriveFS } from './cockle_drive_fs';
 import { CommandRegistry } from './command_registry';
 import { Context } from './context';
 import { IShellImpl, IShellWorker } from './defs_internal';
@@ -276,18 +275,18 @@ export class ShellImpl implements IShellWorker {
     const { FS, PATH, ERRNO_CODES, PROXYFS } = module;
 
     const { mountpoint } = this;
-    FS.mkdir(mountpoint, 0o777);
+    FS.mkdirTree(mountpoint, 0o777);
     this._fileSystem = { FS, PATH, ERRNO_CODES, PROXYFS };
 
     const { driveFsBaseUrl, initialDirectories, initialFiles } = this.options;
     if (driveFsBaseUrl) {
-      this._driveFS = new DriveFS({
+      this._driveFS = new CockleDriveFS({
         FS,
         PATH,
         ERRNO_CODES,
         baseUrl: driveFsBaseUrl,
         driveName: '',
-        mountpoint: mountpoint
+        mountpoint
       });
       FS.mount(this._driveFS, {}, mountpoint);
     }
@@ -581,5 +580,5 @@ export class ShellImpl implements IShellWorker {
   private _wasmModuleLoader: WasmModuleLoader;
 
   private _fileSystem?: IFileSystem;
-  private _driveFS?: DriveFS;
+  private _driveFS?: CockleDriveFS;
 }
