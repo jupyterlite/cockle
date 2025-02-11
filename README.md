@@ -49,7 +49,7 @@ npm run serve
 
 then open a browser at the specified URL:
 
-<img alt="Demo" src="demo.png" width="500px">
+<img alt="Demo" src="demo.png" width="800px">
 
 ---
 
