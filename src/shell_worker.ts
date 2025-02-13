@@ -5,7 +5,8 @@ import { IShellWorker } from './defs_internal';
 import { ShellImpl } from './shell_impl';
 
 /**
- * WebWorker running ShellImpl.
+ * WebWorker running ShellImpl. Implementation-specific code (comlink) is here to avoid polluting
+ * ShellImpl with it.
  */
 export class ShellWorker implements IShellWorker {
   async initialize(
