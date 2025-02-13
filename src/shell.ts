@@ -1,3 +1,4 @@
+import { PromiseDelegate } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { proxy, wrap } from 'comlink';
@@ -14,7 +15,7 @@ import { DownloadTracker } from './download_tracker';
 export class Shell implements IShell {
   constructor(readonly options: IShell.IOptions) {
     this._bufferedIO = new MainBufferedIO(options.outputCallback);
-    this._initWorker(options);
+    this._initWorker(options).then(this._ready.resolve.bind(this._ready));
   }
 
   private async _initWorker(options: IShell.IOptions) {
@@ -120,6 +121,13 @@ export class Shell implements IShell {
     }
   }
 
+  /**
+   * A promise that is fulfilled when the terminal is ready to be started.
+   */
+  get ready(): Promise<void> {
+    return this._ready.promise;
+  }
+
   async setSize(rows: number, columns: number): Promise<void> {
     if (this.isDisposed) {
       return;
@@ -133,6 +141,7 @@ export class Shell implements IShell {
       return;
     }
 
+    await this.ready;
     await this._bufferedIO.start();
     await this._remote!.start();
   }
@@ -142,5 +151,6 @@ export class Shell implements IShell {
   private _bufferedIO: MainBufferedIO;
   private _disposed = new Signal<this, void>(this);
   private _isDisposed = false;
+  private _ready = new PromiseDelegate<void>();
   private _downloadTracker?: DownloadTracker;
 }
