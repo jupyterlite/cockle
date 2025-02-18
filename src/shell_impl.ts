@@ -52,109 +52,49 @@ export class ShellImpl implements IShellWorker {
 
     // Might be a multi-char string if begins with escape code.
     const code = char.charCodeAt(0);
-    //console.log("CODE", code)
-    if (code === 13) {
-      // \r
-      this.output('\n');
-      const cmdText = this._currentLine;
-      this._currentLine = '';
-      this._cursorIndex = 0;
-      await this._runCommands(cmdText);
-      await this._outputPrompt();
-    } else if (code === 127) {
-      // Backspace
-      if (this._cursorIndex > 0) {
-        const suffix = this._currentLine.slice(this._cursorIndex);
-        this._currentLine = this._currentLine.slice(0, this._cursorIndex - 1) + suffix;
-        this._cursorIndex--;
-        this.output(
-          ansi.cursorLeft(1) + suffix + ansi.eraseEndLine + ansi.cursorLeft(suffix.length)
-        );
+    switch (code) {
+      case 13: {
+        // \r
+        this.output('\n');
+        const cmdText = this._currentLine;
+        this._currentLine = '';
+        this._cursorIndex = 0;
+        await this._runCommands(cmdText);
+        this._outputPrompt();
+        break;
       }
-    } else if (code === 9) {
-      // Tab \t
-      await this._tabComplete();
-    } else if (code === 27) {
-      // Escape following by 1+ more characters
-      const remainder = char.slice(1);
-      if (
-        remainder === '[A' || // Up arrow
-        remainder === '[1A' ||
-        remainder === '[B' || // Down arrow
-        remainder === '[1B'
-      ) {
-        const cmdText = this._history.scrollCurrent(remainder.endsWith('B'));
-        this._currentLine = cmdText !== null ? cmdText : '';
-        this._cursorIndex = this._currentLine.length;
-        // Re-output whole line.
-        this.output(ansi.eraseStartLine + `\r${this._environment.getPrompt()}${this._currentLine}`);
-      } else if (remainder === '[D' || remainder === '[1D') {
-        // Left arrow
+      case 127: // Backspace
         if (this._cursorIndex > 0) {
+          const suffix = this._currentLine.slice(this._cursorIndex);
+          this._currentLine = this._currentLine.slice(0, this._cursorIndex - 1) + suffix;
           this._cursorIndex--;
-          this.output(ansi.cursorLeft());
+          this.output(
+            ansi.cursorLeft(1) + suffix + ansi.eraseEndLine + ansi.cursorLeft(suffix.length)
+          );
         }
-      } else if (remainder === '[C' || remainder === '[1C') {
-        // Right arrow
-        if (this._cursorIndex < this._currentLine.length) {
-          this._cursorIndex++;
-          this.output(ansi.cursorRight());
+        break;
+      case 9: // Tab \t
+        await this._tabComplete();
+        break;
+      case 27: // Escape following by 1+ more characters
+        this._escapedInput(char);
+        break;
+      case 4: // EOT, usually = Ctrl-D
+        break;
+      default:
+        // Add char to command line at cursor position.
+        if (this._cursorIndex === this._currentLine.length) {
+          // Append char.
+          this._currentLine += char;
+          this.output(char);
+        } else {
+          // Insert char.
+          const suffix = this._currentLine.slice(this._cursorIndex);
+          this._currentLine = this._currentLine.slice(0, this._cursorIndex) + char + suffix;
+          this.output(ansi.eraseEndLine + char + suffix + ansi.cursorLeft(suffix.length));
         }
-      } else if (remainder === '[3~') {
-        // Delete
-        if (this._cursorIndex < this._currentLine.length) {
-          const suffix = this._currentLine.slice(this._cursorIndex + 1);
-          this._currentLine = this._currentLine.slice(0, this._cursorIndex) + suffix;
-          this.output(ansi.eraseEndLine + suffix + ansi.cursorLeft(suffix.length));
-        }
-      } else if (remainder === '[H' || remainder === '[1;2H') {
-        // Home
-        if (this._cursorIndex > 0) {
-          this.output(ansi.cursorLeft(this._cursorIndex));
-          this._cursorIndex = 0;
-        }
-      } else if (remainder === '[F' || remainder === '[1;2F') {
-        // End
-        const { length } = this._currentLine;
-        if (this._cursorIndex < length) {
-          this.output(ansi.cursorRight(length - this._cursorIndex));
-          this._cursorIndex = length;
-        }
-      } else if (remainder === '[1;2D' || remainder === '[1;5D') {
-        // Start of previous word
-        if (this._cursorIndex > 0) {
-          const index =
-            this._currentLine.slice(0, this._cursorIndex).trimEnd().lastIndexOf(' ') + 1;
-          this.output(ansi.cursorLeft(this._cursorIndex - index));
-          this._cursorIndex = index;
-        }
-      } else if (remainder === '[1;2C' || remainder === '[1;5C') {
-        // End of next word
-        const { length } = this._currentLine;
-        if (this._cursorIndex < length - 1) {
-          const end = this._currentLine.slice(this._cursorIndex);
-          const trimmed = end.trimStart();
-          const i = trimmed.indexOf(' ');
-          const index = i < 0 ? length : this._cursorIndex + end.length - trimmed.length + i;
-          this.output(ansi.cursorRight(index - this._cursorIndex));
-          this._cursorIndex = index;
-        }
-      }
-    } else if (code === 4) {
-      // EOT, usually = Ctrl-D
-    } else {
-      // Add char to command line at cursor position.
-      if (this._cursorIndex === this._currentLine.length) {
-        // Append char.
-        this._currentLine += char;
-        this.output(char);
-      } else {
-        // Insert char.
-        const suffix = this._currentLine.slice(this._cursorIndex);
-        this._currentLine = this._currentLine.slice(0, this._cursorIndex) + char + suffix;
-        this.output(ansi.eraseEndLine + char + suffix + ansi.cursorLeft(suffix.length));
-      }
-      this._cursorIndex++;
+        this._cursorIndex++;
+        break;
     }
   }
 
@@ -194,6 +134,87 @@ export class ShellImpl implements IShellWorker {
     console.log('Cockle ShellImpl.terminate');
     this._isRunning = false;
     this.options.terminateCallback();
+  }
+
+  /**
+   * Handle input where the first character is an escape (ascii 27).
+   */
+  private async _escapedInput(char: string): Promise<void> {
+    const remainder = char.slice(1);
+    switch (remainder) {
+      case '[A': // Up arrow
+      case '[1A':
+      case '[B': // Down arrow
+      case '[1B': {
+        const cmdText = this._history.scrollCurrent(remainder.endsWith('B'));
+        this._currentLine = cmdText !== null ? cmdText : '';
+        this._cursorIndex = this._currentLine.length;
+        // Re-output whole line.
+        this.output(ansi.eraseStartLine + `\r${this._environment.getPrompt()}${this._currentLine}`);
+        break;
+      }
+      case '[D': // Left arrow
+      case '[1D':
+        if (this._cursorIndex > 0) {
+          this._cursorIndex--;
+          this.output(ansi.cursorLeft());
+        }
+        break;
+      case '[C': // Right arrow
+      case '[1C':
+        if (this._cursorIndex < this._currentLine.length) {
+          this._cursorIndex++;
+          this.output(ansi.cursorRight());
+        }
+        break;
+      case '[3~': // Delete
+        if (this._cursorIndex < this._currentLine.length) {
+          const suffix = this._currentLine.slice(this._cursorIndex + 1);
+          this._currentLine = this._currentLine.slice(0, this._cursorIndex) + suffix;
+          this.output(ansi.eraseEndLine + suffix + ansi.cursorLeft(suffix.length));
+        }
+        break;
+      case '[H': // Home
+      case '[1;2H':
+        if (this._cursorIndex > 0) {
+          this.output(ansi.cursorLeft(this._cursorIndex));
+          this._cursorIndex = 0;
+        }
+        break;
+      case '[F': // End
+      case '[1;2F': {
+        const { length } = this._currentLine;
+        if (this._cursorIndex < length) {
+          this.output(ansi.cursorRight(length - this._cursorIndex));
+          this._cursorIndex = length;
+        }
+        break;
+      }
+      case '[1;2D': // Start of previous word
+      case '[1;5D':
+        if (this._cursorIndex > 0) {
+          const index =
+            this._currentLine.slice(0, this._cursorIndex).trimEnd().lastIndexOf(' ') + 1;
+          this.output(ansi.cursorLeft(this._cursorIndex - index));
+          this._cursorIndex = index;
+        }
+        break;
+      case '[1;2C': // End of next word
+      case '[1;5C': {
+        const { length } = this._currentLine;
+        if (this._cursorIndex < length - 1) {
+          const end = this._currentLine.slice(this._cursorIndex);
+          const trimmed = end.trimStart();
+          const i = trimmed.indexOf(' ');
+          const index = i < 0 ? length : this._cursorIndex + end.length - trimmed.length + i;
+          this.output(ansi.cursorRight(index - this._cursorIndex));
+          this._cursorIndex = index;
+        }
+        break;
+      }
+      default:
+        break;
+    }
   }
 
   private _filenameExpansion(args: string[]): string[] {
