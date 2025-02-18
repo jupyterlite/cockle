@@ -2,6 +2,31 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.16
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.15...d57db66a05507ed26983764309d6c75584062632))
+
+### Enhancements made
+
+- Use switch statements instead of nested if-else [#134](https://github.com/jupyterlite/cockle/pull/134) ([@ianthomas23](https://github.com/ianthomas23))
+- Remove JupyterLite dependencies [#133](https://github.com/jupyterlite/cockle/pull/133) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Use ready promise before starting shell [#132](https://github.com/jupyterlite/cockle/pull/132) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Documentation improvements
+
+- Update screenshot in README [#120](https://github.com/jupyterlite/cockle/pull/120) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-02-05&to=2025-02-18&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-02-05..2025-02-18&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.15
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.14...0c68d554a20e4ca793245566fb2a8924614d70a1))
@@ -19,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-02-04&to=2025-02-05&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-02-04..2025-02-05&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.14
 
