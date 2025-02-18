@@ -17,7 +17,7 @@ export class WasmModuleLoader {
       // Maybe should use @jupyterlab/coreutils.URLExt to combine URL components.
       const filename = this.cache.key(packageName, moduleName) + '.js';
       const url = this.wasmBaseUrl + filename;
-      console.log('Importing JS/WASM from ' + url);
+      console.log('Cockle Importing JS/WASM from ' + url);
 
       this.downloadWasmModuleCallback(packageName, moduleName, true);
       importScripts(url);

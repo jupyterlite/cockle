@@ -1,4 +1,4 @@
-import { IObservableDisposable } from '@lumino/disposable';
+import type { IObservableDisposable } from '@lumino/disposable';
 
 import { IOutputCallback } from './callback';
 

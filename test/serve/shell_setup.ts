@@ -2,7 +2,7 @@ import { IShell, Shell } from '@jupyterlite/cockle';
 import { MockTerminalOutput } from './output_setup';
 
 export interface IShellSetup {
-  shell: Shell;
+  shell: IShell;
   output: MockTerminalOutput;
 }
 

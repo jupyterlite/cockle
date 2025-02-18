@@ -2,6 +2,8 @@
  * Callbacks used by a shell to call functions in the frontend.
  */
 
+import { IFileSystem } from './file_system';
+
 /**
  * Send output string to be displayed in terminal.
  */
@@ -21,6 +23,13 @@ export interface IDownloadWasmModuleCallback {
  */
 export interface IEnableBufferedStdinCallback {
   (enable: boolean): void;
+}
+
+/**
+ * Initialise DriveFS to mount external drive into the shell's filesystem.
+ */
+export interface IInitDriveFSCallback {
+  (driveFsBaseUrl: string, mountpoint: string, fileSystem: IFileSystem): void;
 }
 
 /**

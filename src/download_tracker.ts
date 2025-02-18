@@ -1,4 +1,4 @@
-import { IDisposable } from '@lumino/disposable';
+import type { IDisposable } from '@lumino/disposable';
 
 import { ansi } from './ansi';
 import { IOutputCallback } from './callback';

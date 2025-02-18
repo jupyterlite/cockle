@@ -89,7 +89,7 @@ export class Termios implements ITermios {
       return `  ${name} = ${enumValue} 0x${enumValue.toString(16)} = ${s.join(' ')}`;
     };
 
-    const log: string[] = [title + ':'];
+    const log: string[] = ['Cockle ' + title + ':'];
     log.push(enumHelper(InputFlag, 'c_iflag', this.c_iflag));
     log.push(enumHelper(OutputFlag, 'c_oflag', this.c_oflag));
     log.push(`  c_cflag = ${this.c_cflag} 0x${this.c_cflag.toString(16)}`);

@@ -1,6 +1,5 @@
 import { Aliases } from './aliases';
 import { ansi } from './ansi';
-import { CockleDriveFS } from './cockle_drive_fs';
 import { CommandRegistry } from './command_registry';
 import { Context } from './context';
 import { IShellImpl, IShellWorker } from './defs_internal';
@@ -171,10 +170,6 @@ export class ShellImpl implements IShellWorker {
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
-    if (!this._isRunning) {
-      return;
-    }
-
     const { environment } = this;
 
     if (rows >= 1) {
@@ -196,12 +191,12 @@ export class ShellImpl implements IShellWorker {
   }
 
   terminate() {
-    console.log('ShellImpl.terminate');
+    console.log('Cockle ShellImpl.terminate');
     this._isRunning = false;
     this.options.terminateCallback();
   }
 
-  _filenameExpansion(args: string[]): string[] {
+  private _filenameExpansion(args: string[]): string[] {
     let ret: string[] = [];
     let nFlags = 0;
 
@@ -279,16 +274,8 @@ export class ShellImpl implements IShellWorker {
     this._fileSystem = { FS, PATH, ERRNO_CODES, PROXYFS };
 
     const { driveFsBaseUrl, initialDirectories, initialFiles } = this.options;
-    if (driveFsBaseUrl) {
-      this._driveFS = new CockleDriveFS({
-        FS,
-        PATH,
-        ERRNO_CODES,
-        baseUrl: driveFsBaseUrl,
-        driveName: '',
-        mountpoint
-      });
-      FS.mount(this._driveFS, {}, mountpoint);
+    if (driveFsBaseUrl !== undefined) {
+      this.options.initDriveFSCallback(driveFsBaseUrl, this.mountpoint, this._fileSystem);
     }
 
     FS.chdir(mountpoint);
@@ -580,5 +567,4 @@ export class ShellImpl implements IShellWorker {
   private _wasmModuleLoader: WasmModuleLoader;
 
   private _fileSystem?: IFileSystem;
-  private _driveFS?: CockleDriveFS;
 }

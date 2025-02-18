@@ -161,7 +161,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
     }
 
     const end = Date.now();
-    console.log(`${cmdName} load and run time ${end - start} ms`);
+    console.log(`Cockle ${cmdName} load and run time ${end - start} ms`);
     return exitCode;
   }
 }

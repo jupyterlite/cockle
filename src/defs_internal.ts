@@ -1,14 +1,14 @@
+import { ProxyMarked, Remote } from 'comlink';
+
 import { WorkerBufferedIO } from './buffered_io';
 import {
   IDownloadWasmModuleCallback,
   IEnableBufferedStdinCallback,
+  IInitDriveFSCallback,
   IStdinCallback,
   ITerminateCallback
 } from './callback';
-
 import { IShell } from './defs';
-
-import { ProxyMarked, Remote } from 'comlink';
 
 interface IOptionsCommon {
   color: boolean;
@@ -57,6 +57,7 @@ export namespace IShellImpl {
   export interface IOptions extends IOptionsCommon {
     downloadWasmModuleCallback: IShellWorker.IProxyDownloadWasmModuleCallback;
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;
+    initDriveFSCallback: IInitDriveFSCallback;
     stdinCallback: IStdinCallback;
     terminateCallback: IShellWorker.IProxyTerminateCallback;
     bufferedIO: WorkerBufferedIO;
