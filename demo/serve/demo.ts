@@ -1,4 +1,4 @@
-import { Shell } from '@jupyterlite/cockle';
+import { IShell, Shell } from '@jupyterlite/cockle';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { IDemo } from './defs';
@@ -70,5 +70,5 @@ export class Demo {
   private _options: IDemo.IOptions;
   private _term: Terminal;
   private _fitAddon: FitAddon;
-  private _shell: Shell;
+  private _shell: IShell;
 }
