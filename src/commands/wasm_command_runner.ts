@@ -14,7 +14,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
   abstract get packageName(): string;
 
   async run(cmdName: string, context: Context): Promise<number> {
-    const { args, bufferedIO, fileSystem, mountpoint, stdin, stdout, stderr } = context;
+    const { args, bufferedIO, fileSystem, stdin, stdout, stderr } = context;
     const { wasmBaseUrl } = this.wasmModuleLoader;
 
     const start = Date.now();
@@ -113,6 +113,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
           if (Object.prototype.hasOwnProperty.call(module, 'FS')) {
             // Use PROXYFS so that command sees the shared FS.
             const FS = module.FS;
+            const { mountpoint } = fileSystem;
             FS.mkdir(mountpoint, 0o777);
             FS.mount(fileSystem.PROXYFS, { root: mountpoint, fs: fileSystem.FS }, mountpoint);
             FS.chdir(fileSystem.FS.cwd());

@@ -15,7 +15,6 @@ export class Context {
   constructor(
     readonly args: string[],
     readonly fileSystem: IFileSystem,
-    readonly mountpoint: string,
     readonly aliases: Aliases,
     readonly commandRegistry: CommandRegistry,
     readonly environment: Environment,
