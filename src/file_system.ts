@@ -3,4 +3,5 @@ export interface IFileSystem {
   PATH: any;
   ERRNO_CODES: any;
   PROXYFS: any;
+  mountpoint: string;
 }

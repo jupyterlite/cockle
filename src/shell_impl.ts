@@ -42,7 +42,7 @@ export class ShellImpl implements IShellWorker {
 
   async initialize() {
     await this._initWasmPackages();
-    await this._initFilesystem();
+    await this._initFileSystem();
   }
 
   async input(char: string): Promise<void> {
@@ -96,10 +96,6 @@ export class ShellImpl implements IShellWorker {
         this._cursorIndex++;
         break;
     }
-  }
-
-  get mountpoint(): string {
-    return this.options.mountpoint ?? '/drive';
   }
 
   output(text: string): void {
@@ -282,7 +278,7 @@ export class ShellImpl implements IShellWorker {
     return ret;
   }
 
-  private async _initFilesystem(): Promise<void> {
+  private async _initFileSystem(): Promise<void> {
     const { wasmBaseUrl } = this.options;
     const fsModule = this._wasmModuleLoader.getModule('cockle_fs', 'fs');
     const module = await fsModule({
@@ -290,13 +286,13 @@ export class ShellImpl implements IShellWorker {
     });
     const { FS, PATH, ERRNO_CODES, PROXYFS } = module;
 
-    const { mountpoint } = this;
+    const mountpoint = this.options.mountpoint ?? '/drive';
     FS.mkdirTree(mountpoint, 0o777);
-    this._fileSystem = { FS, PATH, ERRNO_CODES, PROXYFS };
+    this._fileSystem = { FS, PATH, ERRNO_CODES, PROXYFS, mountpoint };
 
     const { driveFsBaseUrl, initialDirectories, initialFiles } = this.options;
     if (driveFsBaseUrl !== undefined) {
-      this.options.initDriveFSCallback(driveFsBaseUrl, this.mountpoint, this._fileSystem);
+      this.options.initDriveFSCallback(driveFsBaseUrl, mountpoint, this._fileSystem);
     }
 
     FS.chdir(mountpoint);
@@ -473,7 +469,6 @@ export class ShellImpl implements IShellWorker {
     const context = new Context(
       args,
       this._fileSystem!,
-      this.mountpoint,
       this._aliases,
       this._commandRegistry,
       this._environment,
