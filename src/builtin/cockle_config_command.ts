@@ -1,6 +1,6 @@
 import { BuiltinCommand } from './builtin_command';
 import { ansi } from '../ansi';
-import { Context } from '../context';
+import { IContext } from '../context';
 import { ExitCode } from '../exit_code';
 import { toTable } from '../utils';
 import { COCKLE_VERSION } from '../version';
@@ -10,7 +10,7 @@ export class CockleConfigCommand extends BuiltinCommand {
     return 'cockle-config';
   }
 
-  protected async _run(context: Context): Promise<number> {
+  protected async _run(context: IContext): Promise<number> {
     const { stdout } = context;
 
     stdout.write(`cockle ${COCKLE_VERSION}\n`);
@@ -20,7 +20,7 @@ export class CockleConfigCommand extends BuiltinCommand {
     return ExitCode.SUCCESS;
   }
 
-  private _writeModuleConfig(context: Context) {
+  private _writeModuleConfig(context: IContext) {
     const { commandRegistry, stdout, wasmModuleCache } = context;
 
     const allModules = commandRegistry.allModules();
@@ -46,7 +46,7 @@ export class CockleConfigCommand extends BuiltinCommand {
     }
   }
 
-  private _writePackageConfig(context: Context) {
+  private _writePackageConfig(context: IContext) {
     const { commandRegistry, stdout } = context;
 
     const map = commandRegistry.wasmPackageMap;

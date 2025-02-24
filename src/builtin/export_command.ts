@@ -1,7 +1,7 @@
 import { BuiltinCommand } from './builtin_command';
 import { TrailingStringsOption } from './option';
 import { Options } from './options';
-import { Context } from '../context';
+import { IContext } from '../context';
 import { ExitCode } from '../exit_code';
 
 class ExportOptions extends Options {
@@ -13,7 +13,7 @@ export class ExportCommand extends BuiltinCommand {
     return 'export';
   }
 
-  protected async _run(context: Context): Promise<number> {
+  protected async _run(context: IContext): Promise<number> {
     const { args, environment } = context;
     const options = Options.fromArgs(args, ExportOptions);
 

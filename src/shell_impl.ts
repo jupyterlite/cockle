@@ -1,7 +1,7 @@
 import { Aliases } from './aliases';
 import { ansi } from './ansi';
 import { CommandRegistry } from './command_registry';
-import { Context } from './context';
+import { IContext } from './context';
 import { IShellImpl, IShellWorker } from './defs_internal';
 import { Environment } from './environment';
 import { ErrorExitCode, FindCommandError, GeneralError } from './error_exit_code';
@@ -466,23 +466,25 @@ export class ShellImpl implements IShellWorker {
 
     let args = commandNode.suffix.map(token => token.value);
     args = this._filenameExpansion(args);
-    const context = new Context(
+    const { aliases, environment, history } = this;
+    const context: IContext = {
       args,
-      this._fileSystem!,
-      this._aliases,
-      this._commandRegistry,
-      this._environment,
-      this._history,
-      this.terminate.bind(this),
-      input,
-      output,
-      error,
-      this.options.bufferedIO,
-      this._wasmModuleLoader.cache
-    );
+      fileSystem: this._fileSystem!,
+      aliases,
+      commandRegistry: this._commandRegistry,
+      environment,
+      history,
+      terminate: this.terminate.bind(this),
+      stdin: input,
+      stdout: output,
+      stderr: error,
+      bufferedIO: this.options.bufferedIO,
+      wasmModuleCache: this._wasmModuleLoader.cache
+    };
     const exitCode = await runner.run(name, context);
 
-    context.flush();
+    error.flush();
+    output.flush();
     return exitCode;
   }
 

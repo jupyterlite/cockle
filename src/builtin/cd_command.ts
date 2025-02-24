@@ -1,7 +1,7 @@
 import { BuiltinCommand } from './builtin_command';
 import { TrailingStringsOption } from './option';
 import { Options } from './options';
-import { Context } from '../context';
+import { IContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 
@@ -14,7 +14,7 @@ export class CdCommand extends BuiltinCommand {
     return 'cd';
   }
 
-  protected async _run(context: Context): Promise<number> {
+  protected async _run(context: IContext): Promise<number> {
     const { args } = context;
     const options = Options.fromArgs(args, CdOptions);
     const paths = options.trailingStrings.strings;

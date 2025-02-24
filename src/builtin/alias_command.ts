@@ -1,7 +1,7 @@
 import { BuiltinCommand } from './builtin_command';
 import { TrailingStringsOption } from './option';
 import { Options } from './options';
-import { Context } from '../context';
+import { IContext } from '../context';
 import { ExitCode } from '../exit_code';
 
 class AliasOptions extends Options {
@@ -13,7 +13,7 @@ export class AliasCommand extends BuiltinCommand {
     return 'alias';
   }
 
-  protected async _run(context: Context): Promise<number> {
+  protected async _run(context: IContext): Promise<number> {
     const { aliases, args, stdout } = context;
     const options = Options.fromArgs(args, AliasOptions);
 

@@ -1,7 +1,7 @@
 import { BuiltinCommand } from './builtin_command';
 import { BooleanOption } from './option';
 import { Options } from './options';
-import { Context } from '../context';
+import { IContext } from '../context';
 import { ExitCode } from '../exit_code';
 
 class HistoryOptions extends Options {
@@ -14,7 +14,7 @@ export class HistoryCommand extends BuiltinCommand {
     return 'history';
   }
 
-  protected async _run(context: Context): Promise<number> {
+  protected async _run(context: IContext): Promise<number> {
     const { args, history, stdout } = context;
     const options = Options.fromArgs(args, HistoryOptions);
 

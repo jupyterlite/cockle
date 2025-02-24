@@ -1,6 +1,6 @@
-import { Context } from '../context';
+import { IContext } from '../context';
 
 export interface ICommandRunner {
   names(): string[];
-  run(cmdName: string, context: Context): Promise<number>;
+  run(cmdName: string, context: IContext): Promise<number>;
 }
