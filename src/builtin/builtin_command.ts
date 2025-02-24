@@ -1,5 +1,5 @@
 import { ICommandRunner } from '../commands/command_runner';
-import { Context } from '../context';
+import { IContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 
 export abstract class BuiltinCommand implements ICommandRunner {
@@ -9,7 +9,7 @@ export abstract class BuiltinCommand implements ICommandRunner {
 
   abstract get name(): string;
 
-  run(cmdName: string, context: Context): Promise<number> {
+  run(cmdName: string, context: IContext): Promise<number> {
     if (cmdName !== this.name) {
       // This should not happen.
       throw new FindCommandError(cmdName);
@@ -17,5 +17,5 @@ export abstract class BuiltinCommand implements ICommandRunner {
     return this._run(context);
   }
 
-  protected abstract _run(context: Context): Promise<number>;
+  protected abstract _run(context: IContext): Promise<number>;
 }

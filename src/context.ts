@@ -11,24 +11,17 @@ import { WasmModuleCache } from './wasm_module_cache';
 /**
  * Context used to run commands.
  */
-export class Context {
-  constructor(
-    readonly args: string[],
-    readonly fileSystem: IFileSystem,
-    readonly aliases: Aliases,
-    readonly commandRegistry: CommandRegistry,
-    readonly environment: Environment,
-    readonly history: History,
-    readonly terminate: ITerminateCallback,
-    readonly stdin: IInput,
-    readonly stdout: IOutput,
-    readonly stderr: IOutput,
-    readonly bufferedIO: WorkerBufferedIO,
-    readonly wasmModuleCache: WasmModuleCache
-  ) {}
-
-  flush(): void {
-    this.stderr.flush();
-    this.stdout.flush();
-  }
+export interface IContext {
+  args: string[];
+  fileSystem: IFileSystem;
+  aliases: Aliases;
+  commandRegistry: CommandRegistry;
+  environment: Environment;
+  history: History;
+  terminate: ITerminateCallback;
+  stdin: IInput;
+  stdout: IOutput;
+  stderr: IOutput;
+  bufferedIO: WorkerBufferedIO;
+  wasmModuleCache: WasmModuleCache;
 }

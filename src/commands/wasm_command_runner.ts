@@ -1,5 +1,5 @@
 import { ICommandRunner } from './command_runner';
-import { Context } from '../context';
+import { IContext } from '../context';
 import { ExitCode } from '../exit_code';
 import { ITermios } from '../termios';
 import { WasmModuleLoader } from '../wasm_module_loader';
@@ -13,7 +13,7 @@ export abstract class WasmCommandRunner implements ICommandRunner {
 
   abstract get packageName(): string;
 
-  async run(cmdName: string, context: Context): Promise<number> {
+  async run(cmdName: string, context: IContext): Promise<number> {
     const { args, bufferedIO, fileSystem, stdin, stdout, stderr } = context;
     const { wasmBaseUrl } = this.wasmModuleLoader;
 
