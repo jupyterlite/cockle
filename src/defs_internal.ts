@@ -2,7 +2,7 @@ import { ProxyMarked, Remote } from 'comlink';
 
 import { WorkerBufferedIO } from './buffered_io';
 import {
-  IDownloadWasmModuleCallback,
+  IDownloadModuleCallback,
   IEnableBufferedStdinCallback,
   IInitDriveFSCallback,
   IStdinCallback,
@@ -31,16 +31,14 @@ export interface IShellWorker extends IShellCommon {
   // Callback proxies need to be separate arguments, they cannot be in IOptions.
   initialize(
     options: IShellWorker.IOptions,
-    downloadWasmModuleCallback: IShellWorker.IProxyDownloadWasmModuleCallback,
+    downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback,
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ): void;
 }
 
 export namespace IShellWorker {
-  export interface IProxyDownloadWasmModuleCallback
-    extends IDownloadWasmModuleCallback,
-      ProxyMarked {}
+  export interface IProxyDownloadModuleCallback extends IDownloadModuleCallback, ProxyMarked {}
   export interface IProxyEnableBufferedStdinCallback
     extends IEnableBufferedStdinCallback,
       ProxyMarked {}
@@ -55,7 +53,7 @@ export type IRemoteShell = Remote<IShellWorker>;
 
 export namespace IShellImpl {
   export interface IOptions extends IOptionsCommon {
-    downloadWasmModuleCallback: IShellWorker.IProxyDownloadWasmModuleCallback;
+    downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback;
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;
     initDriveFSCallback: IInitDriveFSCallback;
     stdinCallback: IStdinCallback;

@@ -1,24 +1,20 @@
-import { ICommandRunner } from './command_runner';
+import { CommandModule } from './command_module';
+import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
 import { IContext } from '../context';
 import { ExitCode } from '../exit_code';
 import { ITermios } from '../termios';
-import { WasmModuleLoader } from '../wasm_module_loader';
 
-export abstract class WasmCommandRunner implements ICommandRunner {
-  constructor(readonly wasmModuleLoader: WasmModuleLoader) {}
-
-  abstract get moduleName(): string;
-
-  abstract names(): string[];
-
-  abstract get packageName(): string;
+export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
+  constructor(readonly module: CommandModule) {
+    super(module);
+  }
 
   async run(cmdName: string, context: IContext): Promise<number> {
     const { args, bufferedIO, fileSystem, stdin, stdout, stderr } = context;
-    const { wasmBaseUrl } = this.wasmModuleLoader;
+    const { wasmBaseUrl } = this.module.loader;
 
     const start = Date.now();
-    const wasmModule = this.wasmModuleLoader.getModule(this.packageName, this.moduleName);
+    const wasmModule = this.module.loader.getModule(this.packageName, this.moduleName);
 
     let _getCharBuffer: number[] = [];
 

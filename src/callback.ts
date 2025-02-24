@@ -12,9 +12,10 @@ export interface IOutputCallback {
 }
 
 /**
- * Callback for start and end of downloading a wasm module so that frontend can inform the user.
+ * Callback for start and end of downloading a JavaScript/WebAssembly module so that frontend can
+ * inform the user.
  */
-export interface IDownloadWasmModuleCallback {
+export interface IDownloadModuleCallback {
   (packageName: string, moduleName: string, start: boolean): void;
 }
 

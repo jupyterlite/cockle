@@ -1,14 +1,15 @@
-import { WasmModuleCache } from './wasm_module_cache';
-import { IShellWorker } from './defs_internal';
+import { CommandModuleCache } from './command_module_cache';
+import { IShellWorker } from '../defs_internal';
 
 /**
- * Loader of WASM modules. Once loaded, a module is cached so that it is faster to subsequently.
+ * Loader of JavaScript/WASM modules. Once loaded, a module is cached so that it is faster to
+ * subsequently.
  * Must be run in a WebWorker.
  */
-export class WasmModuleLoader {
+export class CommandModuleLoader {
   constructor(
     readonly wasmBaseUrl: string,
-    readonly downloadWasmModuleCallback: IShellWorker.IProxyDownloadWasmModuleCallback
+    readonly downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback
   ) {}
 
   public getModule(packageName: string, moduleName: string): any {
@@ -17,16 +18,16 @@ export class WasmModuleLoader {
       // Maybe should use @jupyterlab/coreutils.URLExt to combine URL components.
       const filename = this.cache.key(packageName, moduleName) + '.js';
       const url = this.wasmBaseUrl + filename;
-      console.log('Cockle Importing JS/WASM from ' + url);
+      console.log('Cockle importing JavaScript/WebAssembly from ' + url);
 
-      this.downloadWasmModuleCallback(packageName, moduleName, true);
+      this.downloadModuleCallback(packageName, moduleName, true);
       importScripts(url);
       module = (self as any).Module;
       this.cache.set(packageName, moduleName, module);
-      this.downloadWasmModuleCallback(packageName, moduleName, false);
+      this.downloadModuleCallback(packageName, moduleName, false);
     }
     return module;
   }
 
-  cache = new WasmModuleCache();
+  cache = new CommandModuleCache();
 }

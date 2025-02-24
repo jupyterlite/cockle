@@ -2,7 +2,6 @@ export { Aliases } from './aliases';
 export { BaseShell } from './base_shell';
 export { BaseShellWorker } from './base_shell_worker';
 export { IOutputCallback, IEnableBufferedStdinCallback, IStdinCallback } from './callback';
-export { CommandRegistry } from './command_registry';
 export { IContext } from './context';
 export { IShell } from './defs';
 export * from './exit_code';
