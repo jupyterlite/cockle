@@ -1,7 +1,7 @@
-import { ICommandRunner } from './commands/command_runner';
-import { WasmCommandModule } from './commands/wasm_command_module';
-import { WasmCommandPackage } from './commands/wasm_command_package';
-import * as AllBuiltinCommands from './builtin';
+import { CommandModule } from './command_module';
+import { CommandPackage } from './command_package';
+import { ICommandRunner } from './command_runner';
+import * as AllBuiltinCommands from '../builtin';
 
 export class CommandRegistry {
   constructor() {
@@ -9,11 +9,11 @@ export class CommandRegistry {
   }
 
   /**
-   * Return sequence of all wasm modules ordered by module name.
+   * Return sequence of all modules ordered by module name.
    */
-  allModules(): WasmCommandModule[] {
-    const modules: WasmCommandModule[] = [];
-    for (const pkg of this.wasmPackageMap.values()) {
+  allModules(): CommandModule[] {
+    const modules: CommandModule[] = [];
+    for (const pkg of this.commandPackageMap.values()) {
       modules.push(...pkg.modules);
     }
     modules.sort((a, b) => (a.name < b.name ? -1 : 1));
@@ -44,11 +44,11 @@ export class CommandRegistry {
     }
   }
 
-  registerWasmCommandPackage(wasmCommandPackage: WasmCommandPackage) {
+  registerCommandPackage(commandPackage: CommandPackage) {
     // Check for duplicates?????
-    this.wasmPackageMap.set(wasmCommandPackage.name, wasmCommandPackage);
-    for (const module of wasmCommandPackage.modules) {
-      this._register(module);
+    this.commandPackageMap.set(commandPackage.name, commandPackage);
+    for (const module of commandPackage.modules) {
+      this._register(module.runner);
     }
   }
 
@@ -65,6 +65,6 @@ export class CommandRegistry {
   // Map of command name to runner.
   private _map: Map<string, ICommandRunner> = new Map();
 
-  // WasmCommandPackages indexed by package name.
-  wasmPackageMap: Map<string, WasmCommandPackage> = new Map();
+  // CommandPackages indexed by package name.
+  commandPackageMap: Map<string, CommandPackage> = new Map();
 }

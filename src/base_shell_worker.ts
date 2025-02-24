@@ -10,13 +10,13 @@ import { ShellImpl } from './shell_impl';
 export abstract class BaseShellWorker implements IShellWorker {
   async initialize(
     options: IShellWorker.IOptions,
-    downloadWasmModuleCallback: IShellWorker.IProxyDownloadWasmModuleCallback,
+    downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback,
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ) {
     console.log('Cockle BaseShellWorker.initialize');
     this._bufferedIO = new WorkerBufferedIO(options.sharedArrayBuffer);
-    this._downloadWasmModuleCallback = downloadWasmModuleCallback;
+    this._downloadModuleCallback = downloadModuleCallback;
     this._enableBufferedStdinCallback = enableBufferedStdinCallback;
     this._terminateCallback = terminateCallback;
 
@@ -29,7 +29,7 @@ export abstract class BaseShellWorker implements IShellWorker {
       driveFsBaseUrl,
       initialDirectories,
       initialFiles,
-      downloadWasmModuleCallback: this._downloadWasmModuleCallback.bind(this),
+      downloadModuleCallback: this._downloadModuleCallback.bind(this),
       enableBufferedStdinCallback: this.enableBufferedStdin.bind(this),
       initDriveFSCallback: this.initDriveFS.bind(this),
       terminateCallback: this._terminateCallback.bind(this),
@@ -84,7 +84,7 @@ export abstract class BaseShellWorker implements IShellWorker {
 
   private _shellImpl?: ShellImpl;
   private _bufferedIO?: WorkerBufferedIO;
-  private _downloadWasmModuleCallback?: IShellWorker.IProxyDownloadWasmModuleCallback;
+  private _downloadModuleCallback?: IShellWorker.IProxyDownloadModuleCallback;
   private _enableBufferedStdinCallback?: IShellWorker.IProxyEnableBufferedStdinCallback;
   private _terminateCallback?: IShellWorker.IProxyTerminateCallback;
 }

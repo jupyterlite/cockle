@@ -1,12 +1,12 @@
 import { Aliases } from './aliases';
 import { WorkerBufferedIO } from './buffered_io';
 import { ITerminateCallback } from './callback';
-import { CommandRegistry } from './command_registry';
 import { Environment } from './environment';
 import { History } from './history';
 import { IFileSystem } from './file_system';
 import { IInput, IOutput } from './io';
-import { WasmModuleCache } from './wasm_module_cache';
+import { CommandModuleCache } from './commands/command_module_cache';
+import { CommandRegistry } from './commands/command_registry';
 
 /**
  * Context used to run commands.
@@ -23,5 +23,5 @@ export interface IContext {
   stdout: IOutput;
   stderr: IOutput;
   bufferedIO: WorkerBufferedIO;
-  wasmModuleCache: WasmModuleCache;
+  commandModuleCache: CommandModuleCache;
 }

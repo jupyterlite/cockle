@@ -1,4 +1,4 @@
-export class WasmModuleCache {
+export class CommandModuleCache {
   get(packageName: string, moduleName: string): any {
     const key = this.key(packageName, moduleName);
     return this._cache.get(key) ?? undefined;

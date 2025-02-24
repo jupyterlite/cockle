@@ -21,7 +21,7 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   private _writeModuleConfig(context: IContext) {
-    const { commandRegistry, stdout, wasmModuleCache } = context;
+    const { commandRegistry, stdout, commandModuleCache } = context;
 
     const allModules = commandRegistry.allModules();
 
@@ -30,7 +30,7 @@ export class CockleConfigCommand extends BuiltinCommand {
       lines.push([
         module.name,
         module.packageName,
-        wasmModuleCache.has(module.packageName, module.name) ? 'yes' : ''
+        commandModuleCache.has(module.packageName, module.name) ? 'yes' : ''
       ]);
     }
 
@@ -49,9 +49,9 @@ export class CockleConfigCommand extends BuiltinCommand {
   private _writePackageConfig(context: IContext) {
     const { commandRegistry, stdout } = context;
 
-    const map = commandRegistry.wasmPackageMap;
+    const map = commandRegistry.commandPackageMap;
 
-    const lines = [['package', 'version', 'build string', 'channel']];
+    const lines = [['package', 'version', 'build string', 'source']];
     for (const pkg of map.values()) {
       lines.push([pkg.name, pkg.version, pkg.build_string, pkg.channel]);
     }

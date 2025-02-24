@@ -1,6 +1,5 @@
 import { Aliases } from './aliases';
 import { ansi } from './ansi';
-import { CommandRegistry } from './command_registry';
 import { IContext } from './context';
 import { IShellImpl, IShellWorker } from './defs_internal';
 import { Environment } from './environment';
@@ -11,9 +10,10 @@ import { History } from './history';
 import { FileInput, FileOutput, IInput, IOutput, Pipe, TerminalInput, TerminalOutput } from './io';
 import { CommandNode, PipeNode, parse } from './parse';
 import { longestStartsWith, toColumns } from './utils';
-import { WasmModuleLoader } from './wasm_module_loader';
-import { WasmCommandModule } from './commands/wasm_command_module';
-import { WasmCommandPackage } from './commands/wasm_command_package';
+import { CommandModule } from './commands/command_module';
+import { CommandModuleLoader } from './commands/command_module_loader';
+import { CommandPackage } from './commands/command_package';
+import { CommandRegistry } from './commands/command_registry';
 
 /**
  * Shell implementation.
@@ -21,9 +21,9 @@ import { WasmCommandPackage } from './commands/wasm_command_package';
 export class ShellImpl implements IShellWorker {
   constructor(readonly options: IShellImpl.IOptions) {
     this._environment = new Environment(options.color);
-    this._wasmModuleLoader = new WasmModuleLoader(
+    this._commandModuleLoader = new CommandModuleLoader(
       options.wasmBaseUrl,
-      options.downloadWasmModuleCallback
+      options.downloadModuleCallback
     );
     this._commandRegistry = new CommandRegistry();
   }
@@ -280,7 +280,7 @@ export class ShellImpl implements IShellWorker {
 
   private async _initFileSystem(): Promise<void> {
     const { wasmBaseUrl } = this.options;
-    const fsModule = this._wasmModuleLoader.getModule('cockle_fs', 'fs');
+    const fsModule = this._commandModuleLoader.getModule('cockle_fs', 'fs');
     const module = await fsModule({
       locateFile: (path: string) => wasmBaseUrl + 'cockle_fs/' + path
     });
@@ -329,17 +329,17 @@ export class ShellImpl implements IShellWorker {
 
     // Create command runners for each wasm module of each emscripten-forge package.
     for (const packageName of packageNames) {
-      const pkgConfig = cockleConfig.packages[packageName];
+      const pkgConfig = cockleConfig.packages[packageName]; // Not type safe
       const commandModules = Object.entries(pkgConfig.modules).map(
         ([moduleName, moduleConfig]) =>
-          new WasmCommandModule(
-            this._wasmModuleLoader,
+          new CommandModule(
+            this._commandModuleLoader,
             moduleName,
             (moduleConfig as any).commands ? (moduleConfig as any).commands.split(',') : [],
             packageName
           )
       );
-      const commandPackage = new WasmCommandPackage(
+      const commandPackage = new CommandPackage(
         packageName,
         pkgConfig.version,
         pkgConfig.build_string,
@@ -347,7 +347,7 @@ export class ShellImpl implements IShellWorker {
         pkgConfig.platform,
         commandModules
       );
-      this._commandRegistry.registerWasmCommandPackage(commandPackage);
+      this._commandRegistry.registerCommandPackage(commandPackage);
     }
 
     // Initialise aliases.
@@ -479,7 +479,7 @@ export class ShellImpl implements IShellWorker {
       stdout: output,
       stderr: error,
       bufferedIO: this.options.bufferedIO,
-      wasmModuleCache: this._wasmModuleLoader.cache
+      commandModuleCache: this._commandModuleLoader.cache
     };
     const exitCode = await runner.run(name, context);
 
@@ -582,7 +582,7 @@ export class ShellImpl implements IShellWorker {
   private _commandRegistry: CommandRegistry;
   private _environment: Environment;
   private _history = new History();
-  private _wasmModuleLoader: WasmModuleLoader;
+  private _commandModuleLoader: CommandModuleLoader;
 
   private _fileSystem?: IFileSystem;
 }

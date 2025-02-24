@@ -5,6 +5,7 @@
  * Creates a micromamba environment containing the wasm packages and either copies the files
  * to the specified statically-served assets directory or writes a file containing the names
  * of the files to be so copied, depending on the arguments passed to this script.
+ * Also accepts command packages in local directories that are WebAssembly or pure JavaScript.
  */
 
 /* eslint-disable */
@@ -90,10 +91,10 @@ const inputSchema = zod
 inputSchema.parse(cockleConfig);
 
 // Required emscripten-wasm32 packages.
-const packageNames = Object.entries(cockleConfig.packages)
+const wasmPackageNames = Object.entries(cockleConfig.packages)
   .filter(([key, item]) => !isLocalPackage(item))
   .map((item: any) => item[0]);
-console.log('Required package names', packageNames);
+console.log('Required WebAssembly package names', wasmPackageNames);
 
 // Find micromamba.
 let micromambaCmd: string | undefined;
@@ -119,7 +120,7 @@ let wasmPackageInfo: any;
 if (fs.existsSync(envPath)) {
   wasmPackageInfo = getWasmPackageInfo(micromambaCmd!, envPath);
   const envPackageNames = wasmPackageInfo.map((x: any) => x.name);
-  const haveAllPackages = packageNames.every((name: string) => envPackageNames.includes(name));
+  const haveAllPackages = wasmPackageNames.every((name: string) => envPackageNames.includes(name));
 
   if (haveAllPackages) {
     console.log(`Using existing environment in ${envPath}`);
@@ -135,7 +136,7 @@ if (fs.existsSync(envPath)) {
 if (wasmPackageInfo === undefined) {
   const suffix = `--platform=${PLATFORM} ${getChannelsString()}`;
   console.log(`Creating new environment in ${envPath}`);
-  const createEnvCmd = `${micromambaCmd} create -p ${envPath} -y ${packageNames.join(' ')} ${suffix}`;
+  const createEnvCmd = `${micromambaCmd} create -p ${envPath} -y ${wasmPackageNames.join(' ')} ${suffix}`;
   console.log(execSync(createEnvCmd).toString());
 
   // Obtain wasm package info such as version and build string.
@@ -229,7 +230,7 @@ fs.writeFileSync(targetConfigFile, JSON.stringify(cockleConfig, null, 2));
 // Alternating filenames and subdirectories, only used if !wantCopy.
 const filenamesAndDirectories = [targetConfigFile, ''];
 
-// Output wasm files and their javascript wrappers.
+// Possible output js/wasm files.
 const requiredSuffixes = {
   '.js': true,
   '.wasm': true,
