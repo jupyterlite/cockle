@@ -12,16 +12,16 @@ import { WasmModuleCache } from './wasm_module_cache';
  * Context used to run commands.
  */
 export interface IContext {
-  args: string[],
-  fileSystem: IFileSystem,
-  aliases: Aliases,
-  commandRegistry: CommandRegistry,
-  environment: Environment,
-  history: History,
-  terminate: ITerminateCallback,
-  stdin: IInput,
-  stdout: IOutput,
-  stderr: IOutput,
-  bufferedIO: WorkerBufferedIO,
-  wasmModuleCache: WasmModuleCache
+  args: string[];
+  fileSystem: IFileSystem;
+  aliases: Aliases;
+  commandRegistry: CommandRegistry;
+  environment: Environment;
+  history: History;
+  terminate: ITerminateCallback;
+  stdin: IInput;
+  stdout: IOutput;
+  stderr: IOutput;
+  bufferedIO: WorkerBufferedIO;
+  wasmModuleCache: WasmModuleCache;
 }
