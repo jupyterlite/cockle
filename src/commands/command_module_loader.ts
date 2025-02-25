@@ -21,10 +21,13 @@ export class CommandModuleLoader {
       console.log('Cockle importing JavaScript/WebAssembly from ' + url);
 
       this.downloadModuleCallback(packageName, moduleName, true);
-      importScripts(url);
-      module = (self as any).Module;
-      this.cache.set(packageName, moduleName, module);
-      this.downloadModuleCallback(packageName, moduleName, false);
+      try {
+        importScripts(url);
+        module = (self as any).Module;
+        this.cache.set(packageName, moduleName, module);
+      } finally {
+        this.downloadModuleCallback(packageName, moduleName, false);
+      }
     }
     return module;
   }
