@@ -98,10 +98,11 @@ console.log('Required WebAssembly package names', wasmPackageNames);
 
 // Find micromamba.
 let micromambaCmd: string | undefined;
+let micromambaVersion = '';
 const cmds = ['micromamba', '$CONDA_PREFIX/bin/micromamba', '$MAMBA_EXE'];
 for (const cmd of cmds) {
   try {
-    execSync(`${cmd} --version`);
+    micromambaVersion = execSync(`${cmd} --version`).toString();
     micromambaCmd = cmd;
     break;
   } catch (e) {
@@ -111,7 +112,7 @@ for (const cmd of cmds) {
 if (micromambaCmd === undefined) {
   throw new Error('Unable to find micromamba, aborting');
 } else {
-  console.log(`Found micromamba: ${micromambaCmd}`);
+  console.log(`Found micromamba: ${micromambaCmd} ${micromambaVersion}`);
 }
 
 // Create or reuse existing mamba environment for the wasm packages.
