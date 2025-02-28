@@ -15,7 +15,7 @@ export class ExportCommand extends BuiltinCommand {
 
   protected async _run(context: IContext): Promise<number> {
     const { args, environment } = context;
-    const options = Options.fromArgs(args, ExportOptions);
+    const options = new ExportOptions().parse(args);
 
     if (options.trailingStrings.isSet) {
       for (const name of options.trailingStrings.strings) {

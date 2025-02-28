@@ -16,7 +16,7 @@ export class HistoryCommand extends BuiltinCommand {
 
   protected async _run(context: IContext): Promise<number> {
     const { args, history, stdout } = context;
-    const options = Options.fromArgs(args, HistoryOptions);
+    const options = new HistoryOptions().parse(args);
 
     if (options.help.isSet) {
       options.writeHelp(stdout);

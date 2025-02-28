@@ -6,10 +6,8 @@ import { GeneralError } from '../error_exit_code';
 import { IOutput } from '../io';
 
 export abstract class Options {
-  static fromArgs<T extends Options>(args: string[], optionsType: new () => T): T {
-    const options = new optionsType();
-
-    const trailingStrings: TrailingStringsOption | null = options._getStrings();
+  parse(args: string[]): this {
+    const trailingStrings = this._getStrings();
     let inTrailingStrings = false;
 
     for (const arg of args) {
@@ -19,10 +17,10 @@ export abstract class Options {
         }
         if (arg.startsWith('--')) {
           const longName = arg.slice(2);
-          options._findByLongName(longName).set();
+          this._findByLongName(longName).set();
         } else {
           const shortName = arg.slice(1);
-          options._findByShortName(shortName).set();
+          this._findByShortName(shortName).set();
         }
       } else if (trailingStrings !== null) {
         trailingStrings.add(arg);
@@ -36,7 +34,7 @@ export abstract class Options {
       throw new GeneralError('Insufficient trailing strings options specified');
     }
 
-    return options;
+    return this;
   }
 
   writeHelp(output: IOutput): void {

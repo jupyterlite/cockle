@@ -15,7 +15,7 @@ export class AliasCommand extends BuiltinCommand {
 
   protected async _run(context: IContext): Promise<number> {
     const { aliases, args, stdout } = context;
-    const options = Options.fromArgs(args, AliasOptions);
+    const options = new AliasOptions().parse(args);
 
     if (options.trailingStrings.isSet) {
       for (const name of options.trailingStrings.strings) {
