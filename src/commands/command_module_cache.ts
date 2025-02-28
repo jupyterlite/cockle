@@ -1,5 +1,7 @@
+import type { default as EmscriptenModuleFactory } from '../fs';
+
 export class CommandModuleCache {
-  get(packageName: string, moduleName: string): any {
+  get(packageName: string, moduleName: string): typeof EmscriptenModuleFactory | undefined {
     const key = this.key(packageName, moduleName);
     return this._cache.get(key) ?? undefined;
   }
@@ -13,10 +15,10 @@ export class CommandModuleCache {
     return [packageName, moduleName].join('/');
   }
 
-  set(packageName: string, moduleName: string, module: any): void {
+  set(packageName: string, moduleName: string, module: typeof EmscriptenModuleFactory): void {
     const key = this.key(packageName, moduleName);
     this._cache.set(key, module);
   }
 
-  private _cache = new Map<string, any>();
+  private _cache = new Map<string, typeof EmscriptenModuleFactory>();
 }

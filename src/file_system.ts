@@ -1,7 +1,9 @@
+import { RuntimeExports } from './fs';
+
 export interface IFileSystem {
-  FS: any;
-  PATH: any;
-  ERRNO_CODES: any;
-  PROXYFS: any;
+  FS: typeof RuntimeExports.FS;
+  PATH: typeof RuntimeExports.PATH;
+  ERRNO_CODES: typeof RuntimeExports.ERRNO_CODES;
+  PROXYFS: typeof RuntimeExports.PROXYFS;
   mountpoint: string;
 }

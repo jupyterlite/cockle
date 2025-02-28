@@ -15,6 +15,12 @@ export class FindCommandError extends ErrorExitCode {
   }
 }
 
+export class LoadCommandError extends ErrorExitCode {
+  constructor(commandName: string) {
+    super(ExitCode.CANNOT_FIND_COMMAND, `'${commandName}': cannot load command`);
+  }
+}
+
 export class GeneralError extends ErrorExitCode {
   constructor(message: string) {
     super(ExitCode.GENERAL_ERROR, message);
