@@ -16,7 +16,7 @@ export class CdCommand extends BuiltinCommand {
 
   protected async _run(context: IContext): Promise<number> {
     const { args } = context;
-    const options = Options.fromArgs(args, CdOptions);
+    const options = new CdOptions().parse(args);
     const paths = options.trailingStrings.strings;
 
     if (paths.length < 1) {
