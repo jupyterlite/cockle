@@ -1,7 +1,9 @@
 import { CommandModule } from './command_module';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
 import { IContext } from '../context';
+import { FindCommandError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
+import { MainModule } from '../fs';
 import { ITermios } from '../termios';
 
 export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
@@ -15,6 +17,9 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
 
     const start = Date.now();
     const wasmModule = this.module.loader.getModule(this.packageName, this.moduleName);
+    if (wasmModule === undefined) {
+      throw new FindCommandError(cmdName);
+    }
 
     let _getCharBuffer: number[] = [];
 
@@ -105,7 +110,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       onExit: (moduleExitCode: number) => setExitCode(moduleExitCode),
       quit: (moduleExitCode: number, toThrow: any) => setExitCode(moduleExitCode),
       preRun: [
-        (module: any) => {
+        (module: MainModule) => {
           if (Object.prototype.hasOwnProperty.call(module, 'FS')) {
             // Use PROXYFS so that command sees the shared FS.
             const FS = module.FS;
@@ -117,7 +122,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
 
           if (Object.prototype.hasOwnProperty.call(module, 'ENV')) {
             // Copy environment variables into command.
-            context.environment.copyIntoCommand(module.ENV, stdout.supportsAnsiEscapes());
+            context.environment.copyIntoCommand(module.ENV!, stdout.supportsAnsiEscapes());
           }
 
           if (Object.prototype.hasOwnProperty.call(module, 'TTY')) {
@@ -153,7 +158,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
 
       if (Object.prototype.hasOwnProperty.call(wasm, 'getEnvStrings')) {
         // Copy environment variables back from command.
-        context.environment.copyFromCommand(wasm.getEnvStrings());
+        context.environment.copyFromCommand(wasm.getEnvStrings!());
       }
     }
 

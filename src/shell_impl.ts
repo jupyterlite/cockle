@@ -281,6 +281,12 @@ export class ShellImpl implements IShellWorker {
   private async _initFileSystem(): Promise<void> {
     const { wasmBaseUrl } = this.options;
     const fsModule = this._commandModuleLoader.getModule('cockle_fs', 'fs');
+    if (fsModule === undefined) {
+      // Cannot report this in the terminal as it has not been started yet.
+      // TODO: Store this information and report it when the terminal is up and running?
+      console.error('Unable to load cockle_fs, shell cannot function');
+      return;
+    }
     const module = await fsModule({
       locateFile: (path: string) => wasmBaseUrl + 'cockle_fs/' + path
     });
@@ -517,7 +523,7 @@ export class ShellImpl implements IShellWorker {
       const initialLookup = lookup;
       lookup = analyze.name;
       const { exists } = analyze;
-      if (exists && !FS.isDir(FS.stat(analyze.path).mode)) {
+      if (exists && !FS.isDir(FS.stat(analyze.path, false).mode)) {
         // Exactly matches a filename.
         possibles = [lookup];
       } else {
@@ -544,7 +550,7 @@ export class ShellImpl implements IShellWorker {
 
         // Directories are displayed with appended /
         possibles = possibles.map((path: string) =>
-          FS.isDir(FS.stat(lookupPath + '/' + path).mode) ? path + '/' : path
+          FS.isDir(FS.stat(lookupPath + '/' + path, false).mode) ? path + '/' : path
         );
       }
     }
