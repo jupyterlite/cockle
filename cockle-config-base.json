@@ -14,7 +14,8 @@
         }
       }
     },
-    "grep": {}
+    "grep": {},
+    "sed": {}
   },
   "aliases": {
     "dir": "dir --color=auto",
