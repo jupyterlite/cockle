@@ -1,5 +1,5 @@
 import { default as EmscriptenModuleFactory } from '../types/fs';
-import { JavaScriptModule } from '../types/javascript_module'
+import { JavaScriptModule } from '../types/javascript_module';
 
 type CacheItem = typeof EmscriptenModuleFactory | JavaScriptModule;
 
