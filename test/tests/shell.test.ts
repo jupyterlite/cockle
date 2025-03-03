@@ -212,8 +212,8 @@ test.describe('Shell', () => {
         const ret1 = output.textAndClear();
         return [ret0, ret1];
       });
-      expect(output[0]).toMatch(/^t\r\ntail\r\ntouch\r\ntr\r\ntree\r\ntty\r\n/);
-      expect(output[1]).toMatch(/^\r\ntail {3}tree\r\ntouch {2}tty\r\ntr\r\n/);
+      expect(output[0]).toMatch(/^t\r\ntail\r\ntee\r\ntouch\r\ntr\r\ntree\r\ntty\r\n/);
+      expect(output[1]).toMatch(/^\r\ntail {3}tr\r\ntee {4}tree\r\ntouch {2}tty\r\n/);
     });
 
     test('should add common startsWith', async ({ page }) => {
