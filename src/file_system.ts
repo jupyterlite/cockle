@@ -1,4 +1,4 @@
-import { RuntimeExports } from './fs';
+import { RuntimeExports } from './types/fs';
 
 export interface IFileSystem {
   FS: typeof RuntimeExports.FS;

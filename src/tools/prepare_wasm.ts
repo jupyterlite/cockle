@@ -33,6 +33,10 @@ function isLocalPackage(packageConfig: any): boolean {
   return Object.hasOwn(packageConfig, 'local_directory');
 }
 
+function isWasmPackage(packageConfig: any): boolean {
+  return packageConfig['wasm'];
+}
+
 function getChannelsString(): string {
   console.log('Using channels:');
   CHANNELS.map(channel => console.log(`  ${channel}`));
@@ -81,7 +85,8 @@ const inputSchema = zod
                 })
                 .strict()
             )
-          )
+          ),
+          wasm: zod.optional(zod.boolean())
         })
         .strict()
     ),
@@ -90,9 +95,25 @@ const inputSchema = zod
   .strict();
 inputSchema.parse(cockleConfig);
 
+// Fill in .wasm properties that are missing, and check that non-wasm packages are in a
+// local_directory.
+for (const packageName in cockleConfig.packages) {
+  const packageConfig = cockleConfig.packages[packageName];
+  if (!Object.prototype.hasOwnProperty.call(packageConfig, 'wasm')) {
+    packageConfig['wasm'] = true;
+  }
+
+  if (
+    !Object.prototype.hasOwnProperty.call(packageConfig, 'local_directory') &&
+    !packageConfig['wasm']
+  ) {
+    throw new Error(`Non-wasm package ${packageName} only supported in a 'local_directory'`);
+  }
+}
+
 // Required emscripten-wasm32 packages.
 const wasmPackageNames = Object.entries(cockleConfig.packages)
-  .filter(([key, item]) => !isLocalPackage(item))
+  .filter(([key, item]) => isWasmPackage(item) && !isLocalPackage(item))
   .map((item: any) => item[0]);
 console.log('Required WebAssembly package names', wasmPackageNames);
 
@@ -212,7 +233,8 @@ const outputSchema = zod
                 })
                 .strict()
             )
-          )
+          ),
+          wasm: zod.boolean()
         })
         .strict()
     ),
@@ -232,7 +254,10 @@ fs.writeFileSync(targetConfigFile, JSON.stringify(cockleConfig, null, 2));
 const filenamesAndDirectories = [targetConfigFile, ''];
 
 // Possible output js/wasm files.
-const requiredSuffixes = {
+const requiredJavaScriptSuffixes = {
+  '.js': true
+};
+const requiredWasmSuffixes = {
   '.js': true,
   '.wasm': true,
   '.data': false,
@@ -250,6 +275,9 @@ for (const packageName in cockleConfig.packages) {
     fs.mkdirSync(targetDirectory);
   }
 
+  const requiredSuffixes = packageConfig['wasm']
+    ? requiredWasmSuffixes
+    : requiredJavaScriptSuffixes;
   for (const moduleName of moduleNames) {
     for (const [suffix, required] of Object.entries(requiredSuffixes)) {
       const filename = moduleName + suffix;

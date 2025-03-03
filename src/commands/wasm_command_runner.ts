@@ -3,7 +3,7 @@ import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_run
 import { IContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
-import { MainModule } from '../fs';
+import { MainModule } from '../types/fs';
 import { ITermios } from '../termios';
 
 export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
@@ -16,7 +16,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     const { wasmBaseUrl } = this.module.loader;
 
     const start = Date.now();
-    const wasmModule = this.module.loader.getModule(this.packageName, this.moduleName);
+    const wasmModule = this.module.loader.getWasmModule(this.packageName, this.moduleName);
     if (wasmModule === undefined) {
       throw new FindCommandError(cmdName);
     }

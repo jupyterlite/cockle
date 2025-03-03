@@ -3,6 +3,14 @@
     "check_termios": {
       "local_directory": "../test/wasm-util/wasm"
     },
+    "js-capitalise": {
+      "local_directory": "../test/js-util",
+      "wasm": false
+    },
+    "js-test": {
+      "local_directory": "../test/js-util",
+      "wasm": false
+    },
     "lua": {},
     "local-cmd": {
       "local_directory": "../test/wasm-util/wasm"

@@ -1,5 +1,6 @@
 import { CommandModuleLoader } from './command_module_loader';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
+import { JavascriptCommandRunner } from './javascript_command_runner';
 import { WasmCommandRunner } from './wasm_command_runner';
 
 /**
@@ -12,7 +13,8 @@ export class CommandModule {
     readonly commandModuleLoader: CommandModuleLoader,
     readonly name: string,
     private readonly commands: string[],
-    readonly packageName: string
+    readonly packageName: string,
+    readonly wasm: boolean
   ) {}
 
   get loader(): CommandModuleLoader {
@@ -21,7 +23,7 @@ export class CommandModule {
 
   get runner(): DynamicallyLoadedCommandRunner {
     if (this._runner === undefined) {
-      this._runner = new WasmCommandRunner(this);
+      this._runner = this.wasm ? new WasmCommandRunner(this) : new JavascriptCommandRunner(this);
     }
     return this._runner;
   }

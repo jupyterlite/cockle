@@ -11,6 +11,7 @@ export class CommandPackage {
     readonly build_string: string,
     readonly channel: string, // channel (emscripten-forge package) or local directory.
     readonly platform: string,
+    readonly wasm: boolean,
     readonly modules: CommandModule[]
   ) {}
 }
