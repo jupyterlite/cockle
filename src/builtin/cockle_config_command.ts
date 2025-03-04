@@ -51,9 +51,9 @@ export class CockleConfigCommand extends BuiltinCommand {
 
     const map = commandRegistry.commandPackageMap;
 
-    const lines = [['package', 'version', 'build string', 'source']];
+    const lines = [['package', 'type', 'version', 'build string', 'source']];
     for (const pkg of map.values()) {
-      lines.push([pkg.name, pkg.version, pkg.build_string, pkg.channel]);
+      lines.push([pkg.name, pkg.wasm ? 'wasm' : 'js', pkg.version, pkg.build_string, pkg.channel]);
     }
 
     let colorMap: Map<number, string> | null = null;
@@ -62,6 +62,7 @@ export class CockleConfigCommand extends BuiltinCommand {
       colorMap.set(1, ansi.styleBrightBlue);
       colorMap.set(2, ansi.styleBrightPurple);
       colorMap.set(3, ansi.styleGreen);
+      colorMap.set(4, ansi.styleYellow);
     }
 
     for (const line of toTable(lines, 1, false, colorMap)) {

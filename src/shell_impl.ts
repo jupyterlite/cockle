@@ -280,7 +280,7 @@ export class ShellImpl implements IShellWorker {
 
   private async _initFileSystem(): Promise<void> {
     const { wasmBaseUrl } = this.options;
-    const fsModule = this._commandModuleLoader.getModule('cockle_fs', 'fs');
+    const fsModule = this._commandModuleLoader.getWasmModule('cockle_fs', 'fs');
     if (fsModule === undefined) {
       // Cannot report this in the terminal as it has not been started yet.
       // TODO: Store this information and report it when the terminal is up and running?
@@ -342,7 +342,8 @@ export class ShellImpl implements IShellWorker {
             this._commandModuleLoader,
             moduleName,
             (moduleConfig as any).commands ? (moduleConfig as any).commands.split(',') : [],
-            packageName
+            packageName,
+            pkgConfig.wasm
           )
       );
       const commandPackage = new CommandPackage(
@@ -351,6 +352,7 @@ export class ShellImpl implements IShellWorker {
         pkgConfig.build_string,
         pkgConfig.channel,
         pkgConfig.platform,
+        pkgConfig.wasm,
         commandModules
       );
       this._commandRegistry.registerCommandPackage(commandPackage);

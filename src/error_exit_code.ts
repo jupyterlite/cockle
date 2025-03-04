@@ -32,3 +32,9 @@ export class ImproperUseError extends ErrorExitCode {
     super(ExitCode.IMPROPER_USE, message);
   }
 }
+
+export class RunCommandError extends ErrorExitCode {
+  constructor(commandName: string) {
+    super(ExitCode.CANNOT_RUN_COMMAND, `'${commandName}': cannot run command`);
+  }
+}

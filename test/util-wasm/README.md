@@ -1,4 +1,4 @@
-# wasm-util
+# util-wasm
 
 Utilities that are compiled to wasm and used in testing.
 
