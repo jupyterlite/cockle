@@ -21,29 +21,6 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       throw new FindCommandError(cmdName);
     }
 
-    let _getCharBuffer: number[] = [];
-
-    // Functions for monkey-patching.
-    function getChar(tty: any): number | null {
-      if (_getCharBuffer.length > 0) {
-        return _getCharBuffer.shift()!;
-      }
-
-      const utf16codes = stdin.readChar();
-      const utf16 = utf16codes[0];
-      if (utf16codes.length > 1) {
-        _getCharBuffer = utf16codes.slice(1);
-      }
-
-      // What to do with length other than 1?
-      if (utf16 === 4) {
-        // EOT
-        return null;
-      } else {
-        return utf16;
-      }
-    }
-
     function getTermios(tty: any): ITermios {
       const { termios } = bufferedIO;
       termios.log('Termios get');
@@ -65,6 +42,26 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
 
     function poll(stream: any, timeoutMs: number): number {
       return bufferedIO.poll(timeoutMs);
+    }
+
+    function read(
+      stream: any,
+      buffer: Int8Array,
+      offset: number,
+      length: number,
+      position: any
+    ): number {
+      if (length === 0) {
+        // No buffer to store in.
+        return 0;
+      }
+      let chars = stdin.readChar();
+      if (chars.length == 1 && chars[0] == 4) {
+        chars = [];
+      }
+      // Should check have enough space to store new chars.
+      buffer.set(chars, offset)
+      return chars.length;
     }
 
     function write(
@@ -132,13 +129,9 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
             module.TTY.default_tty_ops.ioctl_tiocgwinsz = getWindowSize;
 
             // May only need to be for some TTYs?
-            module.TTY.stream_ops.write = write;
             module.TTY.stream_ops.poll = poll;
-
-            // Monkey patch stdin get_char.
-            const stdinDeviceId = module.FS.makedev(5, 0);
-            const stdinTty = module.TTY.ttys[stdinDeviceId];
-            stdinTty.ops.get_char = getChar;
+            module.TTY.stream_ops.read = read;
+            module.TTY.stream_ops.write = write;
           }
         }
       ]

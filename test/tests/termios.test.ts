@@ -36,11 +36,11 @@ test.describe('termios', () => {
 
         expect(output[1]).toEqual('ab');
         if (flag !== 'disabled') {
-          expect(output[2]).toEqual('c\r\n');
-          expect(output[3]).toMatch(/^abc\r\nEnd of input\r\n/);
+          expect(output[2]).toEqual('c\r\nabc\r\n');
+          expect(output[3]).toMatch(/^End of input\r\n/);
         } else {
-          expect(output[2]).toEqual('c\n');
-          expect(output[3]).toMatch(/^abc\nEnd of input\n/);
+          expect(output[2]).toEqual('c\nabc\n');
+          expect(output[3]).toMatch(/^End of input\n/);
         }
       });
     });
