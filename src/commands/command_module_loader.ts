@@ -1,7 +1,7 @@
 import { CommandModuleCache } from './command_module_cache';
 import { IShellWorker } from '../defs_internal';
-import { default as EmscriptenModuleFactory } from '../types/fs';
-import { JavaScriptModule } from '../types/javascript_module';
+import { IWebAssemblyModule } from '../types/fs';
+import { IJavaScriptModule } from '../types/javascript_module';
 
 /**
  * Loader of JavaScript/WebAssembly modules. Once loaded, a module is cached so that it is faster
@@ -22,9 +22,9 @@ export class CommandModuleLoader {
   public getJavaScriptModule(
     packageName: string,
     moduleName: string
-  ): JavaScriptModule | undefined {
+  ): IJavaScriptModule | undefined {
     const module = this._getModule(packageName, moduleName, false);
-    return module !== undefined ? (module as JavaScriptModule) : undefined;
+    return module !== undefined ? (module as IJavaScriptModule) : undefined;
   }
 
   /**
@@ -32,12 +32,9 @@ export class CommandModuleLoader {
    * If loading fails return undefined, and caller is responsible for reporting this to the user if
    * appropriate.
    */
-  public getWasmModule(
-    packageName: string,
-    moduleName: string
-  ): typeof EmscriptenModuleFactory | undefined {
+  public getWasmModule(packageName: string, moduleName: string): IWebAssemblyModule | undefined {
     const module = this._getModule(packageName, moduleName, true);
-    return module !== undefined ? (module as typeof EmscriptenModuleFactory) : undefined;
+    return module !== undefined ? (module as IWebAssemblyModule) : undefined;
   }
 
   private _getModule(packageName: string, moduleName: string, wasm: boolean): any {

@@ -1,11 +1,11 @@
-import { default as EmscriptenModuleFactory } from '../types/fs';
-import { JavaScriptModule } from '../types/javascript_module';
+import { IWebAssemblyModule } from '../types/fs';
+import { IJavaScriptModule } from '../types/javascript_module';
 
-type CacheItem = typeof EmscriptenModuleFactory | JavaScriptModule;
+type CacheItem = IWebAssemblyModule | IJavaScriptModule;
 
 /**
  * Cache for command modules so that each only has to be downloaded once.
- * A module can either be a `JavaScriptModule` or a `typeof EmscriptenModuleFactory`.
+ * A module can either be a `IJavaScriptModule` or a `IWebAssemblyModule`.
  * Here they are typed as `any` and the `CommandModuleLoader` deals with the specific types.
  */
 export class CommandModuleCache {

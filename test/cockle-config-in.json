@@ -1,21 +1,22 @@
 {
   "packages": {
-    "check_termios": {
-      "local_directory": "../test/wasm-util/wasm"
-    },
-    "js-capitalise": {
-      "local_directory": "../test/js-util",
-      "wasm": false
-    },
-    "js-test": {
-      "local_directory": "../test/js-util",
-      "wasm": false
-    },
     "lua": {},
-    "local-cmd": {
-      "local_directory": "../test/wasm-util/wasm"
-    },
     "tree": {},
+    "util-js": {
+      "modules": {
+        "js-capitalise": {},
+        "js-test": {}
+      },
+      "local_directory": "../test/util-js",
+      "wasm": false
+    },
+    "util-wasm": {
+      "modules": {
+        "check_termios": {},
+        "local-cmd": {}
+      },
+      "local_directory": "../test/util-wasm/wasm"
+    },
     "vim": {}
   },
   "aliases": {

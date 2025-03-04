@@ -1,10 +1,20 @@
 {
   "packages": {
     "lua": {},
-    "local-cmd": {
-      "local_directory": "../test/wasm-util/wasm"
-    },
     "tree": {},
+    "util-js": {
+      "modules": {
+        "js-capitalise": {}
+      },
+      "local_directory": "../test/util-js",
+      "wasm": false
+    },
+    "util-wasm": {
+      "modules": {
+        "local-cmd": {}
+      },
+      "local_directory": "../test/util-wasm/wasm"
+    },
     "vim": {}
   },
   "aliases": {

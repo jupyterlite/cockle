@@ -3,7 +3,7 @@
  * matches the version of emscripten (3.1.73) that is used for WebAssembly command packages.
  *
  * Modified to add extra optional functions and properties to WasmModule such as ENV and
- * getEnvStrings.
+ * getEnvStrings, and to add IWebAssemblyModule.
  */
 
 // TypeScript bindings for emscripten-generated code.  Automatically generated at compile time.
@@ -438,3 +438,5 @@ interface WasmModule {
 
 export type MainModule = WasmModule & typeof RuntimeExports;
 export default function MainModuleFactory(options?: unknown): Promise<MainModule>;
+
+export type IWebAssemblyModule = typeof MainModuleFactory;

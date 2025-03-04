@@ -1,5 +1,5 @@
-import { IContext } from '../context';
+import { IJavaScriptContext } from '../javascript_context';
 
-export interface JavaScriptModule {
-  run(cmdName: string, context: IContext): Promise<number>;
+export interface IJavaScriptModule {
+  run(cmdName: string, context: IJavaScriptContext): Promise<number>;
 }
