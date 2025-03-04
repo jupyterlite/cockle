@@ -25,7 +25,7 @@ export abstract class InputAll implements IInput {
       }
       return ret;
     } else {
-      return [4]; // EOT
+      return [];
     }
   }
 
