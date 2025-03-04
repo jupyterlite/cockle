@@ -56,11 +56,11 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
         return 0;
       }
       let chars = stdin.readChar();
-      if (chars.length == 1 && chars[0] == 4) {
+      if (chars.length === 1 && chars[0] === 4) {
         chars = [];
       }
       // Should check have enough space to store new chars.
-      buffer.set(chars, offset)
+      buffer.set(chars, offset);
       return chars.length;
     }
 
