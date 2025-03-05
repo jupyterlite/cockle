@@ -260,9 +260,8 @@ const requiredJavaScriptSuffixes = {
 const requiredWasmSuffixes = {
   '.js': true,
   '.wasm': true,
-  '.data': false,
-  '-fs.js': false,
-  '-fs.data': false
+  '.wasm.map': false,
+  '.data': false
 };
 
 for (const packageName in cockleConfig.packages) {
