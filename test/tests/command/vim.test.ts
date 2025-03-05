@@ -31,4 +31,25 @@ test.describe('vim command', () => {
     });
     expect(output).toMatch(/^cat out\r\nhi QW\r\n/);
   });
+
+  test('should support multi-character escape sequences', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const escape = '\x1b';
+      const upArrow = escape + '[A';
+      const leftArrow = escape + '[D';
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+      const { terminalInput } = globalThis.cockle;
+      await Promise.all([
+        shell.inputLine('vim'),
+        terminalInput(shell, [...'iabc\rdef']),
+        terminalInput(shell, [...(upArrow + leftArrow + leftArrow + 'XY')]),
+        terminalInput(shell, [...(escape + ':wq out\r')])
+      ]);
+      // New file should exist.
+      output.clear();
+      await shell.inputLine('cat out');
+      return output.text;
+    });
+    expect(output).toMatch(/^cat out\r\naXYbc\r\ndef\r\n/);
+  });
 });
