@@ -73,6 +73,7 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
   };
 
   await shell.start();
+  await shell.setSize(24, 80);
   output.start();
 
   return { shell, output };
