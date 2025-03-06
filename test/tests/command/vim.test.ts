@@ -9,7 +9,8 @@ test.describe('vim command', () => {
 
   test('should run interactively and exit', async ({ page }) => {
     await page.evaluate(async () => {
-      const { shell } = await globalThis.cockle.shellSetupEmpty();
+      // Use color: true to ensure TERM env var is set.
+      const { shell } = await globalThis.cockle.shellSetupEmpty({ color: true });
       await Promise.all([
         shell.inputLine('vim'),
         globalThis.cockle.terminalInput(shell, ['\x1b', ':', 'q', '\r'])
@@ -19,7 +20,7 @@ test.describe('vim command', () => {
 
   test('should create new file', async ({ page }) => {
     const output = await page.evaluate(async () => {
-      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty({ color: true });
       await Promise.all([
         shell.inputLine('vim'),
         globalThis.cockle.terminalInput(shell, [...'ihi QW\x1b:wq out\r'])
@@ -37,7 +38,7 @@ test.describe('vim command', () => {
       const escape = '\x1b';
       const upArrow = escape + '[A';
       const leftArrow = escape + '[D';
-      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty({ color: true });
       const { terminalInput } = globalThis.cockle;
       await Promise.all([
         shell.inputLine('vim'),

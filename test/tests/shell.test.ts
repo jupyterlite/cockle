@@ -191,7 +191,7 @@ test.describe('Shell', () => {
 
     test('should show tab completion options', async ({ page }) => {
       expect(await shellInputsSimple(page, ['e', '\t'])).toMatch(
-        /^e\r\necho {2}env {2}exit {2}export {2}expr\r\n/
+        /^e\r\necho {4}env {5}exit {4}export {2}expr\r\n/
       );
     });
 
@@ -219,12 +219,12 @@ test.describe('Shell', () => {
     test('should add common startsWith', async ({ page }) => {
       const output = await shellInputsSimpleN(page, [['s', 'h', '\t'], ['\t']]);
       expect(output[0]).toEqual('sha');
-      expect(output[1]).toMatch(/sha1sum {2}sha224sum {2}sha256sum {2}sha384sum {2}sha512sum/);
+      expect(output[1]).toMatch(/sha1sum {4}sha224sum {2}sha256sum {2}sha384sum {2}sha512sum/);
     });
 
     test('should include aliases', async ({ page }) => {
       expect(await shellInputsSimple(page, ['l', '\t'])).toMatch(
-        /^l\r\nll {2}ln {2}local-cmd {2}logname {2}ls/
+        /^l\r\nll {9}ln {9}local-cmd {2}logname {4}ls {9}lua\r\n/
       );
     });
 
@@ -295,7 +295,7 @@ test.describe('Shell', () => {
 
     test('should support . for current directory', async ({ page }) => {
       const output = await shellInputsSimple(page, ['l', 's', ' ', '.', '\t']);
-      expect(output).toMatch(/^ls .\r\n.\/ {2}..\/\r\n/);
+      expect(output).toMatch(/^ls .\r\n.\/ {3}..\/\r\n/);
       expect(output).toMatch(/ls .$/);
     });
 
@@ -335,8 +335,8 @@ test.describe('Shell', () => {
         ],
         options
       );
-      expect(output[0]).toMatch(/^ls .\r\n.\/ {2}..\/ {2}.adir\/ {2}.afile1 {2}.afile2\r\n/);
-      expect(output[1]).toMatch(/^ls .a\r\n.adir\/ {2}.afile1 {2}.afile2\r\n/);
+      expect(output[0]).toMatch(/^ls .\r\n.\/ {7}..\/ {6}.adir\/ {3}.afile1 {2}.afile2\r\n/);
+      expect(output[1]).toMatch(/^ls .a\r\n.adir\/ {3}.afile1 {2}.afile2\r\n/);
       expect(output[2]).toEqual('ls .afile');
     });
   });
