@@ -8,8 +8,9 @@ test.describe('termios', () => {
     flagOptions.forEach(({ flag }) => {
       test(`should support OutputFlag.ONLCR ${flag}`, async ({ page }) => {
         const output = await page.evaluate(async flag => {
-          const EOT = '\x04';
           const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+          const { keys } = globalThis.cockle;
+          const { EOT } = keys;
 
           let cmdText = 'check_termios';
           if (flag !== 'default') {
