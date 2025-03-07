@@ -29,7 +29,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
 
     function setTermios(tty: any, optional_actions: any, data: ITermios) {
       // TODO: handle optional_actions
-      bufferedIO.termios.set(data);
+      bufferedIO.setTermios(data);
       return 0;
     }
 

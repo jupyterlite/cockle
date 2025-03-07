@@ -1,5 +1,5 @@
 import { IOutputCallback } from './callback';
-import { InputFlag, LocalFlag, OutputFlag, Termios } from './termios';
+import { InputFlag, LocalFlag, OutputFlag, ITermios, Termios } from './termios';
 
 /**
  * Classes to deal with buffered IO between main worker and web worker. Both have access to the same
@@ -348,6 +348,11 @@ export class WorkerBufferedIO extends BufferedIO {
     return this._termios;
   }
 
+  setTermios(iTermios: ITermios): void {
+    this.termios.set(iTermios);
+    this._writeColumn = 0;
+  }
+
   write(text: string | Int8Array | number[]): void {
     let chars: number[] = [];
     if (typeof text === 'string') {
@@ -464,7 +469,7 @@ export class WorkerBufferedIO extends BufferedIO {
           }
           break;
         default:
-          if (!inEscape) {
+          if (!inEscape && char >= 32) {
             this._writeColumn++;
           }
           ret.push(char);
