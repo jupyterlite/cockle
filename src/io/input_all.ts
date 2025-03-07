@@ -11,7 +11,7 @@ export abstract class InputAll implements IInput {
    */
   abstract readAll(): string;
 
-  readChar(): number[] {
+  read(maxChars: number): number[] {
     if (this._buffer === undefined) {
       this._buffer = this.readAll();
       this._index = 0;

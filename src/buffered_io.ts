@@ -315,9 +315,14 @@ export class WorkerBufferedIO extends BufferedIO {
     return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
   }
 
-  read(): number[] {
+  read(maxChars: number): number[] {
+    if (maxChars <= 0) {
+      return [];
+    }
+
     if (this._readBuffer.length > 0) {
-      return [this._readBuffer.shift()!];
+      // If have cached read data just return that.
+      return this._readFronBuffer(maxChars);
     }
 
     Atomics.wait(this._readArray, READ_MAIN, this._readCount);
@@ -327,21 +332,16 @@ export class WorkerBufferedIO extends BufferedIO {
       return [];
     }
 
-    let read = this._loadFromSharedArrayBuffer();
+    const read = this._loadFromSharedArrayBuffer();
     this._readCount++;
 
     // Notify main worker that character has been read and a new one can be stored.
     Atomics.store(this._readArray, READ_WORKER, this._readCount);
     Atomics.notify(this._readArray, READ_WORKER, 1);
 
-    read = this._processReadChars(read);
-    this._maybeEchoToOutput(read);
-    if (read.length > 1) {
-      this._readBuffer = read.slice(1);
-      read = [read[0]];
-    }
-
-    return read;
+    this._readBuffer = this._processReadChars(read);
+    this._maybeEchoToOutput(this._readBuffer);
+    return this._readFronBuffer(maxChars);
   }
 
   get termios(): Termios {
@@ -481,6 +481,16 @@ export class WorkerBufferedIO extends BufferedIO {
       }
     }
 
+    return ret;
+  }
+
+  /**
+   * Extract and return up to maxChars from _readBuffer, leaving the remainder in the buffer.
+   * _readBuffer may or may not be empty when this is called.
+   */
+  private _readFronBuffer(maxChars: number): number[] {
+    const ret = this._readBuffer.slice(0, maxChars);
+    this._readBuffer.splice(0, ret.length); // ret.length may be < maxChars
     return ret;
   }
 
