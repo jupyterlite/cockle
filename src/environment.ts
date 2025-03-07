@@ -10,6 +10,7 @@ export class Environment extends Map<string, string> {
     if (color) {
       this.set('PS1', ansi.styleBoldGreen + 'js-shell:' + ansi.styleReset + ' ');
       this.set('TERM', 'xterm-256color');
+      this.set('TERMINFO', '/usr/local/share/terminfo'); // Needed for nano
     } else {
       this.set('PS1', 'js-shell: ');
     }

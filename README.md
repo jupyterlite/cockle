@@ -18,6 +18,7 @@ name as the package unless otherwise specified:
 - `coreutils`: multiple core commands including `cat`, `cp`, `echo`, `ls`, `mkdir`, `mv`, `rm`, `touch`, `uname`, and `wc`
 - `grep`
 - `lua`
+- `nano`
 - `sed`
 - `tree`
 - `vim`
