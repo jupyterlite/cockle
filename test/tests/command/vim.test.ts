@@ -32,15 +32,15 @@ test.describe('vim command', () => {
   test('should support multi-character escape sequences', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const escape = '\x1b';
-      const upArrow = escape + '[A';
-      const leftArrow = escape + '[D';
+      const upArrow = escape + 'OA';
+      const leftArrow = escape + 'OD';
       const { shell, output } = await globalThis.cockle.shellSetupEmpty({ color: true });
       const { terminalInput } = globalThis.cockle;
       await Promise.all([
         shell.inputLine('vim'),
-        terminalInput(shell, [...'iabc\rdef']),
-        terminalInput(shell, [...(upArrow + leftArrow + leftArrow + 'XY')]),
-        terminalInput(shell, [...(escape + ':wq out\r')])
+        terminalInput(shell, [
+          ...('iabc\rdef' + upArrow + leftArrow + leftArrow + 'XY' + escape + ':wq out\r')
+        ])
       ]);
       // New file should exist.
       output.clear();
