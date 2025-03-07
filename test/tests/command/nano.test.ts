@@ -20,8 +20,8 @@ test.describe('nano command', () => {
   test('should create new file', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { shell, output } = await globalThis.cockle.shellSetupEmpty({ color: true });
-      const { terminalInput } = globalThis.cockle;
-      const enter = '\r';
+      const { keys, terminalInput } = globalThis.cockle;
+      const { enter } = keys;
       const exit = '\x18'; // Ctrl-X
       const writeFile = '\x0f'; // Ctrl-O
       await Promise.all([

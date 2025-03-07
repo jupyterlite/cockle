@@ -8,14 +8,7 @@ import {
   shellLineSimpleN,
   test
 } from './utils';
-
-const left = '\x1B[D';
-const backspace = '\x7F';
-const delete_ = '\x1B[3~';
-const home = '\x1B[H';
-const end = '\x1B[F';
-const prev = '\x1B[1;2D';
-const next = '\x1B[1;2C';
+import { keys } from '../serve/keys';
 
 test.describe('Shell', () => {
   test.describe('run command', () => {
@@ -45,7 +38,7 @@ test.describe('Shell', () => {
     test('should output redirect to file without ansi escapes', async ({ page }) => {
       // grep to terminal is colored
       const output_direct = await shellLineSimple(page, 'grep of file1', { color: true });
-      const start = '\x1B[01;31m\x1B[K';
+      const start = '\x1B[01;31m\x1B[K'; // TODO: don't use magic strings here
       const end = '\x1B[m\x1B[K';
       expect(output_direct).toMatch(`\r\nContents ${start}of${end} the file\r\n`);
 
@@ -69,10 +62,11 @@ test.describe('Shell', () => {
     test('should support terminal stdin', async ({ page }) => {
       const output = await page.evaluate(async () => {
         const { shell, output } = await globalThis.cockle.shellSetupEmpty();
-        const EOT = String.fromCharCode(4);
+        const { keys } = globalThis.cockle;
+        const { enter, EOT } = keys;
         await Promise.all([
           shell.inputLine('wc'),
-          globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', '\n', 'c', EOT])
+          globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', EOT])
         ]);
         return output.text;
       });
@@ -82,8 +76,8 @@ test.describe('Shell', () => {
     test('should support terminal stdin of an ansi escape sequence', async ({ page }) => {
       const output = await page.evaluate(async () => {
         const { shell, output } = await globalThis.cockle.shellSetupEmpty();
-        const EOT = String.fromCharCode(4);
-        const downArrow = '\x1B[B';
+        const { keys } = globalThis.cockle;
+        const { downArrow, EOT } = keys;
         await Promise.all([
           shell.inputLine('wc'),
           globalThis.cockle.terminalInput(shell, ['a', downArrow, 'b', EOT])
@@ -96,10 +90,11 @@ test.describe('Shell', () => {
     test('should support terminal stdin more than once', async ({ page }) => {
       const output = await page.evaluate(async () => {
         const { shell, output } = await globalThis.cockle.shellSetupEmpty();
-        const EOT = String.fromCharCode(4);
+        const { keys } = globalThis.cockle;
+        const { enter, EOT } = keys;
         await Promise.all([
           shell.inputLine('wc'),
-          globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', '\n', 'c', EOT])
+          globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', EOT])
         ]);
         const ret0 = output.textAndClear();
 
@@ -229,7 +224,8 @@ test.describe('Shell', () => {
     });
 
     test('should complete within a command preserving suffix', async ({ page }) => {
-      const output = await shellInputsSimpleN(page, [['e', 'c', 'X', left, '\t'], ['\r']]);
+      const { enter, leftArrow, tab } = keys;
+      const output = await shellInputsSimpleN(page, [['e', 'c', 'X', leftArrow, tab], [enter]]);
       expect(output[1]).toMatch(/^\r\nX\r\n/);
     });
   });
@@ -366,14 +362,16 @@ test.describe('Shell', () => {
   });
 
   test.describe('command line editing', () => {
+    const { backspace, delete_, end, enter, home, leftArrow, next, prev } = keys;
+
     // We can't explicitly check the cursor position without performing a visual test or decoding
     // the ANSI escape sequences, so here we use an echo command that will write to stdout and
     // insert an easily identified character at the cursor location.
     test('should delete forward and backward', async ({ page }) => {
       const common = ['e', 'c', 'h', 'o', ' ', 'A', 'B', 'C', 'D'];
       const output = await shellInputsSimpleN(page, [
-        [...common, left, left, backspace, '\r'],
-        [...common, left, left, delete_, '\r']
+        [...common, leftArrow, leftArrow, backspace, enter],
+        [...common, leftArrow, leftArrow, delete_, enter]
       ]);
       expect(output[0]).toMatch(/\r\nACD\r\n/);
       expect(output[1]).toMatch(/\r\nABD\r\n/);
@@ -382,8 +380,8 @@ test.describe('Shell', () => {
     test('should support home and end', async ({ page }) => {
       const common = ['c', 'h', 'o', ' ', 'A', 'B', 'C'];
       const output = await shellInputsSimpleN(page, [
-        [...common, left, left, home, 'e', '\r'],
-        ['e', ...common, left, left, end, 'D', '\r']
+        [...common, leftArrow, leftArrow, home, 'e', enter],
+        ['e', ...common, leftArrow, leftArrow, end, 'D', enter]
       ]);
       expect(output[0]).toMatch(/\r\nABC\r\n/);
       expect(output[1]).toMatch(/\r\nABCD\r\n/);
@@ -392,8 +390,8 @@ test.describe('Shell', () => {
     test('should support prev word', async ({ page }) => {
       const common = ['e', 'c', 'h', 'o', ' ', 'A', 'B', ' ', ' ', 'C', 'D'];
       const output = await shellInputsSimpleN(page, [
-        [...common, prev, 'Z', '\r'],
-        [...common, prev, prev, 'Y', '\r']
+        [...common, prev, 'Z', enter],
+        [...common, prev, prev, 'Y', enter]
       ]);
       expect(output[0]).toMatch(/\r\nAB ZCD\r\n/);
       expect(output[1]).toMatch(/\r\nYAB CD\r\n/);
@@ -402,8 +400,8 @@ test.describe('Shell', () => {
     test('should support next word', async ({ page }) => {
       const common = ['e', 'c', 'h', 'o', ' ', 'A', 'B', ' ', ' ', 'C', 'D'];
       const output = await shellInputsSimpleN(page, [
-        [...common, home, next, next, 'Z', '\r'],
-        [...common, home, next, next, next, 'Y', '\r']
+        [...common, home, next, next, 'Z', enter],
+        [...common, home, next, next, next, 'Y', enter]
       ]);
       expect(output[0]).toMatch(/\r\nABZ CD\r\n/);
       expect(output[1]).toMatch(/\r\nAB CDY\r\n/);

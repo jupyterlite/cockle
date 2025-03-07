@@ -90,13 +90,12 @@ test.describe('history', () => {
   test('should scroll up and down', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+      const { keys } = globalThis.cockle;
+      const { downArrow, upArrow } = keys;
       await shell.inputLine('cat a');
       await shell.inputLine('echo hello');
       await shell.inputLine('ls');
       output.clear();
-
-      const upArrow = '\x1B[A';
-      const downArrow = '\x1B[B';
 
       await shell.input(upArrow);
       await shell.input(upArrow);

@@ -31,11 +31,9 @@ test.describe('vim command', () => {
 
   test('should support multi-character escape sequences', async ({ page }) => {
     const output = await page.evaluate(async () => {
-      const escape = '\x1b';
-      const upArrow = escape + 'OA';
-      const leftArrow = escape + 'OD';
       const { shell, output } = await globalThis.cockle.shellSetupEmpty({ color: true });
-      const { terminalInput } = globalThis.cockle;
+      const { keys, terminalInput } = globalThis.cockle;
+      const { escape, leftArrow, upArrow } = keys;
       await Promise.all([
         shell.inputLine('vim'),
         terminalInput(shell, [
