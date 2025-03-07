@@ -55,7 +55,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
         // No buffer to store in.
         return 0;
       }
-      let chars = stdin.readChar();
+      let chars = stdin.read(length);
       if (chars.length === 1 && chars[0] === 4) {
         chars = [];
       }
