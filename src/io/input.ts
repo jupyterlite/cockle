@@ -2,9 +2,10 @@ export interface IInput {
   isTerminal(): boolean;
 
   /**
-   * Read up to maxChars as a sequence of utf16 character codes.
+   * Read up to maxChars as a sequence of utf16 character codes, or all available characters if
+   * maxChars is null.
    * This is the read function used by WebAssembly commands.
    * Could perhaps return a TypedArray instead?
    */
-  read(maxChars: number): number[];
+  read(maxChars: number | null): number[];
 }

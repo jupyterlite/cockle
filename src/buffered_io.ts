@@ -315,8 +315,8 @@ export class WorkerBufferedIO extends BufferedIO {
     return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
   }
 
-  read(maxChars: number): number[] {
-    if (maxChars <= 0) {
+  read(maxChars: number | null): number[] {
+    if (maxChars !== null && maxChars <= 0) {
       return [];
     }
 
@@ -490,13 +490,20 @@ export class WorkerBufferedIO extends BufferedIO {
   }
 
   /**
-   * Extract and return up to maxChars from _readBuffer, leaving the remainder in the buffer.
+   * Extract and return up to maxChars from _readBuffer, or all characters if maxChars is null,
+   * leaving the remainder in the buffer.
    * _readBuffer may or may not be empty when this is called.
    */
-  private _readFronBuffer(maxChars: number): number[] {
-    const ret = this._readBuffer.slice(0, maxChars);
-    this._readBuffer.splice(0, ret.length); // ret.length may be < maxChars
-    return ret;
+  private _readFronBuffer(maxChars: number | null): number[] {
+    if (maxChars === null) {
+      const ret = this._readBuffer;
+      this._readBuffer = [];
+      return ret;
+    } else {
+      const ret = this._readBuffer.slice(0, maxChars);
+      this._readBuffer.splice(0, ret.length); // ret.length may be < maxChars
+      return ret;
+    }
   }
 
   private _termios: Termios = Termios.newDefaultWasm();
