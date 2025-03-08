@@ -8,7 +8,7 @@ export class TerminalInput implements IInput {
     return true;
   }
 
-  read(maxChars: number): number[] {
+  read(maxChars: number | null): number[] {
     if (this.stdinCallback === undefined) {
       return [];
     }

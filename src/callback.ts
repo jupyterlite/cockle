@@ -35,9 +35,10 @@ export interface IInitDriveFSCallback {
 
 /**
  * Wait for and return a sequence of utf16 code units from stdin, if buffered stdin is enabled.
+ * Return up to maxChars, or all available characters if maxChars is null.
  */
 export interface IStdinCallback {
-  (maxChars: number): number[];
+  (maxChars: number | null): number[];
 }
 
 /**
