@@ -19,6 +19,7 @@
     ],
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
+    "sideEffects": false,
     "scripts": {
         "build": "tsc",
         "eslint": "npm run eslint:check -- --fix",
