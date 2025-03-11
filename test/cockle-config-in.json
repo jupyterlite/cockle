@@ -8,7 +8,7 @@
         "js-capitalise": {},
         "js-test": {}
       },
-      "local_directory": "../test/util-js",
+      "local_directory": "../test/util-js/lib",
       "wasm": false
     },
     "util-wasm": {

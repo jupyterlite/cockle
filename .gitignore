@@ -3,6 +3,7 @@ node_modules/
 tsconfig.tsbuildinfo
 .coverage/
 .eslintcache
+.rollup.cache/
 playwright-report/
 test-results/
 test/package-lock.json
