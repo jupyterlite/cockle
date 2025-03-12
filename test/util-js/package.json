@@ -1,0 +1,16 @@
+{
+    "type": "module",
+    "private": true,
+    "scripts": {
+        "build": "rollup --config"
+    },
+    "devDependencies": {
+        "@jupyterlite/cockle": "file:../../",
+        "@rollup/plugin-node-resolve": "^16.0.0",
+        "@rollup/plugin-typescript": "^12.1.2",
+        "esbuild": "^0.25.0",
+        "rollup": "^4.34.8",
+        "ts-loader": "^9.5.1",
+        "typescript": "^5.5.4"
+    }
+}

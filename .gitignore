@@ -1,11 +1,10 @@
-lib/
 node_modules/
 tsconfig.tsbuildinfo
 .coverage/
 .eslintcache
+.rollup.cache/
 playwright-report/
 test-results/
-test/package-lock.json
 *.data
 *.js
 *.wasm
@@ -13,5 +12,9 @@ cockle_wasm_env/
 cockle-config.json
 demo/package-lock.json
 demo/assets/*.json
-test/assets/*.json
+demo/lib/
+lib/
 src/version.ts
+test/assets/*.json
+test/lib/
+test/package-lock.json

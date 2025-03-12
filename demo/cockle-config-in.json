@@ -7,7 +7,7 @@
       "modules": {
         "js-capitalise": {}
       },
-      "local_directory": "../test/util-js",
+      "local_directory": "../test/util-js/lib",
       "wasm": false
     },
     "util-wasm": {
