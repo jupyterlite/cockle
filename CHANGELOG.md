@@ -2,6 +2,50 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.17
+
+This release adds support for the WebAssembly commands `nano` and `sed`, and preliminary support for JavaScript commands.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.16...b2ab16d7b3f715d609fcbe396392aec98d668d01))
+
+### Enhancements made
+
+- Build JavaScript commands for testing using rollup [#161](https://github.com/jupyterlite/cockle/pull/161) ([@ianthomas23](https://github.com/ianthomas23))
+- Add sideEffects config to package.json [#160](https://github.com/jupyterlite/cockle/pull/160) ([@ianthomas23](https://github.com/ianthomas23))
+- Support returning all buffered characters in stdin read function [#159](https://github.com/jupyterlite/cockle/pull/159) ([@ianthomas23](https://github.com/ianthomas23))
+- Use maxChars when reading input from wasm command [#156](https://github.com/jupyterlite/cockle/pull/156) ([@ianthomas23](https://github.com/ianthomas23))
+- Set an initial size for terminal in tests [#154](https://github.com/jupyterlite/cockle/pull/154) ([@ianthomas23](https://github.com/ianthomas23))
+- Add support for nano editor [#153](https://github.com/jupyterlite/cockle/pull/153) ([@ianthomas23](https://github.com/ianthomas23))
+- Support WebAssembly source map files [#150](https://github.com/jupyterlite/cockle/pull/150) ([@ianthomas23](https://github.com/ianthomas23))
+- Use input read() function rather than get_char() to read multiple characters at a time [#147](https://github.com/jupyterlite/cockle/pull/147) ([@ianthomas23](https://github.com/ianthomas23))
+- Support dynamic loading of JavaScript commands [#146](https://github.com/jupyterlite/cockle/pull/146) ([@ianthomas23](https://github.com/ianthomas23))
+- Add new command `sed`, always available [#144](https://github.com/jupyterlite/cockle/pull/144) ([@ianthomas23](https://github.com/ianthomas23))
+- Add tee command [#143](https://github.com/jupyterlite/cockle/pull/143) ([@ianthomas23](https://github.com/ianthomas23))
+- Use TypeScript type definitions for WebAssembly modules [#140](https://github.com/jupyterlite/cockle/pull/140) ([@ianthomas23](https://github.com/ianthomas23))
+- Print micromamba version used to deploy [#138](https://github.com/jupyterlite/cockle/pull/138) ([@ianthomas23](https://github.com/ianthomas23))
+- Refactor wasm loading and running to make more generic [#137](https://github.com/jupyterlite/cockle/pull/137) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Remove extraneous newline when closing vim or nano [#158](https://github.com/jupyterlite/cockle/pull/158) ([@ianthomas23](https://github.com/ianthomas23))
+- Stop download notification if fail to importScripts [#139](https://github.com/jupyterlite/cockle/pull/139) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Reuse common key definitions in in-browser tests [#155](https://github.com/jupyterlite/cockle/pull/155) ([@ianthomas23](https://github.com/ianthomas23))
+- Add vim test using multi-char escape sequences (arrow keys) [#151](https://github.com/jupyterlite/cockle/pull/151) ([@ianthomas23](https://github.com/ianthomas23))
+- Simplify syntax of Options argument parsing [#141](https://github.com/jupyterlite/cockle/pull/141) ([@ianthomas23](https://github.com/ianthomas23))
+- Use interface IContext instead of class Context [#136](https://github.com/jupyterlite/cockle/pull/136) ([@ianthomas23](https://github.com/ianthomas23))
+- Move mountpoint to IFileSystem [#135](https://github.com/jupyterlite/cockle/pull/135) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-02-18&to=2025-03-12&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-02-18..2025-03-12&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.16
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.15...d57db66a05507ed26983764309d6c75584062632))
@@ -24,8 +68,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-02-05&to=2025-02-18&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-02-05..2025-02-18&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.15
 
