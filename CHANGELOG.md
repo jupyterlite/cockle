@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.18
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.17...60c9aae1e63c57eef610c7c589e9bcd47817a502))
+
+### Bugs fixed
+
+- Revert some emscripten type changes [#162](https://github.com/jupyterlite/cockle/pull/162) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-03-12&to=2025-03-12&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-03-12..2025-03-12&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.17
 
 This release adds support for the WebAssembly commands `nano` and `sed`, and preliminary support for JavaScript commands.
@@ -43,8 +59,6 @@ This release adds support for the WebAssembly commands `nano` and `sed`, and pre
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-02-18&to=2025-03-12&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-02-18..2025-03-12&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.16
 
