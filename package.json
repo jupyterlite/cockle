@@ -15,13 +15,15 @@
     "files": [
         "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,wasm,woff2,ttf}",
         "src/**/*.ts",
+        "src/**/*.d.ts",
         "cockle-config-base.json"
     ],
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "sideEffects": false,
     "scripts": {
-        "build": "tsc",
+        "build": "tsc && npm run build:copy-dts",
+        "build:copy-dts": "copyfiles -u 1 \"src/**/*.d.ts\" lib",
         "eslint": "npm run eslint:check -- --fix",
         "eslint:check": "eslint . --cache --ext .ts,.tsx",
         "lint": "npm run prettier && npm run eslint",
@@ -48,6 +50,7 @@
         "@types/react": "^18.2.79",
         "@typescript-eslint/eslint-plugin": "^7.16.1",
         "@typescript-eslint/parser": "^7.16.1",
+        "copyfiles": "^2.4.1",
         "eslint": "^8.56.0",
         "eslint-config-prettier": "^9.1.0",
         "eslint-plugin-prettier": "^5.1.3",
