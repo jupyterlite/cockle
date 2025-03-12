@@ -1,7 +1,7 @@
 import { CommandModuleCache } from './command_module_cache';
 import { IShellWorker } from '../defs_internal';
-import { IWebAssemblyModule } from '../types/fs';
 import { IJavaScriptModule } from '../types/javascript_module';
+import { IWebAssemblyModule } from '../types/wasm_module';
 
 /**
  * Loader of JavaScript/WebAssembly modules. Once loaded, a module is cached so that it is faster

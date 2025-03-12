@@ -3,7 +3,7 @@ import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_run
 import { IContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
-import { MainModule } from '../types/fs';
+import type { MainModule } from '../types/wasm_module';
 import { ITermios } from '../termios';
 
 export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
