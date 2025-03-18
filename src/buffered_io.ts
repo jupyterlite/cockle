@@ -209,7 +209,10 @@ export class MainBufferedIO extends BufferedIO {
 }
 
 export class WorkerBufferedIO extends BufferedIO {
-  constructor(sharedArrayBuffer: SharedArrayBuffer, readonly outputCallback: IOutputCallback) {
+  constructor(
+    sharedArrayBuffer: SharedArrayBuffer,
+    readonly outputCallback: IOutputCallback
+  ) {
     super(sharedArrayBuffer);
   }
 
