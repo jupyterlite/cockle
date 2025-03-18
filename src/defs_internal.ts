@@ -5,6 +5,7 @@ import {
   IDownloadModuleCallback,
   IEnableBufferedStdinCallback,
   IInitDriveFSCallback,
+  IOutputCallback,
   IStdinCallback,
   ITerminateCallback
 } from './callback';
@@ -33,6 +34,7 @@ export interface IShellWorker extends IShellCommon {
     options: IShellWorker.IOptions,
     downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback,
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
+    outputCallback: IShellWorker.IProxyOutputCallback,
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ): void;
 }
@@ -42,6 +44,7 @@ export namespace IShellWorker {
   export interface IProxyEnableBufferedStdinCallback
     extends IEnableBufferedStdinCallback,
       ProxyMarked {}
+  export interface IProxyOutputCallback extends IOutputCallback, ProxyMarked {}
   export interface IProxyTerminateCallback extends ITerminateCallback, ProxyMarked {}
 
   export interface IOptions extends IOptionsCommon {

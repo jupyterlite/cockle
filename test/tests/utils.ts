@@ -25,6 +25,7 @@ export async function shellInputsSimpleN(
         for (const char of chars) {
           await shell.input(char);
         }
+        await globalThis.cockle.delay();
         ret.push(output.textAndClear());
       }
       return ret;
@@ -54,6 +55,7 @@ export async function shellLineSimpleN(
       const ret: string[] = [];
       for (const line of lines) {
         await shell.inputLine(line);
+        await globalThis.cockle.delay();
         ret.push(output.textAndClear());
       }
       return ret;
@@ -73,6 +75,7 @@ export async function shellLineComplexN(
       const ret: string[] = [];
       for (const line of lines) {
         await shell.inputLine(line);
+        await globalThis.cockle.delay();
         ret.push(output.textAndClear());
       }
       return ret;

@@ -1,5 +1,5 @@
 import { Aliases, OutputFlag, Termios, parse, tokenize } from '@jupyterlite/cockle';
-import { terminalInput } from './input_setup';
+import { delay, terminalInput } from './input_setup';
 import { keys } from './keys';
 import { shellSetupEmpty, shellSetupComplex, shellSetupSimple } from './shell_setup';
 
@@ -8,6 +8,7 @@ async function setup() {
     Aliases,
     OutputFlag,
     Termios,
+    delay,
     keys,
     parse,
     shellSetupComplex,
