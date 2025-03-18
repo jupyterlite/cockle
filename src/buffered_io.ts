@@ -2,13 +2,12 @@ import { IOutputCallback } from './callback';
 import { InputFlag, LocalFlag, OutputFlag, ITermios, Termios } from './termios';
 
 /**
- * Classes to deal with buffered IO between main worker and web worker. Both have access to the same
+ * Classes for buffered input between main worker and web worker. Both have access to the same
  * SharedArrayBuffer and use that to pass stdin characters from the UI (main worker) to the shell
  * (webworker). This is necessary when the shell is running a WASM command that is synchronous and
  * blocking, as the usual async message passing from main to webworker does not work as the received
  * messages would only be processed when the command has finished.
  *
- * Writing (from web worker to main worker) always occurs via here, never directly.
  * Reading (from main worker to web worker) is explicitly enabled/disabled.
  */
 
@@ -18,19 +17,13 @@ const READ_WORKER = 1;
 const READ_LENGTH = 2;
 const READ_START = 3;
 
-const WRITE_CONTROL = 0;
-const WRITE_LENGTH = 1;
-const WRITE_START = 2;
-
 abstract class BufferedIO {
   constructor(sharedArrayBuffer?: SharedArrayBuffer) {
     const bytesPerElement = Int32Array.BYTES_PER_ELEMENT;
     const readLength = this._maxReadChars + 3;
-    const writeLength = this._maxWriteChars + 2;
-    const totaLength = readLength + writeLength;
 
     if (sharedArrayBuffer === undefined) {
-      this._sharedArrayBuffer = new SharedArrayBuffer(totaLength * bytesPerElement);
+      this._sharedArrayBuffer = new SharedArrayBuffer(readLength * bytesPerElement);
     } else {
       this._sharedArrayBuffer = sharedArrayBuffer;
     }
@@ -39,16 +32,6 @@ abstract class BufferedIO {
     if (sharedArrayBuffer === undefined) {
       this._readArray[READ_MAIN] = 0;
       this._readArray[READ_WORKER] = 0;
-    }
-
-    this._writeArray = new Int32Array(
-      this._sharedArrayBuffer,
-      readLength * bytesPerElement,
-      writeLength
-    );
-    if (sharedArrayBuffer !== undefined) {
-      this._writeArray[WRITE_CONTROL] = 0;
-      this._writeArray[WRITE_LENGTH] = 0;
     }
   }
 
@@ -97,9 +80,6 @@ abstract class BufferedIO {
   protected _readArray: Int32Array;
   protected _readCount: number = 0;
 
-  protected _maxWriteChars: number = 256; // Multiples of this can be sent consecutively.
-  protected _writeArray: Int32Array;
-
   private _utf8Decoder?: TextDecoder;
 }
 
@@ -142,11 +122,6 @@ export class MainBufferedIO extends BufferedIO {
       return;
     }
 
-    // Stop listening for writes.
-    this._disposing = true;
-    Atomics.store(this._writeArray, WRITE_CONTROL, 999); // Sentinel value, anything not 0 or 1.
-    Atomics.notify(this._writeArray, WRITE_CONTROL);
-
     this._isDisposed = true;
   }
 
@@ -177,49 +152,7 @@ export class MainBufferedIO extends BufferedIO {
     this._sendStdinNow = sendStdinNow;
   }
 
-  async start(): Promise<void> {
-    this._listenForWrite();
-  }
-
-  async _afterListenWrite() {
-    if (this._disabling) {
-      return;
-    }
-
-    let text = '';
-    let moreToFollow = true;
-    do {
-      let n = Atomics.load(this._writeArray, WRITE_LENGTH);
-      moreToFollow = n === 0;
-      if (moreToFollow) {
-        n = this._maxWriteChars;
-      }
-
-      const chars = new Int16Array(n);
-      for (let i = 0; i < n; i++) {
-        chars[i] = Atomics.load(this._writeArray, WRITE_START + i);
-      }
-      text += String.fromCharCode(...chars);
-
-      Atomics.store(this._writeArray, WRITE_CONTROL, 0); // reset
-      Atomics.notify(this._writeArray, WRITE_CONTROL, 1);
-
-      if (moreToFollow && !this._disposing) {
-        const { async, value } = Atomics.waitAsync(this._writeArray, WRITE_CONTROL, 0);
-        if (async) {
-          await value;
-        }
-      }
-    } while (moreToFollow);
-
-    if (text.length > 0 && !this._disposing) {
-      this.outputCallback(text);
-    }
-
-    if (!this._disposing) {
-      this._listenForWrite();
-    }
-  }
+  async start(): Promise<void> {}
 
   /**
    * After a successful read by the worker, main checks if another character can be stored in the
@@ -241,15 +174,6 @@ export class MainBufferedIO extends BufferedIO {
     this._readBuffer = [];
     this._readBufferCount = 0;
     this._readSentCount = 0;
-  }
-
-  private _listenForWrite() {
-    const { async, value } = Atomics.waitAsync(this._writeArray, WRITE_CONTROL, 0);
-    if (async) {
-      value.then(() => this._afterListenWrite());
-    } else {
-      this._afterListenWrite();
-    }
   }
 
   private _storeInSharedArrayBuffer() {
@@ -276,7 +200,6 @@ export class MainBufferedIO extends BufferedIO {
     }
   }
 
-  private _disposing: boolean = false;
   private _isDisposed: boolean = false;
   private _disabling: boolean = false;
   private _readBuffer: string[] = [];
@@ -286,7 +209,10 @@ export class MainBufferedIO extends BufferedIO {
 }
 
 export class WorkerBufferedIO extends BufferedIO {
-  constructor(sharedArrayBuffer: SharedArrayBuffer) {
+  constructor(
+    sharedArrayBuffer: SharedArrayBuffer,
+    readonly outputCallback: IOutputCallback
+  ) {
     super(sharedArrayBuffer);
   }
 
@@ -361,24 +287,7 @@ export class WorkerBufferedIO extends BufferedIO {
       chars = this._processWriteChars(text);
     }
 
-    let length = chars.length;
-    let offset = 0;
-    while (length > 0) {
-      const moreToFollow = length > this._maxWriteChars;
-      Atomics.store(this._writeArray, WRITE_CONTROL, 1);
-      Atomics.store(this._writeArray, WRITE_LENGTH, moreToFollow ? 0 : length);
-      const n = moreToFollow ? this._maxWriteChars : length;
-      for (let i = 0; i < n; i++) {
-        Atomics.store(this._writeArray, WRITE_START + i, chars[offset + i]);
-      }
-      Atomics.notify(this._writeArray, WRITE_CONTROL, 1); // signal other end that buffer is ready to read.
-
-      // Wait for acknowledgement that buffer has been read.
-      Atomics.wait(this._writeArray, WRITE_CONTROL, 1);
-
-      length -= this._maxWriteChars;
-      offset += this._maxWriteChars;
-    }
+    this.outputCallback(String.fromCharCode(...chars));
   }
 
   _maybeEchoToOutput(chars: number[]): void {

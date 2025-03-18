@@ -12,10 +12,11 @@ export abstract class BaseShellWorker implements IShellWorker {
     options: IShellWorker.IOptions,
     downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback,
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
+    outputCallback: IShellWorker.IProxyOutputCallback,
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ) {
     console.log('Cockle BaseShellWorker.initialize');
-    this._bufferedIO = new WorkerBufferedIO(options.sharedArrayBuffer);
+    this._bufferedIO = new WorkerBufferedIO(options.sharedArrayBuffer, outputCallback);
     this._downloadModuleCallback = downloadModuleCallback;
     this._enableBufferedStdinCallback = enableBufferedStdinCallback;
     this._terminateCallback = terminateCallback;

@@ -40,6 +40,7 @@ export abstract class BaseShell implements IShell {
       },
       proxy(this.downloadWasmModuleCallback.bind(this)),
       proxy(this.enableBufferedStdinCallback.bind(this)),
+      proxy(options.outputCallback),
       proxy(this.dispose.bind(this)) // terminateCallback
     );
 
