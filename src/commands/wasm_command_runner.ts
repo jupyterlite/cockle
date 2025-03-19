@@ -12,7 +12,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
   }
 
   async run(cmdName: string, context: IContext): Promise<number> {
-    const { args, bufferedIO, fileSystem, stdin, stdout, stderr } = context;
+    const { args, workerIO, fileSystem, stdin, stdout, stderr } = context;
     const { wasmBaseUrl } = this.module.loader;
 
     const start = Date.now();
@@ -22,14 +22,14 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     }
 
     function getTermios(tty: any): ITermios {
-      const { termios } = bufferedIO;
+      const { termios } = workerIO;
       termios.log('Termios get');
       return termios.clone();
     }
 
     function setTermios(tty: any, optional_actions: any, data: ITermios) {
       // TODO: handle optional_actions
-      bufferedIO.setTermios(data);
+      workerIO.setTermios(data);
       return 0;
     }
 
@@ -41,7 +41,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     }
 
     function poll(stream: any, timeoutMs: number): number {
-      return bufferedIO.poll(timeoutMs);
+      return workerIO.poll(timeoutMs);
     }
 
     function read(
@@ -76,14 +76,14 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       }
 
       const chars = buffer.slice(offset, offset + length);
-      const text = bufferedIO.utf8ArrayToString(chars);
+      const text = workerIO.utf8ArrayToString(chars);
       const isStderr = stream.path === '/dev/tty1';
 
       if (isStderr && cmdName === 'touch' && args.length > 1) {
         // Crude hiding of many errors in touch command, really only want to hide
         // `touch: failed to close '${args[1]}': Bad file descriptor`
         // but that is sent as multiple write() calls.
-        // The correct fix can be reintroduced when BufferedIO correctly line buffers output.
+        // The correct fix can be reintroduced when WorkerIO correctly line buffers output.
         return length;
       }
 

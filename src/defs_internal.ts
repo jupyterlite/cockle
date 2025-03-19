@@ -1,6 +1,6 @@
 import { ProxyMarked, Remote } from 'comlink';
 
-import { WorkerBufferedIO } from './buffered_io';
+import { IWorkerIO } from './buffered_io';
 import {
   IDownloadModuleCallback,
   IEnableBufferedStdinCallback,
@@ -61,6 +61,6 @@ export namespace IShellImpl {
     initDriveFSCallback: IInitDriveFSCallback;
     stdinCallback: IStdinCallback;
     terminateCallback: IShellWorker.IProxyTerminateCallback;
-    bufferedIO: WorkerBufferedIO;
+    workerIO: IWorkerIO;
   }
 }

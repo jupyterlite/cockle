@@ -102,7 +102,7 @@ export class ShellImpl implements IShellWorker {
     if (!this._isRunning) {
       return;
     }
-    this.options.bufferedIO.write(text);
+    this.options.workerIO.write(text);
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
@@ -373,12 +373,12 @@ export class ShellImpl implements IShellWorker {
     if (!this._isRunning) {
       return;
     }
-    this.options.bufferedIO.write(`\n${this.environment.getPrompt()}`);
+    this.options.workerIO.write(`\n${this.environment.getPrompt()}`);
   }
 
   private async _runCommands(cmdText: string): Promise<void> {
     this.options.enableBufferedStdinCallback(true);
-    this.options.bufferedIO.allowAdjacentNewline(true);
+    this.options.workerIO.allowAdjacentNewline(true);
 
     if (cmdText.startsWith('!')) {
       // Get command from history and run that.
@@ -437,7 +437,7 @@ export class ShellImpl implements IShellWorker {
       exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
       this.environment.set('?', `${exitCode}`);
 
-      this.options.bufferedIO.allowAdjacentNewline(false);
+      this.options.workerIO.allowAdjacentNewline(false);
       this.options.enableBufferedStdinCallback(false);
     }
   }
@@ -486,7 +486,7 @@ export class ShellImpl implements IShellWorker {
       stdin: input,
       stdout: output,
       stderr: error,
-      bufferedIO: this.options.bufferedIO,
+      workerIO: this.options.workerIO,
       commandModuleCache: this._commandModuleLoader.cache
     };
     const exitCode = await runner.run(name, context);
