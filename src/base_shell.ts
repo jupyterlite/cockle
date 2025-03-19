@@ -3,7 +3,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 
 import { proxy, wrap } from 'comlink';
 
-import { MainBufferedIO } from './buffered_io';
+import { SharedArrayBufferMainIO } from './buffered_io';
 import { IShell } from './defs';
 import { IRemoteShell } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
@@ -14,7 +14,7 @@ import { DownloadTracker } from './download_tracker';
  */
 export abstract class BaseShell implements IShell {
   constructor(readonly options: IShell.IOptions) {
-    this._bufferedIO = new MainBufferedIO(options.outputCallback);
+    this._mainIO = new SharedArrayBufferMainIO();
     this._worker = this.initWorker(options);
     this._initRemote(options).then(this._ready.resolve.bind(this._ready));
   }
@@ -27,7 +27,7 @@ export abstract class BaseShell implements IShell {
   private async _initRemote(options: IShell.IOptions) {
     this._remote = wrap(this._worker);
     const { mountpoint, wasmBaseUrl, driveFsBaseUrl, initialDirectories, initialFiles } = options;
-    const { sharedArrayBuffer } = this._bufferedIO;
+    const { sharedArrayBuffer } = this._mainIO;
     await this._remote.initialize(
       {
         color: options.color ?? true,
@@ -45,7 +45,7 @@ export abstract class BaseShell implements IShell {
     );
 
     // Register sendStdinNow callback only after this._remote has been initialized.
-    this._bufferedIO.registerSendStdinNow(this._remote.input);
+    this._mainIO.registerSendStdinNow(this._remote.input);
   }
 
   dispose(): void {
@@ -64,8 +64,8 @@ export abstract class BaseShell implements IShell {
       this._downloadTracker = undefined;
     }
 
-    this._bufferedIO.dispose();
-    (this._bufferedIO as any) = undefined;
+    this._mainIO.dispose();
+    (this._mainIO as any) = undefined;
 
     this._disposed.emit();
   }
@@ -107,9 +107,9 @@ export abstract class BaseShell implements IShell {
     }
 
     if (enable) {
-      await this._bufferedIO.enable();
+      await this._mainIO.enable();
     } else {
-      await this._bufferedIO.disable();
+      await this._mainIO.disable();
     }
   }
 
@@ -118,8 +118,8 @@ export abstract class BaseShell implements IShell {
       return;
     }
 
-    if (this._bufferedIO.enabled) {
-      await this._bufferedIO.push(char);
+    if (this._mainIO.enabled) {
+      await this._mainIO.push(char);
     } else {
       await this._remote!.input(char);
     }
@@ -146,15 +146,16 @@ export abstract class BaseShell implements IShell {
     }
 
     await this.ready;
-    await this._bufferedIO.start();
     await this._remote!.start();
   }
 
-  private _worker: Worker;
-  private _remote?: IRemoteShell;
-  private _bufferedIO: MainBufferedIO;
   private _disposed = new Signal<this, void>(this);
   private _isDisposed = false;
   private _ready = new PromiseDelegate<void>();
+
+  private _worker: Worker;
+  private _remote?: IRemoteShell;
+  private _mainIO: SharedArrayBufferMainIO;
+
   private _downloadTracker?: DownloadTracker;
 }

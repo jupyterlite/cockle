@@ -1,5 +1,5 @@
 import { Aliases } from './aliases';
-import { WorkerBufferedIO } from './buffered_io';
+import { IWorkerIO } from './buffered_io';
 import { ITerminateCallback } from './callback';
 import { History } from './history';
 import { IInput, IOutput } from './io';
@@ -18,6 +18,6 @@ export interface IContext extends IJavaScriptContext {
   stdin: IInput;
   stdout: IOutput;
   stderr: IOutput;
-  bufferedIO: WorkerBufferedIO;
+  workerIO: IWorkerIO;
   commandModuleCache: CommandModuleCache;
 }
