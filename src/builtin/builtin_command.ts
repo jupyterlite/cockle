@@ -3,6 +3,14 @@ import { IContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 
 export abstract class BuiltinCommand implements ICommandRunner {
+  get moduleName(): string {
+    return '<builtin>';
+  }
+
+  get packageName(): string {
+    return '';
+  }
+
   names(): string[] {
     return [this.name];
   }

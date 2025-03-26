@@ -1,9 +1,19 @@
 import { BuiltinCommand } from './builtin_command';
+import { BooleanOption } from './option';
+import { Options } from './options';
 import { ansi } from '../ansi';
 import { IContext } from '../context';
 import { ExitCode } from '../exit_code';
 import { toTable } from '../utils';
 import { COCKLE_VERSION } from '../version';
+
+class CockleConfigOptions extends Options {
+  version = new BooleanOption('v', 'version', 'show cockle version');
+  package = new BooleanOption('p', 'package', 'show package information');
+  module = new BooleanOption('m', 'module', 'show module information');
+  command = new BooleanOption('c', 'command', 'show command information');
+  help = new BooleanOption('h', 'help', 'display this help and exit');
+}
 
 export class CockleConfigCommand extends BuiltinCommand {
   get name(): string {
@@ -11,13 +21,51 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   protected async _run(context: IContext): Promise<number> {
-    const { stdout } = context;
+    const { args, stdout } = context;
+    const options = new CockleConfigOptions().parse(args);
 
-    stdout.write(`cockle ${COCKLE_VERSION}\n`);
-    this._writePackageConfig(context);
-    this._writeModuleConfig(context);
+    if (options.help.isSet) {
+      options.writeHelp(stdout);
+    } else {
+      const showAll = args.length === 0;
+      if (showAll || options.version.isSet) {
+        this._writeVersion(context);
+      }
+      if (showAll || options.package.isSet) {
+        this._writePackageConfig(context);
+      }
+      if (showAll || options.module.isSet) {
+        this._writeModuleConfig(context);
+      }
+      if (options.command.isSet) {
+        this._writeCommandConfig(context);
+      }
+    }
 
     return ExitCode.SUCCESS;
+  }
+
+  private _writeCommandConfig(context: IContext) {
+    const { commandRegistry, stdout } = context;
+
+    const lines = [['command', 'module']];
+    const names = commandRegistry.allCommands();
+    for (const name of names) {
+      const runner = commandRegistry.get(name);
+      if (runner !== null) {
+        lines.push([name, runner.moduleName]);
+      }
+    }
+
+    let colorMap: Map<number, string> | null = null;
+    if (stdout.supportsAnsiEscapes()) {
+      colorMap = new Map();
+      colorMap.set(1, ansi.styleBrightBlue);
+    }
+
+    for (const line of toTable(lines, 1, false, colorMap)) {
+      stdout.write(line + '\n');
+    }
   }
 
   private _writeModuleConfig(context: IContext) {
@@ -68,5 +116,10 @@ export class CockleConfigCommand extends BuiltinCommand {
     for (const line of toTable(lines, 1, false, colorMap)) {
       stdout.write(line + '\n');
     }
+  }
+
+  private _writeVersion(context: IContext) {
+    const { stdout } = context;
+    stdout.write(`cockle ${COCKLE_VERSION}\n`);
   }
 }
