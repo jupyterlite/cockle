@@ -19,7 +19,15 @@ export abstract class Option {
     return this.shortName ? `-${this.shortName}` : `--${this.longName}`;
   }
 
-  set(): void {
+  /**
+   * Parse remaining args and return those args not consumed.
+   */
+  parse(currentArg: string, args: string[]): string[] {
+    this.set();
+    return args;
+  }
+
+  protected set(): void {
     this._isSet = true;
   }
 
@@ -32,6 +40,26 @@ export class BooleanOption extends Option {
   }
 }
 
+export class OptionalStringOption extends BooleanOption {
+  constructor(shortName: string, longName: string, description: string) {
+    super(shortName, longName, description);
+  }
+
+  get string(): string | undefined {
+    return this._string;
+  }
+
+  override parse(currentArg: string, args: string[]): string[] {
+    this.set();
+    if (args.length > 0 && !args[0].startsWith('-')) {
+      this._string = args.shift();
+    }
+    return args;
+  }
+
+  private _string?: string;
+}
+
 // Greedily consumes all remaining options as strings.
 // Often used for file/directory paths.
 export class TrailingStringsOption extends Option {
@@ -42,13 +70,26 @@ export class TrailingStringsOption extends Option {
     }
   }
 
-  add(str: string) {
-    this._strings.push(str);
-    this._isSet = true;
-  }
-
   get length(): number {
     return this._strings.length;
+  }
+
+  /**
+   * Parse remaining args. This will consume all the args, throwing an error if there are any args
+   * of an incorrect form.
+   */
+  override parse(currentArg: string, args: string[]): string[] {
+    this._strings.push(currentArg);
+    this.set();
+
+    for (const arg of args) {
+      if (arg.startsWith('-')) {
+        throw new GeneralError('Cannot have named option after parsing a trailing path');
+      }
+      this._strings.push(arg);
+    }
+
+    return [];
   }
 
   get strings(): string[] {

@@ -9,6 +9,15 @@ export class CommandRegistry {
   }
 
   /**
+   * Return sequence of all command names in alphabetical order.
+   */
+  allCommands(): string[] {
+    const commands = Array.from(this._map.keys());
+    commands.sort();
+    return commands;
+  }
+
+  /**
    * Return sequence of all modules ordered by module name.
    */
   allModules(): CommandModule[] {
@@ -20,6 +29,10 @@ export class CommandRegistry {
     return modules;
   }
 
+  /**
+   * Return the ICommandRunner for a particular named function, or null if no such name exists.
+   * Note it does not load the module, that occurs when the command is run.
+   */
   get(name: string): ICommandRunner | null {
     return this._map.get(name) ?? null;
   }

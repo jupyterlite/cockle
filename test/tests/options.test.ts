@@ -1,6 +1,10 @@
 import { expect } from '@playwright/test';
 import { test } from './utils';
-import { BooleanOption, TrailingStringsOption } from '../../src/builtin/option';
+import {
+  BooleanOption,
+  OptionalStringOption,
+  TrailingStringsOption
+} from '../../src/builtin/option';
 import { Options } from '../../src/builtin/options';
 
 class BooleanOptions extends Options {
@@ -15,6 +19,11 @@ class TrailingOptions extends Options {
 
 class AtLeastOneTrailingOptions extends Options {
   trailingStrings = new TrailingStringsOption(1);
+}
+
+class OptStringOptions extends Options {
+  flag = new BooleanOption('f', 'flag', 'some flag');
+  possibleString = new OptionalStringOption('p', '', 'possible string');
 }
 
 test.describe('Options', () => {
@@ -71,5 +80,34 @@ test.describe('Options', () => {
     expect(() => new AtLeastOneTrailingOptions().parse([])).toThrow(
       /Insufficient trailing strings options specified/
     );
+  });
+
+  test('should support optional string', () => {
+    const options0 = new OptStringOptions().parse([]);
+    expect(options0.possibleString.isSet).toBeFalsy();
+    expect(options0.possibleString.string).toBeUndefined();
+    expect(options0.flag.isSet).toBeFalsy();
+
+    const options1 = new OptStringOptions().parse(['-p']);
+    expect(options1.possibleString.isSet).toBeTruthy();
+    expect(options1.possibleString.string).toBeUndefined();
+    expect(options1.flag.isSet).toBeFalsy();
+
+    const options2 = new OptStringOptions().parse(['-p', 'abc']);
+    expect(options2.possibleString.isSet).toBeTruthy();
+    expect(options2.possibleString.string).toEqual('abc');
+    expect(options2.flag.isSet).toBeFalsy();
+  });
+
+  test('should continue after optional string', () => {
+    const options0 = new OptStringOptions().parse(['-p', '-f']);
+    expect(options0.possibleString.isSet).toBeTruthy();
+    expect(options0.possibleString.string).toBeUndefined();
+    expect(options0.flag.isSet).toBeTruthy();
+
+    const options1 = new OptStringOptions().parse(['-p', 'abc', '-f']);
+    expect(options1.possibleString.isSet).toBeTruthy();
+    expect(options1.possibleString.string).toEqual('abc');
+    expect(options1.flag.isSet).toBeTruthy();
   });
 });
