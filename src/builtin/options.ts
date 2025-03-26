@@ -26,7 +26,7 @@ export abstract class Options {
         trailingStrings.add(arg);
         inTrailingStrings = true;
       } else {
-        throw new GeneralError(`Unrecognised option: ${arg}`);
+        throw new GeneralError(`Unrecognised option: '${arg}'`);
       }
     }
 
