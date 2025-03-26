@@ -7,11 +7,14 @@ import { IOutput } from '../io';
 
 export abstract class Options {
   parse(args: string[]): this {
+    // Use copy of args to avoid modifying caller's args.
+    let localArgs = args.slice();
+
     const trailingStrings = this._getStrings();
     const inTrailingStrings = false;
 
-    while (args.length > 0) {
-      const arg = args.shift()!;
+    while (localArgs.length > 0) {
+      const arg = localArgs.shift()!;
 
       if (arg.startsWith('-') && arg.length > 1) {
         if (inTrailingStrings) {
@@ -19,13 +22,13 @@ export abstract class Options {
         }
         if (arg.startsWith('--')) {
           const longName = arg.slice(2);
-          args = this._findByLongName(longName).parse(arg, args);
+          localArgs = this._findByLongName(longName).parse(arg, localArgs);
         } else {
           const shortName = arg.slice(1);
-          args = this._findByShortName(shortName).parse(arg, args);
+          localArgs = this._findByShortName(shortName).parse(arg, localArgs);
         }
       } else if (trailingStrings !== null) {
-        args = trailingStrings.parse(arg, args);
+        localArgs = trailingStrings.parse(arg, localArgs);
       } else {
         throw new GeneralError(`Unrecognised option: '${arg}'`);
       }
