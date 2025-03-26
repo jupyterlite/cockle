@@ -8,23 +8,24 @@ import { IOutput } from '../io';
 export abstract class Options {
   parse(args: string[]): this {
     const trailingStrings = this._getStrings();
-    let inTrailingStrings = false;
+    const inTrailingStrings = false;
 
-    for (const arg of args) {
+    while (args.length > 0) {
+      const arg = args.shift()!;
+
       if (arg.startsWith('-') && arg.length > 1) {
         if (inTrailingStrings) {
           throw new GeneralError('Cannot have named option after parsing a trailing path');
         }
         if (arg.startsWith('--')) {
           const longName = arg.slice(2);
-          this._findByLongName(longName).set();
+          args = this._findByLongName(longName).parse(arg, args);
         } else {
           const shortName = arg.slice(1);
-          this._findByShortName(shortName).set();
+          args = this._findByShortName(shortName).parse(arg, args);
         }
       } else if (trailingStrings !== null) {
-        trailingStrings.add(arg);
-        inTrailingStrings = true;
+        args = trailingStrings.parse(arg, args);
       } else {
         throw new GeneralError(`Unrecognised option: '${arg}'`);
       }
