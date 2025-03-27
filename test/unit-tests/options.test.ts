@@ -1,5 +1,3 @@
-import { expect } from '@playwright/test';
-import { test } from './utils';
 import {
   BooleanOption,
   OptionalStringOption,
@@ -26,8 +24,7 @@ class OptStringOptions extends Options {
   possibleString = new OptionalStringOption('p', '', 'possible string');
 }
 
-test.describe('Options', () => {
-  // Note tests run via node, not in browser.
+describe('Options', () => {
   test('should support boolean options', () => {
     const options0 = new BooleanOptions().parse([]);
     expect(options0.flag.isSet).toBeFalsy();

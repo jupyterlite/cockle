@@ -57,7 +57,8 @@ then open a browser at the specified URL:
 
 ## Testing
 
-The `test` directory contains playwright end-to-end tests which can be built and run as follows:
+The `test` directory contains unit tests and playwright integration tests which can be built and run
+as follows:
 
 ```bash
 cd test
@@ -65,10 +66,9 @@ npm install
 npx playwright install --with-deps chromium
 npm run build
 npm run test
-npm run test:report
 ```
 
-You can interactively run individual tests using `npm run test:ui`.
+You can interactively run individual playwright tests using `npm run test:integration:ui`.
 
 In addition, the `demo` directory contains separate visual tests that can be run in the same way.
 Only Linux screenshots are stored within the repository.

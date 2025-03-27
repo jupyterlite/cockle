@@ -4,5 +4,5 @@
     "composite": false,
     "rootDir": "../"
   },
-  "include": ["serve/*", "../src/*"]
+  "include": ["serve/*", "integration-tests/*", "unit-tests/*", "../src/*"]
 }
