@@ -38,7 +38,7 @@ jobs:
           npm run lint:check
 
   test:
-    name: 'End-to-end tests ${{ matrix.os }}'
+    name: 'Unit and integration tests ${{ matrix.os }}'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
