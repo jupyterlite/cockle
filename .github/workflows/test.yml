@@ -30,7 +30,6 @@ jobs:
           environment-file: environment-dev.yml
           init-shell: bash
           cache-downloads: true
-          micromamba-version: '2.0.5-0'
 
       - name: Lint
         run: |
@@ -57,7 +56,6 @@ jobs:
           environment-file: environment-dev.yml
           init-shell: bash
           cache-downloads: true
-          micromamba-version: '2.0.5-0'
 
       - name: Build
         run: |
@@ -88,7 +86,6 @@ jobs:
           environment-file: environment-dev.yml
           init-shell: bash
           cache-downloads: true
-          micromamba-version: '2.0.5-0'
 
       - name: Build
         run: |
