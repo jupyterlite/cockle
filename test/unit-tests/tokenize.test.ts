@@ -189,11 +189,11 @@ describe('tokenize', () => {
     });
 
     test('should work next to whitespace', () => {
-      expect(tokenize( 'ls "a b"')).toEqual([
+      expect(tokenize('ls "a b"')).toEqual([
         { offset: 0, value: 'ls' },
         { offset: 3, value: 'a b' }
       ]);
-      expect(tokenize( '"a b" ls')).toEqual([
+      expect(tokenize('"a b" ls')).toEqual([
         { offset: 0, value: 'a b' },
         { offset: 6, value: 'ls' }
       ]);
