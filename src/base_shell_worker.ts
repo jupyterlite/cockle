@@ -35,6 +35,7 @@ export abstract class BaseShellWorker implements IShellWorker {
       initDriveFSCallback: this.initDriveFS.bind(this),
       terminateCallback: this._terminateCallback.bind(this),
       stdinCallback: this._workerIO.read.bind(this._workerIO),
+      stdinAsyncCallback: this._workerIO.readAsync.bind(this._workerIO),
       workerIO: this._workerIO
     });
     await this._shellImpl.initialize();
@@ -52,7 +53,7 @@ export abstract class BaseShellWorker implements IShellWorker {
 
     // Enable/disable main worker's buffered stdin.
     if (this._enableBufferedStdinCallback) {
-      this._enableBufferedStdinCallback(enable);
+      await this._enableBufferedStdinCallback(enable);
     }
   }
 

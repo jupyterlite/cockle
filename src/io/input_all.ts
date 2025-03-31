@@ -11,6 +11,10 @@ export abstract class InputAll implements IInput {
    */
   abstract readAll(): string;
 
+  async readAsync(maxChars: number | null): Promise<number[]> {
+    return this.read(maxChars);
+  }
+
   read(maxChars: number | null): number[] {
     if (this._buffer === undefined) {
       this._buffer = this.readAll();

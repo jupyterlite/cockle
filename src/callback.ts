@@ -23,7 +23,7 @@ export interface IDownloadModuleCallback {
  * Enable/disable buffered stdin.
  */
 export interface IEnableBufferedStdinCallback {
-  (enable: boolean): void;
+  (enable: boolean): Promise<void>;
 }
 
 /**
@@ -39,6 +39,10 @@ export interface IInitDriveFSCallback {
  */
 export interface IStdinCallback {
   (maxChars: number | null): number[];
+}
+
+export interface IStdinAsyncCallback {
+  (maxChars: number | null): Promise<number[]>;
 }
 
 /**

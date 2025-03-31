@@ -101,7 +101,7 @@ export abstract class BaseShell implements IShell {
     return this._isDisposed;
   }
 
-  private async enableBufferedStdinCallback(enable: boolean) {
+  private async enableBufferedStdinCallback(enable: boolean): Promise<void> {
     if (this.isDisposed) {
       return;
     }

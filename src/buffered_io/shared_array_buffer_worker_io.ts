@@ -16,6 +16,10 @@ export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
    * Currently assumes always writable.
    */
   poll(timeoutMs: number): number {
+    if (!this._enabled) {
+      throw new Error('SharedArrayBufferWorkerIO.poll when disabled');
+    }
+
     // Constants.
     const POLLIN = 1;
     const POLLOUT = 4;
@@ -33,6 +37,10 @@ export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
   }
 
   read(maxChars: number | null): number[] {
+    if (!this._enabled) {
+      throw new Error('SharedArrayBufferWorkerIO.read when disabled');
+    }
+
     if (maxChars !== null && maxChars <= 0) {
       return [];
     }
@@ -44,6 +52,32 @@ export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
 
     Atomics.wait(this._intArray, SAB.MAIN, this._readCount);
 
+    return this._postRead(maxChars);
+  }
+
+  async readAsync(maxChars: number | null): Promise<number[]> {
+    if (!this._enabled) {
+      throw new Error('SharedArrayBufferWorkerIO.readAsync when disabled');
+    }
+
+    if (maxChars !== null && maxChars <= 0) {
+      return [];
+    }
+
+    if (this._readBuffer.length > 0) {
+      // If have cached read data just return that.
+      return this._readFromBuffer(maxChars);
+    }
+
+    const { async, value } = Atomics.waitAsync(this._intArray, SAB.MAIN, this._readCount);
+    if (async) {
+      await value;
+    }
+
+    return this._postRead(maxChars);
+  }
+
+  private _postRead(maxChars: number | null): number[] {
     const readCount = Atomics.load(this._intArray, SAB.MAIN);
     if (readCount === this._readCount) {
       return [];

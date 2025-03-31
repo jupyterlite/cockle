@@ -400,7 +400,7 @@ export class ShellImpl implements IShellWorker {
     this._history.add(cmdText);
 
     let exitCode!: number;
-    const stdin = new TerminalInput(this.options.stdinCallback);
+    const stdin = new TerminalInput(this.options.stdinCallback, this.options.stdinAsyncCallback);
     const stdout = new TerminalOutput(this.output.bind(this));
     const stderr = new TerminalOutput(
       this.output.bind(this),

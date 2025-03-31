@@ -1,17 +1,21 @@
 import { IInput } from './input';
-import { IStdinCallback } from '../callback';
+import { IStdinCallback, IStdinAsyncCallback } from '../callback';
 
 export class TerminalInput implements IInput {
-  constructor(readonly stdinCallback?: IStdinCallback) {}
+  constructor(
+    readonly stdinCallback: IStdinCallback,
+    readonly stdinAsyncCallback: IStdinAsyncCallback
+  ) {}
 
   isTerminal(): boolean {
     return true;
   }
 
+  async readAsync(maxChars: number | null): Promise<number[]> {
+    return await this.stdinAsyncCallback(maxChars);
+  }
+
   read(maxChars: number | null): number[] {
-    if (this.stdinCallback === undefined) {
-      return [];
-    }
     return this.stdinCallback(maxChars);
   }
 }

@@ -10,14 +10,19 @@ export abstract class WorkerIO implements IWorkerIO {
   }
 
   async disable(): Promise<void> {
+    this._enabled = false;
     this._clear();
   }
 
-  async enable(): Promise<void> {}
+  async enable(): Promise<void> {
+    this._enabled = true;
+  }
 
   abstract poll(timeoutMs: number): number;
 
   abstract read(maxChars: number | null): number[];
+
+  abstract readAsync(maxChars: number | null): Promise<number[]>;
 
   setTermios(iTermios: ITermios): void {
     this.termios.set(iTermios);
@@ -174,6 +179,7 @@ export abstract class WorkerIO implements IWorkerIO {
   }
 
   protected _allowAdjacentNewline = false;
+  protected _enabled: boolean = false;
   private _termios: Termios = Termios.newDefaultWasm();
   protected _writeColumn = 0;
   private _utf8Decoder?: TextDecoder;
