@@ -4,6 +4,7 @@ export * from './file_input';
 export * from './file_output';
 export * from './input';
 export * from './input_all';
+export * from './javascript_input';
 export * from './output';
 export * from './pipe';
 export * from './pipe_input';

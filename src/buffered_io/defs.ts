@@ -15,6 +15,7 @@ export interface IWorkerIO {
   enable(): Promise<void>;
   poll(timeoutMs: number): number;
   read(maxChars: number | null): number[];
+  readAsync(maxChars: number | null): Promise<number[]>;
   setTermios(iTermios: ITermios): void;
   get termios(): Termios;
   utf8ArrayToString(chars: Int8Array): string;

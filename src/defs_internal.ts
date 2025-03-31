@@ -7,6 +7,7 @@ import {
   IInitDriveFSCallback,
   IOutputCallback,
   IStdinCallback,
+  IStdinAsyncCallback,
   ITerminateCallback
 } from './callback';
 import { IShell } from './defs';
@@ -60,6 +61,7 @@ export namespace IShellImpl {
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;
     initDriveFSCallback: IInitDriveFSCallback;
     stdinCallback: IStdinCallback;
+    stdinAsyncCallback: IStdinAsyncCallback;
     terminateCallback: IShellWorker.IProxyTerminateCallback;
     workerIO: IWorkerIO;
   }

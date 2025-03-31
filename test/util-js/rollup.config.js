@@ -1,7 +1,7 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
 
-const inputs = ['js-capitalise.ts', 'js-test.ts']
+const inputs = ['js-capitalise.ts', 'js-read.ts', 'js-test.ts']
 
 const config = [];
 inputs.forEach((x) => {

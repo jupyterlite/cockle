@@ -31,9 +31,9 @@ export class SharedArrayBufferMainIO extends MainIO implements IMainIO {
     while (this._readBuffer.length > 0) {
       this._sendStdinNow!(this._readBuffer.shift()!);
     }
-    this._disabling = false;
 
     await super.disable();
+    this._disabling = false;
   }
 
   get sharedArrayBuffer(): SharedArrayBuffer {
@@ -66,7 +66,8 @@ export class SharedArrayBufferMainIO extends MainIO implements IMainIO {
   private _afterRead() {
     this._readCount = Atomics.load(this._intArray, 1);
     if (this._readCount !== this._readSentCount) {
-      throw new Error('Should not happen');
+      // This can occur if buffered read disabled before the afterRead acknowledgement is received.
+      return;
     }
 
     if (this._readBufferCount > this._readSentCount) {
