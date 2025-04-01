@@ -30,8 +30,10 @@ export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
       return POLLIN | (writable ? POLLOUT : 0);
     }
 
-    const t = timeoutMs > 0 ? timeoutMs : 0;
-    const readableCheck = Atomics.wait(this._intArray, SAB.MAIN, this._readCount, t);
+    if (timeoutMs < 0) {
+      timeoutMs = Infinity;
+    }
+    const readableCheck = Atomics.wait(this._intArray, SAB.MAIN, this._readCount, timeoutMs);
     const readable = readableCheck === 'not-equal';
     return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
   }
