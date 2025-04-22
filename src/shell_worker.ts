@@ -1,7 +1,7 @@
 import { expose } from 'comlink';
 
 import { BaseShellWorker } from './base_shell_worker';
-import { IFileSystem } from './file_system';
+import { IDriveFSOptions } from './drive_fs';
 
 /**
  * Default shell worker that does not use a DriveFS.
@@ -12,11 +12,7 @@ class ShellWorker extends BaseShellWorker {
    * Initialize the DriveFS to mount an external file system.
    * Default implementation does nothing.
    */
-  protected initDriveFS(
-    driveFsBaseUrl: string,
-    mountpoint: string,
-    fileSystem: IFileSystem
-  ): void {}
+  protected initDriveFS(options: IDriveFSOptions): void {}
 }
 
 const worker = new ShellWorker();

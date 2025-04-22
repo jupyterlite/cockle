@@ -2,7 +2,7 @@
  * Callbacks used by a shell to call functions in the frontend.
  */
 
-import { IFileSystem } from './file_system';
+import { IDriveFSOptions } from './drive_fs';
 
 /**
  * Send output string to be displayed in terminal.
@@ -30,7 +30,7 @@ export interface IEnableBufferedStdinCallback {
  * Initialise DriveFS to mount external drive into the shell's filesystem.
  */
 export interface IInitDriveFSCallback {
-  (driveFsBaseUrl: string, mountpoint: string, fileSystem: IFileSystem): void;
+  (options: IDriveFSOptions): void;
 }
 
 /**
