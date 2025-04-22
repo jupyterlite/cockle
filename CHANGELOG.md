@@ -2,6 +2,33 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.19
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.18...9ace79232f4aada96475a6b87336d5665ba0fc20))
+
+### Enhancements made
+
+- Add optional `browsingContextId` to `IShell.IOptions` and `IDriveFSOptions` [#171](https://github.com/jupyterlite/cockle/pull/171) ([@ianthomas23](https://github.com/ianthomas23))
+- Negative timeout passed to `poll()` means infinite timeout [#170](https://github.com/jupyterlite/cockle/pull/170) ([@ianthomas23](https://github.com/ianthomas23))
+- Support async read from stdin in JavaScript commands [#169](https://github.com/jupyterlite/cockle/pull/169) ([@ianthomas23](https://github.com/ianthomas23))
+- Add command information to `cockle-config` [#166](https://github.com/jupyterlite/cockle/pull/166) ([@ianthomas23](https://github.com/ianthomas23))
+- Refactor SharedArrayBuffer buffered IO [#164](https://github.com/jupyterlite/cockle/pull/164) ([@ianthomas23](https://github.com/ianthomas23))
+- Output via postMessage rather than SharedArrayBuffer [#163](https://github.com/jupyterlite/cockle/pull/163) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Remove micromamba pin in CI [#168](https://github.com/jupyterlite/cockle/pull/168) ([@ianthomas23](https://github.com/ianthomas23))
+- Add unit tests alongside existing integration tests [#167](https://github.com/jupyterlite/cockle/pull/167) ([@ianthomas23](https://github.com/ianthomas23))
+- Add tests for built-in command Options [#165](https://github.com/jupyterlite/cockle/pull/165) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-03-12&to=2025-04-22&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-03-12..2025-04-22&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.18
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.17...60c9aae1e63c57eef610c7c589e9bcd47817a502))
@@ -15,8 +42,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-03-12&to=2025-03-12&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-03-12..2025-03-12&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.17
 
