@@ -1,6 +1,6 @@
 import { IWorkerIO, SharedArrayBufferWorkerIO } from './buffered_io';
 import { IShellWorker } from './defs_internal';
-import { IFileSystem } from './file_system';
+import { IDriveFSOptions } from './drive_fs';
 import { ShellImpl } from './shell_impl';
 
 /**
@@ -21,13 +21,21 @@ export abstract class BaseShellWorker implements IShellWorker {
     this._enableBufferedStdinCallback = enableBufferedStdinCallback;
     this._terminateCallback = terminateCallback;
 
-    const { color, mountpoint, wasmBaseUrl, driveFsBaseUrl, initialDirectories, initialFiles } =
-      options;
+    const {
+      color,
+      mountpoint,
+      wasmBaseUrl,
+      driveFsBaseUrl,
+      browsingContextId,
+      initialDirectories,
+      initialFiles
+    } = options;
     this._shellImpl = new ShellImpl({
       color,
       mountpoint,
       wasmBaseUrl,
       driveFsBaseUrl,
+      browsingContextId,
       initialDirectories,
       initialFiles,
       downloadModuleCallback: this._downloadModuleCallback.bind(this),
@@ -60,11 +68,7 @@ export abstract class BaseShellWorker implements IShellWorker {
   /**
    * Initialize the DriveFS to mount an external file system.
    */
-  protected abstract initDriveFS(
-    driveFsBaseUrl: string,
-    mountpoint: string,
-    fileSystem: IFileSystem
-  ): void;
+  protected abstract initDriveFS(options: IDriveFSOptions): void;
 
   async input(char: string): Promise<void> {
     if (this._shellImpl) {

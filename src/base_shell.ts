@@ -26,7 +26,14 @@ export abstract class BaseShell implements IShell {
 
   private async _initRemote(options: IShell.IOptions) {
     this._remote = wrap(this._worker);
-    const { mountpoint, wasmBaseUrl, driveFsBaseUrl, initialDirectories, initialFiles } = options;
+    const {
+      mountpoint,
+      wasmBaseUrl,
+      driveFsBaseUrl,
+      browsingContextId,
+      initialDirectories,
+      initialFiles
+    } = options;
     const { sharedArrayBuffer } = this._mainIO;
     await this._remote.initialize(
       {
@@ -34,6 +41,7 @@ export abstract class BaseShell implements IShell {
         mountpoint,
         wasmBaseUrl,
         driveFsBaseUrl,
+        browsingContextId,
         sharedArrayBuffer,
         initialDirectories,
         initialFiles

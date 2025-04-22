@@ -14,6 +14,7 @@ export namespace IShell {
     mountpoint?: string;
     wasmBaseUrl: string;
     driveFsBaseUrl?: string;
+    browsingContextId?: string;
     // Initial directories and files to create, for testing purposes.
     initialDirectories?: string[];
     initialFiles?: IShell.IFiles;
