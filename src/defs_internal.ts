@@ -13,6 +13,7 @@ import {
 import { IShell } from './defs';
 
 interface IOptionsCommon {
+  id: string;
   color: boolean;
   mountpoint?: string;
   wasmBaseUrl: string;

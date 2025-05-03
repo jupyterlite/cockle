@@ -10,5 +10,6 @@ export * from './io';
 export { IJavaScriptContext } from './javascript_context';
 export { parse } from './parse';
 export { Shell } from './shell';
+export { ShellManager } from './shell_manager';
 export * from './termios';
 export { tokenize, Token } from './tokenize';

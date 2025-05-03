@@ -1,4 +1,4 @@
-import { OutputFlag, Termios } from '@jupyterlite/cockle';
+import { OutputFlag, ShellManager, Termios } from '@jupyterlite/cockle';
 import { delay, terminalInput } from './input_setup';
 import { keys } from './keys';
 import { shellSetupEmpty, shellSetupComplex, shellSetupSimple } from './shell_setup';
@@ -6,6 +6,7 @@ import { shellSetupEmpty, shellSetupComplex, shellSetupSimple } from './shell_se
 async function setup() {
   const cockle = {
     OutputFlag,
+    ShellManager,
     Termios,
     delay,
     keys,

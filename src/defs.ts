@@ -3,6 +3,7 @@ import type { IObservableDisposable } from '@lumino/disposable';
 import { IOutputCallback } from './callback';
 
 export interface IShell extends IObservableDisposable {
+  id: string;
   input(char: string): Promise<void>;
   setSize(rows: number, columns: number): Promise<void>;
   start(): Promise<void>;
@@ -10,6 +11,7 @@ export interface IShell extends IObservableDisposable {
 
 export namespace IShell {
   export interface IOptions {
+    id?: string;
     color?: boolean;
     mountpoint?: string;
     wasmBaseUrl: string;

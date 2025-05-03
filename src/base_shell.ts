@@ -1,4 +1,4 @@
-import { PromiseDelegate } from '@lumino/coreutils';
+import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { proxy, wrap } from 'comlink';
@@ -7,6 +7,7 @@ import { SharedArrayBufferMainIO } from './buffered_io';
 import { IShell } from './defs';
 import { IRemoteShell } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
+import { ShellManager } from './shell_manager';
 
 /**
  * Abstract base class for Shell that external libraries use.
@@ -14,6 +15,9 @@ import { DownloadTracker } from './download_tracker';
  */
 export abstract class BaseShell implements IShell {
   constructor(readonly options: IShell.IOptions) {
+    this._id = options.id ?? UUID.uuid4();
+    ShellManager.register(this);
+
     this._mainIO = new SharedArrayBufferMainIO();
     this._worker = this.initWorker(options);
     this._initRemote(options).then(this._ready.resolve.bind(this._ready));
@@ -26,25 +30,18 @@ export abstract class BaseShell implements IShell {
 
   private async _initRemote(options: IShell.IOptions) {
     this._remote = wrap(this._worker);
-    const {
-      mountpoint,
-      wasmBaseUrl,
-      driveFsBaseUrl,
-      browsingContextId,
-      initialDirectories,
-      initialFiles
-    } = options;
     const { sharedArrayBuffer } = this._mainIO;
     await this._remote.initialize(
       {
+        id: this._id,
         color: options.color ?? true,
-        mountpoint,
-        wasmBaseUrl,
-        driveFsBaseUrl,
-        browsingContextId,
+        mountpoint: options.mountpoint,
+        wasmBaseUrl: options.wasmBaseUrl,
+        driveFsBaseUrl: options.driveFsBaseUrl,
+        browsingContextId: options.browsingContextId,
         sharedArrayBuffer,
-        initialDirectories,
-        initialFiles
+        initialDirectories: options.initialDirectories,
+        initialFiles: options.initialFiles
       },
       proxy(this.downloadWasmModuleCallback.bind(this)),
       proxy(this.enableBufferedStdinCallback.bind(this)),
@@ -64,6 +61,7 @@ export abstract class BaseShell implements IShell {
     console.log('Cockle Shell disposed');
     this._isDisposed = true;
 
+    ShellManager.unregister(this);
     this._remote = undefined;
     this._worker!.terminate();
 
@@ -103,6 +101,10 @@ export abstract class BaseShell implements IShell {
         this._downloadTracker.stop();
       }
     }
+  }
+
+  get id(): string {
+    return this._id;
   }
 
   get isDisposed(): boolean {
@@ -161,6 +163,7 @@ export abstract class BaseShell implements IShell {
   private _isDisposed = false;
   private _ready = new PromiseDelegate<void>();
 
+  private _id: string;
   private _worker: Worker;
   private _remote?: IRemoteShell;
   private _mainIO: SharedArrayBufferMainIO;
