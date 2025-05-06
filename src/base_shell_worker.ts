@@ -21,23 +21,15 @@ export abstract class BaseShellWorker implements IShellWorker {
     this._enableBufferedStdinCallback = enableBufferedStdinCallback;
     this._terminateCallback = terminateCallback;
 
-    const {
-      color,
-      mountpoint,
-      wasmBaseUrl,
-      driveFsBaseUrl,
-      browsingContextId,
-      initialDirectories,
-      initialFiles
-    } = options;
     this._shellImpl = new ShellImpl({
-      color,
-      mountpoint,
-      wasmBaseUrl,
-      driveFsBaseUrl,
-      browsingContextId,
-      initialDirectories,
-      initialFiles,
+      id: options.id,
+      color: options.color,
+      mountpoint: options.mountpoint,
+      wasmBaseUrl: options.wasmBaseUrl,
+      driveFsBaseUrl: options.driveFsBaseUrl,
+      browsingContextId: options.browsingContextId,
+      initialDirectories: options.initialDirectories,
+      initialFiles: options.initialFiles,
       downloadModuleCallback: this._downloadModuleCallback.bind(this),
       enableBufferedStdinCallback: this.enableBufferedStdin.bind(this),
       initDriveFSCallback: this.initDriveFS.bind(this),
