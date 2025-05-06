@@ -1,4 +1,4 @@
-import { IShell } from "./defs";
+import { IShell } from './defs';
 
 /**
  * Shell manager that knows about all shells in a particular browser tab.
@@ -34,5 +34,5 @@ export class ShellManager {
   }
 
   // Only created when first needed.
-  private static _shells? : Map<string, IShell>;
+  private static _shells?: Map<string, IShell>;
 }

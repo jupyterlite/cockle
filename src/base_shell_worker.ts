@@ -20,7 +20,7 @@ export abstract class BaseShellWorker implements IShellWorker {
     this._downloadModuleCallback = downloadModuleCallback;
     this._enableBufferedStdinCallback = enableBufferedStdinCallback;
     this._terminateCallback = terminateCallback;
-    
+
     this._shellImpl = new ShellImpl({
       id: options.id,
       color: options.color,

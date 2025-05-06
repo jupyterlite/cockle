@@ -35,7 +35,7 @@ test.describe('ShellManager', () => {
       const shell0 = obj0.shell;
       const obj1 = await shellSetupEmpty();
       const shell1 = obj1.shell;
-      const ret0 = shell0.id
+      const ret0 = shell0.id;
       const ret1 = shell1.id;
       const ret2 = ShellManager.ids();
       shell0.dispose();
