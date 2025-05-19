@@ -16,14 +16,14 @@ export class ShellManager {
 
   static register(shell: IShell) {
     const shells = this._checkInitialised();
-    const { id } = shell;
-    shells.set(id, shell);
+    const { shellId } = shell;
+    shells.set(shellId, shell);
   }
 
   static unregister(shell: IShell) {
     const shells = this._checkInitialised();
-    const { id } = shell;
-    shells.delete(id);
+    const { shellId } = shell;
+    shells.delete(shellId);
   }
 
   private static _checkInitialised(): Map<string, IShell> {

@@ -3,19 +3,19 @@ import type { IObservableDisposable } from '@lumino/disposable';
 import { IOutputCallback } from './callback';
 
 export interface IShell extends IObservableDisposable {
-  id: string;
   input(char: string): Promise<void>;
   setSize(rows: number, columns: number): Promise<void>;
+  shellId: string;
   start(): Promise<void>;
 }
 
 export namespace IShell {
   export interface IOptions {
-    id?: string;
+    shellId?: string;
     color?: boolean;
     mountpoint?: string;
+    baseUrl: string;
     wasmBaseUrl: string;
-    driveFsBaseUrl?: string;
     browsingContextId?: string;
     // Initial directories and files to create, for testing purposes.
     initialDirectories?: string[];

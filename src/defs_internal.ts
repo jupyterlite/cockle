@@ -13,11 +13,11 @@ import {
 import { IShell } from './defs';
 
 interface IOptionsCommon {
-  id: string;
+  shellId: string;
   color: boolean;
   mountpoint?: string;
+  baseUrl: string;
   wasmBaseUrl: string;
-  driveFsBaseUrl?: string;
   browsingContextId?: string;
   // Initial directories and files to create, for testing purposes.
   initialDirectories?: string[];

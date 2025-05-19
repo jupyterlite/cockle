@@ -20,8 +20,10 @@ export class Demo {
     this._fitAddon = new FitAddon();
     this._term.loadAddon(this._fitAddon);
 
+    const baseUrl = window.location.href;
     this._shell = new Shell({
-      wasmBaseUrl: window.location.href,
+      baseUrl,
+      wasmBaseUrl: baseUrl,
       outputCallback: this.outputCallback.bind(this),
       initialDirectories: ['dir'],
       initialFiles: {

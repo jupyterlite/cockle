@@ -55,10 +55,12 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
     initialFiles['dir/subdir/nestedfile'] = '';
   }
 
+  const baseUrl = 'http://localhost:8000/';
   const shell = new Shell({
     color: options.color ?? false,
     outputCallback: output.callback,
-    wasmBaseUrl: 'http://localhost:8000/',
+    baseUrl,
+    wasmBaseUrl: baseUrl,
     initialDirectories,
     initialFiles
   });

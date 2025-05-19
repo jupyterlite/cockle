@@ -14,7 +14,7 @@ test.describe('ShellManager', () => {
     const output = await page.evaluate(async () => {
       const { ShellManager, shellSetupEmpty } = globalThis.cockle;
       const { shell } = await shellSetupEmpty();
-      const ret0 = shell.id;
+      const ret0 = shell.shellId;
       const ret1 = ShellManager.ids();
       shell.dispose();
       const ret2 = ShellManager.ids();
@@ -35,8 +35,8 @@ test.describe('ShellManager', () => {
       const shell0 = obj0.shell;
       const obj1 = await shellSetupEmpty();
       const shell1 = obj1.shell;
-      const ret0 = shell0.id;
-      const ret1 = shell1.id;
+      const ret0 = shell0.shellId;
+      const ret1 = shell1.shellId;
       const ret2 = ShellManager.ids();
       shell0.dispose();
       shell1.dispose();

@@ -296,10 +296,10 @@ export class ShellImpl implements IShellWorker {
     FS.mkdirTree(mountpoint, 0o777);
     this._fileSystem = { FS, PATH, ERRNO_CODES, PROXYFS, mountpoint };
 
-    const { browsingContextId, driveFsBaseUrl, initialDirectories, initialFiles } = this.options;
+    const { browsingContextId, baseUrl, initialDirectories, initialFiles } = this.options;
     this.options.initDriveFSCallback({
       browsingContextId,
-      driveFsBaseUrl,
+      baseUrl,
       fileSystem: this._fileSystem,
       mountpoint
     });
