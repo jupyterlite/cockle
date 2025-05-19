@@ -15,7 +15,7 @@ import { ShellManager } from './shell_manager';
  */
 export abstract class BaseShell implements IShell {
   constructor(readonly options: IShell.IOptions) {
-    this._id = options.id ?? UUID.uuid4();
+    this._shellId = options.shellId ?? UUID.uuid4();
     ShellManager.register(this);
 
     this._mainIO = new SharedArrayBufferMainIO();
@@ -33,11 +33,11 @@ export abstract class BaseShell implements IShell {
     const { sharedArrayBuffer } = this._mainIO;
     await this._remote.initialize(
       {
-        id: this._id,
+        shellId: this._shellId,
         color: options.color ?? true,
         mountpoint: options.mountpoint,
+        baseUrl: options.baseUrl,
         wasmBaseUrl: options.wasmBaseUrl,
-        driveFsBaseUrl: options.driveFsBaseUrl,
         browsingContextId: options.browsingContextId,
         sharedArrayBuffer,
         initialDirectories: options.initialDirectories,
@@ -103,10 +103,6 @@ export abstract class BaseShell implements IShell {
     }
   }
 
-  get id(): string {
-    return this._id;
-  }
-
   get isDisposed(): boolean {
     return this._isDisposed;
   }
@@ -150,6 +146,10 @@ export abstract class BaseShell implements IShell {
     await this._remote!.setSize(rows, columns);
   }
 
+  get shellId(): string {
+    return this._shellId;
+  }
+
   async start(): Promise<void> {
     if (this.isDisposed) {
       return;
@@ -163,7 +163,7 @@ export abstract class BaseShell implements IShell {
   private _isDisposed = false;
   private _ready = new PromiseDelegate<void>();
 
-  private _id: string;
+  private _shellId: string;
   private _worker: Worker;
   private _remote?: IRemoteShell;
   private _mainIO: SharedArrayBufferMainIO;

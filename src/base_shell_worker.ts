@@ -22,11 +22,11 @@ export abstract class BaseShellWorker implements IShellWorker {
     this._terminateCallback = terminateCallback;
 
     this._shellImpl = new ShellImpl({
-      id: options.id,
+      shellId: options.shellId,
       color: options.color,
       mountpoint: options.mountpoint,
+      baseUrl: options.baseUrl,
       wasmBaseUrl: options.wasmBaseUrl,
-      driveFsBaseUrl: options.driveFsBaseUrl,
       browsingContextId: options.browsingContextId,
       initialDirectories: options.initialDirectories,
       initialFiles: options.initialFiles,
