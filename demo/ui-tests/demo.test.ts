@@ -17,9 +17,10 @@ async function inputLine(page, text: string, appendEnter: boolean = true) {
 test('visual test', async ({ page }) => {
   await page.goto('/');
 
-  const wait = 100; // milliseconds
+  const wait = 100; // milliseconds.
 
   await page.locator('div.xterm-screen').click(); // sets focus for keyboard input
+  await page.waitForTimeout(wait);
 
   await inputLine(page, 'cp file.txt file2.txt');
   await page.waitForTimeout(wait);
