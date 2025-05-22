@@ -1,9 +1,8 @@
 import { CommandModule } from './command_module';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
-import { IContext } from '../context';
+import { IContext, IJavaScriptContext } from '../context';
 import { FindCommandError, LoadCommandError, RunCommandError } from '../error_exit_code';
 import { JavaScriptInput } from '../io';
-import { IJavaScriptContext } from '../javascript_context';
 
 export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
   constructor(readonly module: CommandModule) {
@@ -27,7 +26,8 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
 
     try {
       return await jsModule.run(cmdName, jsContext);
-    } catch {
+    } catch (err) {
+      console.error(`JavascriptCommandRunner: ${err}`);
       throw new RunCommandError(cmdName);
     }
   }

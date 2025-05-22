@@ -1,5 +1,6 @@
 import { Aliases } from './aliases';
 import { ansi } from './ansi';
+import { IWorkerIO } from './buffered_io';
 import { IContext } from './context';
 import { IShellImpl, IShellWorker } from './defs_internal';
 import { Environment } from './environment';
@@ -19,7 +20,8 @@ import { CommandRegistry } from './commands/command_registry';
  * Shell implementation.
  */
 export class ShellImpl implements IShellWorker {
-  constructor(readonly options: IShellImpl.IOptions) {
+  constructor(options: IShellImpl.IOptions) {
+    this._options = options;
     this._environment = new Environment(options.color);
     this._commandModuleLoader = new CommandModuleLoader(
       options.wasmBaseUrl,
@@ -102,7 +104,7 @@ export class ShellImpl implements IShellWorker {
     if (!this._isRunning) {
       return;
     }
-    this.options.workerIO.write(text);
+    this._options.workerIO.write(text);
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
@@ -121,15 +123,19 @@ export class ShellImpl implements IShellWorker {
     }
   }
 
+  setWorkerIO(workerIO: IWorkerIO) {
+    this._options.workerIO = workerIO;
+  }
+
   async start(): Promise<void> {
     this._isRunning = true;
-    await this._outputPrompt();
+    this._outputPrompt();
   }
 
   terminate() {
     console.log('Cockle ShellImpl.terminate');
     this._isRunning = false;
-    this.options.terminateCallback();
+    this._options.terminateCallback();
   }
 
   /**
@@ -279,7 +285,7 @@ export class ShellImpl implements IShellWorker {
   }
 
   private async _initFileSystem(): Promise<void> {
-    const { wasmBaseUrl } = this.options;
+    const { wasmBaseUrl } = this._options;
     const fsModule = this._commandModuleLoader.getWasmModule('cockle_fs', 'fs');
     if (fsModule === undefined) {
       // Cannot report this in the terminal as it has not been started yet.
@@ -292,12 +298,12 @@ export class ShellImpl implements IShellWorker {
     });
     const { FS, PATH, ERRNO_CODES, PROXYFS } = module;
 
-    const mountpoint = this.options.mountpoint ?? '/drive';
+    const mountpoint = this._options.mountpoint ?? '/drive';
     FS.mkdirTree(mountpoint, 0o777);
     this._fileSystem = { FS, PATH, ERRNO_CODES, PROXYFS, mountpoint };
 
-    const { browsingContextId, baseUrl, initialDirectories, initialFiles } = this.options;
-    this.options.initDriveFSCallback({
+    const { browsingContextId, baseUrl, initialDirectories, initialFiles } = this._options;
+    this._options.initDriveFSCallback({
       browsingContextId,
       baseUrl,
       fileSystem: this._fileSystem,
@@ -319,7 +325,7 @@ export class ShellImpl implements IShellWorker {
   }
 
   private async _initWasmPackages(): Promise<void> {
-    const url = this.options.wasmBaseUrl + 'cockle-config.json';
+    const url = this._options.wasmBaseUrl + 'cockle-config.json';
     const response = await fetch(url);
     if (!response.ok) {
       // Would be nice to report this via the terminal.
@@ -376,12 +382,12 @@ export class ShellImpl implements IShellWorker {
     if (!this._isRunning) {
       return;
     }
-    this.options.workerIO.write(`\n${this.environment.getPrompt()}`);
+    this._options.workerIO.write(`\n${this.environment.getPrompt()}`);
   }
 
   private async _runCommands(cmdText: string): Promise<void> {
-    this.options.enableBufferedStdinCallback(true);
-    this.options.workerIO.allowAdjacentNewline(true);
+    await this._options.enableBufferedStdinCallback(true);
+    this._options.workerIO.allowAdjacentNewline(true);
 
     if (cmdText.startsWith('!')) {
       // Get command from history and run that.
@@ -390,7 +396,7 @@ export class ShellImpl implements IShellWorker {
       if (possibleCmd === null) {
         // Does not set exit code.
         let text = '!' + index + ': event not found';
-        if (this.options.color) {
+        if (this._options.color) {
           text = ansi.styleBoldRed + text + ansi.styleReset;
         }
         this.output(`${text}\n`);
@@ -403,12 +409,15 @@ export class ShellImpl implements IShellWorker {
     this._history.add(cmdText);
 
     let exitCode!: number;
-    const stdin = new TerminalInput(this.options.stdinCallback, this.options.stdinAsyncCallback);
+    const stdin = new TerminalInput(
+      this._stdinCallback.bind(this),
+      this._stdinAsyncCallback.bind(this)
+    );
     const stdout = new TerminalOutput(this.output.bind(this));
     const stderr = new TerminalOutput(
       this.output.bind(this),
-      this.options.color ? ansi.styleBoldRed : null,
-      this.options.color ? ansi.styleReset : null
+      this._options.color ? ansi.styleBoldRed : null,
+      this._options.color ? ansi.styleReset : null
     );
     try {
       const nodes = parse(cmdText, true, this._aliases);
@@ -440,8 +449,8 @@ export class ShellImpl implements IShellWorker {
       exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
       this.environment.set('?', `${exitCode}`);
 
-      this.options.workerIO.allowAdjacentNewline(false);
-      this.options.enableBufferedStdinCallback(false);
+      this._options.workerIO.allowAdjacentNewline(false);
+      await this._options.enableBufferedStdinCallback(false);
     }
   }
 
@@ -489,14 +498,23 @@ export class ShellImpl implements IShellWorker {
       stdin: input,
       stdout: output,
       stderr: error,
-      workerIO: this.options.workerIO,
-      commandModuleCache: this._commandModuleLoader.cache
+      workerIO: this._options.workerIO,
+      commandModuleCache: this._commandModuleLoader.cache,
+      stdinContext: this._options.stdinContext
     };
     const exitCode = await runner.run(name, context);
 
     error.flush();
     output.flush();
     return exitCode;
+  }
+
+  private _stdinCallback(maxChars: number | null): number[] {
+    return this._options.workerIO.read(maxChars);
+  }
+
+  private async _stdinAsyncCallback(maxChars: number | null): Promise<number[]> {
+    return await this._options.workerIO.readAsync(maxChars);
   }
 
   private async _tabComplete(): Promise<void> {
@@ -594,6 +612,7 @@ export class ShellImpl implements IShellWorker {
   private _environment: Environment;
   private _history = new History();
   private _commandModuleLoader: CommandModuleLoader;
+  private _options: IShellImpl.IOptions;
 
   private _fileSystem?: IFileSystem;
 }

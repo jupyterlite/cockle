@@ -29,14 +29,15 @@ export abstract class MainIO implements IMainIO {
     return this._isDisposed;
   }
 
+  abstract push(chars: string): Promise<void>;
+
   registerSendStdinNow(sendStdinNow: IOutputCallback): void {
     this._sendStdinNow = sendStdinNow;
   }
 
   protected abstract _clear(): void;
 
-  protected _disabling: boolean = false;
-  private _enabled: boolean = false;
+  protected _enabled: boolean = false;
   private _isDisposed: boolean = false;
   protected _sendStdinNow?: IOutputCallback;
 }

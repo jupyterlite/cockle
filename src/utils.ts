@@ -112,6 +112,8 @@ export function* toTable(
       line += ' '.repeat(colWidths[j] - row[j].length);
       if (simple) {
         line += '  ';
+      } else if (j === ncols - 1) {
+        line += ' │';
       } else {
         line += ' │ ';
       }

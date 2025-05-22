@@ -4,12 +4,14 @@ import { keys } from './keys';
 import { shellSetupEmpty, shellSetupComplex, shellSetupSimple } from './shell_setup';
 
 async function setup() {
+  const shellManager = new ShellManager();
+
   const cockle = {
     OutputFlag,
-    ShellManager,
     Termios,
     delay,
     keys,
+    shellManager,
     shellSetupComplex,
     shellSetupEmpty,
     shellSetupSimple,
