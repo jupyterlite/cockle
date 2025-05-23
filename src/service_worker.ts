@@ -1,7 +1,21 @@
 const broadcast = new BroadcastChannel('/cockle/service-worker');
 
-// @ts-expect-error No overload matches this call.
+// @ts-expect-error TS2769
+self.addEventListener('install', onInstall);
+// @ts-expect-error TS2769
+self.addEventListener('activate', onActivate);
+// @ts-expect-error TS2769
 self.addEventListener('fetch', onFetch);
+
+function onInstall(event: ExtendableEvent): void {
+  // @ts-expect-error TS2339
+  void self.skipWaiting();
+}
+
+function onActivate(event: ExtendableEvent): void {
+  // @ts-expect-error TS2551
+  event.waitUntil(self.clients.claim());
+}
 
 async function onFetch(event: FetchEvent): Promise<void> {
   const { request } = event;

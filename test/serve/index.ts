@@ -1,5 +1,5 @@
-import { OutputFlag, ShellManager, Termios } from '@jupyterlite/cockle';
-import { delay, terminalInput } from './input_setup';
+import { OutputFlag, ShellManager, Termios, delay } from '@jupyterlite/cockle';
+import { terminalInput } from './input_setup';
 import { keys } from './keys';
 import { shellSetupEmpty, shellSetupComplex, shellSetupSimple } from './shell_setup';
 

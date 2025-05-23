@@ -13,3 +13,4 @@ export { Shell } from './shell';
 export { ShellManager } from './shell_manager';
 export * from './termios';
 export { tokenize, Token } from './tokenize';
+export { delay } from './utils';

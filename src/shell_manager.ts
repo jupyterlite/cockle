@@ -1,6 +1,7 @@
 import { IStdinHandler, IStdinReply, IStdinRequest } from './buffered_io';
 import { IShell } from './defs';
 import { ServiceWorkerManager } from './service_worker_manager';
+import { delay } from './utils';
 
 /**
  * Shell manager that knows about all shells in a particular browser tab.
@@ -11,6 +12,10 @@ export class ShellManager {
     if (this._serviceWorkerManager === undefined) {
       this._serviceWorkerManager = new ServiceWorkerManager(baseUrl, this);
       await this._serviceWorkerManager.ready;
+
+      // Short delay to ensure ServiceWorker is available.
+      await delay(100);
+
       return this._serviceWorkerManager.browsingContextId;
     } else {
       console.warn('Service Worker already installed');
