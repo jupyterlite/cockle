@@ -1,8 +1,4 @@
-import { Shell } from '@jupyterlite/cockle';
-
-export async function delay(milliseconds: number = 10): Promise<void> {
-  await new Promise(f => setTimeout(f, milliseconds));
-}
+import { Shell, delay } from '@jupyterlite/cockle';
 
 /**
  * Helper to provide terminal input whilst a command is running.

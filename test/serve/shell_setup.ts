@@ -1,4 +1,4 @@
-import { IShell, Shell } from '@jupyterlite/cockle';
+import { IShell, Shell, ShellManager } from '@jupyterlite/cockle';
 import { MockTerminalOutput } from './output_setup';
 
 export interface IShellSetup {
@@ -10,6 +10,8 @@ export interface IOptions {
   color?: boolean;
   initialDirectories?: string[];
   initialFiles?: IShell.IFiles;
+  shellId?: string;
+  shellManager?: ShellManager;
 }
 
 export async function shellSetupEmpty(options: IOptions = {}): Promise<IShellSetup> {
@@ -56,11 +58,20 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
   }
 
   const baseUrl = 'http://localhost:8000/';
+  const { shellId, shellManager } = options;
+  let browsingContextId: string | undefined;
+  if (shellManager !== undefined) {
+    browsingContextId = await shellManager.installServiceWorker(baseUrl);
+  }
+
   const shell = new Shell({
     color: options.color ?? false,
     outputCallback: output.callback,
     baseUrl,
     wasmBaseUrl: baseUrl,
+    browsingContextId,
+    shellId,
+    shellManager,
     initialDirectories,
     initialFiles
   });

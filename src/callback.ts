@@ -34,6 +34,13 @@ export interface IInitDriveFSCallback {
 }
 
 /**
+ * Callback for worker to set IMainIO, to switch between SharedArrayBuffer and ServiceWorker.
+ */
+export interface ISetMainIOCallback {
+  (shortName: string): void;
+}
+
+/**
  * Wait for and return a sequence of utf16 code units from stdin, if buffered stdin is enabled.
  * Return up to maxChars, or all available characters if maxChars is null.
  */

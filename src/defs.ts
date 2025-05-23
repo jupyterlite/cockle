@@ -1,5 +1,6 @@
 import type { IObservableDisposable } from '@lumino/disposable';
 
+import { IStdinHandler, IStdinReply, IStdinRequest } from './buffered_io';
 import { IOutputCallback } from './callback';
 
 export interface IShell extends IObservableDisposable {
@@ -11,12 +12,14 @@ export interface IShell extends IObservableDisposable {
 
 export namespace IShell {
   export interface IOptions {
-    shellId?: string;
+    shellId?: string; // Unique ID/name
     color?: boolean;
     mountpoint?: string;
     baseUrl: string;
     wasmBaseUrl: string;
     browsingContextId?: string;
+    shellManager?: IShellManager; // If specified, register this shell with shellManager
+
     // Initial directories and files to create, for testing purposes.
     initialDirectories?: string[];
     initialFiles?: IShell.IFiles;
@@ -25,4 +28,9 @@ export namespace IShell {
   }
 
   export type IFiles = { [key: string]: string };
+}
+
+export interface IShellManager {
+  registerShell(shellId: string, shell: IShell, stdinHandler: IStdinHandler): void;
+  stdinHandler(request: IStdinRequest): Promise<IStdinReply>;
 }

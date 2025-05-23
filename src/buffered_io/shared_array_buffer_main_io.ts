@@ -45,6 +45,10 @@ export class SharedArrayBufferMainIO extends MainIO implements IMainIO {
    * It may or may not be stored in the SharedArrayBuffer immediately.
    */
   async push(chars: string) {
+    if (!this._enabled) {
+      throw new Error('SharedArrayBufferMainIO.push when disabled');
+    }
+
     if (chars.length > SAB.maxChars) {
       // Too big, log this and do not pass it on?
       console.log(`String '${chars}' is too long to buffer`);
@@ -121,6 +125,7 @@ export class SharedArrayBufferMainIO extends MainIO implements IMainIO {
     }
   }
 
+  private _disabling: boolean = false;
   private _intArray: Int32Array;
   private _readBuffer: string[] = [];
   private _readBufferCount: number = 0;

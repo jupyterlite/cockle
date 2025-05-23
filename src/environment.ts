@@ -53,6 +53,10 @@ export class Environment extends Map<string, string> {
     return this.get('PS1') ?? '$ ';
   }
 
+  get color(): boolean {
+    return this.has('TERM');
+  }
+
   // Keys to ignore when copying back from a command's env vars.
   private _ignore: Set<string> = new Set(['USER', 'LOGNAME', 'HOME', 'LANG', '_']);
 }

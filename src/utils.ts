@@ -1,5 +1,9 @@
 import { ansi } from './ansi';
 
+export async function delay(milliseconds: number = 10): Promise<void> {
+  await new Promise(f => setTimeout(f, milliseconds));
+}
+
 /**
  * Find the longest string that starts all of the supplied strings.
  * startIndex is the index to start at, if you already know that the first startIndex characters
@@ -112,6 +116,8 @@ export function* toTable(
       line += ' '.repeat(colWidths[j] - row[j].length);
       if (simple) {
         line += '  ';
+      } else if (j === ncols - 1) {
+        line += ' │';
       } else {
         line += ' │ ';
       }
