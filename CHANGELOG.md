@@ -2,6 +2,28 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.0-a0
+
+Pre-release to test the recent Service Worker improvements of #174 downstream in [terminal](https://github.com/jupyterlite/terminal), and start experimenting with external commands (#178).
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.19...d47377531fb0249db1807be1822a597ef8373f3e))
+
+### Enhancements made
+
+- Add experimental support for external commands [#178](https://github.com/jupyterlite/cockle/pull/178) ([@ianthomas23](https://github.com/ianthomas23))
+- Keep a permanent IContext in ShellImpl, don't recreate for each command run [#175](https://github.com/jupyterlite/cockle/pull/175) ([@ianthomas23](https://github.com/ianthomas23))
+- Support use of ServiceWorker for synchronous stdin [#174](https://github.com/jupyterlite/cockle/pull/174) ([@ianthomas23](https://github.com/ianthomas23))
+- Rename input options shellId and baseUrl [#173](https://github.com/jupyterlite/cockle/pull/173) ([@ianthomas23](https://github.com/ianthomas23))
+- Shell id, and stored in static ShellManager [#172](https://github.com/jupyterlite/cockle/pull/172) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-04-22&to=2025-05-27&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-04-22..2025-05-27&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.19
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.18...9ace79232f4aada96475a6b87336d5665ba0fc20))
@@ -26,8 +48,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-03-12&to=2025-04-22&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-03-12..2025-04-22&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.18
 
