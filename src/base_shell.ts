@@ -11,9 +11,13 @@ import {
   ServiceWorkerMainIO,
   SharedArrayBufferMainIO
 } from './buffered_io';
+import { IExternalCommand } from './callback';
+import { IExternalContext } from './context';
 import { IShell } from './defs';
 import { IRemoteShell } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
+import { ExitCode } from './exit_code';
+import { ExternalOutput } from './io';
 
 /**
  * Abstract base class for Shell that external libraries use.
@@ -38,6 +42,41 @@ export abstract class BaseShell implements IShell {
    * Load the web worker.
    */
   protected abstract initWorker(options: IShell.IOptions): Worker;
+
+  /**
+   * Call an external command, i.e. one that runs in the browser UI thread.
+   */
+  async callExternalCommand(
+    name: string,
+    args: string[],
+    environment: Map<string, string>,
+    stdoutSupportsAnsiEscapes: boolean,
+    stderrSupportsAnsiEscapes: boolean
+  ): Promise<{ exitCode: number; newEnvironment?: Map<string, string> }> {
+    const command = this._externalCommands.get(name);
+    if (command === undefined) {
+      // This should not happen unless the command has not been registered properly.
+      return { exitCode: ExitCode.CANNOT_FIND_COMMAND };
+    }
+
+    const stdout = new ExternalOutput(
+      text => this._remote!.externalOutput(text, false),
+      stdoutSupportsAnsiEscapes
+    );
+    const stderr = new ExternalOutput(
+      text => this._remote!.externalOutput(text, true),
+      stderrSupportsAnsiEscapes
+    );
+
+    const context: IExternalContext = {
+      args,
+      environment,
+      stdout,
+      stderr
+    };
+    const exitCode = await command(context);
+    return { exitCode, newEnvironment: environment };
+  }
 
   dispose(): void {
     if (this._isDisposed) {
@@ -130,6 +169,20 @@ export abstract class BaseShell implements IShell {
     return this._ready.promise;
   }
 
+  async registerExternalCommand(name: string, command: IExternalCommand): Promise<boolean> {
+    if (this.isDisposed) {
+      return false;
+    }
+
+    await this.ready;
+
+    const success = await this._remote!.registerExternalCommand(name);
+    if (success) {
+      this._externalCommands.set(name, command);
+    }
+    return success;
+  }
+
   async setSize(rows: number, columns: number): Promise<void> {
     if (this.isDisposed) {
       return;
@@ -216,6 +269,7 @@ export abstract class BaseShell implements IShell {
         initialDirectories: options.initialDirectories,
         initialFiles: options.initialFiles
       },
+      proxy(this.callExternalCommand.bind(this)),
       proxy(this.downloadWasmModuleCallback.bind(this)),
       proxy(this.enableBufferedStdinCallback.bind(this)),
       proxy(options.outputCallback),
@@ -258,6 +312,7 @@ export abstract class BaseShell implements IShell {
   private _shellId: string; // Unique identifier within a single browser tab.
   private _worker?: Worker;
   private _remote?: IRemoteShell;
+  private _externalCommands = new Map<string, IExternalCommand>();
 
   private _serviceWorkerMainIO?: ServiceWorkerMainIO;
   private _sharedArrayBufferMainIO?: SharedArrayBufferMainIO;

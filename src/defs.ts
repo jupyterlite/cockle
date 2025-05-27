@@ -1,10 +1,11 @@
 import type { IObservableDisposable } from '@lumino/disposable';
 
 import { IStdinHandler, IStdinReply, IStdinRequest } from './buffered_io';
-import { IOutputCallback } from './callback';
+import { IExternalCommand, IOutputCallback } from './callback';
 
 export interface IShell extends IObservableDisposable {
   input(char: string): Promise<void>;
+  registerExternalCommand(name: string, command: IExternalCommand): Promise<boolean>;
   setSize(rows: number, columns: number): Promise<void>;
   shellId: string;
   start(): Promise<void>;

@@ -1,7 +1,7 @@
 import { IStdinContext } from './stdin_context';
 import { Aliases } from '../aliases';
 import { IWorkerIO } from '../buffered_io';
-import { ITerminateCallback } from '../callback';
+import { ITerminateCallback } from '../callback_internal';
 import { Environment } from '../environment';
 import { IFileSystem } from '../file_system';
 import { History } from '../history';

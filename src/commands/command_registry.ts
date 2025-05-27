@@ -1,10 +1,12 @@
 import { CommandModule } from './command_module';
 import { CommandPackage } from './command_package';
 import { ICommandRunner } from './command_runner';
+import { ExternalCommandRunner } from './external_command_runner';
 import * as AllBuiltinCommands from '../builtin';
+import { ICallExternalCommand } from '../callback_internal';
 
 export class CommandRegistry {
-  constructor() {
+  constructor(readonly callExternalCommand: ICallExternalCommand) {
     this.registerBuiltinCommands(AllBuiltinCommands);
   }
 
@@ -63,6 +65,14 @@ export class CommandRegistry {
     for (const module of commandPackage.modules) {
       this._register(module.runner);
     }
+  }
+
+  registerExternalCommand(name: string): boolean {
+    if (this._map.has(name)) {
+      return false;
+    }
+    this._map.set(name, new ExternalCommandRunner(name, this.callExternalCommand));
+    return true;
   }
 
   /**

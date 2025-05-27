@@ -1,8 +1,8 @@
 export { Aliases } from './aliases';
 export { BaseShell } from './base_shell';
 export { BaseShellWorker } from './base_shell_worker';
-export { IOutputCallback, IEnableBufferedStdinCallback, IStdinCallback } from './callback';
-export { IJavaScriptContext } from './context';
+export { IOutputCallback } from './callback';
+export { IExternalContext, IJavaScriptContext } from './context';
 export { IShell } from './defs';
 export { IDriveFSOptions } from './drive_fs';
 export * from './exit_code';
