@@ -12,6 +12,7 @@ export interface IOptions {
   initialFiles?: IShell.IFiles;
   shellId?: string;
   shellManager?: ShellManager;
+  stdinOption?: string; // Set initial synchronous stdin option,
 }
 
 export async function shellSetupEmpty(options: IOptions = {}): Promise<IShellSetup> {
@@ -58,7 +59,12 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
   }
 
   const baseUrl = 'http://localhost:8000/';
-  const { shellId, shellManager } = options;
+  const { shellId, stdinOption } = options;
+  let { shellManager } = options;
+  if (stdinOption !== undefined && shellManager === undefined) {
+    shellManager = new ShellManager();
+  }
+
   let browsingContextId: string | undefined;
   if (shellManager !== undefined) {
     browsingContextId = await shellManager.installServiceWorker(baseUrl);
@@ -78,15 +84,22 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
 
   // Monkey patch an inputLine function to enter a sequence of characters and append a '\r'.
   // Cannot be used for multi-character ANSI escape codes.
-  (shell as any).inputLine = async (line: string) => {
+  const inputLine = async (line: string) => {
     for (const char of line) {
       await shell.input(char);
     }
     await shell.input('\r');
   };
+  (shell as any).inputLine = inputLine;
 
   await shell.start();
   await shell.setSize(24, 80);
+
+  if (stdinOption) {
+    // Set initial synchronous stdin option before enabling recording of output.
+    await inputLine(`cockle-config -s ${stdinOption}`);
+  }
+
   output.start();
 
   return { shell, output };
