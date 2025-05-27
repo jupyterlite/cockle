@@ -1,4 +1,4 @@
-import { ISetMainIOCallback } from '../callback';
+import { ISetMainIOCallback } from '../callback_internal';
 
 export interface IStdinContext {
   available(shortName: string): boolean;

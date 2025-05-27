@@ -1,7 +1,29 @@
-import { IShell, Shell } from '@jupyterlite/cockle';
+import { IExternalContext, IShell, Shell } from '@jupyterlite/cockle';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { IDemo } from './defs';
+
+async function externalCommand(context: IExternalContext): Promise<number> {
+  const { args } = context;
+
+  if (args.includes('environment')) {
+    context.environment.set('TEST_VAR', '23');
+  }
+
+  if (args.includes('stdout')) {
+    context.stdout.write('Output line 1\n');
+    context.stdout.write('Output line 2\n');
+  }
+
+  if (args.includes('stderr')) {
+    context.stderr.write('Error message\n');
+  }
+
+  if (args.includes('exitCode')) {
+    return 1;
+  }
+  return 0;
+}
 
 export class Demo {
   constructor(options: IDemo.IOptions) {
@@ -45,6 +67,8 @@ export class Demo {
           'print(factorial(tonumber(arg[1])))\n'
       }
     });
+
+    this._shell.registerExternalCommand('external-cmd', externalCommand);
   }
 
   async start(): Promise<void> {

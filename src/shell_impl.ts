@@ -51,7 +51,7 @@ export class ShellImpl implements IShellWorker {
       args: [],
       fileSystem: this._fileSystem,
       aliases: new Aliases(),
-      commandRegistry: new CommandRegistry(),
+      commandRegistry: new CommandRegistry(options.callExternalCommand),
       environment: new Environment(options.color),
       history: new History(),
       terminate: this.terminate.bind(this),
@@ -70,6 +70,12 @@ export class ShellImpl implements IShellWorker {
 
   get environment(): Environment {
     return this._context.environment;
+  }
+
+  externalOutput(text: string, isStderr: boolean): void {
+    // Pass output from an external command to the current IOutput.
+    const output: IOutput = isStderr ? this._context.stderr : this._context.stdout;
+    output.write(text);
   }
 
   get history(): History {
@@ -139,6 +145,10 @@ export class ShellImpl implements IShellWorker {
       return;
     }
     this._context.workerIO.write(text);
+  }
+
+  registerExternalCommand(name: string): boolean {
+    return this._context.commandRegistry.registerExternalCommand(name);
   }
 
   async setSize(rows: number, columns: number): Promise<void> {

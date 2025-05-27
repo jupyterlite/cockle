@@ -11,6 +11,7 @@ import { ShellImpl } from './shell_impl';
 export abstract class BaseShellWorker implements IShellWorker {
   async initialize(
     options: IShellWorker.IOptions,
+    callExternalCommand: IShellWorker.IProxyCallExternalCommand,
     downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback,
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
     outputCallback: IShellWorker.IProxyOutputCallback,
@@ -60,6 +61,7 @@ export abstract class BaseShellWorker implements IShellWorker {
       browsingContextId: options.browsingContextId,
       initialDirectories: options.initialDirectories,
       initialFiles: options.initialFiles,
+      callExternalCommand,
       downloadModuleCallback: this._downloadModuleCallback.bind(this),
       enableBufferedStdinCallback: this.enableBufferedStdin.bind(this),
       initDriveFSCallback: this.initDriveFS.bind(this),
@@ -84,6 +86,10 @@ export abstract class BaseShellWorker implements IShellWorker {
     }
   }
 
+  externalOutput(text: string, isStderr: boolean): void {
+    this._shellImpl?.externalOutput(text, isStderr);
+  }
+
   /**
    * Initialize the DriveFS to mount an external file system.
    */
@@ -93,6 +99,13 @@ export abstract class BaseShellWorker implements IShellWorker {
     if (this._shellImpl) {
       await this._shellImpl.input(char);
     }
+  }
+
+  registerExternalCommand(name: string): boolean {
+    if (this._shellImpl) {
+      return this._shellImpl!.registerExternalCommand(name);
+    }
+    return false;
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
