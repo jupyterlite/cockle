@@ -8,7 +8,17 @@ import { ErrorExitCode, FindCommandError, GeneralError } from './error_exit_code
 import { ExitCode } from './exit_code';
 import { IFileSystem } from './file_system';
 import { History } from './history';
-import { FileInput, FileOutput, IInput, IOutput, Pipe, TerminalInput, TerminalOutput } from './io';
+import {
+  DummyInput,
+  DummyOutput,
+  FileInput,
+  FileOutput,
+  IInput,
+  IOutput,
+  Pipe,
+  TerminalInput,
+  TerminalOutput
+} from './io';
 import { CommandNode, PipeNode, parse } from './parse';
 import { longestStartsWith, toColumns } from './utils';
 import { CommandModule } from './commands/command_module';
@@ -22,24 +32,48 @@ import { CommandRegistry } from './commands/command_registry';
 export class ShellImpl implements IShellWorker {
   constructor(options: IShellImpl.IOptions) {
     this._options = options;
-    this._environment = new Environment(options.color);
     this._commandModuleLoader = new CommandModuleLoader(
       options.wasmBaseUrl,
       options.downloadModuleCallback
     );
-    this._commandRegistry = new CommandRegistry();
+
+    // Correct values for FS, etc, are filled in by initFileSystem.
+    this._fileSystem = {
+      FS: undefined,
+      PATH: undefined,
+      ERRNO_CODES: undefined,
+      PROXYFS: undefined,
+      mountpoint: options.mountpoint ?? '/drive'
+    };
+
+    // Content within which commands are run,
+    this._context = {
+      args: [],
+      fileSystem: this._fileSystem,
+      aliases: new Aliases(),
+      commandRegistry: new CommandRegistry(),
+      environment: new Environment(options.color),
+      history: new History(),
+      terminate: this.terminate.bind(this),
+      stdin: this._dummyInput,
+      stdout: this._dummyOutput,
+      stderr: this._dummyOutput,
+      workerIO: options.workerIO,
+      commandModuleCache: this._commandModuleLoader.cache,
+      stdinContext: options.stdinContext
+    };
   }
 
   get aliases(): Aliases {
-    return this._aliases;
+    return this._context.aliases;
   }
 
   get environment(): Environment {
-    return this._environment;
+    return this._context.environment;
   }
 
   get history(): History {
-    return this._history;
+    return this._context.history;
   }
 
   async initialize() {
@@ -104,7 +138,7 @@ export class ShellImpl implements IShellWorker {
     if (!this._isRunning) {
       return;
     }
-    this._options.workerIO.write(text);
+    this._context.workerIO.write(text);
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
@@ -124,7 +158,7 @@ export class ShellImpl implements IShellWorker {
   }
 
   setWorkerIO(workerIO: IWorkerIO) {
-    this._options.workerIO = workerIO;
+    this._context.workerIO = workerIO;
   }
 
   async start(): Promise<void> {
@@ -135,7 +169,7 @@ export class ShellImpl implements IShellWorker {
   terminate() {
     console.log('Cockle ShellImpl.terminate');
     this._isRunning = false;
-    this._options.terminateCallback();
+    this._context.terminate();
   }
 
   /**
@@ -148,11 +182,11 @@ export class ShellImpl implements IShellWorker {
       case '[1A':
       case '[B': // Down arrow
       case '[1B': {
-        const cmdText = this._history.scrollCurrent(remainder.endsWith('B'));
+        const cmdText = this.history.scrollCurrent(remainder.endsWith('B'));
         this._currentLine = cmdText !== null ? cmdText : '';
         this._cursorIndex = this._currentLine.length;
         // Re-output whole line.
-        this.output(ansi.eraseStartLine + `\r${this._environment.getPrompt()}${this._currentLine}`);
+        this.output(ansi.eraseStartLine + `\r${this.environment.getPrompt()}${this._currentLine}`);
         break;
       }
       case '[D': // Left arrow
@@ -239,7 +273,7 @@ export class ShellImpl implements IShellWorker {
         continue;
       }
 
-      const { FS } = this._fileSystem!;
+      const { FS } = this._context.fileSystem!;
       const analyze = FS.analyzePath(arg, false);
       if (!analyze.parentExists) {
         ret.push(arg);
@@ -298,20 +332,24 @@ export class ShellImpl implements IShellWorker {
     });
     const { FS, PATH, ERRNO_CODES, PROXYFS } = module;
 
-    const mountpoint = this._options.mountpoint ?? '/drive';
+    const mountpoint = this._fileSystem.mountpoint;
     FS.mkdirTree(mountpoint, 0o777);
-    this._fileSystem = { FS, PATH, ERRNO_CODES, PROXYFS, mountpoint };
+
+    this._context.fileSystem.FS = FS;
+    this._context.fileSystem.PATH = PATH;
+    this._context.fileSystem.ERRNO_CODES = ERRNO_CODES;
+    this._context.fileSystem.PROXYFS = PROXYFS;
 
     const { browsingContextId, baseUrl, initialDirectories, initialFiles } = this._options;
     this._options.initDriveFSCallback({
       browsingContextId,
       baseUrl,
-      fileSystem: this._fileSystem,
+      fileSystem: this._context.fileSystem,
       mountpoint
     });
 
     FS.chdir(mountpoint);
-    this._environment.set('PWD', FS.cwd());
+    this.environment.set('PWD', FS.cwd());
 
     if (initialDirectories) {
       initialDirectories.forEach((directory: string) => FS.mkdir(directory, 0o775));
@@ -364,7 +402,7 @@ export class ShellImpl implements IShellWorker {
         pkgConfig.wasm,
         commandModules
       );
-      this._commandRegistry.registerCommandPackage(commandPackage);
+      this._context.commandRegistry.registerCommandPackage(commandPackage);
     }
 
     // Initialise aliases.
@@ -372,7 +410,7 @@ export class ShellImpl implements IShellWorker {
       for (const [key, v] of Object.entries(cockleConfig.aliases)) {
         const value = v as string;
         if (value.length > 0) {
-          this._aliases.set(key, value);
+          this.aliases.set(key, value);
         }
       }
     }
@@ -382,17 +420,17 @@ export class ShellImpl implements IShellWorker {
     if (!this._isRunning) {
       return;
     }
-    this._options.workerIO.write(`\n${this.environment.getPrompt()}`);
+    this._context.workerIO.write(`\n${this.environment.getPrompt()}`);
   }
 
   private async _runCommands(cmdText: string): Promise<void> {
     await this._options.enableBufferedStdinCallback(true);
-    this._options.workerIO.allowAdjacentNewline(true);
+    this._context.workerIO.allowAdjacentNewline(true);
 
     if (cmdText.startsWith('!')) {
       // Get command from history and run that.
       const index = parseInt(cmdText.slice(1));
-      const possibleCmd = this._history.at(index);
+      const possibleCmd = this.history.at(index);
       if (possibleCmd === null) {
         // Does not set exit code.
         let text = '!' + index + ': event not found';
@@ -406,7 +444,7 @@ export class ShellImpl implements IShellWorker {
       cmdText = possibleCmd;
     }
 
-    this._history.add(cmdText);
+    this.history.add(cmdText);
 
     let exitCode!: number;
     const stdin = new TerminalInput(
@@ -420,7 +458,7 @@ export class ShellImpl implements IShellWorker {
       this._options.color ? ansi.styleReset : null
     );
     try {
-      const nodes = parse(cmdText, true, this._aliases);
+      const nodes = parse(cmdText, true, this.aliases);
 
       for (const node of nodes) {
         if (node instanceof CommandNode) {
@@ -449,7 +487,7 @@ export class ShellImpl implements IShellWorker {
       exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
       this.environment.set('?', `${exitCode}`);
 
-      this._options.workerIO.allowAdjacentNewline(false);
+      this._context.workerIO.allowAdjacentNewline(false);
       await this._options.enableBufferedStdinCallback(false);
     }
   }
@@ -461,7 +499,7 @@ export class ShellImpl implements IShellWorker {
     error: IOutput
   ): Promise<number> {
     const name = commandNode.name.value;
-    const runner = this._commandRegistry.get(name);
+    const runner = this._context.commandRegistry.get(name);
     if (runner === null) {
       // Give location of command in input?
       throw new FindCommandError(name);
@@ -476,45 +514,45 @@ export class ShellImpl implements IShellWorker {
       const redirectChars = redirect.token.value;
       const path = redirect.target.value;
       if (redirectChars === '>' || redirectChars === '>>') {
-        output = new FileOutput(this._fileSystem!, path, redirectChars === '>>');
+        output = new FileOutput(this._context.fileSystem, path, redirectChars === '>>');
       } else if (redirectChars === '<') {
-        input = new FileInput(this._fileSystem!, path);
+        input = new FileInput(this._context.fileSystem, path);
       } else {
         throw new GeneralError('Unrecognised redirect ' + redirectChars);
       }
     }
 
+    // Set current properties of IContext.
     let args = commandNode.suffix.map(token => token.value);
     args = this._filenameExpansion(args);
-    const { aliases, environment, history } = this;
-    const context: IContext = {
-      args,
-      fileSystem: this._fileSystem!,
-      aliases,
-      commandRegistry: this._commandRegistry,
-      environment,
-      history,
-      terminate: this.terminate.bind(this),
-      stdin: input,
-      stdout: output,
-      stderr: error,
-      workerIO: this._options.workerIO,
-      commandModuleCache: this._commandModuleLoader.cache,
-      stdinContext: this._options.stdinContext
-    };
-    const exitCode = await runner.run(name, context);
+    this._context.args = args;
+    this._context.stdin = input;
+    this._context.stdout = output;
+    this._context.stderr = error;
 
-    error.flush();
-    output.flush();
+    let exitCode = -1;
+    try {
+      exitCode = await runner.run(name, this._context);
+    } finally {
+      error.flush();
+      output.flush();
+
+      // Reset properties of IContext.
+      this._context.args = [];
+      this._context.stdin = this._dummyInput;
+      this._context.stdout = this._dummyOutput;
+      this._context.stderr = this._dummyOutput;
+    }
+
     return exitCode;
   }
 
   private _stdinCallback(maxChars: number | null): number[] {
-    return this._options.workerIO.read(maxChars);
+    return this._context.workerIO.read(maxChars);
   }
 
   private async _stdinAsyncCallback(maxChars: number | null): Promise<number[]> {
-    return await this._options.workerIO.readAsync(maxChars);
+    return await this._context.workerIO.readAsync(maxChars);
   }
 
   private async _tabComplete(): Promise<void> {
@@ -531,13 +569,13 @@ export class ShellImpl implements IShellWorker {
 
     let possibles: string[] = [];
     if (isCommand) {
-      const commandMatches = this._commandRegistry.match(lookup);
-      const aliasMatches = this._aliases.match(lookup);
+      const commandMatches = this._context.commandRegistry.match(lookup);
+      const aliasMatches = this.aliases.match(lookup);
       // Combine, removing duplicates, and sort.
       possibles = [...new Set([...commandMatches, ...aliasMatches])].sort();
     } else {
       // Is filename.
-      const { FS } = this._fileSystem!;
+      const { FS } = this._context.fileSystem;
       const analyze = FS.analyzePath(lookup, false);
       if (!analyze.parentExists) {
         return;
@@ -597,8 +635,8 @@ export class ShellImpl implements IShellWorker {
         this.output(extra + suffix + ansi.cursorLeft(suffix.length));
       } else {
         // Write all the possibles in columns across the terminal.
-        const lines = toColumns(possibles, this._environment.getNumber('COLUMNS') ?? 0);
-        const output = `\n${lines.join('\n')}\n${this._environment.getPrompt()}${this._currentLine}`;
+        const lines = toColumns(possibles, this.environment.getNumber('COLUMNS') ?? 0);
+        const output = `\n${lines.join('\n')}\n${this.environment.getPrompt()}${this._currentLine}`;
         this.output(output + ansi.cursorLeft(suffix.length));
       }
     }
@@ -607,12 +645,11 @@ export class ShellImpl implements IShellWorker {
   private _currentLine: string = '';
   private _cursorIndex: number = 0;
   private _isRunning = false;
-  private _aliases = new Aliases();
-  private _commandRegistry: CommandRegistry;
-  private _environment: Environment;
-  private _history = new History();
-  private _commandModuleLoader: CommandModuleLoader;
-  private _options: IShellImpl.IOptions;
 
-  private _fileSystem?: IFileSystem;
+  private _commandModuleLoader: CommandModuleLoader;
+  private _context: IContext;
+  private _dummyInput = new DummyInput();
+  private _dummyOutput = new DummyOutput();
+  private _fileSystem: IFileSystem;
+  private _options: IShellImpl.IOptions;
 }
