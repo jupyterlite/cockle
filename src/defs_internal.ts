@@ -6,10 +6,10 @@ import {
   IEnableBufferedStdinCallback,
   IInitDriveFSCallback,
   IOutputCallback,
-  IStdinCallback,
-  IStdinAsyncCallback,
+  ISetMainIOCallback,
   ITerminateCallback
 } from './callback';
+import { IStdinContext } from './context';
 import { IShell } from './defs';
 
 interface IOptionsCommon {
@@ -38,6 +38,7 @@ export interface IShellWorker extends IShellCommon {
     downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback,
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
     outputCallback: IShellWorker.IProxyOutputCallback,
+    setMainIOCallback: IShellWorker.IProxySetMainIOCallback,
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ): void;
 }
@@ -48,10 +49,12 @@ export namespace IShellWorker {
     extends IEnableBufferedStdinCallback,
       ProxyMarked {}
   export interface IProxyOutputCallback extends IOutputCallback, ProxyMarked {}
+  export interface IProxySetMainIOCallback extends ISetMainIOCallback, ProxyMarked {}
   export interface IProxyTerminateCallback extends ITerminateCallback, ProxyMarked {}
 
   export interface IOptions extends IOptionsCommon {
-    sharedArrayBuffer: SharedArrayBuffer;
+    sharedArrayBuffer?: SharedArrayBuffer; // If set, supports bufferedIO via SharedArrayBuffer
+    supportsServiceWorker: boolean;
   }
 }
 
@@ -62,9 +65,8 @@ export namespace IShellImpl {
     downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback;
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;
     initDriveFSCallback: IInitDriveFSCallback;
-    stdinCallback: IStdinCallback;
-    stdinAsyncCallback: IStdinAsyncCallback;
     terminateCallback: IShellWorker.IProxyTerminateCallback;
     workerIO: IWorkerIO;
+    stdinContext: IStdinContext;
   }
 }

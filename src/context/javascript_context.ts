@@ -1,6 +1,6 @@
-import { Environment } from './environment';
-import { IFileSystem } from './file_system';
-import { IJavaScriptInput, IOutput } from './io';
+import { Environment } from '../environment';
+import { IFileSystem } from '../file_system';
+import { IJavaScriptInput, IOutput } from '../io';
 
 /**
  * Mininal context used to run imported JavaScript commands.

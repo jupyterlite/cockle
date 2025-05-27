@@ -4,20 +4,20 @@ import { test } from './utils';
 test.describe('ShellManager', () => {
   test('should support no shells created', async ({ page }) => {
     const output = await page.evaluate(async () => {
-      const { ShellManager } = globalThis.cockle;
-      return ShellManager.ids();
+      const { shellManager } = globalThis.cockle;
+      return shellManager.shellIds();
     });
     expect(output).toEqual([]);
   });
 
   test('should support one shell created', async ({ page }) => {
     const output = await page.evaluate(async () => {
-      const { ShellManager, shellSetupEmpty } = globalThis.cockle;
-      const { shell } = await shellSetupEmpty();
+      const { shellManager, shellSetupEmpty } = globalThis.cockle;
+      const { shell } = await shellSetupEmpty({ shellManager });
       const ret0 = shell.shellId;
-      const ret1 = ShellManager.ids();
+      const ret1 = shellManager.shellIds();
       shell.dispose();
-      const ret2 = ShellManager.ids();
+      const ret2 = shellManager.shellIds();
       return [ret0, ret1, ret2];
     });
     const shellId = output[0];
@@ -30,17 +30,15 @@ test.describe('ShellManager', () => {
 
   test('should support two shells created', async ({ page }) => {
     const output = await page.evaluate(async () => {
-      const { ShellManager, shellSetupEmpty } = globalThis.cockle;
-      const obj0 = await shellSetupEmpty();
-      const shell0 = obj0.shell;
-      const obj1 = await shellSetupEmpty();
-      const shell1 = obj1.shell;
+      const { shellManager, shellSetupEmpty } = globalThis.cockle;
+      const shell0 = (await shellSetupEmpty({ shellManager })).shell;
+      const shell1 = (await shellSetupEmpty({ shellManager })).shell;
       const ret0 = shell0.shellId;
       const ret1 = shell1.shellId;
-      const ret2 = ShellManager.ids();
+      const ret2 = shellManager.shellIds();
       shell0.dispose();
       shell1.dispose();
-      const ret3 = ShellManager.ids();
+      const ret3 = shellManager.shellIds();
       return [ret0, ret1, ret2, ret3];
     });
     const shellId0 = output[0];
@@ -55,5 +53,20 @@ test.describe('ShellManager', () => {
 
     expect(output[2]).toEqual(expect.arrayContaining([shellId0, shellId1]));
     expect(output[3]).toEqual([]);
+  });
+
+  test('should throw on duplicate shellIds', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { shellManager, shellSetupEmpty } = globalThis.cockle;
+      const shellId = 'abc'; // Use the same shellId multiple times.
+      await shellSetupEmpty({ shellId, shellManager });
+      try {
+        await shellSetupEmpty({ shellId, shellManager });
+      } catch (err: any) {
+        return err.message;
+      }
+      return undefined;
+    });
+    expect(output).toEqual('Duplicate shellId: abc');
   });
 });

@@ -59,56 +59,6 @@ test.describe('Shell', () => {
       expect(output[1]).toMatch('\r\n      1 file2\r\n      1 file1\r\n      1 dirA\r\n');
     });
 
-    test('should support terminal stdin', async ({ page }) => {
-      const output = await page.evaluate(async () => {
-        const { shell, output } = await globalThis.cockle.shellSetupEmpty();
-        const { keys } = globalThis.cockle;
-        const { enter, EOT } = keys;
-        await Promise.all([
-          shell.inputLine('wc'),
-          globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', EOT])
-        ]);
-        return output.text;
-      });
-      expect(output).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
-    });
-
-    test('should support terminal stdin of an ansi escape sequence', async ({ page }) => {
-      const output = await page.evaluate(async () => {
-        const { shell, output } = await globalThis.cockle.shellSetupEmpty();
-        const { keys } = globalThis.cockle;
-        const { downArrow, EOT } = keys;
-        await Promise.all([
-          shell.inputLine('wc'),
-          globalThis.cockle.terminalInput(shell, ['a', downArrow, 'b', EOT])
-        ]);
-        return output.text;
-      });
-      expect(output).toMatch('wc\r\na\x1B[Bb      0       1       5\r\n');
-    });
-
-    test('should support terminal stdin more than once', async ({ page }) => {
-      const output = await page.evaluate(async () => {
-        const { shell, output } = await globalThis.cockle.shellSetupEmpty();
-        const { keys } = globalThis.cockle;
-        const { enter, EOT } = keys;
-        await Promise.all([
-          shell.inputLine('wc'),
-          globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', EOT])
-        ]);
-        const ret0 = output.textAndClear();
-
-        await Promise.all([
-          shell.inputLine('wc'),
-          globalThis.cockle.terminalInput(shell, ['d', 'e', ' ', 'f', EOT])
-        ]);
-        const ret1 = output.text;
-        return [ret0, ret1];
-      });
-      expect(output[0]).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
-      expect(output[1]).toMatch(/^wc\r\nde f {6}0 {7}2 {7}4\r\n/);
-    });
-
     test('should support quotes', async ({ page }) => {
       const output = await shellLineSimple(page, 'echo "Hello    x;   yz"');
       expect(output).toMatch('\r\nHello    x;   yz\r\n');
@@ -483,6 +433,114 @@ test.describe('Shell', () => {
     test('should expand * in subdirectory', async ({ page }) => {
       const output0 = await shellLineComplex(page, 'ls dir/subf*');
       expect(output0).toMatch(/\r\ndir\/subfile\.md\s+dir\/subfile\.txt\r\n/);
+    });
+  });
+
+  test.describe('synchronous stdin settings', () => {
+    test('should only report SAB if not using shell manager', async ({ page }) => {
+      const output = await shellLineSimple(page, 'cockle-config -s');
+      expect(output).toMatch(
+        '│ shared array buffer │ sab        │ yes       │ yes     │\r\n' +
+          '│ service worker      │ sw         │           │         │'
+      );
+    });
+
+    test('should report SAB and SW if using shell manager', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { shellManager, shellSetupEmpty } = globalThis.cockle;
+        const { output, shell } = await shellSetupEmpty({ shellManager });
+        await shell.inputLine('cockle-config -s');
+        return output.text;
+      });
+      expect(output).toMatch(
+        '│ shared array buffer │ sab        │ yes       │ yes     │\r\n' +
+          '│ service worker      │ sw         │ yes       │         │'
+      );
+    });
+
+    test('should support setting use of SW via cockle-config', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { shellManager, shellSetupEmpty } = globalThis.cockle;
+        const { output, shell } = await shellSetupEmpty({ shellManager });
+        await shell.inputLine('cockle-config -s sw');
+        return output.text;
+      });
+      expect(output).toMatch(
+        '│ shared array buffer │ sab        │ yes       │         │\r\n' +
+          '│ service worker      │ sw         │ yes       │ yes     │'
+      );
+    });
+  });
+
+  test.describe('synchronous stdin', () => {
+    const stdinOptions = ['sab', 'sw'];
+    stdinOptions.forEach(stdinOption => {
+      test(`check parameterised stdinOption works for ${stdinOption}`, async ({ page }) => {
+        const output = await shellLineSimple(page, 'cockle-config -s', { stdinOption });
+        if (stdinOption === 'sab') {
+          expect(output).toMatch(
+            '│ shared array buffer │ sab        │ yes       │ yes     │\r\n' +
+              '│ service worker      │ sw         │ yes       │         │'
+          );
+        } else {
+          expect(output).toMatch(
+            '│ shared array buffer │ sab        │ yes       │         │\r\n' +
+              '│ service worker      │ sw         │ yes       │ yes     │'
+          );
+        }
+      });
+
+      test(`should support terminal stdin via ${stdinOption}`, async ({ page }) => {
+        const output = await page.evaluate(async stdinOption => {
+          const { shell, output } = await globalThis.cockle.shellSetupEmpty({ stdinOption });
+          const { keys } = globalThis.cockle;
+          const { enter, EOT } = keys;
+          await Promise.all([
+            shell.inputLine('wc'),
+            globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', EOT])
+          ]);
+          return output.text;
+        });
+        expect(output).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
+      });
+
+      test(`should support terminal stdin  via ${stdinOption} of an ansi escape sequence`, async ({
+        page
+      }) => {
+        const output = await page.evaluate(async stdinOption => {
+          const { shell, output } = await globalThis.cockle.shellSetupEmpty({ stdinOption });
+          const { keys } = globalThis.cockle;
+          const { downArrow, EOT } = keys;
+          await Promise.all([
+            shell.inputLine('wc'),
+            globalThis.cockle.terminalInput(shell, ['a', downArrow, 'b', EOT])
+          ]);
+          return output.text;
+        });
+        expect(output).toMatch('wc\r\na\x1B[Bb      0       1       5\r\n');
+      });
+
+      test(`should support terminal stdin via ${stdinOption} more than once`, async ({ page }) => {
+        const output = await page.evaluate(async stdinOption => {
+          const { shell, output } = await globalThis.cockle.shellSetupEmpty({ stdinOption });
+          const { keys } = globalThis.cockle;
+          const { enter, EOT } = keys;
+          await Promise.all([
+            shell.inputLine('wc'),
+            globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', EOT])
+          ]);
+          const ret0 = output.textAndClear();
+
+          await Promise.all([
+            shell.inputLine('wc'),
+            globalThis.cockle.terminalInput(shell, ['d', 'e', ' ', 'f', EOT])
+          ]);
+          const ret1 = output.text;
+          return [ret0, ret1];
+        });
+        expect(output[0]).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
+        expect(output[1]).toMatch(/^wc\r\nde f {6}0 {7}2 {7}4\r\n/);
+      });
     });
   });
 });
