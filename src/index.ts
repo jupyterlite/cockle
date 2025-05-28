@@ -1,9 +1,10 @@
 export { Aliases } from './aliases';
 export { BaseShell } from './base_shell';
 export { BaseShellWorker } from './base_shell_worker';
+export { IStdinReply, IStdinRequest } from './buffered_io';
 export { IOutputCallback } from './callback';
 export { IExternalContext, IJavaScriptContext } from './context';
-export { IShell } from './defs';
+export { IShell, IShellManager } from './defs';
 export { IDriveFSOptions } from './drive_fs';
 export * from './exit_code';
 export { IFileSystem } from './file_system';

@@ -33,5 +33,6 @@ export namespace IShell {
 
 export interface IShellManager {
   registerShell(shellId: string, shell: IShell, stdinHandler: IStdinHandler): void;
+  shellIds(): string[];
   stdinHandler(request: IStdinRequest): Promise<IStdinReply>;
 }
