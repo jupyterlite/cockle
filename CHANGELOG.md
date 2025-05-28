@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.0-a1
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.0-a0...0df33e9c5e9dcefb03b53605b21cf711b524f90a))
+
+### Enhancements made
+
+- Terminal service worker support [#180](https://github.com/jupyterlite/cockle/pull/180) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-05-27&to=2025-05-28&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-05-27..2025-05-28&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.0-a0
 
 Pre-release to test the recent Service Worker improvements of #174 downstream in [terminal](https://github.com/jupyterlite/terminal), and start experimenting with external commands (#178).
@@ -21,8 +37,6 @@ Pre-release to test the recent Service Worker improvements of #174 downstream in
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-04-22&to=2025-05-27&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-04-22..2025-05-27&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.19
 
