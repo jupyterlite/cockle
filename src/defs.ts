@@ -1,6 +1,6 @@
 import type { IObservableDisposable } from '@lumino/disposable';
 
-import { IStdinHandler, IStdinReply, IStdinRequest } from './buffered_io';
+import { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
 import { IExternalCommand, IOutputCallback } from './callback';
 
 export interface IShell extends IObservableDisposable {
@@ -32,6 +32,7 @@ export namespace IShell {
 }
 
 export interface IShellManager {
-  registerShell(shellId: string, shell: IShell, stdinHandler: IStdinHandler): void;
-  stdinHandler(request: IStdinRequest): Promise<IStdinReply>;
+  handleStdin(request: IStdinRequest): Promise<IStdinReply>;
+  registerShell(shellId: string, shell: IShell, handleStdin: IHandleStdin): void;
+  shellIds(): string[];
 }

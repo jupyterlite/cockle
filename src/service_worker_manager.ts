@@ -103,7 +103,7 @@ export class ServiceWorkerManager {
       return;
     }
 
-    const response = await this.shellManager.stdinHandler(data);
+    const response = await this.shellManager.handleStdin(data);
     this._broadcastChannel.postMessage({
       response,
       browsingContextId: this._browsingContextId
