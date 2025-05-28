@@ -179,7 +179,7 @@ export class ShellImpl implements IShellWorker {
   terminate() {
     console.log('Cockle ShellImpl.terminate');
     this._isRunning = false;
-    this._context.terminate();
+    this._options.terminateCallback();
   }
 
   /**
