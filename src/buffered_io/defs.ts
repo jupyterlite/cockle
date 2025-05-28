@@ -24,6 +24,13 @@ export interface IWorkerIO {
 }
 
 /**
+ * Handle stdin request from service worker.
+ */
+export interface IHandleStdin {
+  (stdinRequest: IStdinRequest): Promise<IStdinReply>;
+}
+
+/**
  * Request for stdin via service worker.
  */
 export interface IStdinRequest {
@@ -38,11 +45,4 @@ export interface IStdinRequest {
 export interface IStdinReply {
   error?: string;
   text?: string | null; // null means timeout reached before any input available.
-}
-
-/**
- * Interface for handler of stdin requests.
- */
-export interface IStdinHandler {
-  (stdinRequest: IStdinRequest): Promise<IStdinReply>;
 }

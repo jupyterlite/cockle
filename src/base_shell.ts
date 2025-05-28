@@ -31,7 +31,7 @@ export abstract class BaseShell implements IShell {
       this.options.shellManager.registerShell(
         this._shellId,
         this,
-        this._serviceWorkerStdinHandler.bind(this)
+        this._serviceWorkerHandleStdin.bind(this)
       );
     }
 
@@ -286,12 +286,12 @@ export abstract class BaseShell implements IShell {
     }
   }
 
-  private async _serviceWorkerStdinHandler(request: IStdinRequest): Promise<IStdinReply> {
+  private async _serviceWorkerHandleStdin(request: IStdinRequest): Promise<IStdinReply> {
     if (this._serviceWorkerMainIO !== undefined) {
-      return await this._serviceWorkerMainIO.stdinHandler(request);
+      return await this._serviceWorkerMainIO.handleStdin(request);
     } else {
       // Should never be called if _serviceWorkerMainIO does not exist.
-      throw new Error('No serviceWorkerStdinHandler exists');
+      throw new Error('No serviceWorker handleStdin exists');
     }
   }
 

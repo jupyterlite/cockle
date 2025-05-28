@@ -1,4 +1,4 @@
-import { IStdinHandler, IStdinReply, IStdinRequest } from './buffered_io';
+import { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
 import { IShell, IShellManager } from './defs';
 import { ServiceWorkerManager } from './service_worker_manager';
 import { delay } from './utils';
@@ -12,6 +12,15 @@ import { delay } from './utils';
  * registration.
  */
 export class ShellManager implements IShellManager {
+  async handleStdin(request: IStdinRequest): Promise<IStdinReply> {
+    const { shellId } = request;
+    const shellHandleStdin = this._shells.get(shellId);
+    if (shellHandleStdin === undefined) {
+      return { error: `Unrecognised shellId ${shellId}` };
+    }
+    return await shellHandleStdin(request);
+  }
+
   async installServiceWorker(baseUrl: string): Promise<string> {
     if (this._serviceWorkerManager === undefined) {
       this._serviceWorkerManager = new ServiceWorkerManager(baseUrl, this);
@@ -27,13 +36,13 @@ export class ShellManager implements IShellManager {
     }
   }
 
-  registerShell(shellId: string, shell: IShell, stdinHandler: IStdinHandler): void {
+  registerShell(shellId: string, shell: IShell, handleStdin: IHandleStdin): void {
     if (shellId === '') {
       throw new Error('shellId not set');
     } else if (this._shells.has(shellId)) {
       throw new Error(`Duplicate shellId: ${shellId}`);
     }
-    this._shells.set(shellId, stdinHandler);
+    this._shells.set(shellId, handleStdin);
     shell.disposed.connect(() => this._shells.delete(shellId));
   }
 
@@ -41,15 +50,6 @@ export class ShellManager implements IShellManager {
     return [...this._shells.keys()];
   }
 
-  async stdinHandler(request: IStdinRequest): Promise<IStdinReply> {
-    const { shellId } = request;
-    const stdinHandler = this._shells.get(shellId);
-    if (stdinHandler === undefined) {
-      return { error: `Unrecognised shellId ${shellId}` };
-    }
-    return await stdinHandler(request);
-  }
-
-  private _shells = new Map<string, IStdinHandler>();
+  private _shells = new Map<string, IHandleStdin>();
   private _serviceWorkerManager?: ServiceWorkerManager;
 }

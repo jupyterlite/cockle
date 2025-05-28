@@ -1,7 +1,7 @@
 export { Aliases } from './aliases';
 export { BaseShell } from './base_shell';
 export { BaseShellWorker } from './base_shell_worker';
-export { IStdinReply, IStdinRequest } from './buffered_io';
+export { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
 export { IOutputCallback } from './callback';
 export { IExternalContext, IJavaScriptContext } from './context';
 export { IShell, IShellManager } from './defs';

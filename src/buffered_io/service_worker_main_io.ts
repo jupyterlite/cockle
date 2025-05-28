@@ -43,9 +43,9 @@ export class ServiceWorkerMainIO extends MainIO implements IMainIO {
     this._readBuffer = '';
   }
 
-  async stdinHandler(request: IStdinRequest): Promise<IStdinReply> {
+  async handleStdin(request: IStdinRequest): Promise<IStdinReply> {
     if (!this._enabled) {
-      throw new Error('ServiceWorkerMainIO.stdinHandler when disabled');
+      throw new Error('ServiceWorkerMainIO.handleStdin when disabled');
     }
 
     const { test, timeoutMs } = request;
