@@ -22,10 +22,18 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
     // Narrow context passed to JavaScript command so that we don't leak cockle internals.
     const { args, environment, fileSystem, stdout, stderr } = context;
     const stdin = new JavaScriptInput(context.stdin);
-    const jsContext: IJavaScriptContext = { args, environment, fileSystem, stdin, stdout, stderr };
+    const jsContext: IJavaScriptContext = {
+      name: cmdName,
+      args,
+      environment,
+      fileSystem,
+      stdin,
+      stdout,
+      stderr
+    };
 
     try {
-      return await jsModule.run(cmdName, jsContext);
+      return await jsModule.run(jsContext);
     } catch (err) {
       console.error(`JavascriptCommandRunner: ${err}`);
       throw new RunCommandError(cmdName);

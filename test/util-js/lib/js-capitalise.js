@@ -4,9 +4,9 @@ var Module = (function (exports) {
     const ExitCode = {
         GENERAL_ERROR: 1};
 
-    async function run(cmdName, context) {
-        const { args, stdout } = context;
-        stdout.write(cmdName + ': ' + args.map(arg => arg.toUpperCase()).join(','));
+    async function run(context) {
+        const { args, name, stdout } = context;
+        stdout.write(name + ': ' + args.map(arg => arg.toUpperCase()).join(','));
         return ExitCode.GENERAL_ERROR;
     }
 

@@ -4,9 +4,9 @@ var Module = (function (exports) {
     const ExitCode = {
         SUCCESS: 0};
 
-    async function run(cmdName, context) {
-        const { args, stdout } = context;
-        stdout.write(cmdName + ': ' + args.join(','));
+    async function run(context) {
+        const { args, name, stdout } = context;
+        stdout.write(name + ': ' + args.join(','));
         return ExitCode.SUCCESS;
     }
 

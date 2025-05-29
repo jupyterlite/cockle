@@ -10,6 +10,10 @@ async function externalCommand(context: IExternalContext): Promise<number> {
     context.environment.set('TEST_VAR', '23');
   }
 
+  if (args.includes('name')) {
+    context.stdout.write(context.name + '\n');
+  }
+
   if (args.includes('stdout')) {
     context.stdout.write('Output line 1\n');
     context.stdout.write('Output line 2\n');

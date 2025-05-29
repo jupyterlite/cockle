@@ -34,7 +34,7 @@ test.describe('external command', () => {
       await shell.inputLine('external-cmd stdout');
       return output.text;
     });
-    expect(output).toMatch('Output line 1\r\nOutput line 2\r\n');
+    expect(output).toMatch('\r\nOutput line 1\r\nOutput line 2\r\n');
   });
 
   test('should write to file', async ({ page }) => {
@@ -92,5 +92,16 @@ test.describe('external command', () => {
       return output.text;
     });
     expect(output).toMatch('\r\nTEST_VAR=23\r\n');
+  });
+
+  test('should be passed command name', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { externalCommand, shellSetupEmpty } = globalThis.cockle;
+      const { shell, output } = await shellSetupEmpty();
+      await shell.registerExternalCommand('external-cmd', externalCommand);
+      await shell.inputLine('external-cmd name');
+      return output.text;
+    });
+    expect(output).toMatch('\r\nexternal-cmd\r\n');
   });
 });
