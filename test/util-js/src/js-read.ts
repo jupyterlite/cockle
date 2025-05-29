@@ -1,7 +1,7 @@
 import type { IJavaScriptContext } from '@jupyterlite/cockle';
 import { ExitCode } from '@jupyterlite/cockle';
 
-export async function run(cmdName: string, context: IJavaScriptContext): Promise<number> {
+export async function run(context: IJavaScriptContext): Promise<number> {
   const { stdin, stdout } = context;
 
   // Read from stdin a character at a time and write it back capitalised until no further input is

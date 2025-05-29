@@ -69,6 +69,7 @@ export abstract class BaseShell implements IShell {
     );
 
     const context: IExternalContext = {
+      name,
       args,
       environment,
       stdout,

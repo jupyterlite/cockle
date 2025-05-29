@@ -6,6 +6,7 @@
 import { ExternalOutput } from '../io';
 
 export interface IExternalContext {
+  name: string;
   args: string[];
   environment: Map<string, string>;
   stdout: ExternalOutput;
