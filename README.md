@@ -4,6 +4,8 @@ In-browser bash-like shell implemented in a combination of TypeScript and WebAss
 
 Used in the [JupyterLite terminal extension](https://github.com/jupyterlite/terminal).
 
+Try it out outside of JupyterLite on github pages at https://jupyterlite.github.io/cockle.
+
 ⚠️ This is an early-stage work in progress and should be considered experimental code. Anything and
 everything could change at any time.
 
