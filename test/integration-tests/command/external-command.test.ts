@@ -1,3 +1,4 @@
+import { IExternalCommand } from '@jupyterlite/cockle';
 import { expect } from '@playwright/test';
 import { test } from '../utils';
 
@@ -6,7 +7,10 @@ test.describe('external command', () => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty();
-      const ok = await shell.registerExternalCommand('external-cmd', externalCommand);
+      const ok = await shell.registerExternalCommand({
+        name: 'external-cmd',
+        command: externalCommand
+      });
       await shell.inputLine('cockle-config -c');
       return [ok, output.text];
     });
@@ -18,8 +22,14 @@ test.describe('external command', () => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
       const { shell } = await shellSetupEmpty();
-      const ok0 = await shell.registerExternalCommand('external-cmd', externalCommand);
-      const ok1 = await shell.registerExternalCommand('external-cmd', externalCommand);
+      const ok0 = await shell.registerExternalCommand({
+        name: 'external-cmd',
+        command: externalCommand
+      });
+      const ok1 = await shell.registerExternalCommand({
+        name: 'external-cmd',
+        command: externalCommand
+      });
       return [ok0, ok1];
     });
     expect(output[0]).toBeTruthy();
@@ -30,7 +40,7 @@ test.describe('external command', () => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand('external-cmd', externalCommand);
+      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
       await shell.inputLine('external-cmd stdout');
       return output.text;
     });
@@ -41,7 +51,7 @@ test.describe('external command', () => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand('external-cmd', externalCommand);
+      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
       await shell.inputLine('external-cmd stdout > out.txt');
       const out0 = output.textAndClear();
       await shell.inputLine('cat out.txt');
@@ -55,7 +65,7 @@ test.describe('external command', () => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand('external-cmd', externalCommand);
+      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
       await shell.inputLine('external-cmd stderr > out.txt');
       return output.text;
     });
@@ -66,7 +76,7 @@ test.describe('external command', () => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand('external-cmd', externalCommand);
+      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
       await shell.inputLine('external-cmd');
       output.clear();
       await shell.inputLine('env | grep ?');
@@ -85,7 +95,7 @@ test.describe('external command', () => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand('external-cmd', externalCommand);
+      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
       await shell.inputLine('external-cmd environment');
       output.clear();
       await shell.inputLine('env | grep TEST_VAR');
@@ -98,7 +108,7 @@ test.describe('external command', () => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand('external-cmd', externalCommand);
+      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
       await shell.inputLine('external-cmd name');
       return output.text;
     });
