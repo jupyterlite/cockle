@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.0-a2
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.0-a1...b42f7713c4f0aeda2e5bce1ca451191afe27f608))
+
+### Enhancements made
+
+- Use `IOptions` when `registerExternalCommand` [#183](https://github.com/jupyterlite/cockle/pull/183) ([@ianthomas23](https://github.com/ianthomas23))
+- Include command name in `IExternalContext` and `IJavaScriptContext` [#181](https://github.com/jupyterlite/cockle/pull/181) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Deploy on github pages [#182](https://github.com/jupyterlite/cockle/pull/182) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-05-28&to=2025-06-02&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-05-28..2025-06-02&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.0-a1
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.0-a0...0df33e9c5e9dcefb03b53605b21cf711b524f90a))
@@ -15,8 +36,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-05-27&to=2025-05-28&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-05-27..2025-05-28&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.0-a0
 
