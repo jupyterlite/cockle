@@ -11,12 +11,12 @@ import {
   ServiceWorkerMainIO,
   SharedArrayBufferMainIO
 } from './buffered_io';
-import { IExternalCommand } from './callback';
 import { IExternalContext } from './context';
 import { IShell } from './defs';
 import { IRemoteShell } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
 import { ExitCode } from './exit_code';
+import { IExternalCommand } from './external_command';
 import { ExternalOutput } from './io';
 
 /**
@@ -170,13 +170,14 @@ export abstract class BaseShell implements IShell {
     return this._ready.promise;
   }
 
-  async registerExternalCommand(name: string, command: IExternalCommand): Promise<boolean> {
+  async registerExternalCommand(options: IExternalCommand.IOptions): Promise<boolean> {
     if (this.isDisposed) {
       return false;
     }
 
     await this.ready;
 
+    const { name, command } = options;
     const success = await this._remote!.registerExternalCommand(name);
     if (success) {
       this._externalCommands.set(name, command);

@@ -72,7 +72,7 @@ export class Demo {
       }
     });
 
-    this._shell.registerExternalCommand('external-cmd', externalCommand);
+    this._shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
   }
 
   async start(): Promise<void> {
