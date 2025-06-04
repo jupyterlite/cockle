@@ -2,6 +2,45 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.0
+
+This release adds support for using a ServiceWorker to provide `stdin` whilst commands are running, as an alternative to the existing SharedArrayBuffer implementation. If running in the [terminal](https://github.com/jupyterlite/terminal) the ServiceWorker is provided by JupyterLite, alternatively the ServiceWorker implementation provided here can be used instead as shown in the `demo`. Use of a ServiceWorker means it is no longer necessary to serve `cockle` using cross-origin headers.
+
+If served with cross-origin headers both the SharedArrayBuffer and ServiceWorker `stdin` implementations will be available, with SharedArrayBuffer used by default. The user can switch between them at runtime using the shell command `cockle-config -s`.
+
+This release also adds experimental support for two new classes of command:
+
+- JavaScript command: runs in the WebWorker but the implementation is pure JavaScript, it does not include compiled WebAssembly.
+- External command: runs in the main UI thread, intended to access JupyterLite internals.
+
+Both of these are more limited than WebAssembly commands, and are labelled experimental as their APIs will definitely change.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/7050e0a96...4b9d69880c68a2c8267c41283aa09415692451a1))
+
+### Enhancements made
+
+- Use `IOptions` when `registerExternalCommand` [#183](https://github.com/jupyterlite/cockle/pull/183) ([@ianthomas23](https://github.com/ianthomas23))
+- Include command name in `IExternalContext` and `IJavaScriptContext` [#181](https://github.com/jupyterlite/cockle/pull/181) ([@ianthomas23](https://github.com/ianthomas23))
+- Terminal service worker support [#180](https://github.com/jupyterlite/cockle/pull/180) ([@ianthomas23](https://github.com/ianthomas23))
+- Add experimental support for external commands [#178](https://github.com/jupyterlite/cockle/pull/178) ([@ianthomas23](https://github.com/ianthomas23))
+- Keep a permanent IContext in ShellImpl, don't recreate for each command run [#175](https://github.com/jupyterlite/cockle/pull/175) ([@ianthomas23](https://github.com/ianthomas23))
+- Support use of ServiceWorker for synchronous stdin [#174](https://github.com/jupyterlite/cockle/pull/174) ([@ianthomas23](https://github.com/ianthomas23))
+- Rename input options shellId and baseUrl [#173](https://github.com/jupyterlite/cockle/pull/173) ([@ianthomas23](https://github.com/ianthomas23))
+- Shell id, and stored in static ShellManager [#172](https://github.com/jupyterlite/cockle/pull/172) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Prepare for v0.1.0 release [#184](https://github.com/jupyterlite/cockle/pull/184) ([@ianthomas23](https://github.com/ianthomas23))
+- Deploy on github pages [#182](https://github.com/jupyterlite/cockle/pull/182) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-04-22&to=2025-06-04&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-04-22..2025-06-04&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.0-a2
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.0-a1...b42f7713c4f0aeda2e5bce1ca451191afe27f608))
@@ -20,8 +59,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-05-28&to=2025-06-02&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-05-28..2025-06-02&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.0-a1
 
