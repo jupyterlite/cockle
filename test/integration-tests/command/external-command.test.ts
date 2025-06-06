@@ -1,4 +1,3 @@
-import { IExternalCommand } from '@jupyterlite/cockle';
 import { expect } from '@playwright/test';
 import { test } from '../utils';
 

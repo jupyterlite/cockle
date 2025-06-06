@@ -25,6 +25,7 @@ import { CommandModule } from './commands/command_module';
 import { CommandModuleLoader } from './commands/command_module_loader';
 import { CommandPackage } from './commands/command_package';
 import { CommandRegistry } from './commands/command_registry';
+import { joinURL } from './utils';
 
 /**
  * Shell implementation.
@@ -338,7 +339,7 @@ export class ShellImpl implements IShellWorker {
       return;
     }
     const module = await fsModule({
-      locateFile: (path: string) => wasmBaseUrl + 'cockle_fs/' + path
+      locateFile: (path: string) => joinURL(wasmBaseUrl, 'cockle_fs/' + path)
     });
     const { FS, PATH, ERRNO_CODES, PROXYFS } = module;
 
@@ -373,7 +374,7 @@ export class ShellImpl implements IShellWorker {
   }
 
   private async _initWasmPackages(): Promise<void> {
-    const url = this._options.wasmBaseUrl + 'cockle-config.json';
+    const url = joinURL(this._options.wasmBaseUrl, 'cockle-config.json');
     const response = await fetch(url);
     if (!response.ok) {
       // Would be nice to report this via the terminal.

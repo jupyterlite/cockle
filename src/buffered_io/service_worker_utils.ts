@@ -1,4 +1,5 @@
 import { IStdinReply, IStdinRequest } from './defs';
+import { joinURL } from '../utils';
 
 export enum AsyncOrSync {
   ASYNC = 0,
@@ -7,10 +8,12 @@ export enum AsyncOrSync {
 
 export class ServiceWorkerUtils {
   constructor(
-    readonly baseUrl: string,
+    baseUrl: string,
     readonly browsingContextId: string,
     readonly shellId: string
-  ) {}
+  ) {
+    this._url = joinURL(baseUrl, 'api/stdin/terminal');
+  }
 
   getStdin(timeoutMs: number): string {
     try {
@@ -44,8 +47,7 @@ export class ServiceWorkerUtils {
     test: boolean = false
   ): { xhr: XMLHttpRequest; msg: string } {
     const xhr = new XMLHttpRequest();
-    const url = new URL('/api/stdin/terminal', this.baseUrl).href;
-    xhr.open('POST', url, asyncOrSync === AsyncOrSync.ASYNC);
+    xhr.open('POST', this._url, asyncOrSync === AsyncOrSync.ASYNC);
     const data: IStdinRequest = { shellId: this.shellId, timeoutMs };
     if (test) {
       data['test'] = true;
@@ -65,4 +67,6 @@ export class ServiceWorkerUtils {
       throw new Error(`Invalid stdin response: ${reply}`);
     }
   }
+
+  private _url: string;
 }

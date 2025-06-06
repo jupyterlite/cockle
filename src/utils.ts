@@ -5,6 +5,15 @@ export async function delay(milliseconds: number = 10): Promise<void> {
 }
 
 /**
+ * Join a baseUrl to a path, ensuring there is exactly one slash at the join position.
+ */
+export function joinURL(baseUrl: string, path: string): string {
+  baseUrl = baseUrl.replace(/\/+$/, ''); // Remove trailing slashes.
+  path = path.replace(/^\/+/, ''); // Remove leading slashes.
+  return `${baseUrl}/${path}`;
+}
+
+/**
  * Find the longest string that starts all of the supplied strings.
  * startIndex is the index to start at, if you already know that the first startIndex characters
  * are identical.

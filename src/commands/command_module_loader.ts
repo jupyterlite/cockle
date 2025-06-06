@@ -2,6 +2,7 @@ import { CommandModuleCache } from './command_module_cache';
 import { IShellWorker } from '../defs_internal';
 import { IJavaScriptModule } from '../types/javascript_module';
 import { IWebAssemblyModule } from '../types/wasm_module';
+import { joinURL } from '../utils';
 
 /**
  * Loader of JavaScript/WebAssembly modules. Once loaded, a module is cached so that it is faster
@@ -42,7 +43,7 @@ export class CommandModuleLoader {
     if (module === undefined) {
       // Maybe should use @jupyterlab/coreutils.URLExt to combine URL components.
       const filename = this.cache.key(packageName, moduleName) + '.js';
-      const url = this.wasmBaseUrl + filename;
+      const url = joinURL(this.wasmBaseUrl, filename);
       console.log(`Cockle loading ${wasm ? 'WebAssembly' : 'JavaScript'} module from ${url}`);
 
       this.downloadModuleCallback(packageName, moduleName, true);
