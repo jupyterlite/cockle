@@ -23,7 +23,9 @@ export class ServiceWorkerWorkerIO extends WorkerIO implements IWorkerIO {
     if (!readable && timeoutMs > 0) {
       const chars = this._utils.getStdin(timeoutMs);
       this._postRead(chars);
-      readable = this._readBuffer.length > 0;
+      // If chars.length > 0 then there are characters to read, so readable is true.
+      // If chars.length === 0 then the call timed out, readable is true to request next poll().
+      readable = true;
     }
 
     // Constants.

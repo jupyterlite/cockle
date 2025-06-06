@@ -44,5 +44,5 @@ export interface IStdinRequest {
  */
 export interface IStdinReply {
   error?: string;
-  text?: string | null; // null means timeout reached before any input available.
+  text?: string; // An empty string means timeout reached before any input available.
 }

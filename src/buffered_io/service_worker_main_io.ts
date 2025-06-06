@@ -3,6 +3,7 @@ import { PromiseDelegate } from '@lumino/coreutils';
 import { IMainIO, IStdinReply, IStdinRequest } from './defs';
 import { MainIO } from './main';
 import { ServiceWorkerUtils } from './service_worker_utils';
+import { delay } from '../utils';
 
 export class ServiceWorkerMainIO extends MainIO implements IMainIO {
   constructor(baseUrl: string, browsingContextId: string, shellId: string) {
@@ -61,15 +62,10 @@ export class ServiceWorkerMainIO extends MainIO implements IMainIO {
       return { text };
     }
 
-    const stdinPromise = new PromiseDelegate<string | null>();
+    const stdinPromise = new PromiseDelegate<string>();
 
     if (timeoutMs > 0) {
-      const timeoutPromise = new Promise<null>(resolve => {
-        setTimeout(() => resolve(null), timeoutMs);
-      });
-      timeoutPromise.then(() => {
-        stdinPromise.resolve(null);
-      });
+      delay(timeoutMs).then(() => stdinPromise.resolve(''));
     }
 
     // Store stdinPromise so that it can be resolved by next push() call.
@@ -101,6 +97,6 @@ export class ServiceWorkerMainIO extends MainIO implements IMainIO {
   }
 
   private _readBuffer: string = '';
-  private _stdinPromise?: PromiseDelegate<string | null>;
+  private _stdinPromise?: PromiseDelegate<string>;
   private _utils: ServiceWorkerUtils;
 }
