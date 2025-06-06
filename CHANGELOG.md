@@ -2,6 +2,29 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.1
+
+This is a bug fix release to fix bugs in URLs and the use of ServiceWorker for `stdin`.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.0...d85122898fee1fd7ec69ed1dae85b522132d75e9))
+
+### Enhancements made
+
+- Add git2cpp to demo [#185](https://github.com/jupyterlite/cockle/pull/185) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Fix handling of timeout when vim uses service worker for stdin [#188](https://github.com/jupyterlite/cockle/pull/188) ([@ianthomas23](https://github.com/ianthomas23))
+- Join URLs correctly with a single slash between baseUrl and path [#187](https://github.com/jupyterlite/cockle/pull/187) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-06-04&to=2025-06-06&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-06-04..2025-06-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.0
 
 This release adds support for using a ServiceWorker to provide `stdin` whilst commands are running, as an alternative to the existing SharedArrayBuffer implementation. If running in the [terminal](https://github.com/jupyterlite/terminal) the ServiceWorker is provided by JupyterLite, alternatively the ServiceWorker implementation provided here can be used instead as shown in the `demo`. Use of a ServiceWorker means it is no longer necessary to serve `cockle` using cross-origin headers.
@@ -38,8 +61,6 @@ Both of these are more limited than WebAssembly commands, and are labelled exper
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-04-22&to=2025-06-04&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-04-22..2025-06-04&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.0-a2
 
