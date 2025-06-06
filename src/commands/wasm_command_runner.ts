@@ -5,6 +5,7 @@ import { FindCommandError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import type { MainModule } from '../types/wasm_module';
 import { ITermios } from '../termios';
+import { joinURL } from '../utils';
 
 export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
   constructor(readonly module: CommandModule) {
@@ -103,7 +104,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     const wasm = await wasmModule({
       thisProgram: cmdName,
       arguments: args,
-      locateFile: (path: string) => wasmBaseUrl + this.packageName + '/' + path,
+      locateFile: (path: string) => joinURL(wasmBaseUrl, this.packageName + '/' + path),
       onExit: (moduleExitCode: number) => setExitCode(moduleExitCode),
       quit: (moduleExitCode: number, toThrow: any) => setExitCode(moduleExitCode),
       preRun: [
