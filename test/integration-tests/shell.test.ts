@@ -504,7 +504,7 @@ test.describe('Shell', () => {
         expect(output).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
       });
 
-      test(`should support terminal stdin  via ${stdinOption} of an ansi escape sequence`, async ({
+      test(`should support terminal stdin via ${stdinOption} of an ansi escape sequence`, async ({
         page
       }) => {
         const output = await page.evaluate(async stdinOption => {
@@ -540,6 +540,29 @@ test.describe('Shell', () => {
         });
         expect(output[0]).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
         expect(output[1]).toMatch(/^wc\r\nde f {6}0 {7}2 {7}4\r\n/);
+      });
+
+      test(`should support terminal stdin with poll timeout via ${stdinOption}`, async ({
+        page
+      }) => {
+        // Test WorkerIO.poll(timeoutMs) using vim which uses a 4 second timeout.
+        const output = await page.evaluate(async stdinOption => {
+          const { delay, keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+          const { shell, output } = await shellSetupEmpty({
+            color: true,
+            stdinOption
+          });
+          const stdinWithDelay = async () => {
+            await terminalInput(shell, [...'iabc']);
+            await delay(4500); // Delay > 4 seconds to force timeout on poll() call.
+            await terminalInput(shell, [...('Zz' + keys.escape + ':wq out\r')]);
+          };
+          await Promise.all([shell.inputLine('vim'), stdinWithDelay()]);
+          output.clear();
+          await shell.inputLine('cat out');
+          return output.text;
+        });
+        expect(output).toMatch(/^cat out\r\nabcZz\r\n/);
       });
     });
   });
