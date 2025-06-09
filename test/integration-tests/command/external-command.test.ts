@@ -113,4 +113,43 @@ test.describe('external command', () => {
     });
     expect(output).toMatch('\r\nexternal-cmd\r\n');
   });
+
+  test('should read from pipe', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { externalCommand, shellSetupSimple } = globalThis.cockle;
+      const { shell, output } = await shellSetupSimple();
+      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
+      await shell.inputLine('cat file2 | external-cmd stdin');
+      return output.text;
+    });
+    expect(output).toMatch(/^cat file2 | external-cmd stdin\r\nSOME OTHER FILE\r\nSECOND LINE\r\n/);
+  });
+
+  test('should read from file', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { externalCommand, shellSetupSimple } = globalThis.cockle;
+      const { shell, output } = await shellSetupSimple();
+      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
+      await shell.inputLine('external-cmd stdin < file2');
+      return output.text;
+    });
+    expect(output).toMatch(/^external-cmd stdin < file2\r\nSOME OTHER FILE\r\nSECOND LINE\r\n/);
+  });
+
+  const stdinOptions = ['sab', 'sw'];
+  stdinOptions.forEach(stdinOption => {
+    test(`should read from stdin via ${stdinOption}`, async ({ page }) => {
+      const output = await page.evaluate(async stdinOption => {
+        const { externalCommand, keys, shellSetupEmpty } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ stdinOption });
+        await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
+        await Promise.all([
+          shell.inputLine('external-cmd stdin'),
+          globalThis.cockle.terminalInput(shell, ['a', 'B', ' ', 'c', keys.EOT])
+        ]);
+        return output.text;
+      });
+      expect(output).toMatch(/^external-cmd stdin\r\naABB {2}cC\r\n/);
+    });
+  });
 });

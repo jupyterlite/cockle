@@ -10,6 +10,7 @@ export interface ICallExternalCommand {
     name: string,
     args: string[],
     environment: Map<string, string>,
+    stdinIsTerminal: boolean,
     stdoutSupportsAnsiEscapes: boolean,
     stderrSupportsAnsiEscapes: boolean
   ): Promise<{ exitCode: number; newEnvironment?: Map<string, string> }>;

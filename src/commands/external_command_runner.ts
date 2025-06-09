@@ -27,11 +27,12 @@ export class ExternalCommandRunner implements ICommandRunner {
       throw new FindCommandError(cmdName);
     }
 
-    const { args, environment, stdout, stderr } = context;
+    const { args, environment, stdin, stdout, stderr } = context;
     const { exitCode, newEnvironment } = await this.callExternalCommand(
       this.name,
       args,
       environment,
+      stdin.isTerminal(),
       stdout.supportsAnsiEscapes(),
       stderr.supportsAnsiEscapes()
     );

@@ -2,6 +2,7 @@ export * from './buffered_output';
 export * from './console_output';
 export * from './dummy_input';
 export * from './dummy_output';
+export * from './external_input';
 export * from './external_output';
 export * from './file_input';
 export * from './file_output';

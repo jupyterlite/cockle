@@ -25,6 +25,7 @@ interface IOptionsCommon {
 }
 
 interface IShellCommon {
+  externalInput(maxChars: number | null): Promise<string>;
   externalOutput(text: string, isStderr: boolean): void;
   input(char: string): Promise<void>;
   setSize(rows: number, columns: number): Promise<void>;
