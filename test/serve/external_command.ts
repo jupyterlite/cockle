@@ -1,4 +1,4 @@
-import { IExternalContext } from '@jupyterlite/cockle';
+import { ExitCode, IExternalContext } from '@jupyterlite/cockle';
 
 // External command with different bahaviour depending on supplied args, to test
 // external command functionality.
@@ -22,8 +22,22 @@ export async function externalCommand(context: IExternalContext): Promise<number
     context.stderr.write('Error message\n');
   }
 
-  if (args.includes('exitCode')) {
-    return 1;
+  if (args.includes('stdin')) {
+    // Read until EOT, echoing back as upper case.
+    const { stdin, stdout } = context;
+    let stop = false;
+    while (!stop) {
+      const chars = await stdin.readAsync(null);
+      if (chars.length === 0 || chars.endsWith('\x04')) {
+        stop = true;
+      } else {
+        stdout.write(chars.toUpperCase());
+      }
+    }
   }
-  return 0;
+
+  if (args.includes('exitCode')) {
+    return ExitCode.GENERAL_ERROR;
+  }
+  return ExitCode.SUCCESS;
 }

@@ -17,7 +17,7 @@ import { IRemoteShell } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
 import { ExitCode } from './exit_code';
 import { IExternalCommand } from './external_command';
-import { ExternalOutput } from './io';
+import { ExternalInput, ExternalOutput } from './io';
 
 /**
  * Abstract base class for Shell that external libraries use.
@@ -50,6 +50,7 @@ export abstract class BaseShell implements IShell {
     name: string,
     args: string[],
     environment: Map<string, string>,
+    stdinIsTerminal: boolean,
     stdoutSupportsAnsiEscapes: boolean,
     stderrSupportsAnsiEscapes: boolean
   ): Promise<{ exitCode: number; newEnvironment?: Map<string, string> }> {
@@ -59,6 +60,10 @@ export abstract class BaseShell implements IShell {
       return { exitCode: ExitCode.CANNOT_FIND_COMMAND };
     }
 
+    const stdin = new ExternalInput(
+      maxChars => this._remote!.externalInput(maxChars),
+      stdinIsTerminal
+    );
     const stdout = new ExternalOutput(
       text => this._remote!.externalOutput(text, false),
       stdoutSupportsAnsiEscapes
@@ -72,6 +77,7 @@ export abstract class BaseShell implements IShell {
       name,
       args,
       environment,
+      stdin,
       stdout,
       stderr
     };

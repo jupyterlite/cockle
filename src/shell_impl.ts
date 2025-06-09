@@ -73,6 +73,11 @@ export class ShellImpl implements IShellWorker {
     return this._context.environment;
   }
 
+  async externalInput(maxChars: number | null): Promise<string> {
+    const chars = await this._context.stdin.readAsync(maxChars);
+    return String.fromCharCode(...chars);
+  }
+
   externalOutput(text: string, isStderr: boolean): void {
     // Pass output from an external command to the current IOutput.
     const output: IOutput = isStderr ? this._context.stderr : this._context.stdout;
