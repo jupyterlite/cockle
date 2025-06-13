@@ -161,15 +161,21 @@ export class ShellImpl implements IShellWorker {
     const { environment } = this;
 
     if (rows >= 1) {
-      environment.set('LINES', rows.toString());
+      const rowsString = rows.toString();
+      environment.set('LINES', rowsString);
+      environment.set('LESS_LINES', rowsString);
     } else {
       environment.delete('LINES');
+      environment.delete('LESS_LINES');
     }
 
     if (columns >= 1) {
-      environment.set('COLUMNS', columns.toString());
+      const columnsString = columns.toString();
+      environment.set('COLUMNS', columnsString);
+      environment.set('LESS_COLUMNS', columnsString);
     } else {
       environment.delete('COLUMNS');
+      environment.delete('LESS_COLUMNS');
     }
   }
 

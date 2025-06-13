@@ -169,7 +169,7 @@ test.describe('Shell', () => {
 
     test('should include aliases', async ({ page }) => {
       expect(await shellInputsSimple(page, ['l', '\t'])).toMatch(
-        /^l\r\nll {9}ln {9}local-cmd {2}logname {4}ls {9}lua\r\n/
+        /^l\r\nless {7}ll {9}ln {9}local-cmd {2}logname {4}ls {9}lua\r\n/
       );
     });
 
@@ -305,9 +305,11 @@ test.describe('Shell', () => {
         ret.push(output.textAndClear());
         return ret;
       });
-      expect(output[0]).toMatch('\r\nLINES=10\r\nCOLUMNS=44\r\n');
-      expect(output[1]).toMatch('\r\nCOLUMNS=45\r\n');
-      expect(output[2]).toMatch('\r\nLINES=14\r\n');
+      expect(output[0]).toMatch(
+        '\r\nLINES=10\r\nLESS_LINES=10\r\nCOLUMNS=44\r\nLESS_COLUMNS=44\r\n'
+      );
+      expect(output[1]).toMatch('\r\nCOLUMNS=45\r\nLESS_COLUMNS=45\r\n');
+      expect(output[2]).toMatch('\r\nLINES=14\r\nLESS_LINES=14\r\n');
     });
   });
 
