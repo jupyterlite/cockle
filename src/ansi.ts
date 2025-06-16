@@ -4,6 +4,10 @@
 
 const ESC = '\x1B[';
 
+function clamp(n: number): number {
+  return Math.min(Math.max(Math.round(n), 0), 255);
+}
+
 export const ansi = {
   cursorUp: (count = 1) => (count > 0 ? ESC + count + 'A' : ''),
   cursorDown: (count = 1) => (count > 0 ? ESC + count + 'B' : ''),
@@ -15,6 +19,11 @@ export const ansi = {
   eraseSavedLines: ESC + '3J',
   eraseEndLine: ESC + 'K',
   eraseStartLine: ESC + '1K',
+
+  styleRGB: (r: number, g: number, b: number, foreground: boolean = true) => {
+    const code = foreground ? '38' : '48';
+    return `${ESC}${code};2;${clamp(r)};${clamp(g)};${clamp(b)}m`;
+  },
 
   styleReset: ESC + '1;0m',
   styleBoldRed: ESC + '1;31m',
