@@ -1,4 +1,4 @@
-import { ExitCode, IExternalContext, IShell, Shell } from '@jupyterlite/cockle';
+import { ansi, ExitCode, IExternalContext, IShell, Shell } from '@jupyterlite/cockle';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { IDemo } from './defs';
@@ -21,6 +21,17 @@ async function externalCommand(context: IExternalContext): Promise<number> {
 
   if (args.includes('stderr')) {
     context.stderr.write('Error message\n');
+  }
+
+  if (args.includes('color')) {
+    for (let j = 0; j < 16; j++) {
+      let line = '';
+      for (let i = 0; i < 32; i++) {
+        const rgb = ansi.styleRGB((i + 1) * 8 - 1, 128, (j + 1) * 16 - 1);
+        line += rgb + String.fromCharCode(65 + i) + ansi.styleReset;
+      }
+      context.stdout.write(line + '\n');
+    }
   }
 
   if (args.includes('stdin')) {
