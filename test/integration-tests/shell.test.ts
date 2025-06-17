@@ -568,4 +568,38 @@ test.describe('Shell', () => {
       });
     });
   });
+
+  test.describe('constructor options', () => {
+    test('should support setting aliases', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const aliases = { my_alias: 'target --something' };
+        const { output, shell } = await globalThis.cockle.shellSetupEmpty({ aliases });
+        await shell.inputLine('alias my_alias');
+        return output.text;
+      });
+      expect(output).toMatch(/^alias my_alias\r\nmy_alias='target --something'\r\n/);
+    });
+
+    test('should support setting environment variables', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const environment = { ABC: 'some_value' };
+        const { output, shell } = await globalThis.cockle.shellSetupEmpty({ environment });
+        await shell.inputLine('env | grep ABC');
+        return output.text;
+      });
+      expect(output).toMatch(/^env | grep ABC'\r\nABC=some_value\r\n/);
+    });
+
+    test('should support deleting environment variables', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const environment = { PS1: null };
+        const { output, shell } = await globalThis.cockle.shellSetupEmpty({ environment });
+        await shell.inputLine('env | grep PS1');
+        await shell.inputLine('env | grep ?');
+        return output.text;
+      });
+      // Test error code for 'env | grep PS1'
+      expect(output).toMatch('env | grep ?\r\n?=1\r\n');
+    });
+  });
 });

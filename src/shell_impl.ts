@@ -47,7 +47,7 @@ export class ShellImpl implements IShellWorker {
       mountpoint: options.mountpoint ?? '/drive'
     };
 
-    // Content within which commands are run,
+    // Content within which commands are run.
     this._context = {
       args: [],
       fileSystem: this._fileSystem,
@@ -64,6 +64,21 @@ export class ShellImpl implements IShellWorker {
       stdinContext: options.stdinContext
     };
 
+    // Aliases.
+    Object.entries(options.aliases).forEach(([name, value]) =>
+      this._context.aliases.set(name, value)
+    );
+
+    // Environment variables.
+    Object.entries(options.environment).forEach(([name, value]) => {
+      if (value === null) {
+        this._context.environment.delete(name);
+      } else {
+        this._context.environment.set(name, value);
+      }
+    });
+
+    // External commands.
     options.externalCommandNames.forEach(name =>
       this._context.commandRegistry.registerExternalCommand(name)
     );

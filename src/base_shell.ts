@@ -262,6 +262,8 @@ export abstract class BaseShell implements IShell {
         wasmBaseUrl: options.wasmBaseUrl,
         baseUrl: options.baseUrl,
         browsingContextId: options.browsingContextId,
+        aliases: options.aliases ?? {},
+        environment: options.environment ?? {},
         externalCommandNames: options.externalCommands?.map(x => x.name) ?? [],
         sharedArrayBuffer,
         supportsServiceWorker,

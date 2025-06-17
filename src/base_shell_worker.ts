@@ -59,6 +59,8 @@ export abstract class BaseShellWorker implements IShellWorker {
       baseUrl: options.baseUrl,
       wasmBaseUrl: options.wasmBaseUrl,
       browsingContextId: options.browsingContextId,
+      aliases: options.aliases,
+      environment: options.environment,
       externalCommandNames: options.externalCommandNames,
       initialDirectories: options.initialDirectories,
       initialFiles: options.initialFiles,
