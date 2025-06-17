@@ -176,21 +176,6 @@ export abstract class BaseShell implements IShell {
     return this._ready.promise;
   }
 
-  async registerExternalCommand(options: IExternalCommand.IOptions): Promise<boolean> {
-    if (this.isDisposed) {
-      return false;
-    }
-
-    await this.ready;
-
-    const { name, command } = options;
-    const success = await this._remote!.registerExternalCommand(name);
-    if (success) {
-      this._externalCommands.set(name, command);
-    }
-    return success;
-  }
-
   async setSize(rows: number, columns: number): Promise<void> {
     if (this.isDisposed) {
       return;
@@ -253,6 +238,11 @@ export abstract class BaseShell implements IShell {
 
     this._mainIO = this._sharedArrayBufferMainIO ?? this._serviceWorkerMainIO;
 
+    // Register external commands here, the names are passed through to the WebWorker.
+    this.options.externalCommands?.forEach(cmd =>
+      this._externalCommands.set(cmd.name, cmd.command)
+    );
+
     this._worker = this.initWorker(this.options);
     this._initRemote(this.options).then(this._ready.resolve.bind(this._ready));
   }
@@ -272,6 +262,7 @@ export abstract class BaseShell implements IShell {
         wasmBaseUrl: options.wasmBaseUrl,
         baseUrl: options.baseUrl,
         browsingContextId: options.browsingContextId,
+        externalCommandNames: options.externalCommands?.map(x => x.name) ?? [],
         sharedArrayBuffer,
         supportsServiceWorker,
         initialDirectories: options.initialDirectories,
