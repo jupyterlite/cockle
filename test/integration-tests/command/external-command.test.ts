@@ -81,6 +81,43 @@ test.describe('external command', () => {
     expect(output).toMatch('\r\nTEST_VAR=23\r\n');
   });
 
+  test('should change environment variable', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { externalCommand, shellSetupEmpty } = globalThis.cockle;
+      const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
+      const { shell, output } = await shellSetupEmpty({ externalCommands });
+      await shell.inputLine('export TEST_VAR=999');
+      output.clear();
+      await shell.inputLine('env | grep TEST_VAR');
+      const ret0 = output.textAndClear();
+      await shell.inputLine('external-cmd environment');
+      output.clear();
+      await shell.inputLine('env | grep TEST_VAR');
+      return [ret0, output.text];
+    });
+    expect(output[0]).toMatch('\r\nTEST_VAR=999\r\n');
+    expect(output[1]).toMatch('\r\nTEST_VAR=23\r\n');
+  });
+
+  test('should delete environment variable', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { externalCommand, shellSetupEmpty } = globalThis.cockle;
+      const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
+      const { shell, output } = await shellSetupEmpty({ externalCommands });
+      await shell.inputLine('export TEST_VAR2=9876');
+      output.clear();
+      await shell.inputLine('env | grep TEST_VAR2');
+      const ret0 = output.textAndClear();
+      await shell.inputLine('external-cmd environment');
+      output.clear();
+      await shell.inputLine('env | grep TEST_VAR2');
+      await shell.inputLine('env | grep ?'); // Check error code
+      return [ret0, output.text];
+    });
+    expect(output[0]).toMatch('\r\nTEST_VAR2=9876\r\n');
+    expect(output[1]).toMatch('\r\n?=1\r\n');
+  });
+
   test('should be passed command name', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;

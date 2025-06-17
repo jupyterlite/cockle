@@ -9,6 +9,7 @@ export { IShell, IShellManager } from './defs';
 export { IDriveFSOptions } from './drive_fs';
 export * from './exit_code';
 export { IExternalCommand } from './external_command';
+export { ExternalEnvironment } from './external_environment';
 export { IFileSystem } from './file_system';
 export * from './io';
 export { parse } from './parse';

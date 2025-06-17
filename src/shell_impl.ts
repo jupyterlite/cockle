@@ -71,7 +71,7 @@ export class ShellImpl implements IShellWorker {
 
     // Environment variables.
     Object.entries(options.environment).forEach(([name, value]) => {
-      if (value === null) {
+      if (value === undefined) {
         this._context.environment.delete(name);
       } else {
         this._context.environment.set(name, value);

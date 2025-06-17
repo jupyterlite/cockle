@@ -20,7 +20,7 @@ interface IOptionsCommon {
   wasmBaseUrl: string;
   browsingContextId?: string;
   aliases: { [key: string]: string };
-  environment: { [key: string]: string | null };
+  environment: { [key: string]: string | undefined };
   externalCommandNames: string[];
 
   // Initial directories and files to create, for testing purposes.

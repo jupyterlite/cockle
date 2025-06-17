@@ -8,6 +8,7 @@ async function externalCommand(context: IExternalContext): Promise<number> {
 
   if (args.includes('environment')) {
     context.environment.set('TEST_VAR', '23');
+    context.environment.delete('TEST_VAR2');
   }
 
   if (args.includes('name')) {
