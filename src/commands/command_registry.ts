@@ -67,12 +67,9 @@ export class CommandRegistry {
     }
   }
 
-  registerExternalCommand(name: string): boolean {
-    if (this._map.has(name)) {
-      return false;
-    }
+  registerExternalCommand(name: string): void {
+    // Overwrite if name already registered.
     this._map.set(name, new ExternalCommandRunner(name, this.callExternalCommand));
-    return true;
   }
 
   /**

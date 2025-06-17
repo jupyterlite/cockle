@@ -44,7 +44,7 @@ export interface IShellWorker extends IShellCommon {
     setMainIOCallback: IShellWorker.IProxySetMainIOCallback,
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ): void;
-  registerExternalCommand(name: string): boolean;
+  registerExternalCommand(name: string): void;
 }
 
 export namespace IShellWorker {

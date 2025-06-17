@@ -6,7 +6,7 @@ import { IExternalCommand } from './external_command';
 
 export interface IShell extends IObservableDisposable {
   input(char: string): Promise<void>;
-  registerExternalCommand(options: IExternalCommand.IOptions): Promise<boolean>;
+  registerExternalCommand(options: IExternalCommand.IOptions): Promise<void>;
   setSize(rows: number, columns: number): Promise<void>;
   shellId: string;
   start(): Promise<void>;

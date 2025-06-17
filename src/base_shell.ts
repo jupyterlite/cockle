@@ -176,19 +176,16 @@ export abstract class BaseShell implements IShell {
     return this._ready.promise;
   }
 
-  async registerExternalCommand(options: IExternalCommand.IOptions): Promise<boolean> {
+  async registerExternalCommand(options: IExternalCommand.IOptions): Promise<void> {
     if (this.isDisposed) {
-      return false;
+      return;
     }
 
     await this.ready;
 
     const { name, command } = options;
-    const success = await this._remote!.registerExternalCommand(name);
-    if (success) {
-      this._externalCommands.set(name, command);
-    }
-    return success;
+    await this._remote!.registerExternalCommand(name);
+    this._externalCommands.set(name, command);
   }
 
   async setSize(rows: number, columns: number): Promise<void> {

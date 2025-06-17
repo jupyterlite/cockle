@@ -6,33 +6,32 @@ test.describe('external command', () => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty();
-      const ok = await shell.registerExternalCommand({
+      await shell.registerExternalCommand({
         name: 'external-cmd',
         command: externalCommand
       });
       await shell.inputLine('cockle-config -c');
-      return [ok, output.text];
+      return output.text;
     });
-    expect(output[0]).toBeTruthy();
-    expect(output[1]).toMatch('│ external-cmd  │ <external>');
+    expect(output).toMatch('│ external-cmd  │ <external>');
   });
 
-  test('should fail when re-register same name', async ({ page }) => {
+  test('should succeed when re-register same name', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
-      const { shell } = await shellSetupEmpty();
-      const ok0 = await shell.registerExternalCommand({
+      const { shell, output } = await shellSetupEmpty();
+      await shell.registerExternalCommand({
         name: 'external-cmd',
         command: externalCommand
       });
-      const ok1 = await shell.registerExternalCommand({
+      await shell.registerExternalCommand({
         name: 'external-cmd',
         command: externalCommand
       });
-      return [ok0, ok1];
+      await shell.inputLine('cockle-config -c');
+      return output.text;
     });
-    expect(output[0]).toBeTruthy();
-    expect(output[1]).toBeFalsy();
+    expect(output).toMatch('│ external-cmd  │ <external>');
   });
 
   test('should write to stdout', async ({ page }) => {

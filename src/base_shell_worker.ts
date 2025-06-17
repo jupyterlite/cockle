@@ -105,11 +105,10 @@ export abstract class BaseShellWorker implements IShellWorker {
     }
   }
 
-  registerExternalCommand(name: string): boolean {
+  registerExternalCommand(name: string): void {
     if (this._shellImpl) {
-      return this._shellImpl!.registerExternalCommand(name);
+      this._shellImpl!.registerExternalCommand(name);
     }
-    return false;
   }
 
   async setSize(rows: number, columns: number): Promise<void> {

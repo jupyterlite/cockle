@@ -153,8 +153,8 @@ export class ShellImpl implements IShellWorker {
     this._context.workerIO.write(text);
   }
 
-  registerExternalCommand(name: string): boolean {
-    return this._context.commandRegistry.registerExternalCommand(name);
+  registerExternalCommand(name: string): void {
+    this._context.commandRegistry.registerExternalCommand(name);
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
