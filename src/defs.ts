@@ -20,6 +20,8 @@ export namespace IShell {
     wasmBaseUrl: string;
     browsingContextId?: string;
     shellManager?: IShellManager; // If specified, register this shell with shellManager
+    aliases?: { [key: string]: string };
+    environment?: { [key: string]: string | null };
     externalCommands?: IExternalCommand.IOptions[];
 
     // Initial directories and files to create, for testing purposes.
