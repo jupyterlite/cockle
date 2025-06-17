@@ -1,4 +1,4 @@
-import { IShell, Shell, ShellManager } from '@jupyterlite/cockle';
+import { IExternalCommand, IShell, Shell, ShellManager } from '@jupyterlite/cockle';
 import { MockTerminalOutput } from './output_setup';
 
 export interface IShellSetup {
@@ -8,6 +8,7 @@ export interface IShellSetup {
 
 export interface IOptions {
   color?: boolean;
+  externalCommands?: IExternalCommand.IOptions[];
   initialDirectories?: string[];
   initialFiles?: IShell.IFiles;
   shellId?: string;
@@ -59,7 +60,7 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
   }
 
   const baseUrl = 'http://localhost:8000/';
-  const { shellId, stdinOption } = options;
+  const { externalCommands, shellId, stdinOption } = options;
   let { shellManager } = options;
   if (stdinOption !== undefined && shellManager === undefined) {
     shellManager = new ShellManager();
@@ -76,6 +77,7 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
     baseUrl,
     wasmBaseUrl: baseUrl,
     browsingContextId,
+    externalCommands,
     shellId,
     shellManager,
     initialDirectories,

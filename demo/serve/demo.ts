@@ -79,6 +79,7 @@ export class Demo {
       wasmBaseUrl: baseUrl,
       outputCallback: this.outputCallback.bind(this),
       shellManager,
+      externalCommands: [{ name: 'external-cmd', command: externalCommand }],
       initialDirectories: ['dir'],
       initialFiles: {
         'file.txt': 'This is the contents of the file',
@@ -96,8 +97,6 @@ export class Demo {
           'print(factorial(tonumber(arg[1])))\n'
       }
     });
-
-    this._shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
   }
 
   async start(): Promise<void> {

@@ -59,6 +59,7 @@ export abstract class BaseShellWorker implements IShellWorker {
       baseUrl: options.baseUrl,
       wasmBaseUrl: options.wasmBaseUrl,
       browsingContextId: options.browsingContextId,
+      externalCommandNames: options.externalCommandNames,
       initialDirectories: options.initialDirectories,
       initialFiles: options.initialFiles,
       callExternalCommand,
@@ -103,13 +104,6 @@ export abstract class BaseShellWorker implements IShellWorker {
     if (this._shellImpl) {
       await this._shellImpl.input(char);
     }
-  }
-
-  registerExternalCommand(name: string): boolean {
-    if (this._shellImpl) {
-      return this._shellImpl!.registerExternalCommand(name);
-    }
-    return false;
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
