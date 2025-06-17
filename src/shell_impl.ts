@@ -63,6 +63,10 @@ export class ShellImpl implements IShellWorker {
       commandModuleCache: this._commandModuleLoader.cache,
       stdinContext: options.stdinContext
     };
+
+    options.externalCommandNames.forEach(name =>
+      this._context.commandRegistry.registerExternalCommand(name)
+    );
   }
 
   get aliases(): Aliases {
@@ -151,10 +155,6 @@ export class ShellImpl implements IShellWorker {
       return;
     }
     this._context.workerIO.write(text);
-  }
-
-  registerExternalCommand(name: string): void {
-    this._context.commandRegistry.registerExternalCommand(name);
   }
 
   async setSize(rows: number, columns: number): Promise<void> {

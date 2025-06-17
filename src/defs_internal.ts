@@ -19,6 +19,8 @@ interface IOptionsCommon {
   baseUrl: string;
   wasmBaseUrl: string;
   browsingContextId?: string;
+  externalCommandNames: string[];
+
   // Initial directories and files to create, for testing purposes.
   initialDirectories?: string[];
   initialFiles?: IShell.IFiles;
@@ -44,7 +46,6 @@ export interface IShellWorker extends IShellCommon {
     setMainIOCallback: IShellWorker.IProxySetMainIOCallback,
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ): void;
-  registerExternalCommand(name: string): void;
 }
 
 export namespace IShellWorker {

@@ -6,7 +6,6 @@ import { IExternalCommand } from './external_command';
 
 export interface IShell extends IObservableDisposable {
   input(char: string): Promise<void>;
-  registerExternalCommand(options: IExternalCommand.IOptions): Promise<void>;
   setSize(rows: number, columns: number): Promise<void>;
   shellId: string;
   start(): Promise<void>;
@@ -21,6 +20,7 @@ export namespace IShell {
     wasmBaseUrl: string;
     browsingContextId?: string;
     shellManager?: IShellManager; // If specified, register this shell with shellManager
+    externalCommands?: IExternalCommand.IOptions[];
 
     // Initial directories and files to create, for testing purposes.
     initialDirectories?: string[];

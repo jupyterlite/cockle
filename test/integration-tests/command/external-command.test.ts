@@ -5,29 +5,8 @@ test.describe('external command', () => {
   test('should register', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
-      const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand({
-        name: 'external-cmd',
-        command: externalCommand
-      });
-      await shell.inputLine('cockle-config -c');
-      return output.text;
-    });
-    expect(output).toMatch('│ external-cmd  │ <external>');
-  });
-
-  test('should succeed when re-register same name', async ({ page }) => {
-    const output = await page.evaluate(async () => {
-      const { externalCommand, shellSetupEmpty } = globalThis.cockle;
-      const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand({
-        name: 'external-cmd',
-        command: externalCommand
-      });
-      await shell.registerExternalCommand({
-        name: 'external-cmd',
-        command: externalCommand
-      });
+      const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
+      const { shell, output } = await shellSetupEmpty({ externalCommands });
       await shell.inputLine('cockle-config -c');
       return output.text;
     });
@@ -37,8 +16,8 @@ test.describe('external command', () => {
   test('should write to stdout', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
-      const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
+      const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
+      const { shell, output } = await shellSetupEmpty({ externalCommands });
       await shell.inputLine('external-cmd stdout');
       return output.text;
     });
@@ -48,8 +27,8 @@ test.describe('external command', () => {
   test('should write to file', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
-      const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
+      const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
+      const { shell, output } = await shellSetupEmpty({ externalCommands });
       await shell.inputLine('external-cmd stdout > out.txt');
       const out0 = output.textAndClear();
       await shell.inputLine('cat out.txt');
@@ -62,8 +41,8 @@ test.describe('external command', () => {
   test('should write to stderr', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
-      const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
+      const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
+      const { shell, output } = await shellSetupEmpty({ externalCommands });
       await shell.inputLine('external-cmd stderr > out.txt');
       return output.text;
     });
@@ -73,8 +52,8 @@ test.describe('external command', () => {
   test('should return exit code', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
-      const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
+      const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
+      const { shell, output } = await shellSetupEmpty({ externalCommands });
       await shell.inputLine('external-cmd');
       output.clear();
       await shell.inputLine('env | grep ?');
@@ -92,8 +71,8 @@ test.describe('external command', () => {
   test('should set new environment variable', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
-      const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
+      const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
+      const { shell, output } = await shellSetupEmpty({ externalCommands });
       await shell.inputLine('external-cmd environment');
       output.clear();
       await shell.inputLine('env | grep TEST_VAR');
@@ -105,8 +84,8 @@ test.describe('external command', () => {
   test('should be passed command name', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
-      const { shell, output } = await shellSetupEmpty();
-      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
+      const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
+      const { shell, output } = await shellSetupEmpty({ externalCommands });
       await shell.inputLine('external-cmd name');
       return output.text;
     });
@@ -116,8 +95,8 @@ test.describe('external command', () => {
   test('should read from pipe', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupSimple } = globalThis.cockle;
-      const { shell, output } = await shellSetupSimple();
-      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
+      const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
+      const { shell, output } = await shellSetupSimple({ externalCommands });
       await shell.inputLine('cat file2 | external-cmd stdin');
       return output.text;
     });
@@ -127,8 +106,8 @@ test.describe('external command', () => {
   test('should read from file', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { externalCommand, shellSetupSimple } = globalThis.cockle;
-      const { shell, output } = await shellSetupSimple();
-      await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
+      const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
+      const { shell, output } = await shellSetupSimple({ externalCommands });
       await shell.inputLine('external-cmd stdin < file2');
       return output.text;
     });
@@ -140,8 +119,8 @@ test.describe('external command', () => {
     test(`should read from stdin via ${stdinOption}`, async ({ page }) => {
       const output = await page.evaluate(async stdinOption => {
         const { externalCommand, keys, shellSetupEmpty } = globalThis.cockle;
-        const { shell, output } = await shellSetupEmpty({ stdinOption });
-        await shell.registerExternalCommand({ name: 'external-cmd', command: externalCommand });
+        const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
+        const { shell, output } = await shellSetupEmpty({ externalCommands, stdinOption });
         await Promise.all([
           shell.inputLine('external-cmd stdin'),
           globalThis.cockle.terminalInput(shell, ['a', 'B', ' ', 'c', keys.EOT])
