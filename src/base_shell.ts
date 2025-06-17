@@ -17,6 +17,7 @@ import { IRemoteShell } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
 import { ExitCode } from './exit_code';
 import { IExternalCommand } from './external_command';
+import { ExternalEnvironment } from './external_environment';
 import { ExternalInput, ExternalOutput } from './io';
 
 /**
@@ -49,17 +50,18 @@ export abstract class BaseShell implements IShell {
   async callExternalCommand(
     name: string,
     args: string[],
-    environment: Map<string, string>,
+    environment: { [key: string]: string },
     stdinIsTerminal: boolean,
     stdoutSupportsAnsiEscapes: boolean,
     stderrSupportsAnsiEscapes: boolean
-  ): Promise<{ exitCode: number; newEnvironment?: Map<string, string> }> {
+  ): Promise<{ exitCode: number; environmentChanges?: { [key: string]: string | undefined } }> {
     const command = this._externalCommands.get(name);
     if (command === undefined) {
       // This should not happen unless the command has not been registered properly.
       return { exitCode: ExitCode.CANNOT_FIND_COMMAND };
     }
 
+    const externalEnvironment = new ExternalEnvironment(Object.entries(environment));
     const stdin = new ExternalInput(
       maxChars => this._remote!.externalInput(maxChars),
       stdinIsTerminal
@@ -76,13 +78,13 @@ export abstract class BaseShell implements IShell {
     const context: IExternalContext = {
       name,
       args,
-      environment,
+      environment: externalEnvironment,
       stdin,
       stdout,
       stderr
     };
     const exitCode = await command(context);
-    return { exitCode, newEnvironment: environment };
+    return { exitCode, environmentChanges: externalEnvironment.changed };
   }
 
   dispose(): void {

@@ -28,24 +28,24 @@ export class ExternalCommandRunner implements ICommandRunner {
     }
 
     const { args, environment, stdin, stdout, stderr } = context;
-    const { exitCode, newEnvironment } = await this.callExternalCommand(
+    const { exitCode, environmentChanges } = await this.callExternalCommand(
       this.name,
       args,
-      environment,
+      Object.fromEntries(environment),
       stdin.isTerminal(),
       stdout.supportsAnsiEscapes(),
       stderr.supportsAnsiEscapes()
     );
 
-    if (newEnvironment !== undefined) {
-      // Maybe should not return all of the environment, but only those keys that have changed.
-      // Do this by passing to command a wrapper of Map that stores what keys have changed via
-      // set() or delete()
-      for (const [key, value] of newEnvironment) {
-        environment.set(key, value);
-      }
+    if (environmentChanges !== undefined) {
+      Object.entries(environmentChanges).forEach(([name, value]) => {
+        if (value === undefined) {
+          environment.delete(name);
+        } else {
+          environment.set(name, value);
+        }
+      });
     }
-
     return exitCode;
   }
 }

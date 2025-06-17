@@ -9,11 +9,11 @@ export interface ICallExternalCommand {
   (
     name: string,
     args: string[],
-    environment: Map<string, string>,
+    environment: { [key: string]: string },
     stdinIsTerminal: boolean,
     stdoutSupportsAnsiEscapes: boolean,
     stderrSupportsAnsiEscapes: boolean
-  ): Promise<{ exitCode: number; newEnvironment?: Map<string, string> }>;
+  ): Promise<{ exitCode: number; environmentChanges?: { [key: string]: string | undefined } }>;
 }
 
 /**
