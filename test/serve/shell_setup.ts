@@ -8,6 +8,8 @@ export interface IShellSetup {
 
 export interface IOptions {
   color?: boolean;
+  aliases?: { [key: string]: string };
+  environment?: { [key: string]: string | null };
   externalCommands?: IExternalCommand.IOptions[];
   initialDirectories?: string[];
   initialFiles?: IShell.IFiles;
@@ -60,7 +62,7 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
   }
 
   const baseUrl = 'http://localhost:8000/';
-  const { externalCommands, shellId, stdinOption } = options;
+  const { aliases, environment, externalCommands, shellId, stdinOption } = options;
   let { shellManager } = options;
   if (stdinOption !== undefined && shellManager === undefined) {
     shellManager = new ShellManager();
@@ -77,6 +79,8 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
     baseUrl,
     wasmBaseUrl: baseUrl,
     browsingContextId,
+    aliases,
+    environment,
     externalCommands,
     shellId,
     shellManager,
