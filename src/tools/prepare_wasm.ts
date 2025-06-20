@@ -52,7 +52,7 @@ function getWasmPackageInfo(micromambaCmd: string, envPath: string): any {
 const COCKLE_WASM_EXTRA_CHANNEL = process.env.COCKLE_WASM_EXTRA_CHANNEL;
 if (COCKLE_WASM_EXTRA_CHANNEL !== undefined) {
   // Prepend so used first.
-  const extraChannels = COCKLE_WASM_EXTRA_CHANNEL.split(":")
+  const extraChannels = COCKLE_WASM_EXTRA_CHANNEL.split(':');
   CHANNELS.unshift(...extraChannels);
 }
 
