@@ -52,7 +52,8 @@ function getWasmPackageInfo(micromambaCmd: string, envPath: string): any {
 const COCKLE_WASM_EXTRA_CHANNEL = process.env.COCKLE_WASM_EXTRA_CHANNEL;
 if (COCKLE_WASM_EXTRA_CHANNEL !== undefined) {
   // Prepend so used first.
-  CHANNELS.unshift(COCKLE_WASM_EXTRA_CHANNEL);
+  const extraChannels = COCKLE_WASM_EXTRA_CHANNEL.split(':');
+  CHANNELS.unshift(...extraChannels);
 }
 
 // Base cockle config file from this repo.
