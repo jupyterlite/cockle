@@ -1,11 +1,10 @@
 import { BuiltinCommand } from './builtin_command';
 import { BooleanOption, OptionalStringOption } from './option';
 import { Options } from './options';
-import { ansi } from '../ansi';
 import { IContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
-import { toTable } from '../utils';
+import { BorderTable } from '../layout';
 import { COCKLE_VERSION } from '../version';
 
 class CockleConfigOptions extends Options {
@@ -23,7 +22,7 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   protected async _run(context: IContext): Promise<number> {
-    const { args, stdout } = context;
+    const { args, environment, stdout } = context;
     const options = new CockleConfigOptions().parse(args);
 
     if (options.help.isSet) {
@@ -31,44 +30,58 @@ export class CockleConfigCommand extends BuiltinCommand {
       return ExitCode.SUCCESS;
     }
 
+    const colorByColumn =
+      stdout.supportsAnsiEscapes() && environment.color
+        ? BorderTable.defaultColorByColumn()
+        : undefined;
+
     const showAll = args.length === 0;
     if (showAll || options.version.isSet) {
       this._writeVersion(context);
     }
     if (showAll || options.stdin.isSet) {
-      this._writeOrSetSyncStdinConfig(context, options.stdin.string);
+      this._writeOrSetSyncStdinConfig(context, colorByColumn, options.stdin.string);
     }
     if (showAll || options.package.isSet) {
-      this._writePackageConfig(context, options.package.string);
+      this._writePackageConfig(context, colorByColumn, options.package.string);
     }
     if (showAll || options.module.isSet) {
-      this._writeModuleConfig(context, options.module.string);
+      this._writeModuleConfig(context, colorByColumn, options.module.string);
     }
     if (options.command.isSet) {
-      this._writeCommandConfig(context, options.command.string);
+      this._writeCommandConfig(context, colorByColumn, options.command.string);
     }
 
     return ExitCode.SUCCESS;
   }
 
-  private _writeCommandConfig(context: IContext, name: string | undefined) {
-    const { commandRegistry } = context;
+  private _writeCommandConfig(
+    context: IContext,
+    colorByColumn: Map<number, string> | undefined,
+    name: string | undefined
+  ) {
+    const { commandRegistry, stdout } = context;
     const names = name === undefined ? commandRegistry.allCommands() : [name];
-    const lines = [['command', 'module']];
 
+    const table = new BorderTable({ colorByColumn, sortByColumn: [0] });
+    table.addHeaderRow(['command', 'module']);
     for (const name of names) {
       const runner = commandRegistry.get(name);
       if (runner === null) {
         throw new GeneralError(`Unknown command '${name}'`);
       }
-      lines.push([name, runner.moduleName]);
+      table.addRow([name, runner.moduleName]);
     }
 
-    this._writeTable(context, lines);
+    table.write(stdout);
   }
 
-  private _writeModuleConfig(context: IContext, name: string | undefined) {
-    const { commandRegistry, commandModuleCache } = context;
+  private _writeModuleConfig(
+    context: IContext,
+    colorByColumn: Map<number, string> | undefined,
+    name: string | undefined
+  ) {
+    const { commandRegistry, commandModuleCache, stdout } = context;
 
     let modules = commandRegistry.allModules();
     if (name !== undefined) {
@@ -78,41 +91,50 @@ export class CockleConfigCommand extends BuiltinCommand {
       }
     }
 
-    const lines = [['module', 'package', 'cached']];
+    const table = new BorderTable({ colorByColumn, sortByColumn: [0, 1] });
+    table.addHeaderRow(['module', 'package', 'cached']);
     for (const module of modules) {
-      lines.push([
+      table.addRow([
         module.name,
         module.packageName,
         commandModuleCache.has(module.packageName, module.name) ? 'yes' : ''
       ]);
     }
 
-    this._writeTable(context, lines);
+    table.write(stdout);
   }
 
-  private _writeOrSetSyncStdinConfig(context: IContext, name: string | undefined) {
-    const { stdinContext } = context;
+  private _writeOrSetSyncStdinConfig(
+    context: IContext,
+    colorByColumn: Map<number, string> | undefined,
+    name: string | undefined
+  ) {
+    const { stdinContext, stdout } = context;
 
     if (name !== undefined) {
       stdinContext.setEnabled(name);
     }
 
+    const table = new BorderTable({ colorByColumn });
+    table.addHeaderRow(['synchronous stdin', 'short name', 'available', 'enabled']);
     const { enabled, shortNames } = stdinContext;
-    const lines = [['synchronous stdin', 'short name', 'available', 'enabled']];
     for (const shortName of shortNames) {
-      lines.push([
+      table.addRow([
         stdinContext.longName(shortName),
         shortName,
         stdinContext.available(shortName) ? 'yes' : '',
         enabled === shortName ? 'yes' : ''
       ]);
     }
-
-    this._writeTable(context, lines);
+    table.write(stdout);
   }
 
-  private _writePackageConfig(context: IContext, name: string | undefined) {
-    const { commandRegistry } = context;
+  private _writePackageConfig(
+    context: IContext,
+    colorByColumn: Map<number, string> | undefined,
+    name: string | undefined
+  ) {
+    const { commandRegistry, stdout } = context;
 
     let packages = [...commandRegistry.commandPackageMap.values()];
     if (name !== undefined) {
@@ -122,29 +144,18 @@ export class CockleConfigCommand extends BuiltinCommand {
       }
     }
 
-    const lines = [['package', 'type', 'version', 'build string', 'source']];
+    const table = new BorderTable({ colorByColumn, sortByColumn: [0] });
+    table.addHeaderRow(['synchronous stdin', 'short name', 'available', 'enabled']);
     for (const pkg of packages) {
-      lines.push([pkg.name, pkg.wasm ? 'wasm' : 'js', pkg.version, pkg.build_string, pkg.channel]);
+      table.addRow([
+        pkg.name,
+        pkg.wasm ? 'wasm' : 'js',
+        pkg.version,
+        pkg.build_string,
+        pkg.channel
+      ]);
     }
-
-    this._writeTable(context, lines);
-  }
-
-  private _writeTable(context: IContext, lines: string[][]) {
-    const { environment, stdout } = context;
-
-    let colorMap: Map<number, string> | null = null;
-    if (stdout.supportsAnsiEscapes() && environment.color) {
-      colorMap = new Map();
-      colorMap.set(1, ansi.styleBrightBlue);
-      colorMap.set(2, ansi.styleBrightPurple);
-      colorMap.set(3, ansi.styleGreen);
-      colorMap.set(4, ansi.styleYellow);
-    }
-
-    for (const line of toTable(lines, 1, false, colorMap)) {
-      stdout.write(line + '\n');
-    }
+    table.write(stdout);
   }
 
   private _writeVersion(context: IContext) {

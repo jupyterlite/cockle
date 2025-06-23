@@ -12,6 +12,7 @@ export { IExternalCommand } from './external_command';
 export { ExternalEnvironment } from './external_environment';
 export { IFileSystem } from './file_system';
 export * from './io';
+export * from './layout';
 export { parse } from './parse';
 export { Shell } from './shell';
 export { ShellManager } from './shell_manager';

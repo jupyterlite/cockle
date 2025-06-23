@@ -1,5 +1,3 @@
-import { ansi } from './ansi';
-
 export async function delay(milliseconds: number = 10): Promise<void> {
   await new Promise(f => setTimeout(f, milliseconds));
 }
@@ -29,6 +27,13 @@ export function longestStartsWith(strings: string[], startIndex: number = 0): st
     index++;
   }
   return toMatch.slice(0, index);
+}
+
+/**
+ * Trim whitespace from end of string.
+ */
+export function rtrim(text: string): string {
+  return text.replace(/\s+$/, '');
 }
 
 /**
@@ -69,84 +74,4 @@ export function toColumns(strings: string[], columnWidth: number): string[] {
     lines.push(line);
   }
   return lines;
-}
-
-/**
- *
- */
-export function* toTable(
-  strings: string[][],
-  nHeaderRows: number,
-  simple: boolean = false,
-  colorMap: Map<number, string> | null = null
-): Generator<string> {
-  // Should check each input line has the same number of items.
-  // nHeaderRows <= nrows
-
-  const nrows = strings.length;
-  const ncols = strings[0].length;
-
-  // Get column widths
-  const widths = strings.map(row => row.map(str => str.length));
-  const colWidths = Array(ncols).fill(0);
-  for (let i = 0; i < nrows; i++) {
-    for (let j = 0; j < ncols; j++) {
-      colWidths[j] = Math.max(colWidths[j], widths[i][j]);
-    }
-  }
-
-  function hLine(which: number): string {
-    // 0 <= which < 2
-    const starts = '╭├╰';
-    const mids = '┬┼┴';
-    const ends = '╮┤╯';
-    let line = starts[which];
-    for (let j = 0; j < ncols; j++) {
-      line += '─'.repeat(colWidths[j] + 2);
-      line += j < ncols - 1 ? mids[which] : ends[which];
-    }
-    return line;
-  }
-
-  if (!simple) {
-    yield hLine(0);
-  }
-
-  for (let i = 0; i < nrows; i++) {
-    const row = strings[i];
-    let line = simple ? '' : '│ ';
-    for (let j = 0; j < ncols; j++) {
-      const color = colorMap?.get(j) || null;
-      if (color) {
-        line += color + row[j] + ansi.styleReset;
-      } else {
-        line += row[j];
-      }
-      line += ' '.repeat(colWidths[j] - row[j].length);
-      if (simple) {
-        line += '  ';
-      } else if (j === ncols - 1) {
-        line += ' │';
-      } else {
-        line += ' │ ';
-      }
-    }
-    yield line;
-
-    if (i === nHeaderRows - 1) {
-      if (simple) {
-        let line = '';
-        for (let j = 0; j < ncols; j++) {
-          line += '─'.repeat(colWidths[j]) + '  ';
-        }
-        yield line;
-      } else if (i !== nrows - 1) {
-        yield hLine(1);
-      }
-    }
-  }
-
-  if (!simple) {
-    yield hLine(2);
-  }
 }
