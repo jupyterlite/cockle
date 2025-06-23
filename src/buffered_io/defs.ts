@@ -12,11 +12,14 @@ export interface IMainIO extends IDisposable {
 
 export interface IWorkerIO {
   allowAdjacentNewline(set: boolean): void;
+  canEnable(): Promise<void>;
   disable(): Promise<void>;
   enable(): Promise<void>;
+  get enabled(): boolean;
   poll(timeoutMs: number): number;
   read(maxChars: number | null): number[];
-  readAsync(maxChars: number | null): Promise<number[]>;
+  // timeoutMs of 0 means no timeout, wait forever.
+  readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]>;
   setTermios(iTermios: ITermios): void;
   get termios(): Termios;
   utf8ArrayToString(chars: Int8Array): string;

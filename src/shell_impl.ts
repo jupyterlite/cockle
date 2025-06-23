@@ -82,6 +82,12 @@ export class ShellImpl implements IShellWorker {
     options.externalCommandNames.forEach(name =>
       this._context.commandRegistry.registerExternalCommand(name)
     );
+
+    this._stderr = new TerminalOutput(
+      this.output.bind(this),
+      this._options.color ? ansi.styleBoldRed : undefined,
+      this._options.color ? ansi.styleReset : undefined
+    );
   }
 
   get aliases(): Aliases {
@@ -127,7 +133,7 @@ export class ShellImpl implements IShellWorker {
         this._currentLine = '';
         this._cursorIndex = 0;
         await this._runCommands(cmdText);
-        this._outputPrompt();
+        await this._outputPrompt();
         break;
       }
       case 127: // Backspace
@@ -200,13 +206,21 @@ export class ShellImpl implements IShellWorker {
 
   async start(): Promise<void> {
     this._isRunning = true;
-    this._outputPrompt();
+    await this._outputPrompt();
   }
 
   terminate() {
     console.log('Cockle ShellImpl.terminate');
     this._isRunning = false;
     this._options.terminateCallback();
+  }
+
+  async themeChange(): Promise<void> {
+    if (this._context.workerIO.enabled) {
+      this._pendingThemeChange = true;
+    } else {
+      await this._handleThemeChange();
+    }
   }
 
   /**
@@ -355,6 +369,36 @@ export class ShellImpl implements IShellWorker {
     return ret;
   }
 
+  private async _handleThemeChange(): Promise<void> {
+    await this._options.enableBufferedStdinCallback(true);
+
+    // Operating System Command to get terminal background color.
+    // https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Operating-System-Commands
+    this.output('\x1b]11;?\x07');
+
+    const timeoutMs = 10;
+    const chars = await this._context.workerIO.readAsync(null, timeoutMs);
+
+    await this._options.enableBufferedStdinCallback(false);
+    this._pendingThemeChange = false;
+
+    const charStr = String.fromCharCode(...chars);
+    // Expecting something like this: ]11;rgb:8080/0000/ffff\
+    // eslint-disable-next-line no-control-regex
+    const re = /^\x1b]11;rgb:([0-9A-Fa-f]{2,})\/([0-9A-Fa-f]{2,})\/([0-9A-Fa-f]{2,})\x1b\\$/;
+    const match = re.exec(charStr);
+    if (!match) {
+      console.warn('Unable to determine terminal background color');
+      this._setDarkMode(false);
+    } else {
+      const r = parseInt(match[1].slice(0, 2), 16) / 255.0;
+      const g = parseInt(match[2].slice(0, 2), 16) / 255.0;
+      const b = parseInt(match[3].slice(0, 2), 16) / 255.0;
+      const lum = (r + g + b) / 3.0;
+      this._setDarkMode(lum < 0.6);
+    }
+  }
+
   private async _initFileSystem(): Promise<void> {
     const { wasmBaseUrl } = this._options;
     const fsModule = this._commandModuleLoader.getWasmModule('cockle_fs', 'fs');
@@ -453,17 +497,17 @@ export class ShellImpl implements IShellWorker {
     }
   }
 
-  private _outputPrompt(): void {
+  private async _outputPrompt(): Promise<void> {
     if (!this._isRunning) {
       return;
+    }
+    if (this._pendingThemeChange) {
+      await this._handleThemeChange();
     }
     this._context.workerIO.write(`\n${this.environment.getPrompt()}`);
   }
 
   private async _runCommands(cmdText: string): Promise<void> {
-    await this._options.enableBufferedStdinCallback(true);
-    this._context.workerIO.allowAdjacentNewline(true);
-
     if (cmdText.startsWith('!')) {
       // Get command from history and run that.
       const index = parseInt(cmdText.slice(1));
@@ -475,11 +519,14 @@ export class ShellImpl implements IShellWorker {
           text = ansi.styleBoldRed + text + ansi.styleReset;
         }
         this.output(`${text}\n`);
-        this._outputPrompt();
+        await this._outputPrompt();
         return;
       }
       cmdText = possibleCmd;
     }
+
+    await this._options.enableBufferedStdinCallback(true);
+    this._context.workerIO.allowAdjacentNewline(true);
 
     this.history.add(cmdText);
 
@@ -489,11 +536,7 @@ export class ShellImpl implements IShellWorker {
       this._stdinAsyncCallback.bind(this)
     );
     const stdout = new TerminalOutput(this.output.bind(this));
-    const stderr = new TerminalOutput(
-      this.output.bind(this),
-      this._options.color ? ansi.styleBoldRed : null,
-      this._options.color ? ansi.styleReset : null
-    );
+    const stderr = this._stderr;
     try {
       const nodes = parse(cmdText, true, this.aliases);
 
@@ -584,12 +627,26 @@ export class ShellImpl implements IShellWorker {
     return exitCode;
   }
 
+  private _setDarkMode(darkMode: boolean): void {
+    if (darkMode === this._darkMode) {
+      return;
+    }
+
+    this._darkMode = darkMode;
+    if (this._options.color) {
+      this._stderr.prefix = darkMode ? ansi.styleBrightRed : ansi.styleRed;
+
+      const promptColor = darkMode ? ansi.styleBoldGreen : ansi.styleGreen;
+      this._context.environment.set('PS1', promptColor + 'js-shell:' + ansi.styleReset + ' ');
+    }
+  }
+
   private _stdinCallback(maxChars: number | null): number[] {
     return this._context.workerIO.read(maxChars);
   }
 
   private async _stdinAsyncCallback(maxChars: number | null): Promise<number[]> {
-    return await this._context.workerIO.readAsync(maxChars);
+    return await this._context.workerIO.readAsync(maxChars, 0);
   }
 
   private async _tabComplete(): Promise<void> {
@@ -681,7 +738,9 @@ export class ShellImpl implements IShellWorker {
 
   private _currentLine: string = '';
   private _cursorIndex: number = 0;
+  private _darkMode = false;
   private _isRunning = false;
+  private _pendingThemeChange = false;
 
   private _commandModuleLoader: CommandModuleLoader;
   private _context: IContext;
@@ -689,4 +748,5 @@ export class ShellImpl implements IShellWorker {
   private _dummyOutput = new DummyOutput();
   private _fileSystem: IFileSystem;
   private _options: IShellImpl.IOptions;
+  private _stderr: TerminalOutput;
 }

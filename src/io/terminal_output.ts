@@ -4,9 +4,12 @@ import { IOutputCallback } from '../callback';
 export class TerminalOutput implements IOutput {
   constructor(
     readonly outputCallback: IOutputCallback,
-    readonly prefix: string | null = null,
-    readonly suffix: string | null = null
-  ) {}
+    prefix?: string,
+    suffix?: string
+  ) {
+    this.prefix = prefix;
+    this.suffix = suffix;
+  }
 
   flush(): void {}
 
@@ -19,12 +22,15 @@ export class TerminalOutput implements IOutput {
       return;
     }
 
-    if (this.prefix !== null) {
+    if (this.prefix !== undefined) {
       text = this.prefix + text;
     }
-    if (this.suffix !== null) {
+    if (this.suffix !== undefined) {
       text = text + this.suffix;
     }
     this.outputCallback(text);
   }
+
+  prefix?: string;
+  suffix?: string;
 }

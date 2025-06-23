@@ -19,7 +19,8 @@ test('visual test', async ({ page }) => {
 
   const wait = 100; // milliseconds.
 
-  await page.locator('div.xterm-screen').click(); // sets focus for keyboard input
+  const xterm = page.locator('div.xterm-screen');
+  await xterm.click(); // sets focus for keyboard input
   await page.waitForTimeout(wait);
 
   await inputLine(page, 'cp file.txt file2.txt');
@@ -40,5 +41,5 @@ test('visual test', async ({ page }) => {
   await inputLine(page, 'abc'); // no such command
   await page.waitForTimeout(wait);
 
-  await expect(page).toHaveScreenshot();
+  await expect(xterm).toHaveScreenshot();
 });

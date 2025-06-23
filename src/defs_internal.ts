@@ -48,6 +48,8 @@ export interface IShellWorker extends IShellCommon {
     setMainIOCallback: IShellWorker.IProxySetMainIOCallback,
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ): void;
+
+  themeChange(): Promise<void>;
 }
 
 export namespace IShellWorker {

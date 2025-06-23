@@ -125,6 +125,16 @@ export class Demo {
     this._term!.write(text);
   }
 
+  setTheme(foreground: string, background: string): void {
+    const theme = {
+      ...this._term.options,
+      foreground,
+      background
+    };
+    this._term.options.theme = theme;
+    this._shell.themeChange();
+  }
+
   private _targetDiv: HTMLElement;
   private _term: Terminal;
   private _fitAddon: FitAddon;

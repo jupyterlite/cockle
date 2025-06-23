@@ -55,7 +55,7 @@ export class ServiceWorkerWorkerIO extends WorkerIO implements IWorkerIO {
     return this._readFromBuffer(maxChars);
   }
 
-  async readAsync(maxChars: number | null): Promise<number[]> {
+  async readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]> {
     if (!this._enabled) {
       throw new Error('ServiceWorkerWorkerIO.readAsync when disabled');
     }
@@ -69,7 +69,7 @@ export class ServiceWorkerWorkerIO extends WorkerIO implements IWorkerIO {
       return this._readFromBuffer(maxChars);
     }
 
-    const chars = await this._utils.getStdinAsync(0);
+    const chars = await this._utils.getStdinAsync(timeoutMs);
     this._postRead(chars);
     return this._readFromBuffer(maxChars);
   }
