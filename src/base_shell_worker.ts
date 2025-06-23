@@ -77,6 +77,9 @@ export abstract class BaseShellWorker implements IShellWorker {
 
   async enableBufferedStdin(enable: boolean): Promise<void> {
     if (enable) {
+      // Wait for workerIO to be disabled so can enable it.
+      await this._workerIO?.canEnable();
+
       if (this._enableBufferedStdinCallback) {
         await this._enableBufferedStdinCallback(true);
       }
@@ -118,6 +121,10 @@ export abstract class BaseShellWorker implements IShellWorker {
     if (this._shellImpl) {
       await this._shellImpl.start();
     }
+  }
+
+  async themeChange(): Promise<void> {
+    await this._shellImpl?.themeChange();
   }
 
   private _setWorkerIO(shortName: string): void {

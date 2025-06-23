@@ -1,3 +1,4 @@
+import { PromiseDelegate } from '@lumino/coreutils';
 import { IWorkerIO } from './defs';
 import { IOutputCallback } from '../callback';
 import { InputFlag, ITermios, LocalFlag, OutputFlag, Termios } from '../termios';
@@ -9,20 +10,30 @@ export abstract class WorkerIO implements IWorkerIO {
     this._allowAdjacentNewline = set;
   }
 
+  async canEnable(): Promise<void> {
+    await this._available?.promise;
+  }
+
   async disable(): Promise<void> {
     this._enabled = false;
     this._clear();
+    this._available?.resolve();
   }
 
   async enable(): Promise<void> {
     this._enabled = true;
+    this._available = new PromiseDelegate<void>();
+  }
+
+  get enabled(): boolean {
+    return this._enabled;
   }
 
   abstract poll(timeoutMs: number): number;
 
   abstract read(maxChars: number | null): number[];
 
-  abstract readAsync(maxChars: number | null): Promise<number[]>;
+  abstract readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]>;
 
   setTermios(iTermios: ITermios): void {
     this.termios.set(iTermios);
@@ -179,6 +190,7 @@ export abstract class WorkerIO implements IWorkerIO {
   }
 
   protected _allowAdjacentNewline = false;
+  private _available?: PromiseDelegate<void>;
   protected _enabled: boolean = false;
   private _termios: Termios = Termios.newDefaultWasm();
   protected _writeColumn = 0;

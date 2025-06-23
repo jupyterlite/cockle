@@ -57,7 +57,7 @@ export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
     return this._postRead(maxChars);
   }
 
-  async readAsync(maxChars: number | null): Promise<number[]> {
+  async readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]> {
     if (!this._enabled) {
       throw new Error('SharedArrayBufferWorkerIO.readAsync when disabled');
     }
@@ -71,7 +71,12 @@ export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
       return this._readFromBuffer(maxChars);
     }
 
-    const { async, value } = Atomics.waitAsync(this._intArray, SAB.MAIN, this._readCount);
+    const { async, value } = Atomics.waitAsync(
+      this._intArray,
+      SAB.MAIN,
+      this._readCount,
+      timeoutMs > 0 ? timeoutMs : Infinity
+    );
     if (async) {
       await value;
     }

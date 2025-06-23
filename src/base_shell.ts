@@ -197,6 +197,13 @@ export abstract class BaseShell implements IShell {
 
     await this.ready;
     await this._remote!.start();
+
+    // Initial check if dark mode or not.
+    await this.themeChange();
+  }
+
+  async themeChange(): Promise<void> {
+    await this._remote?.themeChange();
   }
 
   private async _initialize(): Promise<void> {

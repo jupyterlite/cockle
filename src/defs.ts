@@ -9,6 +9,7 @@ export interface IShell extends IObservableDisposable {
   setSize(rows: number, columns: number): Promise<void>;
   shellId: string;
   start(): Promise<void>;
+  themeChange(): void;
 }
 
 export namespace IShell {

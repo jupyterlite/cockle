@@ -9,5 +9,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const targetDiv: HTMLElement = document.getElementById('targetdiv')!;
   const demo = new Demo({ baseUrl, browsingContextId, shellManager, targetDiv });
+
+  const themeSelect = document.getElementById('theme-select') as HTMLSelectElement;
+  themeSelect?.addEventListener('change', (event: any) => {
+    const [foreground, background] = themeSelect.value.split('-');
+    demo.setTheme(foreground, background);
+  });
+
   await demo.start();
 });
