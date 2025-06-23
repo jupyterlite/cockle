@@ -2,6 +2,34 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.2-a0
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.1...7551440d363b8b14311b9ebc90324d02b338e170))
+
+### Enhancements made
+
+- Check if terminal is dark or light mode [#200](https://github.com/jupyterlite/cockle/pull/200) ([@ianthomas23](https://github.com/ianthomas23))
+- Table layout API [#199](https://github.com/jupyterlite/cockle/pull/199) ([@ianthomas23](https://github.com/ianthomas23))
+- Support multiple extra channels via `COCKLE_WASM_EXTRA_CHANNEL` [#198](https://github.com/jupyterlite/cockle/pull/198) ([@ianthomas23](https://github.com/ianthomas23))
+- Improved `ExternalEnvironment` [#197](https://github.com/jupyterlite/cockle/pull/197) ([@ianthomas23](https://github.com/ianthomas23))
+- Setting aliases and env vars via Shell constructor [#196](https://github.com/jupyterlite/cockle/pull/196) ([@ianthomas23](https://github.com/ianthomas23))
+- Register external commands in Shell constructor only [#195](https://github.com/jupyterlite/cockle/pull/195) ([@ianthomas23](https://github.com/ianthomas23))
+- Support 24-bit RGB foreground and background color in TS/JS commands [#194](https://github.com/jupyterlite/cockle/pull/194) ([@ianthomas23](https://github.com/ianthomas23))
+- Add `less` WebAssembly command [#191](https://github.com/jupyterlite/cockle/pull/191) ([@ianthomas23](https://github.com/ianthomas23))
+- Implement stdin for external commands [#189](https://github.com/jupyterlite/cockle/pull/189) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Add tests for `nano` and `vim` editors [#190](https://github.com/jupyterlite/cockle/pull/190) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-06-06&to=2025-06-23&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-06-06..2025-06-23&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.1
 
 This is a bug fix release to fix bugs in URLs and the use of ServiceWorker for `stdin`.
@@ -22,8 +50,6 @@ This is a bug fix release to fix bugs in URLs and the use of ServiceWorker for `
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-06-04&to=2025-06-06&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-06-04..2025-06-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.0
 
