@@ -15,7 +15,7 @@ test.describe('termios', () => {
           let cmdText = 'check_termios';
           if (flag !== 'default') {
             const { OutputFlag, Termios } = globalThis.cockle;
-            const termios = Termios.newDefaultWasm();
+            const termios = new Termios();
             const oflag =
               flag === 'enabled'
                 ? termios.c_oflag | OutputFlag.ONLCR
