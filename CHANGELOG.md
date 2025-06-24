@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.2-a1
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.2-a0...f45fb20085e2ed8c4b8d59ece50b6795da2f050b))
+
+### Enhancements made
+
+- Use termios raw mode to get terminal background color [#202](https://github.com/jupyterlite/cockle/pull/202) ([@ianthomas23](https://github.com/ianthomas23))
+- Use termios ONOCR instead of allowAdjacentNewline [#201](https://github.com/jupyterlite/cockle/pull/201) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-06-23&to=2025-06-24&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-06-23..2025-06-24&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.2-a0
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.1...7551440d363b8b14311b9ebc90324d02b338e170))
@@ -27,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-06-06&to=2025-06-23&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-06-06..2025-06-23&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.1
 
