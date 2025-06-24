@@ -172,6 +172,25 @@ export class Termios implements ITermios {
     ];
   }
 
+  setRawMode() {
+    // Assume is currently default shell termios.
+    this.c_iflag &= ~(
+      InputFlag.ISTRIP |
+      InputFlag.INLCR |
+      InputFlag.IGNCR |
+      InputFlag.ICRNL |
+      InputFlag.IXON
+    );
+    this.c_oflag &= ~OutputFlag.OPOST;
+    this.c_lflag &= ~(
+      LocalFlag.ECHO |
+      LocalFlag.ECHONL |
+      LocalFlag.ICANON |
+      LocalFlag.ISIG |
+      LocalFlag.IEXTEN
+    );
+  }
+
   c_iflag: InputFlag = 0 as InputFlag;
   c_oflag: OutputFlag = 0 as OutputFlag;
   c_cflag: number = 0;
