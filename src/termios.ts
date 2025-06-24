@@ -67,6 +67,10 @@ export interface ITermios {
 }
 
 export class Termios implements ITermios {
+  constructor() {
+    this.setDefaultShell();
+  }
+
   clone(): ITermios {
     return {
       c_iflag: this.c_iflag,
@@ -98,12 +102,6 @@ export class Termios implements ITermios {
     console.log(log.join('\n'));
   }
 
-  static newDefaultWasm(): Termios {
-    const ret = new Termios();
-    ret.setDefaultWasm();
-    return ret;
-  }
-
   set(iTermios: ITermios): void {
     this.c_iflag = iTermios.c_iflag;
     this.c_oflag = iTermios.c_oflag;
@@ -113,8 +111,19 @@ export class Termios implements ITermios {
     this.log('Termios set');
   }
 
+  /**
+   * Set termios settings to the default used in the shell outside of commands.
+   */
+  setDefaultShell(): void {
+    this.setDefaultWasm();
+    this.c_oflag |= OutputFlag.ONOCR;
+  }
+
+  /**
+   * Set termios settings to the default used in commands.
+   * This is taken from the default in emscripten-compiled code.
+   */
   setDefaultWasm(): void {
-    // Default termios from emscripten-compiled code.
     this.c_iflag = InputFlag.IUTF8 | InputFlag.IMAXBEL | InputFlag.IXON | InputFlag.ICRNL; // 25856 = 0x6500
     this.c_oflag = OutputFlag.OPOST | OutputFlag.ONLCR; // 5
     this.c_cflag = 191; // ignored
@@ -161,7 +170,6 @@ export class Termios implements ITermios {
       0,
       0
     ];
-    this.log('Termios setDefaultWasm');
   }
 
   c_iflag: InputFlag = 0 as InputFlag;

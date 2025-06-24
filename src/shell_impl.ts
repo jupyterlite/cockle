@@ -526,7 +526,7 @@ export class ShellImpl implements IShellWorker {
     }
 
     await this._options.enableBufferedStdinCallback(true);
-    this._context.workerIO.allowAdjacentNewline(true);
+    this._context.workerIO.termios.setDefaultWasm();
 
     this.history.add(cmdText);
 
@@ -567,7 +567,7 @@ export class ShellImpl implements IShellWorker {
       exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
       this.environment.set('?', `${exitCode}`);
 
-      this._context.workerIO.allowAdjacentNewline(false);
+      this._context.workerIO.termios.setDefaultShell();
       await this._options.enableBufferedStdinCallback(false);
     }
   }

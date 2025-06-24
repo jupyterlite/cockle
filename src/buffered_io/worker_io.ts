@@ -6,10 +6,6 @@ import { InputFlag, ITermios, LocalFlag, OutputFlag, Termios } from '../termios'
 export abstract class WorkerIO implements IWorkerIO {
   constructor(readonly outputCallback: IOutputCallback) {}
 
-  allowAdjacentNewline(set: boolean): void {
-    this._allowAdjacentNewline = set;
-  }
-
   async canEnable(): Promise<void> {
     await this._available?.promise;
   }
@@ -128,6 +124,7 @@ export abstract class WorkerIO implements IWorkerIO {
     const NL = 10; // Linefeed \n
     const CR = 13; // Carriage return \r
 
+    const { c_oflag } = this.termios;
     let inEscape = false;
     let startEscape = 0;
     const ret: number[] = [];
@@ -141,11 +138,11 @@ export abstract class WorkerIO implements IWorkerIO {
 
       switch (char) {
         case NL:
-          if (this._writeColumn === 0 && !this._allowAdjacentNewline) {
+          if (this._writeColumn === 0 && (c_oflag & OutputFlag.ONOCR) > 0) {
             break;
           }
           this._writeColumn = 0;
-          if ((this.termios.c_oflag & OutputFlag.ONLCR) > 0) {
+          if ((c_oflag & OutputFlag.ONLCR) > 0) {
             ret.push(CR, NL);
           } else {
             ret.push(NL);
@@ -189,10 +186,9 @@ export abstract class WorkerIO implements IWorkerIO {
     }
   }
 
-  protected _allowAdjacentNewline = false;
   private _available?: PromiseDelegate<void>;
   protected _enabled: boolean = false;
-  private _termios: Termios = Termios.newDefaultWasm();
+  private _termios = new Termios();
   protected _writeColumn = 0;
   private _utf8Decoder?: TextDecoder;
 

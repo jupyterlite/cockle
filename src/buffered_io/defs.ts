@@ -11,7 +11,6 @@ export interface IMainIO extends IDisposable {
 }
 
 export interface IWorkerIO {
-  allowAdjacentNewline(set: boolean): void;
   canEnable(): Promise<void>;
   disable(): Promise<void>;
   enable(): Promise<void>;
