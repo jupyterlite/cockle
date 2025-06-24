@@ -85,7 +85,7 @@ export class ShellImpl implements IShellWorker {
 
     this._stderr = new TerminalOutput(
       this.output.bind(this),
-      this._options.color ? ansi.styleBoldRed : undefined,
+      this._options.color ? ansi.styleRed : undefined,
       this._options.color ? ansi.styleReset : undefined
     );
   }
@@ -371,14 +371,17 @@ export class ShellImpl implements IShellWorker {
 
   private async _handleThemeChange(): Promise<void> {
     await this._options.enableBufferedStdinCallback(true);
+    const { workerIO } = this._options;
+    workerIO.termios.setRawMode();
 
     // Operating System Command to get terminal background color.
     // https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Operating-System-Commands
     this.output('\x1b]11;?\x07');
 
     const timeoutMs = 10;
-    const chars = await this._context.workerIO.readAsync(null, timeoutMs);
+    const chars = await workerIO.readAsync(null, timeoutMs);
 
+    workerIO.termios.setDefaultShell();
     await this._options.enableBufferedStdinCallback(false);
     this._pendingThemeChange = false;
 
@@ -389,7 +392,7 @@ export class ShellImpl implements IShellWorker {
     const match = re.exec(charStr);
     if (!match) {
       console.warn('Unable to determine terminal background color');
-      this._setDarkMode(false);
+      this._setDarkMode(undefined);
     } else {
       const r = parseInt(match[1].slice(0, 2), 16) / 255.0;
       const g = parseInt(match[2].slice(0, 2), 16) / 255.0;
@@ -627,7 +630,7 @@ export class ShellImpl implements IShellWorker {
     return exitCode;
   }
 
-  private _setDarkMode(darkMode: boolean): void {
+  private _setDarkMode(darkMode: boolean | undefined): void {
     if (darkMode === this._darkMode) {
       return;
     }
@@ -738,9 +741,9 @@ export class ShellImpl implements IShellWorker {
 
   private _currentLine: string = '';
   private _cursorIndex: number = 0;
-  private _darkMode = false;
+  private _darkMode?: boolean;
   private _isRunning = false;
-  private _pendingThemeChange = false;
+  private _pendingThemeChange = true;
 
   private _commandModuleLoader: CommandModuleLoader;
   private _context: IContext;
