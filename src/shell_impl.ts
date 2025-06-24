@@ -378,7 +378,7 @@ export class ShellImpl implements IShellWorker {
     // https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Operating-System-Commands
     this.output('\x1b]11;?\x07');
 
-    const timeoutMs = 10;
+    const timeoutMs = 100;
     const chars = await workerIO.readAsync(null, timeoutMs);
 
     workerIO.termios.setDefaultShell();
