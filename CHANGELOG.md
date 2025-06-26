@@ -2,49 +2,6 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
-## 0.1.2-a1
-
-([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.2-a0...f45fb20085e2ed8c4b8d59ece50b6795da2f050b))
-
-### Enhancements made
-
-- Use termios raw mode to get terminal background color [#202](https://github.com/jupyterlite/cockle/pull/202) ([@ianthomas23](https://github.com/ianthomas23))
-- Use termios ONOCR instead of allowAdjacentNewline [#201](https://github.com/jupyterlite/cockle/pull/201) ([@ianthomas23](https://github.com/ianthomas23))
-
-### Contributors to this release
-
-([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-06-23&to=2025-06-24&type=c))
-
-[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-06-23..2025-06-24&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
-
-## 0.1.2-a0
-
-([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.1...7551440d363b8b14311b9ebc90324d02b338e170))
-
-### Enhancements made
-
-- Check if terminal is dark or light mode [#200](https://github.com/jupyterlite/cockle/pull/200) ([@ianthomas23](https://github.com/ianthomas23))
-- Table layout API [#199](https://github.com/jupyterlite/cockle/pull/199) ([@ianthomas23](https://github.com/ianthomas23))
-- Support multiple extra channels via `COCKLE_WASM_EXTRA_CHANNEL` [#198](https://github.com/jupyterlite/cockle/pull/198) ([@ianthomas23](https://github.com/ianthomas23))
-- Improved `ExternalEnvironment` [#197](https://github.com/jupyterlite/cockle/pull/197) ([@ianthomas23](https://github.com/ianthomas23))
-- Setting aliases and env vars via Shell constructor [#196](https://github.com/jupyterlite/cockle/pull/196) ([@ianthomas23](https://github.com/ianthomas23))
-- Register external commands in Shell constructor only [#195](https://github.com/jupyterlite/cockle/pull/195) ([@ianthomas23](https://github.com/ianthomas23))
-- Support 24-bit RGB foreground and background color in TS/JS commands [#194](https://github.com/jupyterlite/cockle/pull/194) ([@ianthomas23](https://github.com/ianthomas23))
-- Add `less` WebAssembly command [#191](https://github.com/jupyterlite/cockle/pull/191) ([@ianthomas23](https://github.com/ianthomas23))
-- Implement stdin for external commands [#189](https://github.com/jupyterlite/cockle/pull/189) ([@ianthomas23](https://github.com/ianthomas23))
-
-### Maintenance and upkeep improvements
-
-- Add tests for `nano` and `vim` editors [#190](https://github.com/jupyterlite/cockle/pull/190) ([@ianthomas23](https://github.com/ianthomas23))
-
-### Contributors to this release
-
-([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-06-06&to=2025-06-23&type=c))
-
-[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-06-06..2025-06-23&type=Issues)
-
 ## 0.1.1
 
 This is a bug fix release to fix bugs in URLs and the use of ServiceWorker for `stdin`.
@@ -65,6 +22,8 @@ This is a bug fix release to fix bugs in URLs and the use of ServiceWorker for `
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-06-04&to=2025-06-06&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-06-04..2025-06-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.0
 
@@ -102,59 +61,6 @@ Both of these are more limited than WebAssembly commands, and are labelled exper
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-04-22&to=2025-06-04&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-04-22..2025-06-04&type=Issues)
-
-## 0.1.0-a2
-
-([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.0-a1...b42f7713c4f0aeda2e5bce1ca451191afe27f608))
-
-### Enhancements made
-
-- Use `IOptions` when `registerExternalCommand` [#183](https://github.com/jupyterlite/cockle/pull/183) ([@ianthomas23](https://github.com/ianthomas23))
-- Include command name in `IExternalContext` and `IJavaScriptContext` [#181](https://github.com/jupyterlite/cockle/pull/181) ([@ianthomas23](https://github.com/ianthomas23))
-
-### Maintenance and upkeep improvements
-
-- Deploy on github pages [#182](https://github.com/jupyterlite/cockle/pull/182) ([@ianthomas23](https://github.com/ianthomas23))
-
-### Contributors to this release
-
-([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-05-28&to=2025-06-02&type=c))
-
-[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-05-28..2025-06-02&type=Issues)
-
-## 0.1.0-a1
-
-([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.0-a0...0df33e9c5e9dcefb03b53605b21cf711b524f90a))
-
-### Enhancements made
-
-- Terminal service worker support [#180](https://github.com/jupyterlite/cockle/pull/180) ([@ianthomas23](https://github.com/ianthomas23))
-
-### Contributors to this release
-
-([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-05-27&to=2025-05-28&type=c))
-
-[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-05-27..2025-05-28&type=Issues)
-
-## 0.1.0-a0
-
-Pre-release to test the recent Service Worker improvements of #174 downstream in [terminal](https://github.com/jupyterlite/terminal), and start experimenting with external commands (#178).
-
-([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.0.19...d47377531fb0249db1807be1822a597ef8373f3e))
-
-### Enhancements made
-
-- Add experimental support for external commands [#178](https://github.com/jupyterlite/cockle/pull/178) ([@ianthomas23](https://github.com/ianthomas23))
-- Keep a permanent IContext in ShellImpl, don't recreate for each command run [#175](https://github.com/jupyterlite/cockle/pull/175) ([@ianthomas23](https://github.com/ianthomas23))
-- Support use of ServiceWorker for synchronous stdin [#174](https://github.com/jupyterlite/cockle/pull/174) ([@ianthomas23](https://github.com/ianthomas23))
-- Rename input options shellId and baseUrl [#173](https://github.com/jupyterlite/cockle/pull/173) ([@ianthomas23](https://github.com/ianthomas23))
-- Shell id, and stored in static ShellManager [#172](https://github.com/jupyterlite/cockle/pull/172) ([@ianthomas23](https://github.com/ianthomas23))
-
-### Contributors to this release
-
-([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-04-22&to=2025-05-27&type=c))
-
-[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-04-22..2025-05-27&type=Issues)
 
 ## 0.0.19
 
