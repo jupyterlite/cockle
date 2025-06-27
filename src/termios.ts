@@ -99,7 +99,7 @@ export class Termios implements ITermios {
     log.push(`  c_cflag = ${this.c_cflag} 0x${this.c_cflag.toString(16)}`);
     log.push(enumHelper(LocalFlag, 'c_lflag', this.c_lflag));
     log.push(`  c_cc = ${this.c_cc}`);
-    console.log(log.join('\n'));
+    console.debug(log.join('\n'));
   }
 
   set(iTermios: ITermios): void {
