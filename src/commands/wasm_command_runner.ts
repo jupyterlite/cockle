@@ -157,7 +157,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     }
 
     const end = Date.now();
-    console.log(`Cockle ${cmdName} load and run time ${end - start} ms`);
+    console.debug(`Cockle ${cmdName} load and run time ${end - start} ms`);
     return exitCode;
   }
 }

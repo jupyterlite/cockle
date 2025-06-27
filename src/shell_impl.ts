@@ -216,9 +216,14 @@ export class ShellImpl implements IShellWorker {
   }
 
   async themeChange(): Promise<void> {
-    if (this._context.workerIO.enabled) {
-      this._pendingThemeChange = true;
-    } else {
+    if (this._themeStatus !== ThemeStatus.Ok) {
+      // Already pending or changing, don't need to repeat.
+      return;
+    }
+
+    this._themeStatus = ThemeStatus.PendingChange;
+
+    if (!this._context.workerIO.enabled) {
       await this._handleThemeChange();
     }
   }
@@ -370,6 +375,13 @@ export class ShellImpl implements IShellWorker {
   }
 
   private async _handleThemeChange(): Promise<void> {
+    if (this._themeStatus === ThemeStatus.Changing) {
+      // Don't run more than once concurrently.
+      return;
+    }
+
+    this._themeStatus = ThemeStatus.Changing;
+
     await this._options.enableBufferedStdinCallback(true);
     const { workerIO } = this._options;
     workerIO.termios.setRawMode();
@@ -379,11 +391,14 @@ export class ShellImpl implements IShellWorker {
     this.output('\x1b]11;?\x07');
 
     const timeoutMs = 100;
+    const start = Date.now();
     const chars = await workerIO.readAsync(null, timeoutMs);
+    console.debug('Cockle theme change', Date.now() - start, 'ms');
 
     workerIO.termios.setDefaultShell();
     await this._options.enableBufferedStdinCallback(false);
-    this._pendingThemeChange = false;
+
+    this._themeStatus = ThemeStatus.Ok;
 
     const charStr = String.fromCharCode(...chars);
     // Expecting something like this: ]11;rgb:8080/0000/ffff\
@@ -504,7 +519,7 @@ export class ShellImpl implements IShellWorker {
     if (!this._isRunning) {
       return;
     }
-    if (this._pendingThemeChange) {
+    if (this._themeStatus === ThemeStatus.PendingChange) {
       await this._handleThemeChange();
     }
     this._context.workerIO.write(`\n${this.environment.getPrompt()}`);
@@ -743,7 +758,7 @@ export class ShellImpl implements IShellWorker {
   private _cursorIndex: number = 0;
   private _darkMode?: boolean;
   private _isRunning = false;
-  private _pendingThemeChange = true;
+  private _themeStatus = ThemeStatus.PendingChange;
 
   private _commandModuleLoader: CommandModuleLoader;
   private _context: IContext;
@@ -752,4 +767,13 @@ export class ShellImpl implements IShellWorker {
   private _fileSystem: IFileSystem;
   private _options: IShellImpl.IOptions;
   private _stderr: TerminalOutput;
+}
+
+/**
+ * Status of theme used to track changes and avoid multiple changes at the same time.
+ */
+enum ThemeStatus {
+  Ok = 0,
+  PendingChange = 1,
+  Changing = 2
 }
