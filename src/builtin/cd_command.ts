@@ -1,12 +1,12 @@
 import { BuiltinCommand } from './builtin_command';
-import { TrailingStringsOption } from './option';
+import { TrailingPathsOption } from './option';
 import { Options } from './options';
 import { IContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 
 class CdOptions extends Options {
-  trailingStrings = new TrailingStringsOption(0);
+  trailingPaths = new TrailingPathsOption();
 }
 
 export class CdCommand extends BuiltinCommand {
@@ -17,7 +17,7 @@ export class CdCommand extends BuiltinCommand {
   protected async _run(context: IContext): Promise<number> {
     const { args } = context;
     const options = new CdOptions().parse(args);
-    const paths = options.trailingStrings.strings;
+    const paths = options.trailingPaths.strings;
 
     if (paths.length < 1) {
       // Do nothing. Should cd to home directory?
