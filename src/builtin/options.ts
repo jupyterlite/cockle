@@ -34,8 +34,11 @@ export abstract class Options {
       }
     }
 
-    if (trailingStrings && trailingStrings.length < trailingStrings.minCount) {
-      throw new GeneralError('Insufficient trailing strings options specified');
+    if (trailingStrings) {
+      const { min } = trailingStrings.options;
+      if (min !== undefined && trailingStrings.length < min) {
+        throw new GeneralError('Insufficient trailing strings options specified');
+      }
     }
 
     return this;
@@ -72,7 +75,9 @@ export abstract class Options {
   }
 
   private _getStrings(): TrailingStringsOption | null {
-    if ('trailingStrings' in this) {
+    if ('trailingPaths' in this) {
+      return this['trailingPaths'] as TrailingStringsOption;
+    } else if ('trailingStrings' in this) {
       return this['trailingStrings'] as TrailingStringsOption;
     } else {
       return null;

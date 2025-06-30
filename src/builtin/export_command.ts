@@ -5,7 +5,7 @@ import { IContext } from '../context';
 import { ExitCode } from '../exit_code';
 
 class ExportOptions extends Options {
-  trailingStrings = new TrailingStringsOption(0);
+  trailingStrings = new TrailingStringsOption();
 }
 
 export class ExportCommand extends BuiltinCommand {

@@ -63,10 +63,10 @@ export class OptionalStringOption extends BooleanOption {
 // Greedily consumes all remaining options as strings.
 // Often used for file/directory paths.
 export class TrailingStringsOption extends Option {
-  constructor(readonly minCount: number = 1) {
+  constructor(readonly options: TrailingStringsOption.IOptions = {}) {
     super('', '', '');
-    if (minCount < 0) {
-      throw new GeneralError('Negative minCount in TrailingStringsOption.constructor');
+    if (options.min !== undefined && options.min < 0) {
+      throw new GeneralError('Negative min in TrailingStringsOption.constructor');
     }
   }
 
@@ -97,4 +97,23 @@ export class TrailingStringsOption extends Option {
   }
 
   private _strings: string[] = [];
+}
+
+export class TrailingPathsOption extends TrailingStringsOption {
+  constructor(readonly options: TrailingPathsOption.IOptions = {}) {
+    super(options);
+  }
+}
+
+
+export namespace TrailingStringsOption {
+  export interface IOptions {
+    min?: number
+  }
+}
+
+export namespace TrailingPathsOption {
+  export interface IOptions extends TrailingStringsOption.IOptions {
+
+  }
 }

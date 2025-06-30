@@ -12,11 +12,11 @@ class BooleanOptions extends Options {
 
 class TrailingOptions extends Options {
   flag = new BooleanOption('f', 'flag', 'some flag');
-  trailingStrings = new TrailingStringsOption(0);
+  trailingStrings = new TrailingStringsOption();
 }
 
 class AtLeastOneTrailingOptions extends Options {
-  trailingStrings = new TrailingStringsOption(1);
+  trailingStrings = new TrailingStringsOption({ min: 1 });
 }
 
 class OptStringOptions extends Options {
