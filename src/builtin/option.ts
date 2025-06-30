@@ -105,15 +105,12 @@ export class TrailingPathsOption extends TrailingStringsOption {
   }
 }
 
-
 export namespace TrailingStringsOption {
   export interface IOptions {
-    min?: number
+    min?: number;
   }
 }
 
 export namespace TrailingPathsOption {
-  export interface IOptions extends TrailingStringsOption.IOptions {
-
-  }
+  export interface IOptions extends TrailingStringsOption.IOptions {}
 }
