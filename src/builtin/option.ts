@@ -65,8 +65,14 @@ export class OptionalStringOption extends BooleanOption {
 export class TrailingStringsOption extends Option {
   constructor(readonly options: TrailingStringsOption.IOptions = {}) {
     super('', '', '');
-    if (options.min !== undefined && options.min < 0) {
-      throw new GeneralError('Negative min in TrailingStringsOption.constructor');
+    const { max, min } = options;
+    if (min !== undefined) {
+      if (min < 0) {
+        throw new GeneralError('Negative min in TrailingStringsOption.constructor');
+      }
+      if (max !== undefined && max < min) {
+        throw new GeneralError('max must be greater than min in TrailingStringsOption.constructor');
+      }
     }
   }
 
@@ -108,6 +114,7 @@ export class TrailingPathsOption extends TrailingStringsOption {
 export namespace TrailingStringsOption {
   export interface IOptions {
     min?: number;
+    max?: number;
   }
 }
 
