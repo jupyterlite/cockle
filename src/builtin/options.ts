@@ -13,10 +13,18 @@ export abstract class Options {
     const trailingStrings = this._getStrings();
     const inTrailingStrings = false;
 
+    const subcommands: { [key: string]: Subcommand } = (this as any).subcommands ?? {};
+    let firstArg = true;
+
     while (localArgs.length > 0) {
       const arg = localArgs.shift()!;
 
-      if (arg.startsWith('-') && arg.length > 1) {
+      if (firstArg && arg in subcommands) {
+        const subcommand = subcommands[arg];
+        subcommand.set();
+        subcommand.parse(localArgs);
+        break;
+      } else if (arg.startsWith('-') && arg.length > 1) {
         if (inTrailingStrings) {
           throw new GeneralError('Cannot have named option after parsing a trailing path');
         }
@@ -32,12 +40,17 @@ export abstract class Options {
       } else {
         throw new GeneralError(`Unrecognised option: '${arg}'`);
       }
+
+      firstArg = false;
     }
 
     if (trailingStrings) {
-      const { min } = trailingStrings.options;
+      const { min, max } = trailingStrings.options;
       if (min !== undefined && trailingStrings.length < min) {
         throw new GeneralError('Insufficient trailing strings options specified');
+      }
+      if (max !== undefined && trailingStrings.length > max) {
+        throw new GeneralError('Too many trailing strings options specified');
       }
     }
 
@@ -84,13 +97,44 @@ export abstract class Options {
     }
   }
 
-  private _help(): string[] {
+  private *_help(): Generator<string> {
     // Dynamically create help text from options.
-    const sorted = [...Object.values(this)].sort((a, b) => (a.name > b.name ? 1 : -1));
-    return sorted.map(option => {
+    for (const [key, option] of Object.entries(this)) {
+      if (key === 'subcommands') {
+        break;
+      }
       const name = option.prefixedName;
       const spaces = Math.max(1, 12 - name.length);
-      return `    ${name}${' '.repeat(spaces)}${option.description}`;
-    });
+      yield `    ${name}${' '.repeat(spaces)}${option.description}`;
+    }
+
+    if ('subcommands' in this) {
+      const subcommands = this['subcommands'] as object;
+      yield '';
+      yield 'subcommands:';
+      for (const sub of Object.values(subcommands)) {
+        const spaces = Math.max(1, 12 - sub.name.length);
+        yield `    ${sub.name}${' '.repeat(spaces)}${sub.description}`;
+      }
+    }
   }
+}
+
+export class Subcommand extends Options {
+  constructor(
+    readonly name: string,
+    readonly description: string
+  ) {
+    super();
+  }
+
+  get isSet(): boolean {
+    return this._isSet;
+  }
+
+  set() {
+    this._isSet = true;
+  }
+
+  private _isSet = false;
 }

@@ -3,7 +3,7 @@ import {
   OptionalStringOption,
   TrailingStringsOption
 } from '../../src/builtin/option';
-import { Options } from '../../src/builtin/options';
+import { Options, Subcommand } from '../../src/builtin/options';
 
 class BooleanOptions extends Options {
   flag = new BooleanOption('f', 'flag', 'some flag');
@@ -19,9 +19,24 @@ class AtLeastOneTrailingOptions extends Options {
   trailingStrings = new TrailingStringsOption({ min: 1 });
 }
 
+class MaxTwoTrailingOptions extends Options {
+  trailingStrings = new TrailingStringsOption({ max: 2 });
+}
+
 class OptStringOptions extends Options {
   flag = new BooleanOption('f', 'flag', 'some flag');
   possibleString = new OptionalStringOption('p', '', 'possible string');
+}
+
+class ASubcommand extends Subcommand {
+  version = new BooleanOption('v', 'version', 'subcommand version');
+}
+
+class WithSubcommandOptions extends Options {
+  version = new BooleanOption('v', 'version', 'command version');
+  subcommands = {
+    asub: new ASubcommand('asub', 'example subcommand')
+  };
 }
 
 describe('Options', () => {
@@ -79,6 +94,27 @@ describe('Options', () => {
     );
   });
 
+  test('should support maximum number of trailing strings', () => {
+    const options0 = new MaxTwoTrailingOptions().parse([]);
+    expect(options0.trailingStrings.length).toEqual(0);
+    expect(options0.trailingStrings.strings).toEqual([]);
+    expect(options0.trailingStrings.isSet).toBeFalsy();
+
+    const options1 = new MaxTwoTrailingOptions().parse(['abc']);
+    expect(options1.trailingStrings.length).toEqual(1);
+    expect(options1.trailingStrings.strings).toEqual(['abc']);
+    expect(options1.trailingStrings.isSet).toBeTruthy();
+
+    const options2 = new MaxTwoTrailingOptions().parse(['abc', 'def']);
+    expect(options2.trailingStrings.length).toEqual(2);
+    expect(options2.trailingStrings.strings).toEqual(['abc', 'def']);
+    expect(options2.trailingStrings.isSet).toBeTruthy();
+
+    expect(() => new MaxTwoTrailingOptions().parse(['abc', 'def', 'ghi'])).toThrow(
+      /Too many trailing strings options specified/
+    );
+  });
+
   test('should support optional string', () => {
     const options0 = new OptStringOptions().parse([]);
     expect(options0.possibleString.isSet).toBeFalsy();
@@ -106,5 +142,22 @@ describe('Options', () => {
     expect(options1.possibleString.isSet).toBeTruthy();
     expect(options1.possibleString.string).toEqual('abc');
     expect(options1.flag.isSet).toBeTruthy();
+  });
+
+  test('should support subcommand', () => {
+    const options0 = new WithSubcommandOptions().parse(['-v']);
+    expect(options0.version.isSet).toBeTruthy();
+    expect(options0.subcommands.asub.isSet).toBeFalsy();
+    expect(options0.subcommands.asub.version.isSet).toBeFalsy();
+
+    const options1 = new WithSubcommandOptions().parse(['asub']);
+    expect(options1.version.isSet).toBeFalsy();
+    expect(options1.subcommands.asub.isSet).toBeTruthy();
+    expect(options1.subcommands.asub.version.isSet).toBeFalsy();
+
+    const options2 = new WithSubcommandOptions().parse(['asub', '-v']);
+    expect(options2.version.isSet).toBeFalsy();
+    expect(options2.subcommands.asub.isSet).toBeTruthy();
+    expect(options2.subcommands.asub.version.isSet).toBeTruthy();
   });
 });

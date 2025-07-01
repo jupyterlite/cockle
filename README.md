@@ -57,8 +57,8 @@ then open a browser at the specified URL:
 <img alt="Demo" src="demo.png" width="800px">
 
 The demo is served with cross-origin headers so that is supports synchronous `stdin` via both
-SharedArrayBuffer and ServiceWorker. Use `cockle-config -s` to check the current settings, and
-`cockle-config -s sw` to switch to using the ServiceWorker.
+SharedArrayBuffer and ServiceWorker. Use `cockle-config stdin` to check the current settings, and
+`cockle-config stdin sw` to switch to using the ServiceWorker.
 
 ---
 

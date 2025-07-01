@@ -440,7 +440,7 @@ test.describe('Shell', () => {
 
   test.describe('synchronous stdin settings', () => {
     test('should only report SAB if not using shell manager', async ({ page }) => {
-      const output = await shellLineSimple(page, 'cockle-config -s');
+      const output = await shellLineSimple(page, 'cockle-config stdin');
       expect(output).toMatch(
         '│ shared array buffer │ sab        │ yes       │ yes     │\r\n' +
           '│ service worker      │ sw         │           │         │'
@@ -451,7 +451,7 @@ test.describe('Shell', () => {
       const output = await page.evaluate(async () => {
         const { shellManager, shellSetupEmpty } = globalThis.cockle;
         const { output, shell } = await shellSetupEmpty({ shellManager });
-        await shell.inputLine('cockle-config -s');
+        await shell.inputLine('cockle-config stdin');
         return output.text;
       });
       expect(output).toMatch(
@@ -464,7 +464,7 @@ test.describe('Shell', () => {
       const output = await page.evaluate(async () => {
         const { shellManager, shellSetupEmpty } = globalThis.cockle;
         const { output, shell } = await shellSetupEmpty({ shellManager });
-        await shell.inputLine('cockle-config -s sw');
+        await shell.inputLine('cockle-config stdin sw');
         return output.text;
       });
       expect(output).toMatch(
@@ -478,7 +478,7 @@ test.describe('Shell', () => {
     const stdinOptions = ['sab', 'sw'];
     stdinOptions.forEach(stdinOption => {
       test(`check parameterised stdinOption works for ${stdinOption}`, async ({ page }) => {
-        const output = await shellLineSimple(page, 'cockle-config -s', { stdinOption });
+        const output = await shellLineSimple(page, 'cockle-config stdin', { stdinOption });
         if (stdinOption === 'sab') {
           expect(output).toMatch(
             '│ shared array buffer │ sab        │ yes       │ yes     │\r\n' +

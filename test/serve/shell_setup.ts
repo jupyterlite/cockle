@@ -103,7 +103,7 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
 
   if (stdinOption) {
     // Set initial synchronous stdin option before enabling recording of output.
-    await inputLine(`cockle-config -s ${stdinOption}`);
+    await inputLine(`cockle-config stdin ${stdinOption}`);
   }
 
   output.start();

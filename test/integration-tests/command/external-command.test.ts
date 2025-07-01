@@ -7,7 +7,7 @@ test.describe('external command', () => {
       const { externalCommand, shellSetupEmpty } = globalThis.cockle;
       const externalCommands = [{ name: 'external-cmd', command: externalCommand }];
       const { shell, output } = await shellSetupEmpty({ externalCommands });
-      await shell.inputLine('cockle-config -c');
+      await shell.inputLine('cockle-config command');
       return output.text;
     });
     expect(output).toMatch('│ external-cmd  │ <external>');
