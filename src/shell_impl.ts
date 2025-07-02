@@ -132,7 +132,9 @@ export class ShellImpl implements IShellWorker {
         const cmdText = this._currentLine;
         this._currentLine = '';
         this._cursorIndex = 0;
-        await this._runCommands(cmdText);
+        if (cmdText.length > 0) {
+          await this._runCommands(cmdText);
+        }
         await this._outputPrompt();
         break;
       }

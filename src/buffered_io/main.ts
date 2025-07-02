@@ -5,6 +5,10 @@ export abstract class MainIO implements IMainIO {
   constructor() {}
 
   async disable(): Promise<void> {
+    if (!this._enabled) {
+      return;
+    }
+
     this._enabled = false;
     this._clear();
   }

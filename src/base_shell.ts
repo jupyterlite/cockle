@@ -303,6 +303,8 @@ export abstract class BaseShell implements IShell {
   }
 
   private _setMainIO(shortName: string): void {
+    const oldMainIO = this._mainIO;
+
     if (shortName === 'sab' && this._sharedArrayBufferMainIO !== undefined) {
       this._mainIO = this._sharedArrayBufferMainIO;
     } else if (shortName === 'sw' && this._serviceWorkerMainIO !== undefined) {
@@ -310,6 +312,9 @@ export abstract class BaseShell implements IShell {
     } else {
       throw new Error(`Cannot set MainIO to '${shortName}'`);
     }
+
+    // Disable old worker IO before switching it. This is a no-op if already disabled.
+    oldMainIO?.disable();
   }
 
   private _disposed = new Signal<this, void>(this);

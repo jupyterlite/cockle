@@ -11,6 +11,10 @@ export abstract class WorkerIO implements IWorkerIO {
   }
 
   async disable(): Promise<void> {
+    if (!this._enabled) {
+      return;
+    }
+
     this._enabled = false;
     this._clear();
     this._available?.resolve();

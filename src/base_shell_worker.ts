@@ -128,6 +128,8 @@ export abstract class BaseShellWorker implements IShellWorker {
   }
 
   private _setWorkerIO(shortName: string): void {
+    const oldWorkerIO = this._workerIO;
+
     if (shortName === 'sab' && this._sharedArrayBufferWorkerIO !== undefined) {
       this._workerIO = this._sharedArrayBufferWorkerIO;
     } else if (shortName === 'sw' && this._serviceWorkerWorkerIO !== undefined) {
@@ -135,6 +137,9 @@ export abstract class BaseShellWorker implements IShellWorker {
     } else {
       throw new Error(`Cannot set WorkerIO to '${shortName}'`);
     }
+
+    // Disable old worker IO before switching it. This is a no-op if already disabled.
+    oldWorkerIO?.disable();
 
     this._shellImpl?.setWorkerIO(this._workerIO);
   }

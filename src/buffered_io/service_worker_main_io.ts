@@ -12,6 +12,10 @@ export class ServiceWorkerMainIO extends MainIO implements IMainIO {
   }
 
   override async disable(): Promise<void> {
+    if (!this._enabled) {
+      return;
+    }
+
     // Send all remaining buffered characters as soon as possible via the supplied sendFunction.
     for (const ch of this._readBuffer) {
       this._sendStdinNow!(ch);
