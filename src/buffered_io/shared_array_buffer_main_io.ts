@@ -18,6 +18,10 @@ export class SharedArrayBufferMainIO extends MainIO implements IMainIO {
   }
 
   override async disable(): Promise<void> {
+    if (!this._enabled) {
+      return;
+    }
+
     // Send all remaining buffered characters as soon as possible via the supplied sendFunction.
     this._disabling = true;
     if (this._readSentCount !== this._readCount) {
