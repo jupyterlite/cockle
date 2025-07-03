@@ -25,7 +25,10 @@ export class TabCompleter {
       possibles = this._getPossibleCompletionsCommand(tokenToComplete);
     } else {
       // FileSystem matches are special as slashes can modify commandLine and tokenToComplete.
-      [commandLine, tokenToComplete, possibles] = this._getPossibleCompletionsFileSystem(commandLine, tokenToComplete);
+      [commandLine, tokenToComplete, possibles] = this._getPossibleCompletionsFileSystem(
+        commandLine,
+        tokenToComplete
+      );
     }
 
     if (possibles.length === 0) {
@@ -34,7 +37,7 @@ export class TabCompleter {
 
     possibles.sort();
 
-     // If a single possible match, complete using it.
+    // If a single possible match, complete using it.
     if (possibles.length === 1) {
       let extra = possibles[0].slice(tokenToComplete.length);
       if (!extra.endsWith('/')) {
@@ -80,7 +83,7 @@ export class TabCompleter {
     }
 
     const initialLookup = tokenToComplete;
-    tokenToComplete = analyze.name;  // Drop parent directories in possible matches.
+    tokenToComplete = analyze.name; // Drop parent directories in possible matches.
     const { exists } = analyze;
     if (exists && !FS.isDir(FS.stat(analyze.path, false).mode)) {
       // Exactly matches a filename.
@@ -111,7 +114,7 @@ export class TabCompleter {
     // Directories are displayed with appended /
     possibles = possibles.map((path: string) =>
       FS.isDir(FS.stat(lookupPath + '/' + path, false).mode) ? path + '/' : path
-    )
+    );
 
     return [commandLine, tokenToComplete, possibles];
   }
