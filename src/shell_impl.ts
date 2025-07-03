@@ -1,6 +1,7 @@
 import { Aliases } from './aliases';
 import { ansi } from './ansi';
 import { IWorkerIO } from './buffered_io';
+import { ICommandLine } from './command_line';
 import { IContext } from './context';
 import { IShellImpl, IShellWorker } from './defs_internal';
 import { Environment } from './environment';
@@ -20,11 +21,11 @@ import {
   TerminalOutput
 } from './io';
 import { CommandNode, PipeNode, parse } from './parse';
-import { longestStartsWith, toColumns } from './utils';
 import { CommandModule } from './commands/command_module';
 import { CommandModuleLoader } from './commands/command_module_loader';
 import { CommandPackage } from './commands/command_package';
 import { CommandRegistry } from './commands/command_registry';
+import { TabCompleter } from './tab_completer';
 import { joinURL } from './utils';
 
 /**
@@ -88,6 +89,8 @@ export class ShellImpl implements IShellWorker {
       this._options.color ? ansi.styleRed : undefined,
       this._options.color ? ansi.styleReset : undefined
     );
+
+    this._tabCompleter = new TabCompleter(this._context);
   }
 
   get aliases(): Aliases {
@@ -129,9 +132,9 @@ export class ShellImpl implements IShellWorker {
       case 13: {
         // \r
         this.output('\n');
-        const cmdText = this._currentLine;
-        this._currentLine = '';
-        this._cursorIndex = 0;
+        const cmdText = this._commandLine.text;
+        this._commandLine.text = '';
+        this._commandLine.cursorIndex = 0;
         if (cmdText.length > 0) {
           await this._runCommands(cmdText);
         }
@@ -139,17 +142,18 @@ export class ShellImpl implements IShellWorker {
         break;
       }
       case 127: // Backspace
-        if (this._cursorIndex > 0) {
-          const suffix = this._currentLine.slice(this._cursorIndex);
-          this._currentLine = this._currentLine.slice(0, this._cursorIndex - 1) + suffix;
-          this._cursorIndex--;
+        if (this._commandLine.cursorIndex > 0) {
+          const { cursorIndex, text } = this._commandLine;
+          const suffix = text.slice(cursorIndex);
+          this._commandLine.text = text.slice(0, cursorIndex - 1) + suffix;
+          this._commandLine.cursorIndex--;
           this.output(
             ansi.cursorLeft(1) + suffix + ansi.eraseEndLine + ansi.cursorLeft(suffix.length)
           );
         }
         break;
       case 9: // Tab \t
-        await this._tabComplete();
+        this._commandLine = await this._tabCompleter.complete(this._commandLine);
         break;
       case 27: // Escape following by 1+ more characters
         this._escapedInput(char);
@@ -158,17 +162,18 @@ export class ShellImpl implements IShellWorker {
         break;
       default:
         // Add char to command line at cursor position.
-        if (this._cursorIndex === this._currentLine.length) {
+        if (this._commandLine.cursorIndex === this._commandLine.text.length) {
           // Append char.
-          this._currentLine += char;
+          this._commandLine.text += char;
           this.output(char);
         } else {
           // Insert char.
-          const suffix = this._currentLine.slice(this._cursorIndex);
-          this._currentLine = this._currentLine.slice(0, this._cursorIndex) + char + suffix;
+          const { cursorIndex, text } = this._commandLine;
+          const suffix = text.slice(cursorIndex);
+          this._commandLine.text = text.slice(0, cursorIndex) + char + suffix;
           this.output(ansi.eraseEndLine + char + suffix + ansi.cursorLeft(suffix.length));
         }
-        this._cursorIndex++;
+        this._commandLine.cursorIndex++;
         break;
     }
   }
@@ -241,68 +246,72 @@ export class ShellImpl implements IShellWorker {
       case '[B': // Down arrow
       case '[1B': {
         const cmdText = this.history.scrollCurrent(remainder.endsWith('B'));
-        this._currentLine = cmdText !== null ? cmdText : '';
-        this._cursorIndex = this._currentLine.length;
+        this._commandLine.text = cmdText !== null ? cmdText : '';
+        this._commandLine.cursorIndex = this._commandLine.text.length;
         // Re-output whole line.
-        this.output(ansi.eraseStartLine + `\r${this.environment.getPrompt()}${this._currentLine}`);
+        this.output(
+          ansi.eraseStartLine + `\r${this.environment.getPrompt()}${this._commandLine.text}`
+        );
         break;
       }
       case '[D': // Left arrow
       case '[1D':
-        if (this._cursorIndex > 0) {
-          this._cursorIndex--;
+        if (this._commandLine.cursorIndex > 0) {
+          this._commandLine.cursorIndex--;
           this.output(ansi.cursorLeft());
         }
         break;
       case '[C': // Right arrow
       case '[1C':
-        if (this._cursorIndex < this._currentLine.length) {
-          this._cursorIndex++;
+        if (this._commandLine.cursorIndex < this._commandLine.text.length) {
+          this._commandLine.cursorIndex++;
           this.output(ansi.cursorRight());
         }
         break;
       case '[3~': // Delete
-        if (this._cursorIndex < this._currentLine.length) {
-          const suffix = this._currentLine.slice(this._cursorIndex + 1);
-          this._currentLine = this._currentLine.slice(0, this._cursorIndex) + suffix;
+        if (this._commandLine.cursorIndex < this._commandLine.text.length) {
+          const { cursorIndex, text } = this._commandLine;
+          const suffix = text.slice(cursorIndex + 1);
+          this._commandLine.text = text.slice(0, cursorIndex) + suffix;
           this.output(ansi.eraseEndLine + suffix + ansi.cursorLeft(suffix.length));
         }
         break;
       case '[H': // Home
       case '[1;2H':
-        if (this._cursorIndex > 0) {
-          this.output(ansi.cursorLeft(this._cursorIndex));
-          this._cursorIndex = 0;
+        if (this._commandLine.cursorIndex > 0) {
+          this.output(ansi.cursorLeft(this._commandLine.cursorIndex));
+          this._commandLine.cursorIndex = 0;
         }
         break;
       case '[F': // End
       case '[1;2F': {
-        const { length } = this._currentLine;
-        if (this._cursorIndex < length) {
-          this.output(ansi.cursorRight(length - this._cursorIndex));
-          this._cursorIndex = length;
+        const { length } = this._commandLine.text;
+        if (this._commandLine.cursorIndex < length) {
+          this.output(ansi.cursorRight(length - this._commandLine.cursorIndex));
+          this._commandLine.cursorIndex = length;
         }
         break;
       }
       case '[1;2D': // Start of previous word
       case '[1;5D':
-        if (this._cursorIndex > 0) {
-          const index =
-            this._currentLine.slice(0, this._cursorIndex).trimEnd().lastIndexOf(' ') + 1;
-          this.output(ansi.cursorLeft(this._cursorIndex - index));
-          this._cursorIndex = index;
+        if (this._commandLine.cursorIndex > 0) {
+          const { cursorIndex, text } = this._commandLine;
+          const index = text.slice(0, cursorIndex).trimEnd().lastIndexOf(' ') + 1;
+          this.output(ansi.cursorLeft(cursorIndex - index));
+          this._commandLine.cursorIndex = index;
         }
         break;
       case '[1;2C': // End of next word
       case '[1;5C': {
-        const { length } = this._currentLine;
-        if (this._cursorIndex < length - 1) {
-          const end = this._currentLine.slice(this._cursorIndex);
+        const { length } = this._commandLine.text;
+        if (this._commandLine.cursorIndex < length - 1) {
+          const { cursorIndex, text } = this._commandLine;
+          const end = text.slice(cursorIndex);
           const trimmed = end.trimStart();
           const i = trimmed.indexOf(' ');
-          const index = i < 0 ? length : this._cursorIndex + end.length - trimmed.length + i;
-          this.output(ansi.cursorRight(index - this._cursorIndex));
-          this._cursorIndex = index;
+          const index = i < 0 ? length : cursorIndex + end.length - trimmed.length + i;
+          this.output(ansi.cursorRight(index - cursorIndex));
+          this._commandLine.cursorIndex = index;
         }
         break;
       }
@@ -669,95 +678,7 @@ export class ShellImpl implements IShellWorker {
     return await this._context.workerIO.readAsync(maxChars, 0);
   }
 
-  private async _tabComplete(): Promise<void> {
-    const text = this._currentLine.slice(0, this._cursorIndex);
-    if (text.endsWith(' ') && text.trim().length > 0) {
-      return;
-    }
-
-    const suffix = this._currentLine.slice(this._cursorIndex);
-    const parsed = parse(text, false);
-    const [lastToken, isCommand] =
-      parsed.length > 0 ? parsed[parsed.length - 1].lastToken() : [null, true];
-    let lookup = lastToken?.value ?? '';
-
-    let possibles: string[] = [];
-    if (isCommand) {
-      const commandMatches = this._context.commandRegistry.match(lookup);
-      const aliasMatches = this.aliases.match(lookup);
-      // Combine, removing duplicates, and sort.
-      possibles = [...new Set([...commandMatches, ...aliasMatches])].sort();
-    } else {
-      // Is filename.
-      const { FS } = this._context.fileSystem;
-      const analyze = FS.analyzePath(lookup, false);
-      if (!analyze.parentExists) {
-        return;
-      }
-
-      const initialLookup = lookup;
-      lookup = analyze.name;
-      const { exists } = analyze;
-      if (exists && !FS.isDir(FS.stat(analyze.path, false).mode)) {
-        // Exactly matches a filename.
-        possibles = [lookup];
-      } else {
-        const lookupPath = exists ? analyze.path : analyze.parentPath;
-        possibles = FS.readdir(lookupPath);
-
-        if (exists) {
-          const wantDot =
-            initialLookup === '.' ||
-            initialLookup === '..' ||
-            initialLookup.endsWith('/.') ||
-            initialLookup.endsWith('/..');
-          if (wantDot) {
-            possibles = possibles.filter((path: string) => path.startsWith('.'));
-          } else {
-            possibles = possibles.filter((path: string) => !path.startsWith('.'));
-            if (!initialLookup.endsWith('/')) {
-              this._currentLine += '/';
-            }
-          }
-        } else {
-          possibles = possibles.filter((path: string) => path.startsWith(lookup));
-        }
-
-        // Directories are displayed with appended /
-        possibles = possibles.map((path: string) =>
-          FS.isDir(FS.stat(lookupPath + '/' + path, false).mode) ? path + '/' : path
-        );
-      }
-    }
-
-    if (possibles.length === 1) {
-      let extra = possibles[0].slice(lookup.length);
-      if (!extra.endsWith('/')) {
-        extra += ' ';
-      }
-      this._currentLine = this._currentLine.slice(0, this._cursorIndex) + extra + suffix;
-      this._cursorIndex += extra.length;
-      this.output(extra + suffix + ansi.cursorLeft(suffix.length));
-    } else if (possibles.length > 1) {
-      // Multiple possibles.
-      const startsWith = longestStartsWith(possibles, lookup.length);
-      if (startsWith.length > lookup.length) {
-        // Complete up to the longest common startsWith.
-        const extra = startsWith.slice(lookup.length);
-        this._currentLine = this._currentLine.slice(0, this._cursorIndex) + extra + suffix;
-        this._cursorIndex += extra.length;
-        this.output(extra + suffix + ansi.cursorLeft(suffix.length));
-      } else {
-        // Write all the possibles in columns across the terminal.
-        const lines = toColumns(possibles, this.environment.getNumber('COLUMNS') ?? 0);
-        const output = `\n${lines.join('\n')}\n${this.environment.getPrompt()}${this._currentLine}`;
-        this.output(output + ansi.cursorLeft(suffix.length));
-      }
-    }
-  }
-
-  private _currentLine: string = '';
-  private _cursorIndex: number = 0;
+  private _commandLine: ICommandLine = { text: '', cursorIndex: 0 };
   private _darkMode?: boolean;
   private _isRunning = false;
   private _themeStatus = ThemeStatus.PendingChange;
@@ -769,6 +690,7 @@ export class ShellImpl implements IShellWorker {
   private _fileSystem: IFileSystem;
   private _options: IShellImpl.IOptions;
   private _stderr: TerminalOutput;
+  private _tabCompleter: TabCompleter;
 }
 
 /**
