@@ -241,7 +241,7 @@ test.describe('Shell', () => {
 
     test('should support . for current directory', async ({ page }) => {
       const output = await shellInputsSimple(page, ['l', 's', ' ', '.', '\t']);
-      expect(output).toMatch(/^ls .\r\n.\/ {3}..\/\r\n/);
+      expect(output).toMatch(/^ls .\r\n..\/ {2}.\/\r\n/);
       expect(output).toMatch(/ls .$/);
     });
 
@@ -281,7 +281,7 @@ test.describe('Shell', () => {
         ],
         options
       );
-      expect(output[0]).toMatch(/^ls .\r\n.\/ {7}..\/ {6}.adir\/ {3}.afile1 {2}.afile2\r\n/);
+      expect(output[0]).toMatch(/^ls .\r\n..\/ {6}.\/ {7}.adir\/ {3}.afile1 {2}.afile2\r\n/);
       expect(output[1]).toMatch(/^ls .a\r\n.adir\/ {3}.afile1 {2}.afile2\r\n/);
       expect(output[2]).toEqual('ls .afile');
     });
