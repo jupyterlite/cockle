@@ -524,6 +524,16 @@ export class ShellImpl implements IShellWorker {
         }
       }
     }
+
+    // Initialise environment variables.
+    if (Object.hasOwn(cockleConfig, 'environment')) {
+      for (const [key, v] of Object.entries(cockleConfig.environment)) {
+        const value = v as string;
+        if (value.length > 0) {
+          this.environment.set(key, value);
+        }
+      }
+    }
   }
 
   private async _outputPrompt(): Promise<void> {

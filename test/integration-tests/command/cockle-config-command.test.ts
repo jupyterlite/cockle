@@ -24,7 +24,7 @@ test.describe('cockle-config command', () => {
       '│ package │ type │ version │ build string │ source                                       │'
     );
     expect(lines[4]).toMatch(
-      '│ grep    │ wasm │ 3.11    │ ha2cbc09_6   │ https://repo.prefix.dev/emscripten-forge-dev │'
+      '│ grep    │ wasm │ 3.11    │ h4e94343_7   │ https://repo.prefix.dev/emscripten-forge-dev │'
     );
 
     const output1 = await shellLineSimple(page, 'cockle-config package xyz123');

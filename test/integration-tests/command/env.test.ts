@@ -11,4 +11,9 @@ test.describe('env command', () => {
     const output = await shellLineSimple(page, 'env MYENV="ls -alF"|grep MYENV');
     expect(output).toMatch(/env MYENV="ls -alF"|grep MYENV\r\nMYENV=ls -alF\r\n/);
   });
+
+  test('should set from cockle-config-in.json', async ({ page }) => {
+    const output = await shellLineSimple(page, 'env | grep ENV_VAR_FROM_COCKLE_CONFIG');
+    expect(output).toMatch('\r\nENV_VAR_FROM_COCKLE_CONFIG=xyz123\r\n');
+  });
 });
