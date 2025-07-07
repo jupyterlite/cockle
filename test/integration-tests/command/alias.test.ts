@@ -22,4 +22,9 @@ test.describe('alias command', () => {
     const output = await shellLineSimpleN(page, ['alias abc="ls -alF"', 'alias | grep abc']);
     expect(output[1]).toMatch("\r\nabc='ls -alF'\r\n");
   });
+
+  test('should set alias from cockle-config-in.json', async ({ page }) => {
+    const output = await shellLineSimple(page, 'alias vi');
+    expect(output).toMatch("alias vi\r\nvi='vim'\r\n")
+  });
 });

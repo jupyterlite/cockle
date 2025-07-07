@@ -91,7 +91,8 @@ const inputSchema = zod
         })
         .strict()
     ),
-    aliases: zod.record(zod.string(), zod.string())
+    aliases: zod.optional(zod.record(zod.string(), zod.string())),
+    environment: zod.optional(zod.record(zod.string(), zod.string()))
   })
   .strict();
 inputSchema.parse(cockleConfig);
@@ -239,7 +240,8 @@ const outputSchema = zod
         })
         .strict()
     ),
-    aliases: zod.record(zod.string(), zod.string())
+    aliases: zod.optional(zod.record(zod.string(), zod.string())),
+    environment: zod.optional(zod.record(zod.string(), zod.string()))
   })
   .strict();
 outputSchema.parse(cockleConfig);

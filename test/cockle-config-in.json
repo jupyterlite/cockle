@@ -23,5 +23,8 @@
   },
   "aliases": {
     "vi": "vim"
+  },
+  "environment": {
+    "ENV_VAR_FROM_COCKLE_CONFIG": "xyz123"
   }
 }
