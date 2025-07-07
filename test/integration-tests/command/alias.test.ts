@@ -25,6 +25,6 @@ test.describe('alias command', () => {
 
   test('should set alias from cockle-config-in.json', async ({ page }) => {
     const output = await shellLineSimple(page, 'alias vi');
-    expect(output).toMatch("alias vi\r\nvi='vim'\r\n")
+    expect(output).toMatch("alias vi\r\nvi='vim'\r\n");
   });
 });
