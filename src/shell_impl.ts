@@ -91,7 +91,7 @@ export class ShellImpl implements IShellWorker {
       this._options.color ? ansi.styleReset : undefined
     );
 
-    this._tabCompleter = new TabCompleter(this._runContext);
+    this._tabCompleter = new TabCompleter(this._runContext, this._options.enableBufferedStdinCallback);
   }
 
   get aliases(): Aliases {
