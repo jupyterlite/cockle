@@ -553,8 +553,7 @@ test.describe('Shell', () => {
       expect(lines.at(-1)).toMatch(/ls a$/);
     });
 
-    //const stdinOptions = ['sab', 'sw'];
-    const stdinOptions = ['sw'];
+    const stdinOptions = ['sab', 'sw'];
     stdinOptions.forEach(stdinOption => {
       test(`check prompt displayed and accepted using y via ${stdinOption}`, async ({ page }) => {
         const output = await page.evaluate(
