@@ -208,17 +208,18 @@ export class TabCompleter {
     workerIO.termios.setRawMode();
 
     let ret = false;
-    while (true) {
+    let haveResponse = false;
+    while (!haveResponse) {
       const read = await workerIO.readAsync(1, 0);
       if (read.length > 0) {
         const char = read[0];
         if (char === 121) {
           // 121='y'
           ret = true;
-          break;
+          haveResponse = true;
         } else if ([3, 4, 110].includes(char)) {
           // 3=ETX, 4=EOT, 110='n'
-          break;
+          haveResponse = true;
         }
       }
     }
