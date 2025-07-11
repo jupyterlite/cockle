@@ -2,6 +2,15 @@ import { expect } from '@playwright/test';
 import { test } from '../utils';
 
 test.describe('wasm-test', () => {
+  test('should register', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+      await shell.inputLine('cockle-config command wasm-test');
+      return output.text;
+    });
+    expect(output).toMatch('│ wasm-test │ wasm-test │');
+  });
+
   test('should write to stdout', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { shell, output } = await globalThis.cockle.shellSetupEmpty();
