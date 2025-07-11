@@ -169,7 +169,7 @@ test.describe('Shell', () => {
 
     test('should include aliases', async ({ page }) => {
       expect(await shellInputsSimple(page, ['l', '\t'])).toMatch(
-        /^l\r\nless {7}ll {9}ln {9}local-cmd {2}logname {4}ls {9}lua\r\n/
+        /^l\r\nless {5}ll {7}ln {7}logname {2}ls {7}lua\r\n/
       );
     });
 
