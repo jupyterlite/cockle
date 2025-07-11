@@ -14,7 +14,7 @@
     },
     "util-wasm": {
       "modules": {
-        "local-cmd": {}
+        "wasm-test": {}
       },
       "local_directory": "../test/util-wasm/wasm"
     },

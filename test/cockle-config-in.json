@@ -15,7 +15,7 @@
     "util-wasm": {
       "modules": {
         "check_termios": {},
-        "local-cmd": {}
+        "wasm-test": {}
       },
       "local_directory": "../test/util-wasm/wasm"
     },

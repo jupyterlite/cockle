@@ -2,7 +2,7 @@
 
 set -eux
 
-names=(check_termios local-cmd)
+names=(check_termios wasm-test)
 
 for name in ${names[@]}; do
     emcc \
