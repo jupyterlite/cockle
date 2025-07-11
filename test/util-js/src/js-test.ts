@@ -54,6 +54,34 @@ export async function run(context: IJavaScriptContext): Promise<number> {
     }
   }
 
+  if (args.includes('readfile')) {
+    // Read from file and echo content to stdout.
+    const { FS } = context.fileSystem;
+    const filename = 'readfile.txt';
+    try {
+      // Exception thrown here will be handled by JavaScriptCommandRunner, but can provide more
+      // precise error information here.
+      const content = FS.readFile(filename, { encoding: 'utf8' });
+      context.stdout.write(content);
+    } catch {
+      context.stderr.write(`Unable to open file ${filename} for reading`);
+      return ExitCode.GENERAL_ERROR;
+    }
+  }
+
+  if (args.includes('writefile')) {
+    const { FS } = context.fileSystem;
+    const filename = 'writefile.txt';
+    try {
+      // Exception thrown here will be handled by JavaScriptCommandRunner, but can provide more
+      // precise error information here.
+      FS.writeFile(filename, 'File written by js-test');
+    } catch {
+      context.stderr.write(`Unable to open file ${filename} for writing`);
+      return ExitCode.GENERAL_ERROR;
+    }
+  }
+
   if (args.includes('exitCode')) {
     return ExitCode.GENERAL_ERROR;
   }

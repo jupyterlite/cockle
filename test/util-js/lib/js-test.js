@@ -23,7 +23,7 @@ var Module = (function (exports) {
         }
         if (args.includes('color')) {
             for (let j = 0; j < 16; j++) {
-                let line = '';
+                const line = '';
                 for (let i = 0; i < 32; i++) {
                     // r,g,b in range 0 to 255 inclusive.
                     const r = (i + 1) * 8 - 1;
@@ -31,7 +31,8 @@ var Module = (function (exports) {
                     const b = (j + 1) * 16 - 1;
                     context.stdout.write(`\x1b[38;2;${r};${g};${b}m` + // RGB color.
                         String.fromCharCode(65 + i) +
-                        "\x1b[1;0m");
+                        '\x1b[1;0m' // Reset color.
+                    );
                 }
                 context.stdout.write(line + '\n');
             }
@@ -48,6 +49,34 @@ var Module = (function (exports) {
                 else {
                     stdout.write(chars.toUpperCase());
                 }
+            }
+        }
+        if (args.includes('readfile')) {
+            // Read from file and echo content to stdout.
+            const { FS } = context.fileSystem;
+            const filename = "readfile.txt";
+            try {
+                // Exception thrown here will be handled by JavaScriptCommandRunner, but can provide more
+                // precise error information here.
+                const content = FS.readFile(filename, { encoding: 'utf8' });
+                context.stdout.write(content);
+            }
+            catch {
+                context.stderr.write(`Unable to open file ${filename} for reading`);
+                return ExitCode.GENERAL_ERROR;
+            }
+        }
+        if (args.includes('writefile')) {
+            const { FS } = context.fileSystem;
+            const filename = "writefile.txt";
+            try {
+                // Exception thrown here will be handled by JavaScriptCommandRunner, but can provide more
+                // precise error information here.
+                FS.writeFile(filename, "File written by js-test");
+            }
+            catch {
+                context.stderr.write(`Unable to open file ${filename} for writing`);
+                return ExitCode.GENERAL_ERROR;
             }
         }
         if (args.includes('exitCode')) {
