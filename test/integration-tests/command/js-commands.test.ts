@@ -169,4 +169,27 @@ test.describe('js-test', () => {
       expect(output).toMatch(/^js-test stdin\r\naABB {2}cC\r\n/);
     });
   });
+
+  test('should write color to stdout', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { shell, output } = await globalThis.cockle.shellSetupSimple();
+      await shell.inputLine('js-test color');
+      return output.text;
+    });
+    const lines = output.split('\r\n');
+    // eslint-disable-next-line no-control-regex
+    expect(lines[1]).toMatch(/^\x1b\[38;2;7;128;15mA\x1b\[1;0m/);
+  });
+
+  test('should not write color to file', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { shell, output } = await globalThis.cockle.shellSetupSimple();
+      await shell.inputLine('js-test color > out');
+      output.clear();
+      await shell.inputLine('cat out');
+      return output.text;
+    });
+    const lines = output.split('\r\n');
+    expect(lines[1]).toMatch(/^ABCDEFGHIJKLMNOPQRSTUVWXYZ/);
+  });
 });

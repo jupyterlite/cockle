@@ -125,4 +125,27 @@ test.describe('wasm-test', () => {
       expect(output).toMatch(/^wasm-test stdin\r\naABB {2}cC\r\n/);
     });
   });
+
+  test('should write color to stdout', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { shell, output } = await globalThis.cockle.shellSetupSimple();
+      await shell.inputLine('wasm-test color');
+      return output.text;
+    });
+    const lines = output.split('\r\n');
+    // eslint-disable-next-line no-control-regex
+    expect(lines[1]).toMatch(/^\x1b\[38;2;255;128;255mA\x1b\[1;0m/);
+  });
+
+  test('should not write color to file', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { shell, output } = await globalThis.cockle.shellSetupSimple();
+      await shell.inputLine('wasm-test color > out');
+      output.clear();
+      await shell.inputLine('cat out');
+      return output.text;
+    });
+    const lines = output.split('\r\n');
+    expect(lines[1]).toMatch(/^ABCDEFGHIJKLMNOPQRSTUVWXYZ/);
+  });
 });

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 int argsInclude(int argc, char** argv, char* check) {
   for (int i = 1; i < argc; i++) {
@@ -27,15 +28,20 @@ int main(int argc, char** argv) {
   }
 
   if (argsInclude(argc, argv, "color")) {
+    int useColor = isatty(fileno(stdout));
     for (int j = 0; j < 16; j++) {
       for (int i = 0; i < 32; i++) {
         // r,g,b in range 0 to 255 inclusive.
         int r = (32-i)*8 - 1;
         int g = 128;
         int b = (16-j)*16 - 1;
-        printf("\e[38;2;%i;%i;%im", r, g, b);  // RGB color.
+        if (useColor) {
+          printf("\e[38;2;%i;%i;%im", r, g, b);  // RGB color.
+        }
         printf("%c", 65+i);
-        printf("\e[1;0m");  // Reset color.
+        if (useColor) {
+          printf("\e[1;0m");  // Reset color.
+        }
       }
       printf("\n");
     }

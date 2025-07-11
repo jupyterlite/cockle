@@ -1,4 +1,4 @@
-import { ExitCode, IExternalContext } from '@jupyterlite/cockle';
+import { ansi, ExitCode, IExternalContext } from '@jupyterlite/cockle';
 
 // External command with different bahaviour depending on supplied args, to test
 // external command functionality.
@@ -21,6 +21,24 @@ export async function externalCommand(context: IExternalContext): Promise<number
 
   if (args.includes('stderr')) {
     context.stderr.write('Error message\n');
+  }
+
+  if (args.includes('color')) {
+    const { stdout } = context;
+    const useColor = stdout.supportsAnsiEscapes();
+    for (let j = 0; j < 16; j++) {
+      let line = '';
+      for (let i = 0; i < 32; i++) {
+        if (useColor) {
+          line += ansi.styleRGB((i + 1) * 8 - 1, 128, (j + 1) * 16 - 1);
+        }
+        line += String.fromCharCode(65 + i);
+        if (useColor) {
+          line += ansi.styleReset;
+        }
+      }
+      stdout.write(line + '\n');
+    }
   }
 
   if (args.includes('stdin')) {
