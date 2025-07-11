@@ -54,6 +54,35 @@ int main(int argc, char** argv) {
     }
   }
 
+  if (argsInclude(argc, argv, "readfile")) {
+    // Read from file and echo content to stdout.
+    const char* filename = "readfile.txt";
+    FILE* fp = fopen(filename, "r");
+    if (fp == NULL) {
+      fprintf(stderr, "Unable to open file %s for reading", filename);
+      return 1;
+    }
+    char buffer[10];
+    size_t count = 0;
+    do {
+      count = fread(buffer, sizeof(buffer[0]), sizeof(buffer)/sizeof(buffer[0]), fp);
+      fwrite(buffer, sizeof(buffer[0]), count, stdout);
+    } while (count > 0);
+    fflush(stdout);
+    fclose(fp);
+  }
+
+  if (argsInclude(argc, argv, "writefile")) {
+    const char* filename = "writefile.txt";
+    FILE* fp = fopen(filename, "w");
+    if (fp == NULL) {
+      fprintf(stderr, "Unable to open file %s for writing", filename);
+      return 1;
+    }
+    fprintf(fp, "File written by wasm-test");
+    fclose(fp);
+  }
+
   if (argsInclude(argc, argv, "exitCode")) {
     return 1;
   }
