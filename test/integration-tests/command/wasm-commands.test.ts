@@ -41,6 +41,31 @@ test.describe('wasm-test', () => {
     expect(output).toMatch('Error message\r\n');
   });
 
+  test('should write to named file', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+      await shell.inputLine('wasm-test writefile');
+      output.clear();
+      await shell.inputLine('cat writefile.txt');
+      return output.text;
+    });
+    expect(output).toMatch('\r\nFile written by wasm-test\r\n');
+  });
+
+  test('should read from named file', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+      await shell.inputLine('wasm-test readfile'); // Fails, no such file.
+      const ret0 = output.textAndClear();
+      await shell.inputLine('echo abcdefghij0123456789 > readfile.txt');
+      output.clear();
+      await shell.inputLine('wasm-test readfile'); // Succeeds and echoes to stdout.
+      return [ret0, output.text];
+    });
+    expect(output[0]).toMatch('\r\nUnable to open file readfile.txt for reading\r\n');
+    expect(output[1]).toMatch('\r\nabcdefghij0123456789\r\n');
+  });
+
   test('should return exit code', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { shell, output } = await globalThis.cockle.shellSetupEmpty();
