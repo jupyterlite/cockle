@@ -23,20 +23,24 @@ export async function run(context: IJavaScriptContext): Promise<number> {
   }
 
   if (args.includes('color')) {
+    const { stdout } = context;
+    const useColor = stdout.supportsAnsiEscapes();
     for (let j = 0; j < 16; j++) {
-      const line = '';
+      let line = '';
       for (let i = 0; i < 32; i++) {
         // r,g,b in range 0 to 255 inclusive.
         const r = (i + 1) * 8 - 1;
         const g = 128;
         const b = (j + 1) * 16 - 1;
-        context.stdout.write(
-          `\x1b[38;2;${r};${g};${b}m` + // RGB color.
-            String.fromCharCode(65 + i) +
-            '\x1b[1;0m' // Reset color.
-        );
+        if (useColor) {
+          line += `\x1b[38;2;${r};${g};${b}m`; // RGB color.
+        }
+        line += String.fromCharCode(65 + i);
+        if (useColor) {
+          line += '\x1b[1;0m'; // Reset color.
+        }
       }
-      context.stdout.write(line + '\n');
+      stdout.write(line + '\n');
     }
   }
 

@@ -3,8 +3,9 @@ import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_run
 import { IContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
-import type { MainModule } from '../types/wasm_module';
+import { IOutput } from '../io';
 import { ITermios } from '../termios';
+import type { MainModule } from '../types/wasm_module';
 import { joinURL } from '../utils';
 
 export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
@@ -135,7 +136,9 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
             module.TTY.stream_ops.write = write;
           }
         }
-      ]
+      ],
+      stderr: this._outputHandler(stderr),
+      stdout: this._outputHandler(stdout)
     });
 
     if (exitCode === undefined) {
@@ -159,5 +162,17 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     const end = Date.now();
     console.debug(`Cockle ${cmdName} load and run time ${end - start} ms`);
     return exitCode;
+  }
+
+  /**
+   * By default a WebAssembly command assumes stdout and stderr are terminals (TTYs).
+   * If this is not the case, need to provide an output writing wrapper.
+   * With this, WebAssembly commands can use `isatty` correctly.
+   */
+  private _outputHandler(output: IOutput): ((x: number) => void) | undefined {
+    if (!output.supportsAnsiEscapes()) {
+      return (x: number) => output.write(String.fromCharCode(x));
+    }
+    return undefined;
   }
 }

@@ -22,13 +22,20 @@ export async function externalCommand(context: IExternalContext): Promise<number
   }
 
   if (args.includes('color')) {
+    const { stdout } = context;
+    const useColor = stdout.supportsAnsiEscapes();
     for (let j = 0; j < 16; j++) {
       let line = '';
       for (let i = 0; i < 32; i++) {
-        const rgb = ansi.styleRGB((i + 1) * 8 - 1, 128, (j + 1) * 16 - 1);
-        line += rgb + String.fromCharCode(65 + i) + ansi.styleReset;
+        if (useColor) {
+          line += ansi.styleRGB((i + 1) * 8 - 1, 128, (j + 1) * 16 - 1);
+        }
+        line += String.fromCharCode(65 + i);
+        if (useColor) {
+          line += ansi.styleReset;
+        }
       }
-      context.stdout.write(line + '\n');
+      stdout.write(line + '\n');
     }
   }
 
