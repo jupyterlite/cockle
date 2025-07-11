@@ -1,46 +1,6 @@
 var Module = (function (exports) {
     'use strict';
 
-    /**
-     * ANSI escape sequences.
-     */
-    const ESC = '\x1B[';
-    function clamp(n) {
-        return Math.min(Math.max(Math.round(n), 0), 255);
-    }
-    const ansi = {
-        cursorUp: (count = 1) => (count > 0 ? ESC + count + 'A' : ''),
-        cursorDown: (count = 1) => (count > 0 ? ESC + count + 'B' : ''),
-        cursorRight: (count = 1) => (count > 0 ? ESC + count + 'C' : ''),
-        cursorLeft: (count = 1) => (count > 0 ? ESC + count + 'D' : ''),
-        cursorHome: ESC + 'H',
-        eraseScreen: ESC + '2J',
-        eraseSavedLines: ESC + '3J',
-        eraseEndLine: ESC + 'K',
-        eraseStartLine: ESC + '1K',
-        styleRGB: (r, g, b, foreground = true) => {
-            const code = foreground ? '38' : '48';
-            return `${ESC}${code};2;${clamp(r)};${clamp(g)};${clamp(b)}m`;
-        },
-        styleReset: ESC + '1;0m',
-        styleBoldRed: ESC + '1;31m',
-        styleBoldGreen: ESC + '1;32m',
-        styleBrightRed: ESC + '0;91m',
-        styleBrightGreen: ESC + '0;92m',
-        styleBrightYellow: ESC + '0;93m',
-        styleBrightBlue: ESC + '0;94m',
-        styleBrightPurple: ESC + '0;95m',
-        styleBrightCyan: ESC + '0;96m',
-        styleRed: ESC + '0;31m',
-        styleGreen: ESC + '0;32m',
-        styleYellow: ESC + '0;33m',
-        styleBlue: ESC + '0;34m',
-        stylePurple: ESC + '0;35m',
-        styleCyan: ESC + '0;36m',
-        showCursor: ESC + '?25h',
-        hideCursor: ESC + '?25l'
-    };
-
     const ExitCode = {
         SUCCESS: 0,
         GENERAL_ERROR: 1};
@@ -65,8 +25,13 @@ var Module = (function (exports) {
             for (let j = 0; j < 16; j++) {
                 let line = '';
                 for (let i = 0; i < 32; i++) {
-                    const rgb = ansi.styleRGB((i + 1) * 8 - 1, 128, (j + 1) * 16 - 1);
-                    line += rgb + String.fromCharCode(65 + i) + ansi.styleReset;
+                    // r,g,b in range 0 to 255 inclusive.
+                    const r = (i + 1) * 8 - 1;
+                    const g = 128;
+                    const b = (j + 1) * 16 - 1;
+                    context.stdout.write(`\x1b[38;2;${r};${g};${b}m` + // RGB color.
+                        String.fromCharCode(65 + i) +
+                        "\x1b[1;0m");
                 }
                 context.stdout.write(line + '\n');
             }

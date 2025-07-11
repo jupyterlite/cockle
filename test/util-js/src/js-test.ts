@@ -1,5 +1,5 @@
 import type { IJavaScriptContext } from '@jupyterlite/cockle';
-import { ansi, ExitCode } from '@jupyterlite/cockle';
+import { ExitCode } from '@jupyterlite/cockle';
 
 export async function run(context: IJavaScriptContext): Promise<number> {
   const { args } = context;
@@ -24,10 +24,17 @@ export async function run(context: IJavaScriptContext): Promise<number> {
 
   if (args.includes('color')) {
     for (let j = 0; j < 16; j++) {
-      let line = '';
+      const line = '';
       for (let i = 0; i < 32; i++) {
-        const rgb = ansi.styleRGB((i + 1) * 8 - 1, 128, (j + 1) * 16 - 1);
-        line += rgb + String.fromCharCode(65 + i) + ansi.styleReset;
+        // r,g,b in range 0 to 255 inclusive.
+        const r = (i + 1) * 8 - 1;
+        const g = 128;
+        const b = (j + 1) * 16 - 1;
+        context.stdout.write(
+          `\x1b[38;2;${r};${g};${b}m` + // RGB color.
+            String.fromCharCode(65 + i) +
+            '\x1b[1;0m' // Reset color.
+        );
       }
       context.stdout.write(line + '\n');
     }
