@@ -6,8 +6,7 @@
     "tree": {},
     "util-js": {
       "modules": {
-        "js-capitalise": {},
-        "js-read": {}
+        "js-test": {}
       },
       "local_directory": "../test/util-js/lib",
       "wasm": false
