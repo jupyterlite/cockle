@@ -21,15 +21,16 @@ export class ExternalCommandRunner implements ICommandRunner {
     return '';
   }
 
-  async run(cmdName: string, context: IContext): Promise<number> {
-    if (cmdName !== this.name) {
+  async run(context: IContext): Promise<number> {
+    const { name, args, environment, stdin, stdout, stderr } = context;
+
+    if (name !== this.name) {
       // This should not happen.
-      throw new FindCommandError(cmdName);
+      throw new FindCommandError(name);
     }
 
-    const { args, environment, stdin, stdout, stderr } = context;
     const { exitCode, environmentChanges } = await this.callExternalCommand(
-      this.name,
+      name,
       args,
       Object.fromEntries(environment),
       stdin.isTerminal(),
@@ -38,11 +39,11 @@ export class ExternalCommandRunner implements ICommandRunner {
     );
 
     if (environmentChanges !== undefined) {
-      Object.entries(environmentChanges).forEach(([name, value]) => {
-        if (value === undefined) {
-          environment.delete(name);
+      Object.entries(environmentChanges).forEach(([envName, envValue]) => {
+        if (envValue === undefined) {
+          environment.delete(envName);
         } else {
-          environment.set(name, value);
+          environment.set(envName, envValue);
         }
       });
     }

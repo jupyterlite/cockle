@@ -7,5 +7,5 @@ export interface ICommandRunner {
   get moduleName(): string;
   names(): string[];
   get packageName(): string;
-  run(cmdName: string, context: IContext): Promise<number>;
+  run(context: IContext): Promise<number>;
 }

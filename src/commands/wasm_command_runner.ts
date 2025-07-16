@@ -13,14 +13,14 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     super(module);
   }
 
-  async run(cmdName: string, context: IContext): Promise<number> {
-    const { args, workerIO, fileSystem, stdin, stdout, stderr } = context;
+  async run(context: IContext): Promise<number> {
+    const { name, args, workerIO, fileSystem, stdin, stdout, stderr } = context;
     const { wasmBaseUrl } = this.module.loader;
 
     const start = Date.now();
     const wasmModule = this.module.loader.getWasmModule(this.packageName, this.moduleName);
     if (wasmModule === undefined) {
-      throw new FindCommandError(cmdName);
+      throw new FindCommandError(name);
     }
 
     function getTermios(tty: any): ITermios {
@@ -81,7 +81,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       const text = workerIO.utf8ArrayToString(chars);
       const isStderr = stream.path === '/dev/tty1';
 
-      if (isStderr && cmdName === 'touch' && args.length > 1) {
+      if (isStderr && name === 'touch' && args.length > 1) {
         // Crude hiding of many errors in touch command, really only want to hide
         // `touch: failed to close '${args[1]}': Bad file descriptor`
         // but that is sent as multiple write() calls.
@@ -103,7 +103,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     }
 
     const wasm = await wasmModule({
-      thisProgram: cmdName,
+      thisProgram: name,
       arguments: args,
       locateFile: (path: string) => joinURL(wasmBaseUrl, this.packageName + '/' + path),
       onExit: (moduleExitCode: number) => setExitCode(moduleExitCode),
@@ -160,7 +160,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     }
 
     const end = Date.now();
-    console.debug(`Cockle ${cmdName} load and run time ${end - start} ms`);
+    console.debug(`Cockle ${name} load and run time ${end - start} ms`);
     return exitCode;
   }
 

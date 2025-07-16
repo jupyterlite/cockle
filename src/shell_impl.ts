@@ -50,6 +50,7 @@ export class ShellImpl implements IShellWorker {
 
     // Content within which commands are run.
     this._context = {
+      name: '',
       args: [],
       fileSystem: this._fileSystem,
       aliases: new Aliases(),
@@ -644,6 +645,7 @@ export class ShellImpl implements IShellWorker {
     // Set current properties of IContext.
     let args = commandNode.suffix.map(token => token.value);
     args = this._filenameExpansion(args);
+    this._context.name = name;
     this._context.args = args;
     this._context.stdin = input;
     this._context.stdout = output;
@@ -651,12 +653,13 @@ export class ShellImpl implements IShellWorker {
 
     let exitCode = -1;
     try {
-      exitCode = await runner.run(name, this._context);
+      exitCode = await runner.run(this._context);
     } finally {
       error.flush();
       output.flush();
 
       // Reset properties of IContext.
+      this._context.name = '';
       this._context.args = [];
       this._context.stdin = this._dummyInput;
       this._context.stdout = this._dummyOutput;

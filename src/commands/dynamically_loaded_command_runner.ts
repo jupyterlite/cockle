@@ -20,5 +20,5 @@ export abstract class DynamicallyLoadedCommandRunner implements ICommandRunner {
     return this.module.packageName;
   }
 
-  abstract run(cmdName: string, context: IContext): Promise<number>;
+  abstract run(context: IContext): Promise<number>;
 }
