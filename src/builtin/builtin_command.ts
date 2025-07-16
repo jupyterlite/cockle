@@ -17,10 +17,11 @@ export abstract class BuiltinCommand implements ICommandRunner {
 
   abstract get name(): string;
 
-  run(cmdName: string, context: IContext): Promise<number> {
-    if (cmdName !== this.name) {
+  run(context: IContext): Promise<number> {
+    const { name } = context;
+    if (name !== this.name) {
       // This should not happen.
-      throw new FindCommandError(cmdName);
+      throw new FindCommandError(name);
     }
     return this._run(context);
   }

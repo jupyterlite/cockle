@@ -13,6 +13,7 @@ import { CommandRegistry } from '../commands/command_registry';
  * Full context used to run builtin and WebAssembly commands.
  */
 export interface IContext {
+  name: string;
   args: string[];
   fileSystem: IFileSystem;
   environment: Environment;

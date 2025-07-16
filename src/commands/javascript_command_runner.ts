@@ -9,21 +9,22 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
     super(module);
   }
 
-  async run(cmdName: string, context: IContext): Promise<number> {
+  async run(context: IContext): Promise<number> {
+    const { name } = context;
     const jsModule = this.module.loader.getJavaScriptModule(this.packageName, this.moduleName);
     if (jsModule === undefined) {
-      throw new FindCommandError(cmdName);
+      throw new FindCommandError(name);
     }
 
     if (!Object.prototype.hasOwnProperty.call(jsModule, 'run')) {
-      throw new LoadCommandError(cmdName);
+      throw new LoadCommandError(name);
     }
 
     // Narrow context passed to JavaScript command so that we don't leak cockle internals.
     const { args, environment, fileSystem, stdout, stderr } = context;
     const stdin = new JavaScriptInput(context.stdin);
     const jsContext: IJavaScriptContext = {
-      name: cmdName,
+      name,
       args,
       environment,
       fileSystem,
@@ -36,7 +37,7 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
       return await jsModule.run(jsContext);
     } catch (err) {
       console.error(`JavascriptCommandRunner: ${err}`);
-      throw new RunCommandError(cmdName);
+      throw new RunCommandError(name);
     }
   }
 }
