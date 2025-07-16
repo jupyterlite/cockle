@@ -1,11 +1,10 @@
+import { IOutput } from './output';
+
 /**
  * Output used by an ExternalCommand, exists in the main UI not webworker.
  * This effectively wraps a real IOutput in the webworker ShellImpl IContext.
  */
-export interface IExternalOutput {
-  supportsAnsiEscapes(): boolean;
-  write(text: string): void;
-}
+export interface IExternalOutput extends IOutput {}
 
 export class ExternalOutput implements IExternalOutput {
   constructor(
@@ -14,6 +13,8 @@ export class ExternalOutput implements IExternalOutput {
   ) {
     this._supportsAnsiEscapes = supportsAnsiEscapes;
   }
+
+  flush(): void {}
 
   supportsAnsiEscapes(): boolean {
     return this._supportsAnsiEscapes;
