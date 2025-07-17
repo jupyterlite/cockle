@@ -43,7 +43,7 @@ export class CockleConfigCommand extends BuiltinCommand {
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
     const { args } = context;
 
-    if (args.length == 1) {
+    if (args.length === 1) {
       const options = new CockleConfigOptions();
       let possibles = Object.keys(options.subcommands);
       if (args[0]) {
