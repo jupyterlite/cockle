@@ -76,47 +76,41 @@ export class TabCompleter {
     tokenToComplete: string
   ): [ICommandLine, string, string[]] {
     // Need to support restricting to only files and only directories.
-    const { FS } = this.context.fileSystem;
-    const analyze = FS.analyzePath(tokenToComplete, false);
-    if (!analyze.parentExists) {
-      return [commandLine, tokenToComplete, []];
+    const { FS, PATH } = this.context.fileSystem;
+
+    const endsWithSlash = tokenToComplete.endsWith('/');
+    const doubleDot = tokenToComplete.endsWith('..');
+    const singleDot = !doubleDot && tokenToComplete.endsWith('.');
+    const isDot = singleDot || doubleDot;
+
+    if (doubleDot) {
+      // Remove final dot for analyzePath otherwise it returns the parent directory.
+      tokenToComplete = tokenToComplete.slice(0, -1);
     }
 
-    const initialLookup = tokenToComplete;
-    tokenToComplete = analyze.name; // Drop parent directories in possible matches.
-    const { exists } = analyze;
-    if (exists && !FS.isDir(FS.stat(analyze.path, false).mode)) {
-      // Exactly matches a filename.
-      return [commandLine, tokenToComplete, [tokenToComplete]];
+    // Obtain parentPath and prefix (start of filename to match in parentPath)
+    const analyze = FS.analyzePath(tokenToComplete, true);
+    const parentPath: string = endsWithSlash || isDot ? analyze.path : analyze.parentPath;
+    const prefix: string = isDot ? (singleDot ? '.' : '..') : endsWithSlash ? '' : analyze.name;
+
+    // Get all files/directories in parentPath.
+    let possibles: string[] = FS.readdir(parentPath);
+
+    if (endsWithSlash) {
+      // Exclude possibles starting with .
+      possibles = possibles.filter((path: string) => !path.startsWith('.'));
     }
 
-    const lookupPath = exists ? analyze.path : analyze.parentPath;
-    let possibles: string[] = FS.readdir(lookupPath);
-
-    if (exists) {
-      const wantDot =
-        initialLookup === '.' ||
-        initialLookup === '..' ||
-        initialLookup.endsWith('/.') ||
-        initialLookup.endsWith('/..');
-      if (wantDot) {
-        possibles = possibles.filter((path: string) => path.startsWith('.'));
-      } else {
-        possibles = possibles.filter((path: string) => !path.startsWith('.'));
-        if (!initialLookup.endsWith('/')) {
-          commandLine.text += '/';
-        }
-      }
-    } else {
-      possibles = possibles.filter((path: string) => path.startsWith(tokenToComplete));
-    }
+    // Filter for correct string prefix
+    possibles = possibles.filter((path: string) => path.startsWith(prefix));
 
     // Directories are displayed with appended /
     possibles = possibles.map((path: string) =>
-      FS.isDir(FS.stat(lookupPath + '/' + path, false).mode) ? path + '/' : path
+      FS.isDir(FS.stat(PATH.join(parentPath, path), false).mode) ? path + '/' : path
     );
 
-    return [commandLine, tokenToComplete, possibles];
+    // Replate tokenToComplete with prefix, so that parent directories are removed.
+    return [commandLine, prefix, possibles];
   }
 
   private async _showPossibleCompletions(
