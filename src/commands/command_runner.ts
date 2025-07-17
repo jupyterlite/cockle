@@ -1,4 +1,5 @@
 import { IContext } from '../context';
+import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
 
 /**
  * Runs a single named command in a particular runtime context.
@@ -8,4 +9,9 @@ export interface ICommandRunner {
   names(): string[];
   get packageName(): string;
   run(context: IContext): Promise<number>;
+
+  /**
+   * Optional tab completion.
+   */
+  tabComplete?(context: ITabCompleteContext): Promise<ITabCompleteResult>;
 }

@@ -4,6 +4,7 @@ import { Options } from './options';
 import { IContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
+import { ITabCompleteContext, ITabCompleteResult, PathMatch } from '../tab_complete';
 
 class CdOptions extends Options {
   trailingPaths = new TrailingPathsOption();
@@ -12,6 +13,10 @@ class CdOptions extends Options {
 export class CdCommand extends BuiltinCommand {
   get name(): string {
     return 'cd';
+  }
+
+  async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
+    return { pathMatch: PathMatch.Directory };
   }
 
   protected async _run(context: IContext): Promise<number> {

@@ -322,6 +322,7 @@ export class ShellImpl implements IShellWorker {
   }
 
   private _filenameExpansion(args: string[]): string[] {
+    const { PATH } = this._context.fileSystem;
     let ret: string[] = [];
     let nFlags = 0;
 
@@ -373,7 +374,7 @@ export class ShellImpl implements IShellWorker {
       possibles = possibles.filter((path: string) => !path.startsWith('.'));
 
       if (relativePath.length > 0) {
-        possibles = possibles.map((path: string) => relativePath + '/' + path);
+        possibles = possibles.map((path: string) => PATH.join(relativePath, path));
       }
       ret = ret.concat(possibles);
     }
