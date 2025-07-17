@@ -1,7 +1,8 @@
 import { ansi } from './ansi';
 import { ICommandLine } from './command_line';
 import { IContext } from './context';
-import { parse } from './parse';
+import { CommandNode, parse } from './parse';
+import { ITabCompleteResult, PathMatch } from './tab_complete';
 import { longestStartsWith, toColumns } from './utils';
 
 export class TabCompleter {
@@ -9,26 +10,43 @@ export class TabCompleter {
 
   async complete(commandLine: ICommandLine): Promise<ICommandLine> {
     const text = commandLine.text.slice(0, commandLine.cursorIndex);
-    if (text.endsWith(' ') && text.trim().length > 0) {
-      return commandLine;
-    }
-
-    const parsed = parse(text, false);
-    const [lastToken, isCommand] =
-      parsed.length > 0 ? parsed[parsed.length - 1].lastToken() : [null, true];
-    let tokenToComplete = lastToken?.value ?? '';
     const suffix = commandLine.text.slice(commandLine.cursorIndex);
 
-    // Get possible matches.
-    let possibles: string[] = [];
+    const parsed = parse(text, false);
+    const [lastToken, isCommand] = text.endsWith(' ')
+      ? [null, false]
+      : parsed.length > 0
+        ? parsed[parsed.length - 1].lastToken()
+        : [null, true];
+    let tokenToComplete = lastToken?.value ?? '';
+
+    // Get possible matches, default is to match path.
+    let tabCompleteResult: ITabCompleteResult = { pathMatch: PathMatch.Any };
     if (isCommand) {
-      possibles = this._getPossibleCompletionsCommand(tokenToComplete);
-    } else {
+      tabCompleteResult = { possibles: this._getPossibleCompletionsCommand(tokenToComplete) };
+    } else if (parsed.length > 0 && parsed[0] instanceof CommandNode) {
+      const commandNode = parsed[0] as CommandNode;
+      const name = commandNode.name.value;
+      const runner = this.context.commandRegistry.get(name);
+      if (runner !== null && runner.tabComplete !== undefined) {
+        const args = commandNode.suffix.map(token => token.value);
+        if (!tokenToComplete) {
+          args.push('');
+        }
+        tabCompleteResult = await runner.tabComplete({ args });
+      }
+    }
+
+    const possibles = tabCompleteResult.possibles ?? [];
+    if (tabCompleteResult.pathMatch !== undefined) {
       // FileSystem matches are special as slashes can modify commandLine and tokenToComplete.
-      [commandLine, tokenToComplete, possibles] = this._getPossibleCompletionsFileSystem(
+      let pathPossibles: string[] = [];
+      [commandLine, tokenToComplete, pathPossibles] = this._getPossibleCompletionsFileSystem(
         commandLine,
-        tokenToComplete
+        tokenToComplete,
+        tabCompleteResult.pathMatch
       );
+      possibles.push(...pathPossibles);
     }
 
     if (possibles.length === 0) {
@@ -73,10 +91,16 @@ export class TabCompleter {
 
   private _getPossibleCompletionsFileSystem(
     commandLine: ICommandLine,
-    tokenToComplete: string
+    tokenToComplete: string,
+    pathMatch: PathMatch
   ): [ICommandLine, string, string[]] {
     // Need to support restricting to only files and only directories.
     const { FS, PATH } = this.context.fileSystem;
+
+    if (!tokenToComplete) {
+      // If tokenToComplete is empty, want all possibles in cwd.
+      tokenToComplete = './';
+    }
 
     const endsWithSlash = tokenToComplete.endsWith('/');
     const doubleDot = tokenToComplete.endsWith('..');
@@ -104,10 +128,23 @@ export class TabCompleter {
     // Filter for correct string prefix
     possibles = possibles.filter((path: string) => path.startsWith(prefix));
 
-    // Directories are displayed with appended /
-    possibles = possibles.map((path: string) =>
-      FS.isDir(FS.stat(PATH.join(parentPath, path), false).mode) ? path + '/' : path
-    );
+    // Filter by file/directory type.
+    if (pathMatch === PathMatch.Directory) {
+      possibles = possibles.filter(path =>
+        FS.isDir(FS.stat(PATH.join(parentPath, path), false).mode)
+      );
+    } else if (pathMatch === PathMatch.File) {
+      possibles = possibles.filter(path =>
+        FS.isFile(FS.stat(PATH.join(parentPath, path), false).mode)
+      );
+    }
+
+    if (pathMatch !== PathMatch.File) {
+      // Directories are displayed with appended /
+      possibles = possibles.map((path: string) =>
+        FS.isDir(FS.stat(PATH.join(parentPath, path), false).mode) ? path + '/' : path
+      );
+    }
 
     // Replate tokenToComplete with prefix, so that parent directories are removed.
     return [commandLine, prefix, possibles];

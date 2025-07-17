@@ -5,6 +5,7 @@ import { IContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import { BorderTable } from '../layout';
+import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
 import { COCKLE_VERSION } from '../version';
 
 class CommandSubcommand extends Subcommand {
@@ -37,6 +38,21 @@ class CockleConfigOptions extends Options {
 export class CockleConfigCommand extends BuiltinCommand {
   get name(): string {
     return 'cockle-config';
+  }
+
+  async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
+    const { args } = context;
+
+    if (args.length == 1) {
+      const options = new CockleConfigOptions();
+      let possibles = Object.keys(options.subcommands);
+      if (args[0]) {
+        possibles = possibles.filter(name => name.startsWith(args[0]));
+      }
+      return { possibles };
+    }
+
+    return {};
   }
 
   protected async _run(context: IContext): Promise<number> {

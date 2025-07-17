@@ -193,5 +193,62 @@ test.describe('TabCompleter', () => {
       expect(output[2]).toEqual('ls ..bdir');
       expect(output[3]).toEqual('ls ..bdir1/');
     });
+
+    test('should show all files for command name followed by space', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['l', 's', ' ', '\t'])).toMatch(
+        /^ls \r\ndirA\/ {2}file1 {2}file2\r\n/
+      );
+    });
+  });
+
+  test.describe('tab complete builtin cd command', () => {
+    const options = {
+      initialDirectories: ['adir1', 'adir2'],
+      initialFiles: { afile1: '', afile2: '' }
+    };
+
+    test('should match start of directory, ignoring filenames', async ({ page }) => {
+      expect(
+        await shellInputsSimple(page, ['c', 'd', ' ', 'a', 'd', 'i', 'r', '\t'], options)
+      ).toMatch(/^cd adir\r\nadir1\/ {2}adir2\/\r\n/);
+    });
+
+    test('should add common startsWith', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'd', ' ', 'a', '\t'], options)).toMatch(
+        /^cd adir$/
+      );
+    });
+
+    test('should show all directories in cwd if no path mentioned', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'd', ' ', '\t'], options)).toMatch(
+        /^cd \r\nadir1\/ {2}adir2\/ {2}dirA\/\r\n/
+      );
+    });
+  });
+
+  test.describe('tab complete builtin cockle-config command', () => {
+    test('should show all subcommands if none mentioned', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', '\t'])).toMatch(
+        /^cockle-config \r\ncommand {2}module {3}package {2}stdin\r\n/
+      );
+    });
+
+    test('should match a single subcommand', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 's', '\t'])).toMatch(
+        /^cockle-config stdin $/
+      );
+    });
+
+    test('should append space to a complete matching subcommand', async ({ page }) => {
+      expect(
+        await shellInputsSimple(page, ['c', 'o', '\t ', 's', 't', 'd', 'i', 'n', '\t'])
+      ).toMatch(/^cockle-config stdin $/);
+    });
+
+    test('should leave unchanged if no matching subcommand', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'x', '\t'])).toMatch(
+        /^cockle-config x$/
+      );
+    });
   });
 });
