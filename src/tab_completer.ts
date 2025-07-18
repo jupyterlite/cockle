@@ -3,6 +3,7 @@ import { ICommandLine } from './command_line';
 import { IContext } from './context';
 import { CommandNode, parse } from './parse';
 import { ITabCompleteResult, PathMatch } from './tab_complete';
+import { RuntimeExports } from './types/wasm_module';
 import { longestStartsWith, toColumns } from './utils';
 
 export class TabCompleter {
@@ -128,21 +129,19 @@ export class TabCompleter {
     // Filter for correct string prefix
     possibles = possibles.filter((path: string) => path.startsWith(prefix));
 
+    const fsCache = new FSCache(FS);
+
     // Filter by file/directory type.
     if (pathMatch === PathMatch.Directory) {
-      possibles = possibles.filter(path =>
-        FS.isDir(FS.stat(PATH.join(parentPath, path), false).mode)
-      );
+      possibles = possibles.filter(path => fsCache.isDir(PATH.join(parentPath, path)));
     } else if (pathMatch === PathMatch.File) {
-      possibles = possibles.filter(path =>
-        FS.isFile(FS.stat(PATH.join(parentPath, path), false).mode)
-      );
+      possibles = possibles.filter(path => fsCache.isFile(PATH.join(parentPath, path)));
     }
 
     if (pathMatch !== PathMatch.File) {
       // Directories are displayed with appended /
       possibles = possibles.map((path: string) =>
-        FS.isDir(FS.stat(PATH.join(parentPath, path), false).mode) ? path + '/' : path
+        fsCache.isDir(PATH.join(parentPath, path)) ? path + '/' : path
       );
     }
 
@@ -161,4 +160,33 @@ export class TabCompleter {
     const output = `\n${lines.join('\n')}\n${environment.getPrompt()}${commandLine.text}`;
     this.context.workerIO.write(output + ansi.cursorLeft(suffix.length));
   }
+}
+
+/**
+ * Short-term cache for FS stat information, assumes file system is read-only so cache is not
+ * necessarily valid if a file/directory is modified.
+ * Only used in TabCompleter, but may be of use elsewhere.
+ * TODO: need type info for FS.stat return.
+ */
+class FSCache {
+  constructor(readonly FS: typeof RuntimeExports.FS) {}
+
+  isDir(fullPath: string): boolean {
+    return this.FS.isDir(this._stat(fullPath).mode);
+  }
+
+  isFile(fullPath: string): boolean {
+    return this.FS.isFile(this._stat(fullPath).mode);
+  }
+
+  private _stat(fullPath: string): any {
+    let stat = this._statCache.get(fullPath);
+    if (stat === undefined) {
+      stat = this.FS.stat(fullPath, false);
+      this._statCache.set(fullPath, stat);
+    }
+    return stat;
+  }
+
+  private _statCache = new Map<string, any>();
 }
