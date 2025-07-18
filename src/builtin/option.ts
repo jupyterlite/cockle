@@ -1,4 +1,5 @@
 import { GeneralError } from '../error_exit_code';
+import { ITabCompleteContext, PathMatch } from '../tab_complete';
 
 export abstract class Option {
   constructor(
@@ -115,9 +116,18 @@ export namespace TrailingStringsOption {
   export interface IOptions {
     min?: number;
     max?: number;
+
+    /**
+     * Function to return possible matches for tab completion.
+     * The token for completion is context.args.at(-1) as it may be an empty string.
+     * The possibles are subsequently filtered using startsWith(token-for-completion).
+     */
+    possibles?: (context: ITabCompleteContext) => string[];
   }
 }
 
 export namespace TrailingPathsOption {
-  export interface IOptions extends TrailingStringsOption.IOptions {}
+  export interface IOptions extends TrailingStringsOption.IOptions {
+    pathMatch?: PathMatch;
+  }
 }

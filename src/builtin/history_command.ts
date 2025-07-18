@@ -3,6 +3,7 @@ import { BooleanOption } from './option';
 import { Options } from './options';
 import { IContext } from '../context';
 import { ExitCode } from '../exit_code';
+import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
 
 class HistoryOptions extends Options {
   clear = new BooleanOption('c', '', 'clear the history by deleting all of the entries');
@@ -12,6 +13,10 @@ class HistoryOptions extends Options {
 export class HistoryCommand extends BuiltinCommand {
   get name(): string {
     return 'history';
+  }
+
+  async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
+    return await new HistoryOptions().tabComplete(context);
   }
 
   protected async _run(context: IContext): Promise<number> {

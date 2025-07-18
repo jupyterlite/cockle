@@ -34,7 +34,8 @@ export class TabCompleter {
         if (!tokenToComplete) {
           args.push('');
         }
-        tabCompleteResult = await runner.tabComplete({ args });
+        const { commandRegistry, stdinContext } = this.context;
+        tabCompleteResult = await runner.tabComplete({ args, commandRegistry, stdinContext });
       }
     }
 

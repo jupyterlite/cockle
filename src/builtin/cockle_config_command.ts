@@ -9,19 +9,32 @@ import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
 import { COCKLE_VERSION } from '../version';
 
 class CommandSubcommand extends Subcommand {
-  trailingStrings = new TrailingStringsOption();
+  trailingStrings = new TrailingStringsOption({
+    possibles: (context: ITabCompleteContext) =>
+      context.commandRegistry.match(context.args.at(-1) ?? '')
+  });
 }
 
 class ModuleSubcommand extends Subcommand {
-  trailingStrings = new TrailingStringsOption();
+  trailingStrings = new TrailingStringsOption({
+    possibles: (context: ITabCompleteContext) =>
+      context.commandRegistry.allModules().map(module => module.name)
+  });
 }
 
 class PackageSubcommand extends Subcommand {
-  trailingStrings = new TrailingStringsOption();
+  trailingStrings = new TrailingStringsOption({
+    possibles: (context: ITabCompleteContext) => {
+      return [...context.commandRegistry.commandPackageMap.keys()];
+    }
+  });
 }
 
 class StdinSubcommand extends Subcommand {
-  trailingStrings = new TrailingStringsOption({ max: 1 });
+  trailingStrings = new TrailingStringsOption({
+    max: 1,
+    possibles: (context: ITabCompleteContext) => context.stdinContext.shortNames
+  });
 }
 
 class CockleConfigOptions extends Options {
@@ -41,18 +54,7 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
-    const { args } = context;
-
-    if (args.length === 1) {
-      const options = new CockleConfigOptions();
-      let possibles = Object.keys(options.subcommands);
-      if (args[0]) {
-        possibles = possibles.filter(name => name.startsWith(args[0]));
-      }
-      return { possibles };
-    }
-
-    return {};
+    return await new CockleConfigOptions().tabComplete(context);
   }
 
   protected async _run(context: IContext): Promise<number> {

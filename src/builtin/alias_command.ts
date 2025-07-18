@@ -3,6 +3,7 @@ import { TrailingStringsOption } from './option';
 import { Options } from './options';
 import { IContext } from '../context';
 import { ExitCode } from '../exit_code';
+import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
 
 class AliasOptions extends Options {
   trailingStrings = new TrailingStringsOption();
@@ -11,6 +12,10 @@ class AliasOptions extends Options {
 export class AliasCommand extends BuiltinCommand {
   get name(): string {
     return 'alias';
+  }
+
+  async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
+    return await new AliasOptions().tabComplete(context);
   }
 
   protected async _run(context: IContext): Promise<number> {

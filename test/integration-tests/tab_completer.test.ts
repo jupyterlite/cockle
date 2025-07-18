@@ -250,5 +250,73 @@ test.describe('TabCompleter', () => {
         /^cockle-config x$/
       );
     });
+
+    test('should match stdin subcommand string options', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 's', 't', '\t', '\t'])).toMatch(
+        /^cockle-config stdin s$/
+      );
+
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 's', 't', '\t', 's', '\t'])).toMatch(
+        /^cockle-config stdin s\r\nsab {2}sw\r\n/
+      );
+
+      expect(
+        await shellInputsSimple(page, ['c', 'o', '\t ', 's', 't', '\t', 's', 'w', '\t'])
+      ).toMatch(/^cockle-config stdin sw $/);
+
+      expect(
+        await shellInputsSimple(page, ['c', 'o', '\t ', 's', 't', '\t', 's', 'a', '\t'])
+      ).toMatch(/^cockle-config stdin sab $/);
+    });
+
+    test('should match command subcommand string options', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'c', '\t', 'j', '\t'])).toMatch(
+        /^cockle-config command j\r\njoin {5}js-test\r\n/
+      );
+
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'c', '\t', 'j', 's', '\t'])).toMatch(
+        /^cockle-config command js-test $/
+      );
+    });
+
+    test('should match module subcommand string options', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'm', '\t', 'w', '\t'])).toMatch(
+        /^cockle-config module wasm-test $/
+      );
+    });
+
+    test('should match package subcommand string options', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'p', '\t', 'u', '\t'])).toMatch(
+        /^cockle-config package util-$/
+      );
+
+      expect(
+        await shellInputsSimple(page, ['c', 'o', '\t ', 'p', '\t', 'u', '\t', 'w', '\t'])
+      ).toMatch(/^cockle-config package util-wasm $/);
+    });
+
+    test('should show -- options', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', '-', '-', '\t'])).toMatch(
+        /^cockle-config --\r\n--help {5}--version\r\n/
+      );
+    });
+
+    test('should match a -- option', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', '-', '-', 'v', '\t'])).toMatch(
+        /^cockle-config --version $/
+      );
+    });
+
+    test('should show - options', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', '-', '\t'])).toMatch(
+        /^cockle-config -\r\n--help {5}--version {2}-h {9}-v\r\n/
+      );
+    });
+
+    test('should match a - option', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['c', 'o', '\t ', '-', 'h', '\t'])).toMatch(
+        /^cockle-config -h $/
+      );
+    });
   });
 });
