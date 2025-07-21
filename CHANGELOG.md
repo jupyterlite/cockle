@@ -2,6 +2,45 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.3
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.2...f8a4f57d35582fecdc95ba583b025a0f48e18097))
+
+### Enhancements made
+
+- Perform tab completion in `Options` classes [#225](https://github.com/jupyterlite/cockle/pull/225) ([@ianthomas23](https://github.com/ianthomas23))
+- Cache `FS.stat` information during tab completion [#224](https://github.com/jupyterlite/cockle/pull/224) ([@ianthomas23](https://github.com/ianthomas23))
+- Add framework to support tab completion for built-in commands [#222](https://github.com/jupyterlite/cockle/pull/222) ([@ianthomas23](https://github.com/ianthomas23))
+- Improve tab completion of file and directory names [#221](https://github.com/jupyterlite/cockle/pull/221) ([@ianthomas23](https://github.com/ianthomas23))
+- Make `IExternalOutput` compatible with `IOutput` [#220](https://github.com/jupyterlite/cockle/pull/220) ([@ianthomas23](https://github.com/ianthomas23))
+- Pass command name in IContext rather than as separate argument to run() [#219](https://github.com/jupyterlite/cockle/pull/219) ([@ianthomas23](https://github.com/ianthomas23))
+- Support setting environment variables in cockle-config-in.json [#212](https://github.com/jupyterlite/cockle/pull/212) ([@ianthomas23](https://github.com/ianthomas23))
+- Make tab completion more modular [#210](https://github.com/jupyterlite/cockle/pull/210) ([@ianthomas23](https://github.com/ianthomas23))
+- Move tab completion to separate class [#209](https://github.com/jupyterlite/cockle/pull/209) ([@ianthomas23](https://github.com/ianthomas23))
+- Support subcommand options [#207](https://github.com/jupyterlite/cockle/pull/207) ([@ianthomas23](https://github.com/ianthomas23))
+- Add TrailingPathsOption [#206](https://github.com/jupyterlite/cockle/pull/206) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Correctly identify when writing to tty [#217](https://github.com/jupyterlite/cockle/pull/217) ([@ianthomas23](https://github.com/ianthomas23))
+- Disable buffered IO before switching it [#208](https://github.com/jupyterlite/cockle/pull/208) ([@ianthomas23](https://github.com/ianthomas23))
+- Avoid multiple concurrent theme change handlers [#205](https://github.com/jupyterlite/cockle/pull/205) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Update lua to 5.4.8 [#218](https://github.com/jupyterlite/cockle/pull/218) ([@ianthomas23](https://github.com/ianthomas23))
+- Add file read and write tests to WebAssembly and JavaScript commands [#216](https://github.com/jupyterlite/cockle/pull/216) ([@ianthomas23](https://github.com/ianthomas23))
+- Comprehensive testing of JavaScriptCommand [#215](https://github.com/jupyterlite/cockle/pull/215) ([@ianthomas23](https://github.com/ianthomas23))
+- Comprehensive testing of locally-built wasm command [#214](https://github.com/jupyterlite/cockle/pull/214) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-06-26&to=2025-07-21&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-06-26..2025-07-21&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.2
 
 This release adds support for the `less` command (with some significant limitations), various enhancements to external commands (TypeScript commands that run in the main UI thread), and initial support to determine the terminal background color to identify dark mode.
@@ -36,8 +75,6 @@ This release adds support for the `less` command (with some significant limitati
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-06-06&to=2025-06-26&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-06-06..2025-06-26&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.1
 
