@@ -5,7 +5,7 @@ import { IJavaScriptInput, IOutput } from '../io';
 /**
  * Mininal context used to run imported JavaScript commands.
  */
-export interface IJavaScriptContext {
+export interface IJavaScriptRunContext {
   name: string;
   args: string[];
   fileSystem: IFileSystem;

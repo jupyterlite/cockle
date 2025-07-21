@@ -2,7 +2,7 @@ import { Aliases } from './aliases';
 import { ansi } from './ansi';
 import { IWorkerIO } from './buffered_io';
 import { ICommandLine } from './command_line';
-import { IContext } from './context';
+import { IRunContext } from './context';
 import { IShellImpl, IShellWorker } from './defs_internal';
 import { Environment } from './environment';
 import { ErrorExitCode, FindCommandError, GeneralError } from './error_exit_code';
@@ -49,7 +49,7 @@ export class ShellImpl implements IShellWorker {
     };
 
     // Content within which commands are run.
-    this._context = {
+    this._runContext = {
       name: '',
       args: [],
       fileSystem: this._fileSystem,
@@ -68,21 +68,21 @@ export class ShellImpl implements IShellWorker {
 
     // Aliases.
     Object.entries(options.aliases).forEach(([name, value]) =>
-      this._context.aliases.set(name, value)
+      this._runContext.aliases.set(name, value)
     );
 
     // Environment variables.
     Object.entries(options.environment).forEach(([name, value]) => {
       if (value === undefined) {
-        this._context.environment.delete(name);
+        this._runContext.environment.delete(name);
       } else {
-        this._context.environment.set(name, value);
+        this._runContext.environment.set(name, value);
       }
     });
 
     // External commands.
     options.externalCommandNames.forEach(name =>
-      this._context.commandRegistry.registerExternalCommand(name)
+      this._runContext.commandRegistry.registerExternalCommand(name)
     );
 
     this._stderr = new TerminalOutput(
@@ -91,30 +91,30 @@ export class ShellImpl implements IShellWorker {
       this._options.color ? ansi.styleReset : undefined
     );
 
-    this._tabCompleter = new TabCompleter(this._context);
+    this._tabCompleter = new TabCompleter(this._runContext);
   }
 
   get aliases(): Aliases {
-    return this._context.aliases;
+    return this._runContext.aliases;
   }
 
   get environment(): Environment {
-    return this._context.environment;
+    return this._runContext.environment;
   }
 
   async externalInput(maxChars: number | null): Promise<string> {
-    const chars = await this._context.stdin.readAsync(maxChars);
+    const chars = await this._runContext.stdin.readAsync(maxChars);
     return String.fromCharCode(...chars);
   }
 
   externalOutput(text: string, isStderr: boolean): void {
     // Pass output from an external command to the current IOutput.
-    const output: IOutput = isStderr ? this._context.stderr : this._context.stdout;
+    const output: IOutput = isStderr ? this._runContext.stderr : this._runContext.stdout;
     output.write(text);
   }
 
   get history(): History {
-    return this._context.history;
+    return this._runContext.history;
   }
 
   async initialize() {
@@ -183,7 +183,7 @@ export class ShellImpl implements IShellWorker {
     if (!this._isRunning) {
       return;
     }
-    this._context.workerIO.write(text);
+    this._runContext.workerIO.write(text);
   }
 
   async setSize(rows: number, columns: number): Promise<void> {
@@ -209,7 +209,7 @@ export class ShellImpl implements IShellWorker {
   }
 
   setWorkerIO(workerIO: IWorkerIO) {
-    this._context.workerIO = workerIO;
+    this._runContext.workerIO = workerIO;
   }
 
   async start(): Promise<void> {
@@ -231,7 +231,7 @@ export class ShellImpl implements IShellWorker {
 
     this._themeStatus = ThemeStatus.PendingChange;
 
-    if (!this._context.workerIO.enabled) {
+    if (!this._runContext.workerIO.enabled) {
       await this._handleThemeChange();
     }
   }
@@ -322,7 +322,7 @@ export class ShellImpl implements IShellWorker {
   }
 
   private _filenameExpansion(args: string[]): string[] {
-    const { PATH } = this._context.fileSystem;
+    const { PATH } = this._runContext.fileSystem;
     let ret: string[] = [];
     let nFlags = 0;
 
@@ -342,7 +342,7 @@ export class ShellImpl implements IShellWorker {
         continue;
       }
 
-      const { FS } = this._context.fileSystem!;
+      const { FS } = this._runContext.fileSystem!;
       const analyze = FS.analyzePath(arg, false);
       if (!analyze.parentExists) {
         ret.push(arg);
@@ -447,16 +447,16 @@ export class ShellImpl implements IShellWorker {
     const mountpoint = this._fileSystem.mountpoint;
     FS.mkdirTree(mountpoint, 0o777);
 
-    this._context.fileSystem.FS = FS;
-    this._context.fileSystem.PATH = PATH;
-    this._context.fileSystem.ERRNO_CODES = ERRNO_CODES;
-    this._context.fileSystem.PROXYFS = PROXYFS;
+    this._runContext.fileSystem.FS = FS;
+    this._runContext.fileSystem.PATH = PATH;
+    this._runContext.fileSystem.ERRNO_CODES = ERRNO_CODES;
+    this._runContext.fileSystem.PROXYFS = PROXYFS;
 
     const { browsingContextId, baseUrl, initialDirectories, initialFiles } = this._options;
     this._options.initDriveFSCallback({
       browsingContextId,
       baseUrl,
-      fileSystem: this._context.fileSystem,
+      fileSystem: this._runContext.fileSystem,
       mountpoint
     });
 
@@ -514,7 +514,7 @@ export class ShellImpl implements IShellWorker {
         pkgConfig.wasm,
         commandModules
       );
-      this._context.commandRegistry.registerCommandPackage(commandPackage);
+      this._runContext.commandRegistry.registerCommandPackage(commandPackage);
     }
 
     // Initialise aliases.
@@ -545,7 +545,7 @@ export class ShellImpl implements IShellWorker {
     if (this._themeStatus === ThemeStatus.PendingChange) {
       await this._handleThemeChange();
     }
-    this._context.workerIO.write(`\n${this.environment.getPrompt()}`);
+    this._runContext.workerIO.write(`\n${this.environment.getPrompt()}`);
   }
 
   private async _runCommands(cmdText: string): Promise<void> {
@@ -567,7 +567,7 @@ export class ShellImpl implements IShellWorker {
     }
 
     await this._options.enableBufferedStdinCallback(true);
-    this._context.workerIO.termios.setDefaultWasm();
+    this._runContext.workerIO.termios.setDefaultWasm();
 
     this.history.add(cmdText);
 
@@ -608,7 +608,7 @@ export class ShellImpl implements IShellWorker {
       exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
       this.environment.set('?', `${exitCode}`);
 
-      this._context.workerIO.termios.setDefaultShell();
+      this._runContext.workerIO.termios.setDefaultShell();
       await this._options.enableBufferedStdinCallback(false);
     }
   }
@@ -620,7 +620,7 @@ export class ShellImpl implements IShellWorker {
     error: IOutput
   ): Promise<number> {
     const name = commandNode.name.value;
-    const runner = this._context.commandRegistry.get(name);
+    const runner = this._runContext.commandRegistry.get(name);
     if (runner === null) {
       // Give location of command in input?
       throw new FindCommandError(name);
@@ -635,9 +635,9 @@ export class ShellImpl implements IShellWorker {
       const redirectChars = redirect.token.value;
       const path = redirect.target.value;
       if (redirectChars === '>' || redirectChars === '>>') {
-        output = new FileOutput(this._context.fileSystem, path, redirectChars === '>>');
+        output = new FileOutput(this._runContext.fileSystem, path, redirectChars === '>>');
       } else if (redirectChars === '<') {
-        input = new FileInput(this._context.fileSystem, path);
+        input = new FileInput(this._runContext.fileSystem, path);
       } else {
         throw new GeneralError('Unrecognised redirect ' + redirectChars);
       }
@@ -646,25 +646,25 @@ export class ShellImpl implements IShellWorker {
     // Set current properties of IContext.
     let args = commandNode.suffix.map(token => token.value);
     args = this._filenameExpansion(args);
-    this._context.name = name;
-    this._context.args = args;
-    this._context.stdin = input;
-    this._context.stdout = output;
-    this._context.stderr = error;
+    this._runContext.name = name;
+    this._runContext.args = args;
+    this._runContext.stdin = input;
+    this._runContext.stdout = output;
+    this._runContext.stderr = error;
 
     let exitCode = -1;
     try {
-      exitCode = await runner.run(this._context);
+      exitCode = await runner.run(this._runContext);
     } finally {
       error.flush();
       output.flush();
 
       // Reset properties of IContext.
-      this._context.name = '';
-      this._context.args = [];
-      this._context.stdin = this._dummyInput;
-      this._context.stdout = this._dummyOutput;
-      this._context.stderr = this._dummyOutput;
+      this._runContext.name = '';
+      this._runContext.args = [];
+      this._runContext.stdin = this._dummyInput;
+      this._runContext.stdout = this._dummyOutput;
+      this._runContext.stderr = this._dummyOutput;
     }
 
     return exitCode;
@@ -680,16 +680,16 @@ export class ShellImpl implements IShellWorker {
       this._stderr.prefix = darkMode ? ansi.styleBrightRed : ansi.styleRed;
 
       const promptColor = darkMode ? ansi.styleBoldGreen : ansi.styleGreen;
-      this._context.environment.set('PS1', promptColor + 'js-shell:' + ansi.styleReset + ' ');
+      this._runContext.environment.set('PS1', promptColor + 'js-shell:' + ansi.styleReset + ' ');
     }
   }
 
   private _stdinCallback(maxChars: number | null): number[] {
-    return this._context.workerIO.read(maxChars);
+    return this._runContext.workerIO.read(maxChars);
   }
 
   private async _stdinAsyncCallback(maxChars: number | null): Promise<number[]> {
-    return await this._context.workerIO.readAsync(maxChars, 0);
+    return await this._runContext.workerIO.readAsync(maxChars, 0);
   }
 
   private _commandLine: ICommandLine = { text: '', cursorIndex: 0 };
@@ -698,7 +698,7 @@ export class ShellImpl implements IShellWorker {
   private _themeStatus = ThemeStatus.PendingChange;
 
   private _commandModuleLoader: CommandModuleLoader;
-  private _context: IContext;
+  private _runContext: IRunContext;
   private _dummyInput = new DummyInput();
   private _dummyOutput = new DummyOutput();
   private _fileSystem: IFileSystem;

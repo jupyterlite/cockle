@@ -1,7 +1,7 @@
-import type { IJavaScriptContext } from '@jupyterlite/cockle';
+import type { IJavaScriptRunContext } from '@jupyterlite/cockle';
 import { ExitCode } from '@jupyterlite/cockle';
 
-export async function run(context: IJavaScriptContext): Promise<number> {
+export async function run(context: IJavaScriptRunContext): Promise<number> {
   const { args } = context;
 
   if (args.includes('environment')) {

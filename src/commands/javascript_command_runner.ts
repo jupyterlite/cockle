@@ -1,6 +1,6 @@
 import { CommandModule } from './command_module';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
-import { IContext, IJavaScriptContext } from '../context';
+import { IRunContext, IJavaScriptRunContext } from '../context';
 import { FindCommandError, LoadCommandError, RunCommandError } from '../error_exit_code';
 import { JavaScriptInput } from '../io';
 import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
@@ -11,7 +11,7 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
     super(module);
   }
 
-  async run(context: IContext): Promise<number> {
+  async run(context: IRunContext): Promise<number> {
     const { name } = context;
     const jsModule = this.module.loader.getJavaScriptModule(this.packageName, this.moduleName);
     if (jsModule === undefined) {
@@ -25,7 +25,7 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
     // Narrow context passed to JavaScript command so that we don't leak cockle internals.
     const { args, environment, fileSystem, stdout, stderr } = context;
     const stdin = new JavaScriptInput(context.stdin);
-    const jsContext: IJavaScriptContext = {
+    const jsContext: IJavaScriptRunContext = {
       name,
       args,
       environment,

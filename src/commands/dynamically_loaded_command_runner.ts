@@ -1,6 +1,6 @@
 import { CommandModule } from './command_module';
 import { ICommandRunner } from './command_runner';
-import { IContext } from '../context';
+import { IRunContext } from '../context';
 
 /**
  * Abstract base class for command runner that dynamically loads the command at runtime.
@@ -20,5 +20,5 @@ export abstract class DynamicallyLoadedCommandRunner implements ICommandRunner {
     return this.module.packageName;
   }
 
-  abstract run(context: IContext): Promise<number>;
+  abstract run(context: IRunContext): Promise<number>;
 }

@@ -1,5 +1,5 @@
 import { BuiltinCommand } from './builtin_command';
-import { IContext } from '../context';
+import { IRunContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import { BorderTable } from '../layout';
@@ -57,7 +57,7 @@ export class CockleConfigCommand extends BuiltinCommand {
     return await new CockleConfigOptions().tabComplete(context);
   }
 
-  protected async _run(context: IContext): Promise<number> {
+  protected async _run(context: IRunContext): Promise<number> {
     const { args, environment, stdout } = context;
     const options = new CockleConfigOptions().parse(args);
     const { subcommands } = options;
@@ -97,7 +97,7 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   private _writeCommandConfig(
-    context: IContext,
+    context: IRunContext,
     colorByColumn: Map<number, string> | undefined,
     names: string[]
   ) {
@@ -126,7 +126,7 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   private _writeModuleConfig(
-    context: IContext,
+    context: IRunContext,
     colorByColumn: Map<number, string> | undefined,
     names: string[]
   ) {
@@ -155,7 +155,7 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   private _writeOrSetSyncStdinConfig(
-    context: IContext,
+    context: IRunContext,
     colorByColumn: Map<number, string> | undefined,
     name: string | undefined
   ) {
@@ -180,7 +180,7 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   private _writePackageConfig(
-    context: IContext,
+    context: IRunContext,
     colorByColumn: Map<number, string> | undefined,
     names: string[]
   ) {
@@ -210,7 +210,7 @@ export class CockleConfigCommand extends BuiltinCommand {
     table.write(stdout);
   }
 
-  private _writeVersion(context: IContext) {
+  private _writeVersion(context: IRunContext) {
     const { stdout } = context;
     stdout.write(`cockle ${COCKLE_VERSION}\n`);
   }

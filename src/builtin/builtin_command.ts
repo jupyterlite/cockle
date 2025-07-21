@@ -1,5 +1,5 @@
 import { ICommandRunner } from '../commands/command_runner';
-import { IContext } from '../context';
+import { IRunContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 
 export abstract class BuiltinCommand implements ICommandRunner {
@@ -17,7 +17,7 @@ export abstract class BuiltinCommand implements ICommandRunner {
 
   abstract get name(): string;
 
-  run(context: IContext): Promise<number> {
+  run(context: IRunContext): Promise<number> {
     const { name } = context;
     if (name !== this.name) {
       // This should not happen.
@@ -26,5 +26,5 @@ export abstract class BuiltinCommand implements ICommandRunner {
     return this._run(context);
   }
 
-  protected abstract _run(context: IContext): Promise<number>;
+  protected abstract _run(context: IRunContext): Promise<number>;
 }

@@ -1,5 +1,5 @@
 import { BuiltinCommand } from './builtin_command';
-import { IContext } from '../context';
+import { IRunContext } from '../context';
 import { ExitCode } from '../exit_code';
 import { BooleanOption } from '../option';
 import { Options } from '../options';
@@ -19,7 +19,7 @@ export class HistoryCommand extends BuiltinCommand {
     return await new HistoryOptions().tabComplete(context);
   }
 
-  protected async _run(context: IContext): Promise<number> {
+  protected async _run(context: IRunContext): Promise<number> {
     const { args, history, stdout } = context;
     const options = new HistoryOptions().parse(args);
 

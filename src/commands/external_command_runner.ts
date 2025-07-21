@@ -1,6 +1,6 @@
 import { ICallExternalCommand } from '../callback_internal';
 import { ICommandRunner } from './command_runner';
-import { IContext } from '../context';
+import { IRunContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 
 export class ExternalCommandRunner implements ICommandRunner {
@@ -21,7 +21,7 @@ export class ExternalCommandRunner implements ICommandRunner {
     return '';
   }
 
-  async run(context: IContext): Promise<number> {
+  async run(context: IRunContext): Promise<number> {
     const { name, args, environment, stdin, stdout, stderr } = context;
 
     if (name !== this.name) {

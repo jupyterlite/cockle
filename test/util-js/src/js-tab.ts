@@ -1,4 +1,4 @@
-import type { IJavaScriptContext, ITabCompleteContext, ITabCompleteResult } from '@jupyterlite/cockle';
+import type { IJavaScriptRunContext, ITabCompleteContext, ITabCompleteResult } from '@jupyterlite/cockle';
 import { ExitCode, Options, TrailingStringsOption } from '@jupyterlite/cockle';
 
 class TestOptions extends Options {
@@ -17,7 +17,7 @@ class TestOptions extends Options {
   });
 }
 
-export async function run(context: IJavaScriptContext): Promise<number> {
+export async function run(context: IJavaScriptRunContext): Promise<number> {
   const options = new TestOptions().parse(context.args);
   const args = options.trailingStrings.strings;
 

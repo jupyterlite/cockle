@@ -1,4 +1,4 @@
-import { IContext } from '../context';
+import { IRunContext } from '../context';
 import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
 
 /**
@@ -8,7 +8,7 @@ export interface ICommandRunner {
   get moduleName(): string;
   names(): string[];
   get packageName(): string;
-  run(context: IContext): Promise<number>;
+  run(context: IRunContext): Promise<number>;
 
   /**
    * Optional tab completion.
