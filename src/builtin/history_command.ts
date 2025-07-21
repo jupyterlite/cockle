@@ -1,8 +1,8 @@
 import { BuiltinCommand } from './builtin_command';
-import { BooleanOption } from './option';
-import { Options } from './options';
 import { IContext } from '../context';
 import { ExitCode } from '../exit_code';
+import { BooleanOption } from '../option';
+import { Options } from '../options';
 import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
 
 class HistoryOptions extends Options {

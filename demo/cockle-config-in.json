@@ -6,6 +6,7 @@
     "tree": {},
     "util-js": {
       "modules": {
+        "js-tab": {},
         "js-test": {}
       },
       "local_directory": "../test/util-js/lib",

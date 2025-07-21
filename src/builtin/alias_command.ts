@@ -1,9 +1,8 @@
 import { BuiltinCommand } from './builtin_command';
-import { TrailingStringsOption } from './option';
-import { Options } from './options';
 import { IContext } from '../context';
 import { ExitCode } from '../exit_code';
-import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
+import { TrailingStringsOption } from '../option';
+import { Options } from '../options';import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
 
 class AliasOptions extends Options {
   trailingStrings = new TrailingStringsOption();

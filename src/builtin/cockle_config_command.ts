@@ -1,10 +1,10 @@
 import { BuiltinCommand } from './builtin_command';
-import { BooleanOption, TrailingStringsOption } from './option';
-import { Options, Subcommand } from './options';
 import { IContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import { BorderTable } from '../layout';
+import { BooleanOption, TrailingStringsOption } from '../option';
+import { Options, Subcommand } from '../options';
 import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
 import { COCKLE_VERSION } from '../version';
 
