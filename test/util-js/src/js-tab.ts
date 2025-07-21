@@ -1,9 +1,13 @@
-import type { IJavaScriptRunContext, ITabCompleteContext, ITabCompleteResult } from '@jupyterlite/cockle';
+import type {
+  IJavaScriptRunContext,
+  IJavaScriptTabCompleteContext,
+  ITabCompleteResult
+} from '@jupyterlite/cockle';
 import { ExitCode, Options, TrailingStringsOption } from '@jupyterlite/cockle';
 
 class TestOptions extends Options {
   trailingStrings = new TrailingStringsOption({
-    possibles: (context: ITabCompleteContext) => [
+    possibles: (context: IJavaScriptTabCompleteContext) => [
       'color',
       'environment',
       'exitCode',
@@ -109,6 +113,8 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
   return ExitCode.SUCCESS;
 }
 
-export async function tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
+export async function tabComplete(
+  context: IJavaScriptTabCompleteContext
+): Promise<ITabCompleteResult> {
   return await new TestOptions().tabComplete(context);
 }

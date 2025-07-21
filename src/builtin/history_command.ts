@@ -1,9 +1,9 @@
 import { BuiltinCommand } from './builtin_command';
-import { IRunContext } from '../context';
+import { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
 import { BooleanOption } from '../option';
 import { Options } from '../options';
-import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
+import { ITabCompleteResult } from '../tab_complete';
 
 class HistoryOptions extends Options {
   clear = new BooleanOption('c', '', 'clear the history by deleting all of the entries');

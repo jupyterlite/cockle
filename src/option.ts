@@ -1,5 +1,6 @@
+import { ITabCompleteContext } from './context';
 import { GeneralError } from './error_exit_code';
-import { ITabCompleteContext, PathMatch } from './tab_complete';
+import { PathMatch } from './tab_complete';
 
 export abstract class Option {
   constructor(

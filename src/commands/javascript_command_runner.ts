@@ -1,10 +1,9 @@
 import { CommandModule } from './command_module';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
-import { IRunContext, IJavaScriptRunContext } from '../context';
+import { IRunContext, IJavaScriptRunContext, ITabCompleteContext } from '../context';
 import { FindCommandError, LoadCommandError, RunCommandError } from '../error_exit_code';
 import { JavaScriptInput } from '../io';
-import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
-
+import { ITabCompleteResult } from '../tab_complete';
 
 export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
   constructor(readonly module: CommandModule) {
@@ -47,11 +46,10 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
     const jsModule = this.module.loader.getJavaScriptModule(this.packageName, this.moduleName);
     if (jsModule !== undefined && Object.prototype.hasOwnProperty.call(jsModule, 'tabComplete')) {
       if (jsModule.tabComplete !== undefined) {
-        console.log("have func")
+        const { name, args } = context;
         try {
-          return await jsModule.tabComplete(context);
-        }
-        catch (err) {
+          return await jsModule.tabComplete({ name, args });
+        } catch (err) {
           // Do nothing, returns empty default below.
         }
       }

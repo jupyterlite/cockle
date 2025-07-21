@@ -1,10 +1,10 @@
 import { BuiltinCommand } from './builtin_command';
-import { IRunContext } from '../context';
+import { IRunContext, ITabCompleteContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import { TrailingPathsOption } from '../option';
-import { Options } from '../options'
-import { ITabCompleteContext, ITabCompleteResult, PathMatch } from '../tab_complete';
+import { Options } from '../options';
+import { ITabCompleteResult, PathMatch } from '../tab_complete';
 
 class CdOptions extends Options {
   trailingPaths = new TrailingPathsOption({ pathMatch: PathMatch.Directory });

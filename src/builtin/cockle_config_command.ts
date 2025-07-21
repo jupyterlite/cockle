@@ -1,31 +1,31 @@
 import { BuiltinCommand } from './builtin_command';
-import { IRunContext } from '../context';
+import { IRunContext, ITabCompleteContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import { BorderTable } from '../layout';
 import { BooleanOption, TrailingStringsOption } from '../option';
 import { Options, Subcommand } from '../options';
-import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
+import { ITabCompleteResult } from '../tab_complete';
 import { COCKLE_VERSION } from '../version';
 
 class CommandSubcommand extends Subcommand {
   trailingStrings = new TrailingStringsOption({
     possibles: (context: ITabCompleteContext) =>
-      context.commandRegistry.match(context.args.at(-1) ?? '')
+      context.commandRegistry ? context.commandRegistry.match(context.args.at(-1) || '') : []
   });
 }
 
 class ModuleSubcommand extends Subcommand {
   trailingStrings = new TrailingStringsOption({
     possibles: (context: ITabCompleteContext) =>
-      context.commandRegistry.allModules().map(module => module.name)
+      context.commandRegistry ? context.commandRegistry.allModules().map(module => module.name) : []
   });
 }
 
 class PackageSubcommand extends Subcommand {
   trailingStrings = new TrailingStringsOption({
     possibles: (context: ITabCompleteContext) => {
-      return [...context.commandRegistry.commandPackageMap.keys()];
+      return context.commandRegistry ? [...context.commandRegistry.commandPackageMap.keys()] : [];
     }
   });
 }
@@ -33,7 +33,8 @@ class PackageSubcommand extends Subcommand {
 class StdinSubcommand extends Subcommand {
   trailingStrings = new TrailingStringsOption({
     max: 1,
-    possibles: (context: ITabCompleteContext) => context.stdinContext.shortNames
+    possibles: (context: ITabCompleteContext) =>
+      context.stdinContext ? context.stdinContext.shortNames : []
   });
 }
 
