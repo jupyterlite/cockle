@@ -35,7 +35,7 @@ export class TabCompleter {
           args.push('');
         }
         const { commandRegistry, stdinContext } = this.context;
-        tabCompleteResult = await runner.tabComplete({ args, commandRegistry, stdinContext });
+        tabCompleteResult = await runner.tabComplete({ name, args, commandRegistry, stdinContext });
       }
     }
 
