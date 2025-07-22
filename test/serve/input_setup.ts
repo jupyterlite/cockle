@@ -17,5 +17,6 @@ export async function terminalInput(
 
   for (const char of chars) {
     await shell.input(char);
+    await delay(10);
   }
 }

@@ -1,3 +1,7 @@
+/**
+ * The same functionality as js-test but using Options and tabComplete.
+ */
+
 import type {
   IJavaScriptRunContext,
   IJavaScriptTabCompleteContext,
@@ -100,7 +104,7 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
     try {
       // Exception thrown here will be handled by JavaScriptCommandRunner, but can provide more
       // precise error information here.
-      FS.writeFile(filename, 'File written by js-test');
+      FS.writeFile(filename, 'File written by js-tab');
     } catch {
       context.stderr.write(`Unable to open file ${filename} for writing`);
       return ExitCode.GENERAL_ERROR;

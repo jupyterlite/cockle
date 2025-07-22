@@ -28,14 +28,28 @@ test.describe('nano command', () => {
         const writeFile = '\x0f'; // Ctrl-O
         await Promise.all([
           shell.inputLine('nano'),
-          terminalInput(shell, [...('abc' + enter + 'def' + writeFile + 'out.txt' + enter + exit)])
+          terminalInput(shell, [
+            'a',
+            'b',
+            'c',
+            enter,
+            'd',
+            'e',
+            'f',
+            writeFile,
+            'o',
+            'u',
+            't',
+            enter,
+            exit
+          ])
         ]);
         // New file should exist.
         output.clear();
-        await shell.inputLine('cat out.txt');
+        await shell.inputLine('cat out');
         return output.text;
       });
-      expect(output).toMatch(/^cat out.txt\r\nabc\r\ndef\r\n/);
+      expect(output).toMatch(/^cat out\r\nabc\r\ndef\r\n/);
     });
 
     test(`should add to existing file using ${stdinOption}`, async ({ page }) => {
@@ -47,7 +61,7 @@ test.describe('nano command', () => {
         const writeFile = '\x0f'; // Ctrl-O
         await Promise.all([
           shell.inputLine('nano file2'),
-          terminalInput(shell, [...(downArrow + 'New' + enter + writeFile + enter + exit)])
+          terminalInput(shell, [downArrow, 'N', 'e', 'w', enter, writeFile, enter, exit])
         ]);
         output.clear();
         await shell.inputLine('cat file2');

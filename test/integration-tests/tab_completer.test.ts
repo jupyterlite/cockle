@@ -271,12 +271,12 @@ test.describe('TabCompleter', () => {
 
     test('should match command subcommand string options', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'c', '\t', 'j', '\t'])).toMatch(
-        /^cockle-config command j\r\njoin {5}js-test\r\n/
+        /^cockle-config command j\r\njoin {5}js-tab {3}js-test\r\n/
       );
 
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'c', '\t', 'j', 's', '\t'])).toMatch(
-        /^cockle-config command js-test $/
-      );
+      expect(
+        await shellInputsSimple(page, ['c', 'o', '\t ', 'c', '\t', 'j', 's', '-', 't', 'e', '\t'])
+      ).toMatch(/^cockle-config command js-test $/);
     });
 
     test('should match module subcommand string options', async ({ page }) => {
