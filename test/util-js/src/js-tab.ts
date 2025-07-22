@@ -1,8 +1,33 @@
-import type { IJavaScriptRunContext } from '@jupyterlite/cockle';
-import { ExitCode } from '@jupyterlite/cockle';
+/**
+ * The same functionality as js-test but using Options and tabComplete.
+ */
+
+import type {
+  IJavaScriptRunContext,
+  IJavaScriptTabCompleteContext,
+  ITabCompleteResult
+} from '@jupyterlite/cockle';
+import { ExitCode, Options, TrailingStringsOption } from '@jupyterlite/cockle';
+
+class TestOptions extends Options {
+  trailingStrings = new TrailingStringsOption({
+    possibles: (context: IJavaScriptTabCompleteContext) => [
+      'color',
+      'environment',
+      'exitCode',
+      'name',
+      'readfile',
+      'stderr',
+      'stdin',
+      'stdout',
+      'writefile'
+    ]
+  });
+}
 
 export async function run(context: IJavaScriptRunContext): Promise<number> {
-  const { args } = context;
+  const options = new TestOptions().parse(context.args);
+  const args = options.trailingStrings.strings;
 
   if (args.includes('environment')) {
     context.environment.set('TEST_JS_VAR', '123');
@@ -79,7 +104,7 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
     try {
       // Exception thrown here will be handled by JavaScriptCommandRunner, but can provide more
       // precise error information here.
-      FS.writeFile(filename, 'File written by js-test');
+      FS.writeFile(filename, 'File written by js-tab');
     } catch {
       context.stderr.write(`Unable to open file ${filename} for writing`);
       return ExitCode.GENERAL_ERROR;
@@ -90,4 +115,10 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
     return ExitCode.GENERAL_ERROR;
   }
   return ExitCode.SUCCESS;
+}
+
+export async function tabComplete(
+  context: IJavaScriptTabCompleteContext
+): Promise<ITabCompleteResult> {
+  return await new TestOptions().tabComplete(context);
 }

@@ -1,9 +1,9 @@
 import { BuiltinCommand } from './builtin_command';
-import { TrailingStringsOption } from './option';
-import { Options } from './options';
-import { IContext } from '../context';
+import { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
-import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
+import { TrailingStringsOption } from '../option';
+import { Options } from '../options';
+import { ITabCompleteResult } from '../tab_complete';
 
 class AliasOptions extends Options {
   trailingStrings = new TrailingStringsOption();
@@ -18,7 +18,7 @@ export class AliasCommand extends BuiltinCommand {
     return await new AliasOptions().tabComplete(context);
   }
 
-  protected async _run(context: IContext): Promise<number> {
+  protected async _run(context: IRunContext): Promise<number> {
     const { aliases, args, stdout } = context;
     const options = new AliasOptions().parse(args);
 

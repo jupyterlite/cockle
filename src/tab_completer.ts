@@ -1,13 +1,13 @@
 import { ansi } from './ansi';
 import { ICommandLine } from './command_line';
-import { IContext } from './context';
+import { IRunContext } from './context';
 import { CommandNode, parse } from './parse';
 import { ITabCompleteResult, PathMatch } from './tab_complete';
 import { RuntimeExports } from './types/wasm_module';
 import { longestStartsWith, toColumns } from './utils';
 
 export class TabCompleter {
-  constructor(readonly context: IContext) {}
+  constructor(readonly context: IRunContext) {}
 
   async complete(commandLine: ICommandLine): Promise<ICommandLine> {
     const text = commandLine.text.slice(0, commandLine.cursorIndex);
@@ -35,7 +35,7 @@ export class TabCompleter {
           args.push('');
         }
         const { commandRegistry, stdinContext } = this.context;
-        tabCompleteResult = await runner.tabComplete({ args, commandRegistry, stdinContext });
+        tabCompleteResult = await runner.tabComplete({ name, args, commandRegistry, stdinContext });
       }
     }
 

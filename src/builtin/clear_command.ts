@@ -1,6 +1,6 @@
 import { BuiltinCommand } from './builtin_command';
 import { ansi } from '../ansi';
-import { IContext } from '../context';
+import { IRunContext } from '../context';
 import { ExitCode } from '../exit_code';
 
 export class ClearCommand extends BuiltinCommand {
@@ -8,7 +8,7 @@ export class ClearCommand extends BuiltinCommand {
     return 'clear';
   }
 
-  protected async _run(context: IContext): Promise<number> {
+  protected async _run(context: IRunContext): Promise<number> {
     const { stdout } = context;
     if (stdout.supportsAnsiEscapes()) {
       stdout.write(ansi.eraseScreen + ansi.eraseSavedLines + ansi.cursorHome);

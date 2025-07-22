@@ -1,6 +1,6 @@
 import { CommandModule } from './command_module';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
-import { IContext } from '../context';
+import { IRunContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import { IOutput } from '../io';
@@ -13,7 +13,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     super(module);
   }
 
-  async run(context: IContext): Promise<number> {
+  async run(context: IRunContext): Promise<number> {
     const { name, args, workerIO, fileSystem, stdin, stdout, stderr } = context;
     const { wasmBaseUrl } = this.module.loader;
 

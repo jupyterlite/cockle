@@ -1,9 +1,5 @@
-import {
-  BooleanOption,
-  OptionalStringOption,
-  TrailingStringsOption
-} from '../../src/builtin/option';
-import { Options, Subcommand } from '../../src/builtin/options';
+import { BooleanOption, OptionalStringOption, TrailingStringsOption } from '../../src/option';
+import { Options, Subcommand } from '../../src/options';
 
 class BooleanOptions extends Options {
   flag = new BooleanOption('f', 'flag', 'some flag');

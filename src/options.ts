@@ -1,10 +1,11 @@
 /**
  * A collection of options for a builtin command.
  */
+import { ITabCompleteContext } from './context';
+import { GeneralError } from './error_exit_code';
+import { IOutput } from './io';
 import { Option, TrailingPathsOption, TrailingStringsOption } from './option';
-import { GeneralError } from '../error_exit_code';
-import { IOutput } from '../io';
-import { ITabCompleteContext, ITabCompleteResult, PathMatch } from '../tab_complete';
+import { ITabCompleteResult, PathMatch } from './tab_complete';
 
 export abstract class Options {
   parse(args: string[]): this {

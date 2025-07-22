@@ -1,9 +1,9 @@
 import { BuiltinCommand } from './builtin_command';
-import { BooleanOption } from './option';
-import { Options } from './options';
-import { IContext } from '../context';
+import { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
-import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
+import { BooleanOption } from '../option';
+import { Options } from '../options';
+import { ITabCompleteResult } from '../tab_complete';
 
 class HistoryOptions extends Options {
   clear = new BooleanOption('c', '', 'clear the history by deleting all of the entries');
@@ -19,7 +19,7 @@ export class HistoryCommand extends BuiltinCommand {
     return await new HistoryOptions().tabComplete(context);
   }
 
-  protected async _run(context: IContext): Promise<number> {
+  protected async _run(context: IRunContext): Promise<number> {
     const { args, history, stdout } = context;
     const options = new HistoryOptions().parse(args);
 

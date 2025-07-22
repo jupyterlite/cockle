@@ -1,31 +1,31 @@
 import { BuiltinCommand } from './builtin_command';
-import { BooleanOption, TrailingStringsOption } from './option';
-import { Options, Subcommand } from './options';
-import { IContext } from '../context';
+import { IRunContext, ITabCompleteContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import { BorderTable } from '../layout';
-import { ITabCompleteContext, ITabCompleteResult } from '../tab_complete';
+import { BooleanOption, TrailingStringsOption } from '../option';
+import { Options, Subcommand } from '../options';
+import { ITabCompleteResult } from '../tab_complete';
 import { COCKLE_VERSION } from '../version';
 
 class CommandSubcommand extends Subcommand {
   trailingStrings = new TrailingStringsOption({
     possibles: (context: ITabCompleteContext) =>
-      context.commandRegistry.match(context.args.at(-1) ?? '')
+      context.commandRegistry ? context.commandRegistry.match(context.args.at(-1) || '') : []
   });
 }
 
 class ModuleSubcommand extends Subcommand {
   trailingStrings = new TrailingStringsOption({
     possibles: (context: ITabCompleteContext) =>
-      context.commandRegistry.allModules().map(module => module.name)
+      context.commandRegistry ? context.commandRegistry.allModules().map(module => module.name) : []
   });
 }
 
 class PackageSubcommand extends Subcommand {
   trailingStrings = new TrailingStringsOption({
     possibles: (context: ITabCompleteContext) => {
-      return [...context.commandRegistry.commandPackageMap.keys()];
+      return context.commandRegistry ? [...context.commandRegistry.commandPackageMap.keys()] : [];
     }
   });
 }
@@ -33,7 +33,8 @@ class PackageSubcommand extends Subcommand {
 class StdinSubcommand extends Subcommand {
   trailingStrings = new TrailingStringsOption({
     max: 1,
-    possibles: (context: ITabCompleteContext) => context.stdinContext.shortNames
+    possibles: (context: ITabCompleteContext) =>
+      context.stdinContext ? context.stdinContext.shortNames : []
   });
 }
 
@@ -57,7 +58,7 @@ export class CockleConfigCommand extends BuiltinCommand {
     return await new CockleConfigOptions().tabComplete(context);
   }
 
-  protected async _run(context: IContext): Promise<number> {
+  protected async _run(context: IRunContext): Promise<number> {
     const { args, environment, stdout } = context;
     const options = new CockleConfigOptions().parse(args);
     const { subcommands } = options;
@@ -97,7 +98,7 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   private _writeCommandConfig(
-    context: IContext,
+    context: IRunContext,
     colorByColumn: Map<number, string> | undefined,
     names: string[]
   ) {
@@ -126,7 +127,7 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   private _writeModuleConfig(
-    context: IContext,
+    context: IRunContext,
     colorByColumn: Map<number, string> | undefined,
     names: string[]
   ) {
@@ -155,7 +156,7 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   private _writeOrSetSyncStdinConfig(
-    context: IContext,
+    context: IRunContext,
     colorByColumn: Map<number, string> | undefined,
     name: string | undefined
   ) {
@@ -180,7 +181,7 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   private _writePackageConfig(
-    context: IContext,
+    context: IRunContext,
     colorByColumn: Map<number, string> | undefined,
     names: string[]
   ) {
@@ -210,7 +211,7 @@ export class CockleConfigCommand extends BuiltinCommand {
     table.write(stdout);
   }
 
-  private _writeVersion(context: IContext) {
+  private _writeVersion(context: IRunContext) {
     const { stdout } = context;
     stdout.write(`cockle ${COCKLE_VERSION}\n`);
   }

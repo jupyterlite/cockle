@@ -24,7 +24,23 @@ test.describe('vim command', () => {
         const { shell, output } = await shellSetupEmpty({ color: true, stdinOption });
         await Promise.all([
           shell.inputLine('vim'),
-          terminalInput(shell, [...'ihi QW\x1b:wq out\r'])
+          terminalInput(shell, [
+            'i',
+            'h',
+            'i',
+            ' ',
+            'Q',
+            'W',
+            '\x1b',
+            ':',
+            'w',
+            'q',
+            ' ',
+            'o',
+            'u',
+            't',
+            '\r'
+          ])
         ]);
         // New file should exist.
         output.clear();
@@ -40,7 +56,7 @@ test.describe('vim command', () => {
         const { shell, output } = await shellSetupSimple({ color: true, stdinOption });
         await Promise.all([
           shell.inputLine('vim file2'),
-          terminalInput(shell, [keys.down, ...'iNew\r\x1b:wq\r'])
+          terminalInput(shell, [keys.down, 'i', 'N', 'e', 'w', '\r', '\x1b', ':', 'w', 'q', '\r'])
         ]);
         output.clear();
         await shell.inputLine('cat file2');
@@ -55,7 +71,7 @@ test.describe('vim command', () => {
         const { shell, output } = await shellSetupSimple({ color: true, stdinOption });
         await Promise.all([
           shell.inputLine('vim file2'),
-          terminalInput(shell, [...'dd\r\x1b:wq\r'])
+          terminalInput(shell, ['d', 'd', '\r', '\x1b', ':', 'w', 'q', '\r'])
         ]);
         output.clear();
         await shell.inputLine('cat file2');

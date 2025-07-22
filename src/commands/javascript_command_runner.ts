@@ -1,15 +1,16 @@
 import { CommandModule } from './command_module';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
-import { IContext, IJavaScriptContext } from '../context';
+import { IRunContext, IJavaScriptRunContext, ITabCompleteContext } from '../context';
 import { FindCommandError, LoadCommandError, RunCommandError } from '../error_exit_code';
 import { JavaScriptInput } from '../io';
+import { ITabCompleteResult } from '../tab_complete';
 
 export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
   constructor(readonly module: CommandModule) {
     super(module);
   }
 
-  async run(context: IContext): Promise<number> {
+  async run(context: IRunContext): Promise<number> {
     const { name } = context;
     const jsModule = this.module.loader.getJavaScriptModule(this.packageName, this.moduleName);
     if (jsModule === undefined) {
@@ -23,7 +24,7 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
     // Narrow context passed to JavaScript command so that we don't leak cockle internals.
     const { args, environment, fileSystem, stdout, stderr } = context;
     const stdin = new JavaScriptInput(context.stdin);
-    const jsContext: IJavaScriptContext = {
+    const jsContext: IJavaScriptRunContext = {
       name,
       args,
       environment,
@@ -39,5 +40,20 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
       console.error(`JavascriptCommandRunner: ${err}`);
       throw new RunCommandError(name);
     }
+  }
+
+  async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
+    const jsModule = this.module.loader.getJavaScriptModule(this.packageName, this.moduleName);
+    if (jsModule !== undefined && Object.prototype.hasOwnProperty.call(jsModule, 'tabComplete')) {
+      if (jsModule.tabComplete !== undefined) {
+        const { name, args } = context;
+        try {
+          return await jsModule.tabComplete({ name, args });
+        } catch (err) {
+          // Do nothing, returns empty default below.
+        }
+      }
+    }
+    return {};
   }
 }

@@ -1,10 +1,10 @@
 import { BuiltinCommand } from './builtin_command';
-import { TrailingPathsOption } from './option';
-import { Options } from './options';
-import { IContext } from '../context';
+import { IRunContext, ITabCompleteContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
-import { ITabCompleteContext, ITabCompleteResult, PathMatch } from '../tab_complete';
+import { TrailingPathsOption } from '../option';
+import { Options } from '../options';
+import { ITabCompleteResult, PathMatch } from '../tab_complete';
 
 class CdOptions extends Options {
   trailingPaths = new TrailingPathsOption({ pathMatch: PathMatch.Directory });
@@ -19,7 +19,7 @@ export class CdCommand extends BuiltinCommand {
     return await new CdOptions().tabComplete(context);
   }
 
-  protected async _run(context: IContext): Promise<number> {
+  protected async _run(context: IRunContext): Promise<number> {
     const { args } = context;
     const options = new CdOptions().parse(args);
     const paths = options.trailingPaths.strings;

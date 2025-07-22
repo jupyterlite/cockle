@@ -31,17 +31,16 @@ test.describe('termios', () => {
           await globalThis.cockle.terminalInput(shell, [EOT]);
           ret.push(output.textAndClear());
           await cmd;
-          ret.push(output.textAndClear());
           return ret;
         }, flag);
 
-        expect(output[1]).toEqual('ab');
+        expect(output[0]).toMatch(/\r\nab$/);
         if (flag !== 'disabled') {
-          expect(output[2]).toEqual('c\r\nabc\r\n');
-          expect(output[3]).toMatch(/^End of input\r\n/);
+          expect(output[1]).toEqual('c\r\nabc\r\n');
+          expect(output[2]).toMatch(/^End of input\r\n/);
         } else {
-          expect(output[2]).toEqual('c\nabc\n');
-          expect(output[3]).toMatch(/^End of input\n/);
+          expect(output[1]).toEqual('c\nabc\n');
+          expect(output[2]).toMatch(/^End of input\n/);
         }
       });
     });

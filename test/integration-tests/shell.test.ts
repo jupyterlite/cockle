@@ -389,9 +389,21 @@ test.describe('Shell', () => {
             stdinOption
           });
           const stdinWithDelay = async () => {
-            await terminalInput(shell, [...'iabc']);
+            await terminalInput(shell, ['i', 'a', 'b', 'c']);
             await delay(4500); // Delay > 4 seconds to force timeout on poll() call.
-            await terminalInput(shell, [...('Zz' + keys.escape + ':wq out\r')]);
+            await terminalInput(shell, [
+              'Z',
+              'z',
+              keys.escape,
+              ':',
+              'w',
+              'q',
+              ' ',
+              'o',
+              'u',
+              't',
+              '\r'
+            ]);
           };
           await Promise.all([shell.inputLine('vim'), stdinWithDelay()]);
           output.clear();
