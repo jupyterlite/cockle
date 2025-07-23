@@ -1,3 +1,5 @@
+import { IExternalTabCompleteResult } from './external_command';
+
 /**
  * Internal callbacks used by a shell impl/worker to call functions in the shell.
  */
@@ -14,6 +16,10 @@ export interface ICallExternalCommand {
     stdoutSupportsAnsiEscapes: boolean,
     stderrSupportsAnsiEscapes: boolean
   ): Promise<{ exitCode: number; environmentChanges?: { [key: string]: string | undefined } }>;
+}
+
+export interface ICallExternalTabComplete {
+  (name: string, args: string[]): Promise<IExternalTabCompleteResult>;
 }
 
 /**

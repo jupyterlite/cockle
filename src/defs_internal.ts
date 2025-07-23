@@ -4,6 +4,7 @@ import { IWorkerIO } from './buffered_io';
 import { IInitDriveFSCallback, IOutputCallback } from './callback';
 import {
   ICallExternalCommand,
+  ICallExternalTabComplete,
   IDownloadModuleCallback,
   IEnableBufferedStdinCallback,
   ISetMainIOCallback,
@@ -11,6 +12,15 @@ import {
 } from './callback_internal';
 import { IStdinContext } from './context';
 import { IShell } from './defs';
+
+/**
+ * Representation of external commmand in the web worker, real external commands exists in the
+ * main UI thread.
+ */
+export interface IExternalCommandConfig {
+  name: string;
+  hasTabComplete: boolean;
+}
 
 interface IOptionsCommon {
   shellId: string;
@@ -21,7 +31,7 @@ interface IOptionsCommon {
   browsingContextId?: string;
   aliases: { [key: string]: string };
   environment: { [key: string]: string | undefined };
-  externalCommandNames: string[];
+  externalCommandConfigs: IExternalCommandConfig[];
 
   // Initial directories and files to create, for testing purposes.
   initialDirectories?: string[];
@@ -42,6 +52,7 @@ export interface IShellWorker extends IShellCommon {
   initialize(
     options: IShellWorker.IOptions,
     callExternalCommand: IShellWorker.IProxyCallExternalCommand,
+    callExternalTabComplete: IShellWorker.IProxyCallExternalTabComplete,
     downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback,
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
     outputCallback: IShellWorker.IProxyOutputCallback,
@@ -54,6 +65,7 @@ export interface IShellWorker extends IShellCommon {
 
 export namespace IShellWorker {
   export interface IProxyCallExternalCommand extends ICallExternalCommand, ProxyMarked {}
+  export interface IProxyCallExternalTabComplete extends ICallExternalTabComplete, ProxyMarked {}
   export interface IProxyDownloadModuleCallback extends IDownloadModuleCallback, ProxyMarked {}
   export interface IProxyEnableBufferedStdinCallback
     extends IEnableBufferedStdinCallback,
@@ -73,6 +85,7 @@ export type IRemoteShell = Remote<IShellWorker>;
 export namespace IShellImpl {
   export interface IOptions extends IOptionsCommon {
     callExternalCommand: IShellWorker.IProxyCallExternalCommand;
+    callExternalTabComplete: IShellWorker.IProxyCallExternalTabComplete;
     downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback;
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;
     initDriveFSCallback: IInitDriveFSCallback;

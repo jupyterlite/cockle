@@ -1,12 +1,14 @@
-import { ICallExternalCommand } from '../callback_internal';
+import { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
 import { ICommandRunner } from './command_runner';
-import { IRunContext } from '../context';
+import { IRunContext, ITabCompleteContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
+import { ITabCompleteResult } from '../tab_complete';
 
 export class ExternalCommandRunner implements ICommandRunner {
   constructor(
     readonly name: string,
-    readonly callExternalCommand: ICallExternalCommand
+    readonly callExternalCommand: ICallExternalCommand,
+    readonly callExternalTabComplete: ICallExternalTabComplete | undefined
   ) {}
 
   get moduleName() {
@@ -48,5 +50,14 @@ export class ExternalCommandRunner implements ICommandRunner {
       });
     }
     return exitCode;
+  }
+
+  async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
+    if (this.callExternalTabComplete !== undefined) {
+      const { name, args } = context;
+      return await this.callExternalTabComplete(name, args);
+    }
+
+    return {};
   }
 }

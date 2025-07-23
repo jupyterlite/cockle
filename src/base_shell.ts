@@ -16,7 +16,7 @@ import { IShell } from './defs';
 import { IRemoteShell } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
 import { ExitCode } from './exit_code';
-import { IExternalCommand } from './external_command';
+import { IExternalCommand, IExternalTabCompleteResult } from './external_command';
 import { ExternalEnvironment } from './external_environment';
 import { ExternalInput, ExternalOutput } from './io';
 
@@ -55,12 +55,13 @@ export abstract class BaseShell implements IShell {
     stdoutSupportsAnsiEscapes: boolean,
     stderrSupportsAnsiEscapes: boolean
   ): Promise<{ exitCode: number; environmentChanges?: { [key: string]: string | undefined } }> {
-    const command = this._externalCommands.get(name);
-    if (command === undefined) {
+    const commandOptions = this._externalCommands.get(name);
+    if (commandOptions === undefined) {
       // This should not happen unless the command has not been registered properly.
       return { exitCode: ExitCode.CANNOT_FIND_COMMAND };
     }
 
+    const { command } = commandOptions;
     const externalEnvironment = new ExternalEnvironment(Object.entries(environment));
     const stdin = new ExternalInput(
       maxChars => this._remote!.externalInput(maxChars),
@@ -85,6 +86,27 @@ export abstract class BaseShell implements IShell {
     };
     const exitCode = await command(context);
     return { exitCode, environmentChanges: externalEnvironment.changed };
+  }
+
+  /**
+   * Call tab completion for an external command.
+   */
+  async callExternalTabComplete(name: string, args: string[]): Promise<IExternalTabCompleteResult> {
+    const commandOptions = this._externalCommands.get(name);
+    if (commandOptions === undefined) {
+      // This should not happen unless the command has not been registered properly.
+      console.warn("'{name} is not a registered external command");
+      return {};
+    }
+
+    const { tabComplete } = commandOptions;
+    if (tabComplete === undefined) {
+      // This should not happen unless the command has not been registered properly.
+      console.warn("External command '{name} does not support tab completion");
+      return {};
+    }
+
+    return await tabComplete({ name, args });
   }
 
   dispose(): void {
@@ -245,9 +267,7 @@ export abstract class BaseShell implements IShell {
     this._mainIO = this._sharedArrayBufferMainIO ?? this._serviceWorkerMainIO;
 
     // Register external commands here, the names are passed through to the WebWorker.
-    this.options.externalCommands?.forEach(cmd =>
-      this._externalCommands.set(cmd.name, cmd.command)
-    );
+    this.options.externalCommands?.forEach(cmd => this._externalCommands.set(cmd.name, cmd));
 
     this._worker = this.initWorker(this.options);
     this._initRemote(this.options).then(this._ready.resolve.bind(this._ready));
@@ -260,6 +280,10 @@ export abstract class BaseShell implements IShell {
     const sharedArrayBuffer = this._sharedArrayBufferMainIO?.sharedArrayBuffer ?? undefined;
     const supportsServiceWorker = this._serviceWorkerMainIO !== undefined;
 
+    const externalCommandConfigs = options.externalCommands?.map(x => {
+      return { name: x.name, hasTabComplete: x.tabComplete !== undefined };
+    });
+
     await this._remote.initialize(
       {
         shellId: this.shellId,
@@ -270,13 +294,14 @@ export abstract class BaseShell implements IShell {
         browsingContextId: options.browsingContextId,
         aliases: options.aliases ?? {},
         environment: options.environment ?? {},
-        externalCommandNames: options.externalCommands?.map(x => x.name) ?? [],
+        externalCommandConfigs: externalCommandConfigs ?? [],
         sharedArrayBuffer,
         supportsServiceWorker,
         initialDirectories: options.initialDirectories,
         initialFiles: options.initialFiles
       },
       proxy(this.callExternalCommand.bind(this)),
+      proxy(this.callExternalTabComplete.bind(this)),
       proxy(this.downloadWasmModuleCallback.bind(this)),
       proxy(this.enableBufferedStdinCallback.bind(this)),
       proxy(options.outputCallback),
@@ -324,7 +349,7 @@ export abstract class BaseShell implements IShell {
   private _shellId: string; // Unique identifier within a single browser tab.
   private _worker?: Worker;
   private _remote?: IRemoteShell;
-  private _externalCommands = new Map<string, IExternalCommand>();
+  private _externalCommands = new Map<string, IExternalCommand.IOptions>();
 
   private _serviceWorkerMainIO?: ServiceWorkerMainIO;
   private _sharedArrayBufferMainIO?: SharedArrayBufferMainIO;

@@ -3,10 +3,13 @@ import { CommandPackage } from './command_package';
 import { ICommandRunner } from './command_runner';
 import { ExternalCommandRunner } from './external_command_runner';
 import * as AllBuiltinCommands from '../builtin';
-import { ICallExternalCommand } from '../callback_internal';
+import { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
 
 export class CommandRegistry {
-  constructor(readonly callExternalCommand: ICallExternalCommand) {
+  constructor(
+    readonly callExternalCommand: ICallExternalCommand,
+    readonly callExternalTabComplete: ICallExternalTabComplete
+  ) {
     this.registerBuiltinCommands(AllBuiltinCommands);
   }
 
@@ -67,9 +70,16 @@ export class CommandRegistry {
     }
   }
 
-  registerExternalCommand(name: string): void {
+  registerExternalCommand(name: string, hasTabComplete: boolean): void {
     // Overwrite if name already registered.
-    this._map.set(name, new ExternalCommandRunner(name, this.callExternalCommand));
+    this._map.set(
+      name,
+      new ExternalCommandRunner(
+        name,
+        this.callExternalCommand,
+        hasTabComplete ? this.callExternalTabComplete : undefined
+      )
+    );
   }
 
   /**
