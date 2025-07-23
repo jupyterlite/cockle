@@ -3,6 +3,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { IDemo } from './defs';
 import { externalCommand } from './external_command';
+import { externalRun, externalTabComplete } from './external_command_tab';
 
 export class Demo {
   constructor(options: IDemo.IOptions) {
@@ -29,7 +30,10 @@ export class Demo {
       wasmBaseUrl: baseUrl,
       outputCallback: this.outputCallback.bind(this),
       shellManager,
-      externalCommands: [{ name: 'external-cmd', command: externalCommand }],
+      externalCommands: [
+        { name: 'external-cmd', command: externalCommand },
+        { name: 'external-tab', command: externalRun, tabComplete: externalTabComplete }
+      ],
       initialDirectories: ['dir'],
       initialFiles: {
         'file.txt': 'This is the contents of the file',

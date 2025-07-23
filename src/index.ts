@@ -4,11 +4,16 @@ export { BaseShell } from './base_shell';
 export { BaseShellWorker } from './base_shell_worker';
 export { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
 export { IOutputCallback } from './callback';
-export { IExternalContext, IJavaScriptRunContext, IJavaScriptTabCompleteContext } from './context';
+export {
+  IExternalContext,
+  IExternalTabCompleteContext,
+  IJavaScriptRunContext,
+  IJavaScriptTabCompleteContext
+} from './context';
 export { IShell, IShellManager } from './defs';
 export { IDriveFSOptions } from './drive_fs';
 export * from './exit_code';
-export { IExternalCommand } from './external_command';
+export { IExternalCommand, IExternalTabCompleteResult } from './external_command';
 export { ExternalEnvironment } from './external_environment';
 export { IFileSystem } from './file_system';
 export * from './io';

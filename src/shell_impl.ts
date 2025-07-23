@@ -54,7 +54,10 @@ export class ShellImpl implements IShellWorker {
       args: [],
       fileSystem: this._fileSystem,
       aliases: new Aliases(),
-      commandRegistry: new CommandRegistry(options.callExternalCommand),
+      commandRegistry: new CommandRegistry(
+        options.callExternalCommand,
+        options.callExternalTabComplete
+      ),
       environment: new Environment(options.color),
       history: new History(),
       terminate: this.terminate.bind(this),
@@ -81,8 +84,8 @@ export class ShellImpl implements IShellWorker {
     });
 
     // External commands.
-    options.externalCommandNames.forEach(name =>
-      this._runContext.commandRegistry.registerExternalCommand(name)
+    options.externalCommandConfigs.forEach(config =>
+      this._runContext.commandRegistry.registerExternalCommand(config.name, config.hasTabComplete)
     );
 
     this._stderr = new TerminalOutput(
