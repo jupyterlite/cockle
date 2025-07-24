@@ -8,3 +8,4 @@ export * from './cockle_config_command';
 export * from './exit_command';
 export * from './export_command';
 export * from './history_command';
+export * from './which_command';
