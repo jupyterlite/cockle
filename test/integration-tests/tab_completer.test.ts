@@ -39,7 +39,7 @@ test.describe('TabCompleter', () => {
         const ret1 = output.textAndClear();
         return [ret0, ret1];
       });
-      expect(output[0]).toMatch(/^t\r\ntail\r\ntee\r\ntouch\r\ntr\r\ntree\r\ntty\r\n/);
+      expect(output[0]).toMatch(/^t\r\ntail\r\ntee\r\ntouch\r\ntr\r\ntree\r\ntrue\r\ntty\r\n/);
       expect(output[1]).toMatch(/^\r\ntail {3}tr\r\ntee {4}tree\r\ntouch {2}tty\r\n/);
     });
 
