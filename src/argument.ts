@@ -1,8 +1,12 @@
+/**
+ * Individual command argument classes.
+ */
+
 import { ITabCompleteContext } from './context';
 import { GeneralError } from './error_exit_code';
-import { PathMatch } from './tab_complete';
+import { PathType } from './tab_complete';
 
-export abstract class Option {
+export abstract class Argument {
   constructor(
     readonly shortName: string,
     readonly longName: string,
@@ -36,13 +40,13 @@ export abstract class Option {
   protected _isSet: boolean = false;
 }
 
-export class BooleanOption extends Option {
+export class BooleanArgument extends Argument {
   constructor(shortName: string, longName: string, description: string) {
     super(shortName, longName, description);
   }
 }
 
-export class OptionalStringOption extends BooleanOption {
+export class OptionalStringArgument extends BooleanArgument {
   constructor(shortName: string, longName: string, description: string) {
     super(shortName, longName, description);
   }
@@ -62,18 +66,20 @@ export class OptionalStringOption extends BooleanOption {
   private _string?: string;
 }
 
-// Greedily consumes all remaining options as strings.
-// Often used for file/directory paths.
-export class TrailingStringsOption extends Option {
-  constructor(readonly options: TrailingStringsOption.IOptions = {}) {
+/**
+ * A collection of position arguments.
+ * Greedily consumes all remaining arguments as strings.
+ */
+export class PositionalArguments extends Argument {
+  constructor(readonly options: PositionalArguments.IOptions = {}) {
     super('', '', '');
     const { max, min } = options;
     if (min !== undefined) {
       if (min < 0) {
-        throw new GeneralError('Negative min in TrailingStringsOption.constructor');
+        throw new GeneralError('Negative min for positional arguments');
       }
       if (max !== undefined && max < min) {
-        throw new GeneralError('max must be greater than min in TrailingStringsOption.constructor');
+        throw new GeneralError('max must be greater than min for positional arguments');
       }
     }
   }
@@ -92,7 +98,7 @@ export class TrailingStringsOption extends Option {
 
     for (const arg of args) {
       if (arg.startsWith('-')) {
-        throw new GeneralError('Cannot have named option after parsing a trailing path');
+        throw new GeneralError('Cannot have named argument after positional arguments');
       }
       this._strings.push(arg);
     }
@@ -107,13 +113,13 @@ export class TrailingStringsOption extends Option {
   private _strings: string[] = [];
 }
 
-export class TrailingPathsOption extends TrailingStringsOption {
-  constructor(readonly options: TrailingPathsOption.IOptions = {}) {
+export class PositionalPathArguments extends PositionalArguments {
+  constructor(readonly options: PositionalPathArguments.IOptions = {}) {
     super(options);
   }
 }
 
-export namespace TrailingStringsOption {
+export namespace PositionalArguments {
   export interface IOptions {
     min?: number;
     max?: number;
@@ -127,8 +133,8 @@ export namespace TrailingStringsOption {
   }
 }
 
-export namespace TrailingPathsOption {
-  export interface IOptions extends TrailingStringsOption.IOptions {
-    pathMatch?: PathMatch;
+export namespace PositionalPathArguments {
+  export interface IOptions extends PositionalArguments.IOptions {
+    pathType?: PathType;
   }
 }

@@ -1,12 +1,12 @@
 import { BuiltinCommand } from './builtin_command';
+import { PositionalArguments } from '../argument';
+import { CommandArguments } from '../arguments';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
-import { TrailingStringsOption } from '../option';
-import { Options } from '../options';
 import { ITabCompleteResult } from '../tab_complete';
 
-class AliasOptions extends Options {
-  trailingStrings = new TrailingStringsOption();
+class AliasArguments extends CommandArguments {
+  positional = new PositionalArguments();
 }
 
 export class AliasCommand extends BuiltinCommand {
@@ -15,15 +15,15 @@ export class AliasCommand extends BuiltinCommand {
   }
 
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
-    return await new AliasOptions().tabComplete(context);
+    return await new AliasArguments().tabComplete(context);
   }
 
   protected async _run(context: IRunContext): Promise<number> {
-    const { aliases, args, stdout } = context;
-    const options = new AliasOptions().parse(args);
+    const { aliases, stdout } = context;
+    const args = new AliasArguments().parse(context.args);
 
-    if (options.trailingStrings.isSet) {
-      for (const name of options.trailingStrings.strings) {
+    if (args.positional.isSet) {
+      for (const name of args.positional.strings) {
         const index = name.indexOf('=');
         if (index === -1) {
           // Print alias.

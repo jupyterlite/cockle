@@ -203,7 +203,7 @@ test.describe('tab complete js-tab command', () => {
     );
   });
 
-  test('should match the single option starting with letter n', async ({ page }) => {
+  test('should match the single possible starting with letter n', async ({ page }) => {
     const output = await page.evaluate(async cmdName => {
       const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty({ externalCommands });
@@ -223,7 +223,7 @@ test.describe('tab complete js-tab command', () => {
     expect(output).toMatch(/^external-tab std$/);
   });
 
-  test('should show all options starting with std', async ({ page }) => {
+  test('should show all possible matches starting with std', async ({ page }) => {
     const output = await page.evaluate(async cmdName => {
       const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty({ externalCommands });
@@ -233,7 +233,7 @@ test.describe('tab complete js-tab command', () => {
     expect(output).toMatch(/^external-tab std\r\nstderr {2}stdin {3}stdout\r\n/);
   });
 
-  test('should match two separate options', async ({ page }) => {
+  test('should match two separate possibles', async ({ page }) => {
     const output = await page.evaluate(async cmdName => {
       const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty({ externalCommands });

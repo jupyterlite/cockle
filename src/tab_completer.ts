@@ -2,7 +2,7 @@ import { ansi } from './ansi';
 import { ICommandLine } from './command_line';
 import { IRunContext } from './context';
 import { CommandNode, parse } from './parse';
-import { ITabCompleteResult, PathMatch } from './tab_complete';
+import { ITabCompleteResult, PathType } from './tab_complete';
 import { RuntimeExports } from './types/wasm_module';
 import { longestStartsWith, toColumns } from './utils';
 
@@ -22,7 +22,7 @@ export class TabCompleter {
     let tokenToComplete = lastToken?.value ?? '';
 
     // Get possible matches, default is to match path.
-    let tabCompleteResult: ITabCompleteResult = { pathMatch: PathMatch.Any };
+    let tabCompleteResult: ITabCompleteResult = { pathType: PathType.Any };
     if (isCommand) {
       tabCompleteResult = { possibles: this._getPossibleCompletionsCommand(tokenToComplete) };
     } else if (parsed.length > 0 && parsed[0] instanceof CommandNode) {
@@ -40,13 +40,13 @@ export class TabCompleter {
     }
 
     const possibles = tabCompleteResult.possibles ?? [];
-    if (tabCompleteResult.pathMatch !== undefined) {
+    if (tabCompleteResult.pathType !== undefined) {
       // FileSystem matches are special as slashes can modify commandLine and tokenToComplete.
       let pathPossibles: string[] = [];
       [commandLine, tokenToComplete, pathPossibles] = this._getPossibleCompletionsFileSystem(
         commandLine,
         tokenToComplete,
-        tabCompleteResult.pathMatch
+        tabCompleteResult.pathType
       );
       possibles.push(...pathPossibles);
     }
@@ -94,7 +94,7 @@ export class TabCompleter {
   private _getPossibleCompletionsFileSystem(
     commandLine: ICommandLine,
     tokenToComplete: string,
-    pathMatch: PathMatch
+    pathType: PathType
   ): [ICommandLine, string, string[]] {
     // Need to support restricting to only files and only directories.
     const { FS, PATH } = this.context.fileSystem;
@@ -133,13 +133,13 @@ export class TabCompleter {
     const fsCache = new FSCache(FS);
 
     // Filter by file/directory type.
-    if (pathMatch === PathMatch.Directory) {
+    if (pathType === PathType.Directory) {
       possibles = possibles.filter(path => fsCache.isDir(PATH.join(parentPath, path)));
-    } else if (pathMatch === PathMatch.File) {
+    } else if (pathType === PathType.File) {
       possibles = possibles.filter(path => fsCache.isFile(PATH.join(parentPath, path)));
     }
 
-    if (pathMatch !== PathMatch.File) {
+    if (pathType !== PathType.File) {
       // Directories are displayed with appended /
       possibles = possibles.map((path: string) =>
         fsCache.isDir(PATH.join(parentPath, path)) ? path + '/' : path

@@ -3,16 +3,16 @@
  */
 import {
   ansi,
+  CommandArguments,
   ExitCode,
   IExternalContext,
   IExternalTabCompleteContext,
   IExternalTabCompleteResult,
-  Options,
-  TrailingStringsOption
+  PositionalArguments
 } from '@jupyterlite/cockle';
 
-class TestOptions extends Options {
-  trailingStrings = new TrailingStringsOption({
+class TestArguments extends CommandArguments {
+  positional = new PositionalArguments({
     possibles: (context: IExternalTabCompleteContext) => [
       'color',
       'environment',
@@ -28,12 +28,11 @@ class TestOptions extends Options {
 export async function externalTabComplete(
   context: IExternalTabCompleteContext
 ): Promise<IExternalTabCompleteResult> {
-  return new TestOptions().tabComplete(context);
+  return new TestArguments().tabComplete(context);
 }
 
 export async function externalRun(context: IExternalContext): Promise<number> {
-  const options = new TestOptions().parse(context.args);
-  const args = options.trailingStrings.strings;
+  const args = new TestArguments().parse(context.args).positional.strings;
 
   if (args.includes('environment')) {
     context.environment.set('TEST_VAR', '23');

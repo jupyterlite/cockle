@@ -1,7 +1,7 @@
 /**
  * Enum to find possible matching file and/or directory names.
  */
-export enum PathMatch {
+export enum PathType {
   Any = 0,
   Directory = 1,
   File = 2
@@ -12,5 +12,5 @@ export enum PathMatch {
  */
 export interface ITabCompleteResult {
   possibles?: string[];
-  pathMatch?: PathMatch;
+  pathType?: PathType;
 }
