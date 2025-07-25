@@ -89,6 +89,11 @@ test.describe('Shell', () => {
         'env|grep ?',
         // Multiple commands failure.
         'cd a b; pwd',
+        'env|grep ?',
+        // True and false commands
+        'true',
+        'env|grep ?',
+        'false',
         'env|grep ?'
       ]);
       expect(output[1]).toMatch('\r\n?=2\r\n');
@@ -101,6 +106,8 @@ test.describe('Shell', () => {
       expect(output[13]).toMatch('\r\n?=0\r\n');
       expect(output[14]).toMatch(/Error: cd: too many arguments/);
       expect(output[15]).toMatch('\r\n?=1\r\n');
+      expect(output[17]).toMatch('\r\n?=0\r\n');
+      expect(output[19]).toMatch('\r\n?=1\r\n');
     });
 
     test('should support unicode', async ({ page }) => {
