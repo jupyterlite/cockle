@@ -1,5 +1,7 @@
 export { Aliases } from './aliases';
 export { ansi } from './ansi';
+export * from './argument';
+export * from './arguments';
 export { BaseShell } from './base_shell';
 export { BaseShellWorker } from './base_shell_worker';
 export { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
@@ -18,8 +20,6 @@ export { ExternalEnvironment } from './external_environment';
 export { IFileSystem } from './file_system';
 export * from './io';
 export * from './layout';
-export * from './option';
-export * from './options';
 export { parse } from './parse';
 export { Shell } from './shell';
 export { ShellManager } from './shell_manager';

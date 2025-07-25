@@ -1,12 +1,12 @@
 import { BuiltinCommand } from './builtin_command';
+import { PositionalArguments } from '../argument';
+import { CommandArguments } from '../arguments';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
-import { TrailingStringsOption } from '../option';
-import { Options } from '../options';
 import { ITabCompleteResult } from '../tab_complete';
 
-class ExportOptions extends Options {
-  trailingStrings = new TrailingStringsOption();
+class ExportArguments extends CommandArguments {
+  positional = new PositionalArguments();
 }
 
 export class ExportCommand extends BuiltinCommand {
@@ -15,15 +15,15 @@ export class ExportCommand extends BuiltinCommand {
   }
 
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
-    return await new ExportOptions().tabComplete(context);
+    return await new ExportArguments().tabComplete(context);
   }
 
   protected async _run(context: IRunContext): Promise<number> {
-    const { args, environment } = context;
-    const options = new ExportOptions().parse(args);
+    const { environment } = context;
+    const args = new ExportArguments().parse(context.args);
 
-    if (options.trailingStrings.isSet) {
-      for (const name of options.trailingStrings.strings) {
+    if (args.positional.isSet) {
+      for (const name of args.positional.strings) {
         const index = name.indexOf('=');
         if (index > 0) {
           const key = name.slice(0, index);

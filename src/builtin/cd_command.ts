@@ -1,13 +1,13 @@
 import { BuiltinCommand } from './builtin_command';
+import { PositionalPathArguments } from '../argument';
+import { CommandArguments } from '../arguments';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
-import { TrailingPathsOption } from '../option';
-import { Options } from '../options';
-import { ITabCompleteResult, PathMatch } from '../tab_complete';
+import { ITabCompleteResult, PathType } from '../tab_complete';
 
-class CdOptions extends Options {
-  trailingPaths = new TrailingPathsOption({ pathMatch: PathMatch.Directory });
+class CdArguments extends CommandArguments {
+  positional = new PositionalPathArguments({ pathType: PathType.Directory });
 }
 
 export class CdCommand extends BuiltinCommand {
@@ -16,13 +16,12 @@ export class CdCommand extends BuiltinCommand {
   }
 
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
-    return await new CdOptions().tabComplete(context);
+    return await new CdArguments().tabComplete(context);
   }
 
   protected async _run(context: IRunContext): Promise<number> {
-    const { args } = context;
-    const options = new CdOptions().parse(args);
-    const paths = options.trailingPaths.strings;
+    const args = new CdArguments().parse(context.args);
+    const paths = args.positional.strings;
 
     if (paths.length < 1) {
       // Do nothing. Should cd to home directory?

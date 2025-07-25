@@ -16,7 +16,7 @@ test.describe('TabCompleter', () => {
       expect(await shellInputsSimple(page, [' ', ' ', 'e', 'c', '\t'])).toEqual('  echo ');
     });
 
-    test('should show tab completion options', async ({ page }) => {
+    test('should show tab completion possibles', async ({ page }) => {
       expect(await shellInputsSimple(page, ['e', '\t'])).toMatch(
         /^e\r\necho {4}env {5}exit {4}export {2}expr\r\n/
       );
@@ -67,7 +67,7 @@ test.describe('TabCompleter', () => {
       expect(await shellInputsSimple(page, ['l', 's', ' ', 'z', '\t'])).toEqual('ls z');
     });
 
-    test('should show tab completion options', async ({ page }) => {
+    test('should show tab completion possibles', async ({ page }) => {
       const output = await shellInputsSimple(page, ['l', 's', ' ', 'f', 'i', 'l', 'e', '\t']);
       expect(output).toMatch(/^ls file\r\nfile1 {2}file2\r\n/);
     });
@@ -251,7 +251,7 @@ test.describe('TabCompleter', () => {
       );
     });
 
-    test('should match stdin subcommand string options', async ({ page }) => {
+    test('should match stdin subcommand string possibles', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t ', 's', 't', '\t', '\t'])).toMatch(
         /^cockle-config stdin s$/
       );
@@ -269,7 +269,7 @@ test.describe('TabCompleter', () => {
       ).toMatch(/^cockle-config stdin sab $/);
     });
 
-    test('should match command subcommand string options', async ({ page }) => {
+    test('should match command subcommand string possibles', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'c', '\t', 'j', '\t'])).toMatch(
         /^cockle-config command j\r\njoin {5}js-tab {3}js-test\r\n/
       );
@@ -279,13 +279,13 @@ test.describe('TabCompleter', () => {
       ).toMatch(/^cockle-config command js-test $/);
     });
 
-    test('should match module subcommand string options', async ({ page }) => {
+    test('should match module subcommand string possibles', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'm', '\t', 'w', '\t'])).toMatch(
         /^cockle-config module wasm-test $/
       );
     });
 
-    test('should match package subcommand string options', async ({ page }) => {
+    test('should match package subcommand string possibles', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'p', '\t', 'u', '\t'])).toMatch(
         /^cockle-config package util-$/
       );
@@ -295,25 +295,25 @@ test.describe('TabCompleter', () => {
       ).toMatch(/^cockle-config package util-wasm $/);
     });
 
-    test('should show -- options', async ({ page }) => {
+    test('should show -- arguments', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t ', '-', '-', '\t'])).toMatch(
         /^cockle-config --\r\n--help {5}--version\r\n/
       );
     });
 
-    test('should match a -- option', async ({ page }) => {
+    test('should match a -- arguments', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t ', '-', '-', 'v', '\t'])).toMatch(
         /^cockle-config --version $/
       );
     });
 
-    test('should show - options', async ({ page }) => {
+    test('should show - arguments', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t ', '-', '\t'])).toMatch(
         /^cockle-config -\r\n--help {5}--version {2}-h {9}-v\r\n/
       );
     });
 
-    test('should match a - option', async ({ page }) => {
+    test('should match a - arguments', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t ', '-', 'h', '\t'])).toMatch(
         /^cockle-config -h $/
       );

@@ -7,10 +7,10 @@ import type {
   IJavaScriptTabCompleteContext,
   ITabCompleteResult
 } from '@jupyterlite/cockle';
-import { ExitCode, Options, TrailingStringsOption } from '@jupyterlite/cockle';
+import { ExitCode, CommandArguments, PositionalArguments } from '@jupyterlite/cockle';
 
-class TestOptions extends Options {
-  trailingStrings = new TrailingStringsOption({
+class TestArguments extends CommandArguments {
+  positional = new PositionalArguments({
     possibles: (context: IJavaScriptTabCompleteContext) => [
       'color',
       'environment',
@@ -26,8 +26,7 @@ class TestOptions extends Options {
 }
 
 export async function run(context: IJavaScriptRunContext): Promise<number> {
-  const options = new TestOptions().parse(context.args);
-  const args = options.trailingStrings.strings;
+  const args = new TestArguments().parse(context.args).positional.strings;
 
   if (args.includes('environment')) {
     context.environment.set('TEST_JS_VAR', '123');
@@ -120,5 +119,5 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
 export async function tabComplete(
   context: IJavaScriptTabCompleteContext
 ): Promise<ITabCompleteResult> {
-  return await new TestOptions().tabComplete(context);
+  return await new TestArguments().tabComplete(context);
 }

@@ -207,7 +207,7 @@ test.describe('tab complete js-tab command', () => {
     );
   });
 
-  test('should match the single option starting with letter w', async ({ page }) => {
+  test('should match the single possible starting with letter w', async ({ page }) => {
     expect(await shellInputsSimple(page, ['j', 's', '-', 't', 'a', '\t', 'w', '\t'])).toMatch(
       /^js-tab writefile $/
     );
@@ -219,13 +219,13 @@ test.describe('tab complete js-tab command', () => {
     );
   });
 
-  test('should show all options starting with std', async ({ page }) => {
+  test('should show all possibles starting with std', async ({ page }) => {
     expect(
       await shellInputsSimple(page, ['j', 's', '-', 't', 'a', '\t', 's', 't', 'd', '\t'])
     ).toMatch(/^js-tab std\r\nstderr {2}stdin {3}stdout\r\n/);
   });
 
-  test('should match two separate options', async ({ page }) => {
+  test('should match two separate possibles', async ({ page }) => {
     expect(
       await shellInputsSimple(page, ['j', 's', '-', 't', 'a', '\t', 'w', '\t', 'n', '\t'])
     ).toMatch(/^js-tab writefile name $/);

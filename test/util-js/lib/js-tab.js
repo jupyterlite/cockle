@@ -18,7 +18,10 @@ var Module = (function (exports) {
         }
     }
 
-    class Option {
+    /**
+     * Individual command argument classes.
+     */
+    class Argument {
         shortName;
         longName;
         description;
@@ -48,9 +51,11 @@ var Module = (function (exports) {
         }
         _isSet = false;
     }
-    // Greedily consumes all remaining options as strings.
-    // Often used for file/directory paths.
-    class TrailingStringsOption extends Option {
+    /**
+     * A collection of position arguments.
+     * Greedily consumes all remaining arguments as strings.
+     */
+    class PositionalArguments extends Argument {
         options;
         constructor(options = {}) {
             super('', '', '');
@@ -58,10 +63,10 @@ var Module = (function (exports) {
             const { max, min } = options;
             if (min !== undefined) {
                 if (min < 0) {
-                    throw new GeneralError('Negative min in TrailingStringsOption.constructor');
+                    throw new GeneralError('Negative min for positional arguments');
                 }
                 if (max !== undefined && max < min) {
-                    throw new GeneralError('max must be greater than min in TrailingStringsOption.constructor');
+                    throw new GeneralError('max must be greater than min for positional arguments');
                 }
             }
         }
@@ -77,7 +82,7 @@ var Module = (function (exports) {
             this.set();
             for (const arg of args) {
                 if (arg.startsWith('-')) {
-                    throw new GeneralError('Cannot have named option after parsing a trailing path');
+                    throw new GeneralError('Cannot have named argument after positional arguments');
                 }
                 this._strings.push(arg);
             }
@@ -88,7 +93,7 @@ var Module = (function (exports) {
         }
         _strings = [];
     }
-    class TrailingPathsOption extends TrailingStringsOption {
+    class PositionalPathsArguments extends PositionalArguments {
         options;
         constructor(options = {}) {
             super(options);
@@ -99,14 +104,17 @@ var Module = (function (exports) {
     /**
      * Enum to find possible matching file and/or directory names.
      */
-    var PathMatch;
-    (function (PathMatch) {
-        PathMatch[PathMatch["Any"] = 0] = "Any";
-        PathMatch[PathMatch["Directory"] = 1] = "Directory";
-        PathMatch[PathMatch["File"] = 2] = "File";
-    })(PathMatch || (PathMatch = {}));
+    var PathType;
+    (function (PathType) {
+        PathType[PathType["Any"] = 0] = "Any";
+        PathType[PathType["Directory"] = 1] = "Directory";
+        PathType[PathType["File"] = 2] = "File";
+    })(PathType || (PathType = {}));
 
-    class Options {
+    /**
+     * Arguments for a command, used by builtin, external and javascript commands.
+     */
+    class CommandArguments {
         parse(args) {
             // Use copy of args to avoid modifying caller's args.
             this._parseToRun(args.slice());
@@ -129,48 +137,35 @@ var Module = (function (exports) {
                 output.write(`${line}\n`);
             }
         }
-        //  private _findByLongName<T extends Options>(longName: string): Option {
         _findByLongName(longName) {
-            const longNameOptions = this._longNameOptions;
-            if (longName in longNameOptions) {
-                return longNameOptions[longName];
+            const longNameArguments = this._longNameArguments;
+            if (longName in longNameArguments) {
+                return longNameArguments[longName];
             }
             else {
                 // Need better error reporting
-                throw new GeneralError(`No such longName option '${longName}'`);
+                throw new GeneralError(`No such longName argument '${longName}'`);
             }
         }
-        //  private _findByShortName<T extends Options>(shortName: string): Option {
         _findByShortName(shortName) {
-            const shortNameOptions = this._shortNameOptions;
-            if (shortName in shortNameOptions) {
-                return shortNameOptions[shortName];
+            const shortNameArguments = this._shortNameArguments;
+            if (shortName in shortNameArguments) {
+                return shortNameArguments[shortName];
             }
             else {
                 // Need better error reporting
-                throw new GeneralError(`No such shortName option '${shortName}'`);
-            }
-        }
-        _getStrings() {
-            if ('trailingPaths' in this) {
-                return this['trailingPaths'];
-            }
-            else if ('trailingStrings' in this) {
-                return this['trailingStrings'];
-            }
-            else {
-                return null;
+                throw new GeneralError(`No such shortName argument '${shortName}'`);
             }
         }
         *_help() {
-            // Dynamically create help text from options.
-            for (const [key, option] of Object.entries(this)) {
+            // Dynamically create help text from arguments.
+            for (const [key, arg] of Object.entries(this)) {
                 if (key === 'subcommands') {
                     break;
                 }
-                const name = option.prefixedName;
+                const name = arg.prefixedName;
                 const spaces = Math.max(1, 12 - name.length);
-                yield `    ${name}${' '.repeat(spaces)}${option.description}`;
+                yield `    ${name}${' '.repeat(spaces)}${arg.description}`;
             }
             if ('subcommands' in this) {
                 const subcommands = this['subcommands'];
@@ -182,16 +177,16 @@ var Module = (function (exports) {
                 }
             }
         }
-        get _longNameOptions() {
-            const options = Object.values(this).filter(opt => opt instanceof Option && 'longName' in opt && opt.longName.length > 0);
-            return Object.fromEntries(options.map(opt => [opt.longName, opt]));
+        get _longNameArguments() {
+            const args = Object.values(this).filter(arg => arg instanceof Argument && 'longName' in arg && arg.longName.length > 0);
+            return Object.fromEntries(args.map(arg => [arg.longName, arg]));
         }
         /**
          * Parse arguments to run a command.
          */
         _parseToRun(args) {
-            const trailingStrings = this._getStrings();
-            let inTrailingStrings = false;
+            const { positional } = this;
+            let inPositional = false;
             const subcommands = this.subcommands ?? {};
             let firstArg = true;
             while (args.length > 0) {
@@ -203,8 +198,8 @@ var Module = (function (exports) {
                     break;
                 }
                 else if (arg.startsWith('-') && arg.length > 1) {
-                    if (inTrailingStrings) {
-                        throw new GeneralError('Cannot have named option after parsing a trailing path');
+                    if (inPositional) {
+                        throw new GeneralError('Cannot have named argument after positional arguments');
                     }
                     if (arg.startsWith('--')) {
                         const longName = arg.slice(2);
@@ -215,22 +210,23 @@ var Module = (function (exports) {
                         args = this._findByShortName(shortName).parse(arg, args);
                     }
                 }
-                else if (trailingStrings !== null) {
-                    inTrailingStrings = true;
-                    args = trailingStrings.parse(arg, args);
+                else if (positional !== undefined) {
+                    inPositional = true;
+                    args = positional.parse(arg, args);
                 }
                 else {
-                    throw new GeneralError(`Unrecognised option: '${arg}'`);
+                    throw new GeneralError(`Unrecognised argument: '${arg}'`);
                 }
                 firstArg = false;
             }
-            if (trailingStrings) {
-                const { min, max } = trailingStrings.options;
-                if (min !== undefined && trailingStrings.length < min) {
-                    throw new GeneralError('Insufficient trailing strings options specified');
+            if (positional !== undefined) {
+                // `positional` should handle its own validation here.
+                const { min, max } = positional.options;
+                if (min !== undefined && positional.length < min) {
+                    throw new GeneralError('Insufficient positional arguments');
                 }
-                if (max !== undefined && trailingStrings.length > max) {
-                    throw new GeneralError('Too many trailing strings options specified');
+                if (max !== undefined && positional.length > max) {
+                    throw new GeneralError('Too many positional arguments');
                 }
             }
         }
@@ -239,7 +235,7 @@ var Module = (function (exports) {
          */
         async _parseToTabComplete(context) {
             const { args } = context;
-            const trailingStrings = this._getStrings();
+            const { positional } = this;
             const subcommands = this.subcommands ?? {};
             let firstArg = true;
             while (args.length > 0) {
@@ -261,23 +257,23 @@ var Module = (function (exports) {
                 }
                 if (arg.startsWith('-')) {
                     if (lastArg) {
-                        const longNamePossibles = Object.keys(this._longNameOptions).map(x => '--' + x);
+                        const longNamePossibles = Object.keys(this._longNameArguments).map(x => '--' + x);
                         if (arg.startsWith('--')) {
                             return { possibles: longNamePossibles };
                         }
                         else {
-                            const shortNamePossibles = Object.keys(this._shortNameOptions).map(x => '-' + x);
+                            const shortNamePossibles = Object.keys(this._shortNameArguments).map(x => '-' + x);
                             return { possibles: shortNamePossibles.concat(longNamePossibles) };
                         }
                     }
                 }
-                else if (trailingStrings !== null) {
+                else if (positional !== undefined) {
                     // Jump straight to last argument as the preceding ones are independent of it.
-                    if (trailingStrings instanceof TrailingPathsOption) {
-                        return { pathMatch: trailingStrings.options.pathMatch ?? PathMatch.Any };
+                    if (positional instanceof PositionalPathsArguments) {
+                        return { pathType: positional.options.pathType ?? PathType.Any };
                     }
                     else {
-                        const possiblesCallback = trailingStrings.options.possibles;
+                        const possiblesCallback = positional.options.possibles;
                         if (possiblesCallback !== undefined) {
                             return { possibles: possiblesCallback({ ...context, args: [arg, ...args] }) };
                         }
@@ -287,17 +283,19 @@ var Module = (function (exports) {
             }
             return {};
         }
-        get _shortNameOptions() {
-            const options = Object.values(this).filter(opt => opt instanceof Option && 'shortName' in opt && opt.shortName.length > 0);
-            return Object.fromEntries(options.map(opt => [opt.shortName, opt]));
+        get _shortNameArguments() {
+            const args = Object.values(this).filter(arg => arg instanceof Argument && 'shortName' in arg && arg.shortName.length > 0);
+            return Object.fromEntries(args.map(arg => [arg.shortName, arg]));
         }
+        positional;
+        subcommands;
     }
 
     /**
      * The same functionality as js-test but using Options and tabComplete.
      */
-    class TestOptions extends Options {
-        trailingStrings = new TrailingStringsOption({
+    class TestArguments extends CommandArguments {
+        positional = new PositionalArguments({
             possibles: (context) => [
                 'color',
                 'environment',
@@ -312,8 +310,7 @@ var Module = (function (exports) {
         });
     }
     async function run(context) {
-        const options = new TestOptions().parse(context.args);
-        const args = options.trailingStrings.strings;
+        const args = new TestArguments().parse(context.args).positional.strings;
         if (args.includes('environment')) {
             context.environment.set('TEST_JS_VAR', '123');
             context.environment.delete('TEST_JS_VAR2');
@@ -397,7 +394,7 @@ var Module = (function (exports) {
         return ExitCode.SUCCESS;
     }
     async function tabComplete(context) {
-        return await new TestOptions().tabComplete(context);
+        return await new TestArguments().tabComplete(context);
     }
 
     exports.run = run;
