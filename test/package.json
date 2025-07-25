@@ -12,9 +12,8 @@
         "postbuild": "node node_modules/@jupyterlite/cockle/lib/tools/prepare_wasm.js --copy assets",
         "serve": "rspack serve",
         "test": "npm run test:unit && npm run test:integration",
-        "test:integration": "playwright test",
-        "test:integration:ui": "playwright test --ui",
-        "test:integration:report": "playwright show-report",
+        "test:integration": "cd integration-tests && playwright test",
+        "test:integration:ui": "cd integration-tests && playwright test --ui",
         "test:unit": "jest"
     },
     "devDependencies": {
