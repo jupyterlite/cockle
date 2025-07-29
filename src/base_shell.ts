@@ -221,8 +221,8 @@ export abstract class BaseShell implements IShell {
     await this._remote!.start();
   }
 
-  async themeChange(): Promise<void> {
-    await this._remote?.themeChange();
+  async themeChange(isDark?: boolean): Promise<void> {
+    await this._remote?.themeChange(isDark);
   }
 
   private async _initialize(): Promise<void> {

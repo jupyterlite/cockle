@@ -125,8 +125,8 @@ export abstract class BaseShellWorker implements IShellWorker {
     }
   }
 
-  async themeChange(): Promise<void> {
-    await this._shellImpl?.themeChange();
+  async themeChange(isDark?: boolean): Promise<void> {
+    await this._shellImpl?.themeChange(isDark);
   }
 
   private _setWorkerIO(shortName: string): void {

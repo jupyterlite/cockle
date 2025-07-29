@@ -78,14 +78,16 @@ export class Demo {
     this._term!.write(text);
   }
 
-  setTheme(foreground: string, background: string): void {
+  setTheme(foreground: string, background: string, mode: string): void {
     const theme = {
       ...this._term.options,
       foreground,
       background
     };
     this._term.options.theme = theme;
-    this._shell.themeChange();
+
+    const isDark = mode === 'light' ? false : mode === 'dark' ? true : undefined;
+    this._shell.themeChange(isDark);
   }
 
   private _targetDiv: HTMLElement;

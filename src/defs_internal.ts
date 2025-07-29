@@ -60,7 +60,7 @@ export interface IShellWorker extends IShellCommon {
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ): void;
 
-  themeChange(): Promise<void>;
+  themeChange(isDark?: boolean): Promise<void>;
 }
 
 export namespace IShellWorker {

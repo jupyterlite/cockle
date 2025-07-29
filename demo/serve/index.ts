@@ -12,8 +12,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const themeSelect = document.getElementById('theme-select') as HTMLSelectElement;
   themeSelect?.addEventListener('change', (event: any) => {
-    const [foreground, background] = themeSelect.value.split('-');
-    demo.setTheme(foreground, background);
+    const [foreground, background, mode] = themeSelect.value.split('-');
+    demo.setTheme(foreground, background, mode);
   });
 
   await demo.start();

@@ -9,7 +9,13 @@ export interface IShell extends IObservableDisposable {
   setSize(rows: number, columns: number): Promise<void>;
   shellId: string;
   start(): Promise<void>;
-  themeChange(): void;
+
+  /**
+   * Call just after theme change so the shell knows whether it is using dark or light mode.
+   * If the dark/light mode is not specified then the shell will ask the terminal what the
+   * background color is to determine it.
+   */
+  themeChange(isDark?: boolean): void;
 }
 
 export namespace IShell {
