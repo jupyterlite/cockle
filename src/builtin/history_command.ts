@@ -1,13 +1,13 @@
 import { BuiltinCommand } from './builtin_command';
+import { BooleanArgument } from '../argument';
+import { CommandArguments } from '../arguments';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
-import { BooleanOption } from '../option';
-import { Options } from '../options';
 import { ITabCompleteResult } from '../tab_complete';
 
-class HistoryOptions extends Options {
-  clear = new BooleanOption('c', '', 'clear the history by deleting all of the entries');
-  help = new BooleanOption('', 'help', 'display this help and exit');
+class HistoryArguments extends CommandArguments {
+  clear = new BooleanArgument('c', '', 'clear the history by deleting all of the entries');
+  help = new BooleanArgument('', 'help', 'display this help and exit');
 }
 
 export class HistoryCommand extends BuiltinCommand {
@@ -16,16 +16,16 @@ export class HistoryCommand extends BuiltinCommand {
   }
 
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
-    return await new HistoryOptions().tabComplete(context);
+    return await new HistoryArguments().tabComplete(context);
   }
 
   protected async _run(context: IRunContext): Promise<number> {
-    const { args, history, stdout } = context;
-    const options = new HistoryOptions().parse(args);
+    const { history, stdout } = context;
+    const args = new HistoryArguments().parse(context.args);
 
-    if (options.help.isSet) {
-      options.writeHelp(stdout);
-    } else if (options.clear.isSet) {
+    if (args.help.isSet) {
+      args.writeHelp(stdout);
+    } else if (args.clear.isSet) {
       history.clear();
     } else {
       history.write(stdout);

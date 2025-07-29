@@ -1,46 +1,46 @@
 import { BuiltinCommand } from './builtin_command';
+import { BooleanArgument, PositionalArguments } from '../argument';
+import { CommandArguments, SubcommandArguments } from '../arguments';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import { BorderTable } from '../layout';
-import { BooleanOption, TrailingStringsOption } from '../option';
-import { Options, Subcommand } from '../options';
 import { ITabCompleteResult } from '../tab_complete';
 import { COCKLE_VERSION } from '../version';
 
-class CommandSubcommand extends Subcommand {
-  trailingStrings = new TrailingStringsOption({
+class CommandSubcommand extends SubcommandArguments {
+  positional = new PositionalArguments({
     possibles: (context: ITabCompleteContext) =>
       context.commandRegistry ? context.commandRegistry.match(context.args.at(-1) || '') : []
   });
 }
 
-class ModuleSubcommand extends Subcommand {
-  trailingStrings = new TrailingStringsOption({
+class ModuleSubcommand extends SubcommandArguments {
+  positional = new PositionalArguments({
     possibles: (context: ITabCompleteContext) =>
       context.commandRegistry ? context.commandRegistry.allModules().map(module => module.name) : []
   });
 }
 
-class PackageSubcommand extends Subcommand {
-  trailingStrings = new TrailingStringsOption({
+class PackageSubcommand extends SubcommandArguments {
+  positional = new PositionalArguments({
     possibles: (context: ITabCompleteContext) => {
       return context.commandRegistry ? [...context.commandRegistry.commandPackageMap.keys()] : [];
     }
   });
 }
 
-class StdinSubcommand extends Subcommand {
-  trailingStrings = new TrailingStringsOption({
+class StdinSubcommand extends SubcommandArguments {
+  positional = new PositionalArguments({
     max: 1,
     possibles: (context: ITabCompleteContext) =>
       context.stdinContext ? context.stdinContext.shortNames : []
   });
 }
 
-class CockleConfigOptions extends Options {
-  version = new BooleanOption('v', 'version', 'show cockle version');
-  help = new BooleanOption('h', 'help', 'display this help and exit');
+class CockleConfigArguments extends CommandArguments {
+  version = new BooleanArgument('v', 'version', 'show cockle version');
+  help = new BooleanArgument('h', 'help', 'display this help and exit');
   subcommands = {
     command: new CommandSubcommand('command', 'show command information'),
     module: new ModuleSubcommand('module', 'show module information'),
@@ -55,16 +55,16 @@ export class CockleConfigCommand extends BuiltinCommand {
   }
 
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
-    return await new CockleConfigOptions().tabComplete(context);
+    return await new CockleConfigArguments().tabComplete(context);
   }
 
   protected async _run(context: IRunContext): Promise<number> {
-    const { args, environment, stdout } = context;
-    const options = new CockleConfigOptions().parse(args);
-    const { subcommands } = options;
+    const { environment, stdout } = context;
+    const args = new CockleConfigArguments().parse(context.args);
+    const { subcommands } = args;
 
-    if (options.help.isSet) {
-      options.writeHelp(stdout);
+    if (args.help.isSet) {
+      args.writeHelp(stdout);
       return ExitCode.SUCCESS;
     }
 
@@ -73,25 +73,25 @@ export class CockleConfigCommand extends BuiltinCommand {
         ? BorderTable.defaultColorByColumn()
         : undefined;
 
-    const showAll = args.length === 0;
-    if (showAll || options.version.isSet) {
+    const showAll = context.args.length === 0;
+    if (showAll || args.version.isSet) {
       this._writeVersion(context);
     }
     if (showAll || subcommands.stdin.isSet) {
       this._writeOrSetSyncStdinConfig(
         context,
         colorByColumn,
-        subcommands.stdin.trailingStrings.strings.at(0)
+        subcommands.stdin.positional.strings.at(0)
       );
     }
     if (showAll || subcommands.package.isSet) {
-      this._writePackageConfig(context, colorByColumn, subcommands.package.trailingStrings.strings);
+      this._writePackageConfig(context, colorByColumn, subcommands.package.positional.strings);
     }
     if (showAll || subcommands.module.isSet) {
-      this._writeModuleConfig(context, colorByColumn, subcommands.module.trailingStrings.strings);
+      this._writeModuleConfig(context, colorByColumn, subcommands.module.positional.strings);
     }
     if (subcommands.command.isSet) {
-      this._writeCommandConfig(context, colorByColumn, subcommands.command.trailingStrings.strings);
+      this._writeCommandConfig(context, colorByColumn, subcommands.command.positional.strings);
     }
 
     return ExitCode.SUCCESS;
