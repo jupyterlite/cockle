@@ -7,7 +7,7 @@ export { BaseShellWorker } from './base_shell_worker';
 export { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
 export { IOutputCallback } from './callback';
 export {
-  IExternalContext,
+  IExternalRunContext,
   IExternalTabCompleteContext,
   IJavaScriptRunContext,
   IJavaScriptTabCompleteContext

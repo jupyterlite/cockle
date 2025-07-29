@@ -1,8 +1,8 @@
-import { ansi, ExitCode, IExternalContext } from '@jupyterlite/cockle';
+import { ansi, ExitCode, IExternalRunContext } from '@jupyterlite/cockle';
 
 // External command with different bahaviour depending on supplied args, to test
 // external command functionality.
-export async function externalCommand(context: IExternalContext): Promise<number> {
+export async function externalCommand(context: IExternalRunContext): Promise<number> {
   const { args } = context;
 
   if (args.includes('environment')) {
