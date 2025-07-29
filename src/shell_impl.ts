@@ -226,7 +226,9 @@ export class ShellImpl implements IShellWorker {
     this._options.terminateCallback();
   }
 
-  async themeChange(): Promise<void> {
+  async themeChange(isDark?: boolean): Promise<void> {
+    this._requestedDarkMode = isDark;
+
     if (this._themeStatus !== ThemeStatus.Ok) {
       // Already pending or changing, don't need to repeat.
       return;
@@ -396,6 +398,13 @@ export class ShellImpl implements IShellWorker {
       return;
     }
 
+    if (this._requestedDarkMode !== undefined) {
+      // Early return as we already know if dark/light mode.
+      this._setDarkMode(this._requestedDarkMode);
+      return;
+    }
+
+    // Need to determine if dark or light mode.
     this._themeStatus = ThemeStatus.Changing;
 
     await this._options.enableBufferedStdinCallback(true);
@@ -697,6 +706,7 @@ export class ShellImpl implements IShellWorker {
 
   private _commandLine: ICommandLine = { text: '', cursorIndex: 0 };
   private _darkMode?: boolean;
+  private _requestedDarkMode?: boolean;
   private _isRunning = false;
   private _themeStatus = ThemeStatus.PendingChange;
 

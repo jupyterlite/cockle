@@ -455,4 +455,36 @@ test.describe('Shell', () => {
       expect(output).toMatch('env | grep ?\r\n?=1\r\n');
     });
   });
+
+  test.describe('themeChange', () => {
+    const modes = ['dark', 'light'];
+    modes.forEach(mode => {
+      test(`should support known ${mode} mode`, async ({ page }) => {
+        const output = await page.evaluate(async mode => {
+          const { delay, shellSetupEmpty } = globalThis.cockle;
+          const { output, shell } = await shellSetupEmpty({ color: true });
+          const isDarkMode = mode === 'dark';
+          shell.themeChange(isDarkMode);
+          await delay(10);
+          await shell.inputLine('');
+          await delay(10);
+          return output.text;
+        }, mode);
+        // Note: shell cannot handle determining the terminal background color unless it is
+        // connected to a real terminal (e.g. xtermjs) or the required ansi sequence is mocked.
+        // Here only testing mode being known dark or light.
+        const lines = output.split('\r\n');
+        const promptLine = lines[1];
+        // Extract color from the start of the prompt.
+        // These checks will change if the prompt color is changed.
+        if (mode === 'dark') {
+          expect(promptLine.slice(0, 7)).toEqual('\x1B[1;32m'); // Bold green
+        } else if (mode === 'light') {
+          expect(promptLine.slice(0, 7)).toEqual('\x1B[0;32m'); // Green
+        } else {
+          throw Error('Unexpected dark/light mode value');
+        }
+      });
+    });
+  });
 });
