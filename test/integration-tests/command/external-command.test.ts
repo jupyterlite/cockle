@@ -233,7 +233,7 @@ test.describe('tab complete js-tab command', () => {
     expect(output).toMatch(/^external-tab std\r\nstderr {2}stdin {3}stdout\r\n/);
   });
 
-  test('should match two separate possibles', async ({ page }) => {
+  test('should match two separate possible arguments', async ({ page }) => {
     const output = await page.evaluate(async cmdName => {
       const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty({ externalCommands });
