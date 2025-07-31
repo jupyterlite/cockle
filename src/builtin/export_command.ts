@@ -14,6 +14,20 @@ export class ExportCommand extends BuiltinCommand {
     return 'export';
   }
 
+  get description(): string {
+    return 'Set environment variables.';
+  }
+
+  help(): string {
+    return `Usage: export NAME=VALUE
+  
+  Set environment variables.
+  
+  Examples:
+    export PATH=/usr/bin
+    export EDITOR=vim`;
+  }
+
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
     return await new ExportArguments().tabComplete(context);
   }

@@ -15,6 +15,16 @@ export class HistoryCommand extends BuiltinCommand {
     return 'history';
   }
 
+  get description(): string {
+    return 'Display previously entered commands.';
+  }
+
+  help(): string {
+    return `Usage: history
+  
+  Display a list of previously entered commands.`;
+  }
+
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
     return await new HistoryArguments().tabComplete(context);
   }

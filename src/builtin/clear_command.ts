@@ -8,6 +8,16 @@ export class ClearCommand extends BuiltinCommand {
     return 'clear';
   }
 
+  get description(): string {
+    return 'Clear the terminal screen.';
+  }
+
+  help(): string {
+    return `Usage: clear
+  
+  Clear the terminal screen.`;
+  }
+
   protected async _run(context: IRunContext): Promise<number> {
     const { stdout } = context;
     if (stdout.supportsAnsiEscapes()) {

@@ -7,6 +7,16 @@ export class TrueCommand extends BuiltinCommand {
     return 'true';
   }
 
+  get description(): string {
+    return 'Exit with a status code of 0 (success).';
+  }
+
+  help(): string {
+    return `Usage: true
+  
+  Exit with a status code of 0 (success).`;
+  }
+
   protected async _run(_: IRunContext): Promise<number> {
     return ExitCode.SUCCESS;
   }
@@ -15,6 +25,16 @@ export class TrueCommand extends BuiltinCommand {
 export class FalseCommand extends BuiltinCommand {
   get name(): string {
     return 'false';
+  }
+
+  get description(): string {
+    return 'Exit with a status code of 1 (failure).';
+  }
+
+  help(): string {
+    return `Usage: false
+  
+  Exit with a status code of 1 (failure).`;
   }
 
   protected async _run(_: IRunContext): Promise<number> {

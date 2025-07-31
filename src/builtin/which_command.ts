@@ -8,6 +8,20 @@ export class WhichCommand extends BuiltinCommand {
     return 'which';
   }
 
+  get description(): string {
+    return 'Show the location of executables or built-in commands.';
+  }
+
+  help(): string {
+    return `Usage: which <command>
+  
+  Show the location of executables or built-in commands.
+  
+  Examples:
+    which ls
+    which cd`;
+  }
+
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
     const possibles = context.commandRegistry?.allCommands();
     return { possibles };

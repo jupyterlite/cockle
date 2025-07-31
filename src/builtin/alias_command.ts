@@ -14,6 +14,21 @@ export class AliasCommand extends BuiltinCommand {
     return 'alias';
   }
 
+  get description(): string {
+    return 'Define or display aliases for commands.';
+  }
+
+  help(): string {
+    return `Usage: alias [name='value']...
+  
+  Define or display aliases for commands.
+  
+  Examples:
+    alias ll='ls -l'
+    alias          # List all aliases
+    alias ll       # Show the value of alias 'll'`;
+  }
+
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
     return await new AliasArguments().tabComplete(context);
   }

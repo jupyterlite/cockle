@@ -27,6 +27,7 @@ import { CommandPackage } from './commands/command_package';
 import { CommandRegistry } from './commands/command_registry';
 import { TabCompleter } from './tab_completer';
 import { joinURL } from './utils';
+import { registerBuiltins } from './builtin/register_builtin_commands';
 
 /**
  * Shell implementation.
@@ -48,16 +49,19 @@ export class ShellImpl implements IShellWorker {
       mountpoint: options.mountpoint ?? '/drive'
     };
 
+    const registry = new CommandRegistry(
+      options.callExternalCommand,
+      options.callExternalTabComplete
+    );
+    registerBuiltins(registry);
+
     // Content within which commands are run.
     this._runContext = {
       name: '',
       args: [],
       fileSystem: this._fileSystem,
       aliases: new Aliases(),
-      commandRegistry: new CommandRegistry(
-        options.callExternalCommand,
-        options.callExternalTabComplete
-      ),
+      commandRegistry: registry,
       environment: new Environment(options.color),
       history: new History(),
       terminate: this.terminate.bind(this),

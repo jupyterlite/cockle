@@ -7,6 +7,20 @@ export class ExitCommand extends BuiltinCommand {
     return 'exit';
   }
 
+  get description(): string {
+    return 'Exit the shell.';
+  }
+
+  help(): string {
+    return `Usage: exit [status]
+  
+  Exit the shell with an optional status code. Defaults to 0.
+  
+  Examples:
+    exit
+    exit 1`;
+  }
+
   protected async _run(context: IRunContext): Promise<number> {
     const { stdout, terminate } = context;
 

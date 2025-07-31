@@ -15,6 +15,16 @@ export class CdCommand extends BuiltinCommand {
     return 'cd';
   }
 
+  get description(): string {
+    return 'Change the current working directory.';
+  }
+
+  help(): string {
+    return `Options:
+    [path]   The target directory to change into.
+             If omitted, defaults to the home directory.`;
+  }
+
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
     return await new CdArguments().tabComplete(context);
   }

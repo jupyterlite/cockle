@@ -82,6 +82,10 @@ export class CommandRegistry {
     );
   }
 
+  registerCommand(command: ICommandRunner) {
+    this._register(command);
+  }
+
   /**
    * Register a command runner under all of its names.
    */

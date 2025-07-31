@@ -54,6 +54,20 @@ export class CockleConfigCommand extends BuiltinCommand {
     return 'cockle-config';
   }
 
+  get description(): string {
+    return 'Configure or view Cockle shell settings.';
+  }
+
+  help(): string {
+    return `Usage: cockle-config [key] [value]
+  
+  View or set configuration options for the Cockle shell.
+  
+  Examples:
+    cockle-config promptColor red
+    cockle-config                # Show current configuration`;
+  }
+
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
     return await new CockleConfigArguments().tabComplete(context);
   }
