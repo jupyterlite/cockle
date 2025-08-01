@@ -56,17 +56,16 @@ export abstract class CommandArguments {
 
   private *_help(): Generator<string> {
     // Dynamically create help text from arguments.
-    for (const [key, arg] of Object.entries(this)) {
-      if (key === 'subcommands') {
-        break;
+    for (const arg of Object.values(this)) {
+      if (arg instanceof Argument) {
+        const name = arg.prefixedName;
+        const spaces = Math.max(1, 12 - name.length);
+        yield `    ${name}${' '.repeat(spaces)}${arg.description}`;
       }
-      const name = arg.prefixedName;
-      const spaces = Math.max(1, 12 - name.length);
-      yield `    ${name}${' '.repeat(spaces)}${arg.description}`;
     }
 
-    if ('subcommands' in this) {
-      const subcommands = this['subcommands'] as object;
+    const { subcommands } = this;
+    if (subcommands !== undefined) {
       yield '';
       yield 'subcommands:';
       for (const sub of Object.values(subcommands)) {

@@ -7,7 +7,7 @@ import { ITabCompleteResult } from '../tab_complete';
 
 class HistoryArguments extends CommandArguments {
   clear = new BooleanArgument('c', '', 'clear the history by deleting all of the entries');
-  help = new BooleanArgument('', 'help', 'display this help and exit');
+  help = new BooleanArgument('h', 'help', 'display this help and exit');
 }
 
 export class HistoryCommand extends BuiltinCommand {
