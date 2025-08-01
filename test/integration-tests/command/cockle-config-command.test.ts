@@ -2,9 +2,23 @@ import { expect } from '@playwright/test';
 import { shellLineSimple, test } from '../utils';
 
 test.describe('cockle-config command', () => {
-  test('should show version', async ({ page }) => {
-    const output = await shellLineSimple(page, 'cockle-config -v');
-    expect(output).toMatch(/^cockle-config -v\r\ncockle \S+\r\n/);
+  ['-v', '--version'].forEach(option => {
+    test(`should show version using ${option}`, async ({ page }) => {
+      const output = await shellLineSimple(page, `cockle-config ${option}`);
+      expect(output).toMatch(/\r\ncockle \S+\r\n/);
+    });
+  });
+
+  ['-h', '--help'].forEach(option => {
+    test(`should show help using ${option}`, async ({ page }) => {
+      const output = await shellLineSimple(page, `cockle-config ${option}`);
+      // Match a few lines.
+      expect(output).toMatch(/\r\n\s*-h.*display this help and exit\r\n/);
+      expect(output).toMatch(/\r\n\s*-v.*show cockle version\r\n/);
+      expect(output).toMatch(/\r\nsubcommands:\r\n/);
+      expect(output).toMatch(/\r\n\s+module\s+show module information\r\n/);
+      expect(output).toMatch(/\r\n\s+stdin\s+synchronous stdin configuration\r\n/);
+    });
   });
 
   test('should run stdin subcommand', async ({ page }) => {
