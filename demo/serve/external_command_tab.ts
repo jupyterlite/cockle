@@ -5,7 +5,7 @@ import {
   ansi,
   CommandArguments,
   ExitCode,
-  IExternalContext,
+  IExternalRunContext,
   IExternalTabCompleteContext,
   IExternalTabCompleteResult,
   PositionalArguments
@@ -31,7 +31,7 @@ export async function externalTabComplete(
   return new TestArguments().tabComplete(context);
 }
 
-export async function externalRun(context: IExternalContext): Promise<number> {
+export async function externalRun(context: IExternalRunContext): Promise<number> {
   const args = new TestArguments().parse(context.args).positional.strings;
 
   if (args.includes('environment')) {

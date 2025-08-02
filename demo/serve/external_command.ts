@@ -1,6 +1,6 @@
-import { ansi, ExitCode, IExternalContext } from '@jupyterlite/cockle';
+import { ansi, ExitCode, IExternalRunContext } from '@jupyterlite/cockle';
 
-export async function externalCommand(context: IExternalContext): Promise<number> {
+export async function externalCommand(context: IExternalRunContext): Promise<number> {
   const { args } = context;
 
   if (args.includes('environment')) {
