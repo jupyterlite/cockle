@@ -16,8 +16,8 @@ test.describe('cockle-config command', () => {
       expect(output).toMatch(/\r\n\s*-h.*display this help and exit\r\n/);
       expect(output).toMatch(/\r\n\s*-v.*show cockle version\r\n/);
       expect(output).toMatch(/\r\nsubcommands:\r\n/);
-      expect(output).toMatch(/\r\n\s+module\s+show module information\r\n/);
-      expect(output).toMatch(/\r\n\s+stdin\s+synchronous stdin configuration\r\n/);
+      expect(output).toMatch(/\r\n\s+module\s+Show information about one or more modules.\r\n/);
+      expect(output).toMatch(/\r\n\s+stdin\s+Configure or show synchronous stdin settings.\r\n/);
     });
   });
 

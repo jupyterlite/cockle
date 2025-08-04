@@ -13,6 +13,10 @@ class CommandSubcommand extends SubcommandArguments {
     possibles: (context: ITabCompleteContext) =>
       context.commandRegistry ? context.commandRegistry.match(context.args.at(-1) || '') : []
   });
+
+  constructor() {
+    super('command', 'Show information about one or more commands.');
+  }
 }
 
 class ModuleSubcommand extends SubcommandArguments {
@@ -20,6 +24,10 @@ class ModuleSubcommand extends SubcommandArguments {
     possibles: (context: ITabCompleteContext) =>
       context.commandRegistry ? context.commandRegistry.allModules().map(module => module.name) : []
   });
+
+  constructor() {
+    super('module', 'Show information about one or more modules.');
+  }
 }
 
 class PackageSubcommand extends SubcommandArguments {
@@ -28,6 +36,10 @@ class PackageSubcommand extends SubcommandArguments {
       return context.commandRegistry ? [...context.commandRegistry.commandPackageMap.keys()] : [];
     }
   });
+
+  constructor() {
+    super('package', 'Show information about one or more packages.');
+  }
 }
 
 class StdinSubcommand extends SubcommandArguments {
@@ -36,17 +48,28 @@ class StdinSubcommand extends SubcommandArguments {
     possibles: (context: ITabCompleteContext) =>
       context.stdinContext ? context.stdinContext.shortNames : []
   });
+
+  constructor() {
+    super('stdin', 'Configure or show synchronous stdin settings.');
+  }
 }
 
 class CockleConfigArguments extends CommandArguments {
   version = new BooleanArgument('v', 'version', 'show cockle version');
   help = new BooleanArgument('h', 'help', 'display this help and exit');
   subcommands = {
-    command: new CommandSubcommand('command', 'show command information'),
-    module: new ModuleSubcommand('module', 'show module information'),
-    package: new PackageSubcommand('package', 'show package information'),
-    stdin: new StdinSubcommand('stdin', 'synchronous stdin configuration')
+    command: new CommandSubcommand(),
+    module: new ModuleSubcommand(),
+    package: new PackageSubcommand(),
+    stdin: new StdinSubcommand()
   };
+
+  constructor() {
+    super({
+      description:
+        'Inspect and optionally modify Cockle configuration. Without arguments prints all sections. Use subcommands to target specific areas (command, module, package, stdin).'
+    });
+  }
 }
 
 export class CockleConfigCommand extends BuiltinCommand {

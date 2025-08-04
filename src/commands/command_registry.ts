@@ -4,6 +4,7 @@ import { ICommandRunner } from './command_runner';
 import { ExternalCommandRunner } from './external_command_runner';
 import * as AllBuiltinCommands from '../builtin';
 import { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
+import { BuiltinCommand } from '../builtin/builtin_command';
 
 export class CommandRegistry {
   constructor(
@@ -20,6 +21,18 @@ export class CommandRegistry {
     const commands = Array.from(this._map.keys());
     commands.sort();
     return commands;
+  }
+
+  builtInCommands(): string[] {
+    const names: string[] = [];
+    for (const name of this._map.keys()) {
+      const runner = this._map.get(name);
+      if (runner instanceof BuiltinCommand) {
+        names.push(name);
+      }
+    }
+    names.sort();
+    return names;
   }
 
   /**

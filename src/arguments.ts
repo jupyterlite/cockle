@@ -8,6 +8,11 @@ import { ITabCompleteResult, PathType } from './tab_complete';
  * Arguments for a command, used by builtin, external and javascript commands.
  */
 export abstract class CommandArguments {
+  protected description?: string;
+
+  constructor(opts: { description?: string } = {}) {
+    this.description = opts.description;
+  }
   parse(args: string[]): this {
     // Use copy of args to avoid modifying caller's args.
     this._parseToRun(args.slice());
@@ -55,12 +60,22 @@ export abstract class CommandArguments {
   }
 
   private *_help(): Generator<string> {
+    // Emit description first if present.
+    if (this.description) {
+      for (const descLine of this.description.trim().split('\n')) {
+        yield descLine;
+      }
+      yield '';
+    }
     // Dynamically create help text from arguments.
-    for (const arg of Object.values(this)) {
-      if (arg instanceof Argument) {
-        const name = arg.prefixedName;
-        const spaces = Math.max(1, 12 - name.length);
-        yield `    ${name}${' '.repeat(spaces)}${arg.description}`;
+    if (Object.values(this).some(v => v instanceof Argument)) {
+      yield 'options:';
+      for (const arg of Object.values(this)) {
+        if (arg instanceof Argument) {
+          const name = arg.prefixedName;
+          const spaces = Math.max(1, 12 - name.length);
+          yield `    ${name}${' '.repeat(spaces)}${arg.description}`;
+        }
       }
     }
 

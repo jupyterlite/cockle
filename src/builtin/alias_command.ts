@@ -1,5 +1,5 @@
 import { BuiltinCommand } from './builtin_command';
-import { PositionalArguments } from '../argument';
+import { PositionalArguments, BooleanArgument } from '../argument';
 import { CommandArguments } from '../arguments';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
@@ -7,6 +7,19 @@ import { ITabCompleteResult } from '../tab_complete';
 
 class AliasArguments extends CommandArguments {
   positional = new PositionalArguments();
+  help = new BooleanArgument('h', 'help', 'display this help and exit');
+
+  constructor() {
+    super({
+      description: `Without arguments, 'alias' prints the list of aliases in the reusable
+    form 'alias NAME=VALUE' on standard output.
+
+    Otherwise, an alias is defined for each NAME whose VALUE is given.
+    A trailing space in VALUE causes the next word to be checked for
+    alias substitution when the alias is expanded.
+    `
+    });
+  }
 }
 
 export class AliasCommand extends BuiltinCommand {
@@ -21,6 +34,11 @@ export class AliasCommand extends BuiltinCommand {
   protected async _run(context: IRunContext): Promise<number> {
     const { aliases, stdout } = context;
     const args = new AliasArguments().parse(context.args);
+
+    if (args.help.isSet) {
+      args.writeHelp(stdout);
+      return ExitCode.SUCCESS;
+    }
 
     if (args.positional.isSet) {
       for (const name of args.positional.strings) {

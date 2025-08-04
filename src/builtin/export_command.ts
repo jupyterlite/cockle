@@ -1,5 +1,5 @@
 import { BuiltinCommand } from './builtin_command';
-import { PositionalArguments } from '../argument';
+import { BooleanArgument, PositionalArguments } from '../argument';
 import { CommandArguments } from '../arguments';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
@@ -7,6 +7,16 @@ import { ITabCompleteResult } from '../tab_complete';
 
 class ExportArguments extends CommandArguments {
   positional = new PositionalArguments();
+  help = new BooleanArgument('h', 'help', 'display this help and exit');
+
+  constructor() {
+    super({
+      description: `Set export attribute for shell variables.
+    
+    Marks each NAME for automatic export to the environment of subsequently
+    executed commands.  If VALUE is supplied, assign VALUE before exporting.`
+    });
+  }
 }
 
 export class ExportCommand extends BuiltinCommand {
@@ -19,8 +29,13 @@ export class ExportCommand extends BuiltinCommand {
   }
 
   protected async _run(context: IRunContext): Promise<number> {
-    const { environment } = context;
+    const { environment, stdout } = context;
     const args = new ExportArguments().parse(context.args);
+
+    if (args.help.isSet) {
+      args.writeHelp(stdout);
+      return ExitCode.SUCCESS;
+    }
 
     if (args.positional.isSet) {
       for (const name of args.positional.strings) {
