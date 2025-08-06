@@ -6,10 +6,14 @@ import { ExitCode } from '../exit_code';
 
 class BoolStubArguments extends CommandArguments {
   help = new BooleanArgument('h', 'help', 'display this help and exit');
+}
 
-  constructor(description: string) {
-    super({ description });
-  }
+class TrueArguments extends BoolStubArguments {
+  description = 'Always succeeds; Return a successful result.';
+}
+
+class FalseArguments extends BoolStubArguments {
+  description = 'Always fails; Return an unsuccessful result.';
 }
 
 export class TrueCommand extends BuiltinCommand {
@@ -18,9 +22,7 @@ export class TrueCommand extends BuiltinCommand {
   }
 
   protected async _run(context: IRunContext): Promise<number> {
-    const args = new BoolStubArguments('Always succeeds; Return a successful result.').parse(
-      context.args
-    );
+    const args = new TrueArguments().parse(context.args);
     if (args.help.isSet) {
       args.writeHelp(context.stdout);
       return ExitCode.SUCCESS;
@@ -35,9 +37,7 @@ export class FalseCommand extends BuiltinCommand {
   }
 
   protected async _run(context: IRunContext): Promise<number> {
-    const args = new BoolStubArguments('Always fails;  Return an unsuccessful result.').parse(
-      context.args
-    );
+    const args = new FalseArguments().parse(context.args);
     if (args.help.isSet) {
       args.writeHelp(context.stdout);
       return ExitCode.SUCCESS;

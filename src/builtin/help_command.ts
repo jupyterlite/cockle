@@ -6,15 +6,10 @@ import { ExitCode } from '../exit_code';
 import { ITabCompleteResult } from '../tab_complete';
 
 class HelpArguments extends CommandArguments {
+  description =
+    "Show help for built-in commands. With no arguments, lists available builtins. With names, shows each command's help (equivalent to '<cmd> --help').";
   help = new BooleanArgument('h', 'help', 'display this help and exit');
   positional = new PositionalArguments({ min: 0 });
-
-  constructor() {
-    super({
-      description:
-        "Show help for built-in commands. With no arguments, lists available builtins. With names, shows each command's help (equivalent to '<cmd> --help')."
-    });
-  }
 }
 
 export class HelpCommand extends BuiltinCommand {
@@ -23,7 +18,7 @@ export class HelpCommand extends BuiltinCommand {
   }
 
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
-    const allBuiltins = context.commandRegistry?.builtInCommands() ?? [];
+    const allBuiltins = context.commandRegistry?.builtinCommands() ?? [];
 
     // Determine the current fragment the user is trying to complete.
     const last = context.args.length > 0 ? context.args[context.args.length - 1] : '';
@@ -31,8 +26,7 @@ export class HelpCommand extends BuiltinCommand {
 
     // If the completion system supports specifying what to replace, supply the fragment.
     return {
-      possibles: filtered,
-      replace: last
+      possibles: filtered
     } as unknown as ITabCompleteResult;
   }
 
@@ -46,11 +40,11 @@ export class HelpCommand extends BuiltinCommand {
     }
 
     const targets = parsed.positional.strings;
-    const builtins = commandRegistry ? commandRegistry.builtInCommands() : [];
+    const builtins = commandRegistry ? commandRegistry.builtinCommands() : [];
 
     if (targets.length === 0) {
       stdout.write('Built-in commands:\n');
-      for (const name of builtins.sort()) {
+      for (const name of builtins) {
         stdout.write(`  ${name}\n`);
       }
       stdout.write('\n');
@@ -80,7 +74,7 @@ export class HelpCommand extends BuiltinCommand {
         ...context,
         name: target,
         args: ['--help']
-      } as unknown as IRunContext;
+      };
 
       stdout.write(`\n=== help for ${target} ===\n`);
       await runner.run(subContext);

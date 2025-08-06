@@ -6,17 +6,12 @@ import { ExitCode } from '../exit_code';
 import { ITabCompleteResult } from '../tab_complete';
 
 class ExportArguments extends CommandArguments {
-  positional = new PositionalArguments();
-  help = new BooleanArgument('h', 'help', 'display this help and exit');
-
-  constructor() {
-    super({
-      description: `Set export attribute for shell variables.
+  description = `Set export attribute for shell variables.
     
     Marks each NAME for automatic export to the environment of subsequently
-    executed commands.  If VALUE is supplied, assign VALUE before exporting.`
-    });
-  }
+    executed commands.  If VALUE is supplied, assign VALUE before exporting.`;
+  positional = new PositionalArguments();
+  help = new BooleanArgument('h', 'help', 'display this help and exit');
 }
 
 export class ExportCommand extends BuiltinCommand {

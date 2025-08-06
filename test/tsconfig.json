@@ -4,5 +4,5 @@
     "composite": false,
     "rootDir": "../"
   },
-  "include": ["serve/*", "integration-tests/*", "unit-tests/*", "../src/*"]
+  "include": ["serve/*", "integration-tests/*", "unit-tests/*", "../src/*", "integration-tests/command/history.test.ts"]
 }

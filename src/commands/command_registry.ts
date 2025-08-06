@@ -23,7 +23,7 @@ export class CommandRegistry {
     return commands;
   }
 
-  builtInCommands(): string[] {
+  builtinCommands(): string[] {
     const names: string[] = [];
     for (const name of this._map.keys()) {
       const runner = this._map.get(name);

@@ -5,16 +5,11 @@ import { BooleanArgument } from '../argument';
 import { CommandArguments } from '../arguments';
 
 class ExitArguments extends CommandArguments {
-  help = new BooleanArgument('h', 'help', 'display this help and exit');
-
-  constructor() {
-    super({
-      description: `Exit the shell.
+  description = `Exit the shell.
     
     Exits the shell with a status of N.  If N is omitted, the exit status
-    is that of the last command executed.`
-    });
-  }
+    is that of the last command executed.`;
+  help = new BooleanArgument('h', 'help', 'display this help and exit');
 }
 
 export class ExitCommand extends BuiltinCommand {

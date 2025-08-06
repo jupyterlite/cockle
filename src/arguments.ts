@@ -8,11 +8,6 @@ import { ITabCompleteResult, PathType } from './tab_complete';
  * Arguments for a command, used by builtin, external and javascript commands.
  */
 export abstract class CommandArguments {
-  protected description?: string;
-
-  constructor(opts: { description?: string } = {}) {
-    this.description = opts.description;
-  }
   parse(args: string[]): this {
     // Use copy of args to avoid modifying caller's args.
     this._parseToRun(args.slice());
@@ -62,20 +57,19 @@ export abstract class CommandArguments {
   private *_help(): Generator<string> {
     // Emit description first if present.
     if (this.description) {
-      for (const descLine of this.description.trim().split('\n')) {
-        yield descLine;
-      }
-      yield '';
+      yield this.description;
     }
     // Dynamically create help text from arguments.
-    if (Object.values(this).some(v => v instanceof Argument)) {
-      yield 'options:';
-      for (const arg of Object.values(this)) {
-        if (arg instanceof Argument) {
-          const name = arg.prefixedName;
-          const spaces = Math.max(1, 12 - name.length);
-          yield `    ${name}${' '.repeat(spaces)}${arg.description}`;
+    let hasOptions = false;
+    for (const value of Object.values(this)) {
+      if (value instanceof Argument) {
+        if (!hasOptions) {
+          yield 'options:';
+          hasOptions = true;
         }
+        const name = value.prefixedName;
+        const spaces = Math.max(1, 12 - name.length);
+        yield `    ${name}${' '.repeat(spaces)}${value.description}`;
       }
     }
 
@@ -217,6 +211,7 @@ export abstract class CommandArguments {
 
   positional?: PositionalArguments;
   subcommands?: { [key: string]: SubcommandArguments };
+  description?: string;
 }
 
 /**

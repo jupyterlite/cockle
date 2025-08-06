@@ -6,13 +6,8 @@ import { IRunContext } from '../context';
 import { ExitCode } from '../exit_code';
 
 class ClearArguments extends CommandArguments {
+  description = 'Clear the terminal screen if ANSI escapes are supported.';
   help = new BooleanArgument('h', 'help', 'display this help and exit');
-
-  constructor() {
-    super({
-      description: 'Clear the terminal screen if ANSI escapes are supported.'
-    });
-  }
 }
 
 export class ClearCommand extends BuiltinCommand {
