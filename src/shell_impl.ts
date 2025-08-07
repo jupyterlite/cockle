@@ -105,6 +105,10 @@ export class ShellImpl implements IShellWorker {
     return this._runContext.environment;
   }
 
+  get exitCode(): number {
+    return this._exitCode;
+  }
+
   async externalInput(maxChars: number | null): Promise<string> {
     const chars = await this._runContext.stdin.readAsync(maxChars);
     return String.fromCharCode(...chars);
@@ -618,7 +622,7 @@ export class ShellImpl implements IShellWorker {
       stderr.flush();
     } finally {
       exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
-      this.environment.set('?', `${exitCode}`);
+      this._setExitCode(exitCode);
 
       this._runContext.workerIO.termios.setDefaultShell();
       await this._options.enableBufferedStdinCallback(false);
@@ -696,6 +700,11 @@ export class ShellImpl implements IShellWorker {
     }
   }
 
+  private _setExitCode(exitCode: number) {
+    this._exitCode = exitCode;
+    this.environment.set('?', `${exitCode}`);
+  }
+
   private _stdinCallback(maxChars: number | null): number[] {
     return this._runContext.workerIO.read(maxChars);
   }
@@ -706,6 +715,7 @@ export class ShellImpl implements IShellWorker {
 
   private _commandLine: ICommandLine = { text: '', cursorIndex: 0 };
   private _darkMode?: boolean;
+  private _exitCode: number = 0;
   private _requestedDarkMode?: boolean;
   private _isRunning = false;
   private _themeStatus = ThemeStatus.PendingChange;

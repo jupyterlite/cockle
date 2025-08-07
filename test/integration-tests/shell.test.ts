@@ -64,6 +64,18 @@ test.describe('Shell', () => {
       expect(output).toMatch('\r\nHello    x;   yz\r\n');
     });
 
+    test('should set IShell.exitCode', async ({ page }) => {
+      const exitCodes = await page.evaluate(async cmdName => {
+        const { shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('ls file1');
+        const exitCode0 = await shell.exitCode();
+        await shell.inputLine('ls unknown');
+        const exitCode1 = await shell.exitCode();
+        return [exitCode0, exitCode1];
+      });
+      expect(exitCodes).toEqual([0, 2]);
+    });
+
     test('should set $? (exit code)', async ({ page }) => {
       const output = await shellLineSimpleN(page, [
         // WASM command success.
@@ -444,15 +456,13 @@ test.describe('Shell', () => {
     });
 
     test('should support deleting environment variables', async ({ page }) => {
-      const output = await page.evaluate(async () => {
+      const exitCode = await page.evaluate(async () => {
         const environment = { PS1: null };
-        const { output, shell } = await globalThis.cockle.shellSetupEmpty({ environment });
+        const { shell } = await globalThis.cockle.shellSetupEmpty({ environment });
         await shell.inputLine('env | grep PS1');
-        await shell.inputLine('env | grep ?');
-        return output.text;
+        return await shell.exitCode();
       });
-      // Test error code for 'env | grep PS1'
-      expect(output).toMatch('env | grep ?\r\n?=1\r\n');
+      expect(exitCode).toEqual(1);
     });
   });
 

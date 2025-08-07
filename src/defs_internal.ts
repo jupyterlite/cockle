@@ -39,6 +39,7 @@ interface IOptionsCommon {
 }
 
 interface IShellCommon {
+  exitCode: number;
   externalInput(maxChars: number | null): Promise<string>;
   externalOutput(text: string, isStderr: boolean): void;
   input(char: string): Promise<void>;
