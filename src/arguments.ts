@@ -55,9 +55,18 @@ export abstract class CommandArguments {
   }
 
   private *_help(): Generator<string> {
+    // Emit description first if present.
+    if (this.description) {
+      yield this.description;
+    }
     // Dynamically create help text from arguments.
+    let hasOptions = false;
     for (const arg of Object.values(this)) {
-      if (arg instanceof Argument) {
+      if (arg instanceof Argument && !(arg instanceof PositionalArguments)) {
+        if (!hasOptions) {
+          yield 'options:';
+          hasOptions = true;
+        }
         const name = arg.prefixedName;
         const spaces = Math.max(1, 12 - name.length);
         yield `    ${name}${' '.repeat(spaces)}${arg.description}`;
@@ -202,6 +211,7 @@ export abstract class CommandArguments {
 
   positional?: PositionalArguments;
   subcommands?: { [key: string]: SubcommandArguments };
+  description?: string;
 }
 
 /**

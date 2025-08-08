@@ -1,3 +1,4 @@
+import { BuiltinCommand } from '../builtin';
 import { CommandModule } from './command_module';
 import { CommandPackage } from './command_package';
 import { ICommandRunner } from './command_runner';
@@ -32,6 +33,21 @@ export class CommandRegistry {
     }
     modules.sort((a, b) => (a.name < b.name ? -1 : 1));
     return modules;
+  }
+
+  /**
+   * Return sequence of built-in commands ordered by name.
+   */
+  builtinCommands(): string[] {
+    const names: string[] = [];
+    for (const name of this._map.keys()) {
+      const runner = this._map.get(name);
+      if (runner instanceof BuiltinCommand) {
+        names.push(name);
+      }
+    }
+    names.sort();
+    return names;
   }
 
   /**

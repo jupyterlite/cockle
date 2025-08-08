@@ -1,5 +1,5 @@
 import { BuiltinCommand } from './builtin_command';
-import { PositionalPathArguments } from '../argument';
+import { BooleanArgument, PositionalPathArguments } from '../argument';
 import { CommandArguments } from '../arguments';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { GeneralError } from '../error_exit_code';
@@ -7,7 +7,11 @@ import { ExitCode } from '../exit_code';
 import { ITabCompleteResult, PathType } from '../tab_complete';
 
 class CdArguments extends CommandArguments {
+  description = `Change the shell working directory.
+  
+  Change the current directory to DIR. If DIR is "-", it is converted to $OLDPWD.`;
   positional = new PositionalPathArguments({ pathType: PathType.Directory });
+  help = new BooleanArgument('h', 'help', 'display this help and exit');
 }
 
 export class CdCommand extends BuiltinCommand {
@@ -21,6 +25,12 @@ export class CdCommand extends BuiltinCommand {
 
   protected async _run(context: IRunContext): Promise<number> {
     const args = new CdArguments().parse(context.args);
+
+    if (args.help.isSet) {
+      args.writeHelp(context.stdout);
+      return ExitCode.SUCCESS;
+    }
+
     const paths = args.positional.strings;
 
     if (paths.length < 1) {
