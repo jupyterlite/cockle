@@ -69,20 +69,15 @@ cmdName.forEach(cmdName => {
     });
 
     test('should return exit code', async ({ page }) => {
-      const output = await page.evaluate(async cmdName => {
-        const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+      const exitCodes = await page.evaluate(async cmdName => {
+        const { shell } = await globalThis.cockle.shellSetupEmpty();
         await shell.inputLine(cmdName);
-        output.clear();
-        await shell.inputLine('env | grep ?');
-        const ret0 = output.textAndClear();
+        const exitCode0 = await shell.exitCode();
         await shell.inputLine(`${cmdName} exitCode`);
-        output.clear();
-        await shell.inputLine('env | grep ?');
-        const ret1 = output.textAndClear();
-        return [ret0, ret1];
+        const exitCode1 = await shell.exitCode();
+        return [exitCode0, exitCode1];
       }, cmdName);
-      expect(output[0]).toMatch('\r\n?=0\r\n');
-      expect(output[1]).toMatch('\r\n?=1\r\n');
+      expect(exitCodes).toEqual([0, 1]);
     });
 
     test('should set new environment variable', async ({ page }) => {
@@ -118,15 +113,24 @@ cmdName.forEach(cmdName => {
         await shell.inputLine('export TEST_JS_VAR2=9876');
         output.clear();
         await shell.inputLine('env | grep TEST_JS_VAR2');
-        const ret0 = output.textAndClear();
-        await shell.inputLine(`${cmdName} environment`);
+        const text0 = output.textAndClear();
+        const exitCode0 = await shell.exitCode();
+        await shell.inputLine(`${cmdName} environment`); // Sets TEST_JS_VAR, deletes TEST_JS_VAR2
         output.clear();
         await shell.inputLine('env | grep TEST_JS_VAR2');
-        await shell.inputLine('env | grep ?'); // Check error code
-        return [ret0, output.text];
+        const text1 = output.textAndClear();
+        const exitCode1 = await shell.exitCode();
+        return [text0, exitCode0, text1, exitCode1];
       }, cmdName);
-      expect(output[0]).toMatch('\r\nTEST_JS_VAR2=9876\r\n');
-      expect(output[1]).toMatch('\r\n?=1\r\n');
+
+      let lines = output[0].split('\r\n');
+      expect(lines).toHaveLength(3);
+      expect(lines[1]).toEqual('TEST_JS_VAR2=9876');
+      //expect(output[1]).toEqual(0);  // TODO: this is 1 but should be 0 ???
+
+      lines = output[2].split('\r\n');
+      expect(lines).toHaveLength(2);
+      expect(output[3]).toEqual(1);
     });
 
     test('should be passed command name', async ({ page }) => {

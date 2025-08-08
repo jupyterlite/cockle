@@ -67,20 +67,15 @@ test.describe('wasm-test', () => {
   });
 
   test('should return exit code', async ({ page }) => {
-    const output = await page.evaluate(async () => {
-      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+    const exitCodes = await page.evaluate(async () => {
+      const { shell } = await globalThis.cockle.shellSetupEmpty();
       await shell.inputLine('wasm-test');
-      output.clear();
-      await shell.inputLine('env | grep ?');
-      const ret0 = output.textAndClear();
+      const exitCode0 = await shell.exitCode();
       await shell.inputLine('wasm-test exitCode');
-      output.clear();
-      await shell.inputLine('env | grep ?');
-      const ret1 = output.textAndClear();
-      return [ret0, ret1];
+      const exitCode1 = await shell.exitCode();
+      return [exitCode0, exitCode1];
     });
-    expect(output[0]).toMatch('\r\n?=0\r\n');
-    expect(output[1]).toMatch('\r\n?=1\r\n');
+    expect(exitCodes).toEqual([0, 1]);
   });
 
   test('should be passed command name', async ({ page }) => {

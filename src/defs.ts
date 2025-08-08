@@ -5,6 +5,11 @@ import { IOutputCallback } from './callback';
 import { IExternalCommand } from './external_command';
 
 export interface IShell extends IObservableDisposable {
+  /**
+   * Return exit code of last command run.
+   */
+  exitCode(): Promise<number>;
+
   input(char: string): Promise<void>;
   setSize(rows: number, columns: number): Promise<void>;
   shellId: string;

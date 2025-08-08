@@ -94,6 +94,10 @@ export abstract class BaseShellWorker implements IShellWorker {
     }
   }
 
+  get exitCode(): number {
+    return this._shellImpl?.exitCode ?? 1;
+  }
+
   async externalInput(maxChars: number | null): Promise<string> {
     return this._shellImpl!.externalInput(maxChars);
   }
