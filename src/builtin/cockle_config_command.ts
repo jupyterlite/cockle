@@ -13,10 +13,6 @@ class CommandSubcommand extends SubcommandArguments {
     possibles: (context: ITabCompleteContext) =>
       context.commandRegistry ? context.commandRegistry.match(context.args.at(-1) || '') : []
   });
-
-  constructor() {
-    super('command', 'Show information about one or more commands.');
-  }
 }
 
 class ModuleSubcommand extends SubcommandArguments {
@@ -24,10 +20,6 @@ class ModuleSubcommand extends SubcommandArguments {
     possibles: (context: ITabCompleteContext) =>
       context.commandRegistry ? context.commandRegistry.allModules().map(module => module.name) : []
   });
-
-  constructor() {
-    super('module', 'Show information about one or more modules.');
-  }
 }
 
 class PackageSubcommand extends SubcommandArguments {
@@ -36,10 +28,6 @@ class PackageSubcommand extends SubcommandArguments {
       return context.commandRegistry ? [...context.commandRegistry.commandPackageMap.keys()] : [];
     }
   });
-
-  constructor() {
-    super('package', 'Show information about one or more packages.');
-  }
 }
 
 class StdinSubcommand extends SubcommandArguments {
@@ -48,10 +36,6 @@ class StdinSubcommand extends SubcommandArguments {
     possibles: (context: ITabCompleteContext) =>
       context.stdinContext ? context.stdinContext.shortNames : []
   });
-
-  constructor() {
-    super('stdin', 'Configure or show synchronous stdin settings.');
-  }
 }
 
 class CockleConfigArguments extends CommandArguments {
@@ -60,10 +44,10 @@ class CockleConfigArguments extends CommandArguments {
   version = new BooleanArgument('v', 'version', 'show cockle version');
   help = new BooleanArgument('h', 'help', 'display this help and exit');
   subcommands = {
-    command: new CommandSubcommand(),
-    module: new ModuleSubcommand(),
-    package: new PackageSubcommand(),
-    stdin: new StdinSubcommand()
+    command: new CommandSubcommand('command', 'Show information about one or more commands.'),
+    module: new ModuleSubcommand('module', 'Show information about one or more modules.'),
+    package: new PackageSubcommand('package', 'Show information about one or more packages.'),
+    stdin: new StdinSubcommand('stdin', 'Configure or show synchronous stdin settings.')
   };
 }
 

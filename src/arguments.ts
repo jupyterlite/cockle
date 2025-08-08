@@ -61,15 +61,15 @@ export abstract class CommandArguments {
     }
     // Dynamically create help text from arguments.
     let hasOptions = false;
-    for (const value of Object.values(this)) {
-      if (value instanceof Argument) {
+    for (const arg of Object.values(this)) {
+      if (arg instanceof Argument && !(arg instanceof PositionalArguments)) {
         if (!hasOptions) {
           yield 'options:';
           hasOptions = true;
         }
-        const name = value.prefixedName;
+        const name = arg.prefixedName;
         const spaces = Math.max(1, 12 - name.length);
-        yield `    ${name}${' '.repeat(spaces)}${value.description}`;
+        yield `    ${name}${' '.repeat(spaces)}${arg.description}`;
       }
     }
 

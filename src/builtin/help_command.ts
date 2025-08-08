@@ -24,10 +24,9 @@ export class HelpCommand extends BuiltinCommand {
     const last = context.args.length > 0 ? context.args[context.args.length - 1] : '';
     const filtered = allBuiltins.filter(cmd => cmd.startsWith(last));
 
-    // If the completion system supports specifying what to replace, supply the fragment.
     return {
       possibles: filtered
-    } as unknown as ITabCompleteResult;
+    };
   }
 
   protected async _run(context: IRunContext): Promise<number> {

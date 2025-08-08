@@ -1,10 +1,10 @@
+import { BuiltinCommand } from '../builtin';
 import { CommandModule } from './command_module';
 import { CommandPackage } from './command_package';
 import { ICommandRunner } from './command_runner';
 import { ExternalCommandRunner } from './external_command_runner';
 import * as AllBuiltinCommands from '../builtin';
 import { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
-import { BuiltinCommand } from '../builtin/builtin_command';
 
 export class CommandRegistry {
   constructor(
@@ -23,18 +23,6 @@ export class CommandRegistry {
     return commands;
   }
 
-  builtinCommands(): string[] {
-    const names: string[] = [];
-    for (const name of this._map.keys()) {
-      const runner = this._map.get(name);
-      if (runner instanceof BuiltinCommand) {
-        names.push(name);
-      }
-    }
-    names.sort();
-    return names;
-  }
-
   /**
    * Return sequence of all modules ordered by module name.
    */
@@ -45,6 +33,21 @@ export class CommandRegistry {
     }
     modules.sort((a, b) => (a.name < b.name ? -1 : 1));
     return modules;
+  }
+
+  /**
+   * Return sequence of built-in commands ordered by name.
+   */
+  builtinCommands(): string[] {
+    const names: string[] = [];
+    for (const name of this._map.keys()) {
+      const runner = this._map.get(name);
+      if (runner instanceof BuiltinCommand) {
+        names.push(name);
+      }
+    }
+    names.sort();
+    return names;
   }
 
   /**

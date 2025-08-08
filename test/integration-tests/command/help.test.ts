@@ -7,15 +7,8 @@ test.describe('built-in commands help coverage', () => {
     const helpOutput = await shellLineSimple(page, 'help');
     const builtins = helpOutput
       .split('\n')
-      .map(l => l.trim())
-      .filter(
-        l =>
-          l &&
-          !l.startsWith('Built-in commands:') &&
-          !l.startsWith('For detailed help') &&
-          !l.startsWith('js-shell:')
-      )
-      .map(l => l.replace(/^[-\s]+/, ''))
+      .filter(line => /^\s+\S/.test(line))
+      .map(line => line.trim())
       .filter(cmd => cmd !== 'help');
 
     expect(builtins.length).toBeGreaterThan(0);
