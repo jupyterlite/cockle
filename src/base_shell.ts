@@ -166,7 +166,7 @@ export abstract class BaseShell implements IShell {
   }
 
   async exitCode(): Promise<number> {
-    return await this._remote?.exitCode ?? 1;
+    return (await this._remote?.exitCode) ?? 1;
   }
 
   get isDisposed(): boolean {

@@ -77,7 +77,7 @@ cmdName.forEach(cmdName => {
         const exitCode1 = await shell.exitCode();
         return [exitCode0, exitCode1];
       }, cmdName);
-      expect(exitCodes).toEqual([0, 1])
+      expect(exitCodes).toEqual([0, 1]);
     });
 
     test('should set new environment variable', async ({ page }) => {

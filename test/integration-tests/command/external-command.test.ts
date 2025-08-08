@@ -51,7 +51,7 @@ cmdName.forEach(cmdName => {
 
     test('should return exit code', async ({ page }) => {
       const exitCodes = await page.evaluate(async cmdName => {
-       const { externalCommands, shellSetupEmpty } = globalThis.cockle;
+        const { externalCommands, shellSetupEmpty } = globalThis.cockle;
         const { shell } = await shellSetupEmpty({ externalCommands });
         await shell.inputLine(cmdName);
         const exitCode0 = await shell.exitCode();
@@ -59,7 +59,7 @@ cmdName.forEach(cmdName => {
         const exitCode1 = await shell.exitCode();
         return [exitCode0, exitCode1];
       }, cmdName);
-      expect(exitCodes).toEqual([0, 1])
+      expect(exitCodes).toEqual([0, 1]);
     });
 
     test('should set new environment variable', async ({ page }) => {

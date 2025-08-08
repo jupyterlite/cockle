@@ -75,7 +75,7 @@ test.describe('wasm-test', () => {
       const exitCode1 = await shell.exitCode();
       return [exitCode0, exitCode1];
     });
-    expect(exitCodes).toEqual([0, 1])
+    expect(exitCodes).toEqual([0, 1]);
   });
 
   test('should be passed command name', async ({ page }) => {
