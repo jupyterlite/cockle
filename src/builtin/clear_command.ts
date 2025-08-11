@@ -2,8 +2,9 @@ import { BuiltinCommand } from './builtin_command';
 import { BooleanArgument } from '../argument';
 import { CommandArguments } from '../arguments';
 import { ansi } from '../ansi';
-import { IRunContext } from '../context';
+import { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
+import { ITabCompleteResult } from '../tab_complete';
 
 class ClearArguments extends CommandArguments {
   description = 'Clear the terminal screen if ANSI escapes are supported.';
@@ -13,6 +14,10 @@ class ClearArguments extends CommandArguments {
 export class ClearCommand extends BuiltinCommand {
   get name(): string {
     return 'clear';
+  }
+
+  async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
+    return await new ClearArguments().tabComplete(context);
   }
 
   protected async _run(context: IRunContext): Promise<number> {

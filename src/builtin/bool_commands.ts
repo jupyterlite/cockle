@@ -1,8 +1,9 @@
 import { BuiltinCommand } from './builtin_command';
 import { CommandArguments } from '../arguments';
 import { BooleanArgument } from '../argument';
-import { IRunContext } from '../context';
+import { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
+import { ITabCompleteResult } from '../tab_complete';
 
 class BoolStubArguments extends CommandArguments {
   help = new BooleanArgument('h', 'help', 'display this help and exit');
@@ -21,6 +22,10 @@ export class TrueCommand extends BuiltinCommand {
     return 'true';
   }
 
+  async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
+    return await new TrueArguments().tabComplete(context);
+  }
+
   protected async _run(context: IRunContext): Promise<number> {
     const args = new TrueArguments().parse(context.args);
     if (args.help.isSet) {
@@ -34,6 +39,10 @@ export class TrueCommand extends BuiltinCommand {
 export class FalseCommand extends BuiltinCommand {
   get name(): string {
     return 'false';
+  }
+
+  async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
+    return await new FalseArguments().tabComplete(context);
   }
 
   protected async _run(context: IRunContext): Promise<number> {

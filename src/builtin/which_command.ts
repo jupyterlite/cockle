@@ -9,7 +9,9 @@ class WhichArguments extends CommandArguments {
   description =
     'Locate built-in commands by name. Prints each given command if it exists, otherwise an error message.';
   help = new BooleanArgument('h', 'help', 'display this help and exit');
-  positional = new PositionalArguments({ min: 0 });
+  positional = new PositionalArguments({
+    possibles: (context: ITabCompleteContext) => context.commandRegistry?.allCommands() ?? []
+  });
 }
 
 export class WhichCommand extends BuiltinCommand {
@@ -18,8 +20,7 @@ export class WhichCommand extends BuiltinCommand {
   }
 
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
-    const possibles = context.commandRegistry?.allCommands();
-    return { possibles };
+    return await new WhichArguments().tabComplete(context);
   }
 
   protected async _run(context: IRunContext): Promise<number> {
