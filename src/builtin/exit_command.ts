@@ -1,20 +1,22 @@
 import { BuiltinCommand } from './builtin_command';
-import { IRunContext } from '../context';
-import { ExitCode } from '../exit_code';
 import { BooleanArgument } from '../argument';
 import { CommandArguments } from '../arguments';
+import { IRunContext, ITabCompleteContext } from '../context';
+import { ExitCode } from '../exit_code';
+import { ITabCompleteResult } from '../tab_complete';
 
 class ExitArguments extends CommandArguments {
-  description = `Exit the shell.
-    
-    Exits the shell with a status of N.  If N is omitted, the exit status
-    is that of the last command executed.`;
+  description = 'Exit the shell';
   help = new BooleanArgument('h', 'help', 'display this help and exit');
 }
 
 export class ExitCommand extends BuiltinCommand {
   get name(): string {
     return 'exit';
+  }
+
+  async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
+    return await new ExitArguments().tabComplete(context);
   }
 
   protected async _run(context: IRunContext): Promise<number> {

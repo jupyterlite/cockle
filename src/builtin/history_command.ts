@@ -7,9 +7,9 @@ import { ITabCompleteResult } from '../tab_complete';
 
 class HistoryArguments extends CommandArguments {
   description = ` Display or manipulate the history list.
-    
+
     Display the history list with line numbers, prefixing each modified
-    entry with a '*'.  An argument of N lists only the last N entries.`;
+    entry with a '*'`;
   clear = new BooleanArgument('c', '', 'clear the history by deleting all of the entries');
   help = new BooleanArgument('h', 'help', 'display this help and exit');
 }

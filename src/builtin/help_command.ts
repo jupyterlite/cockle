@@ -9,7 +9,9 @@ class HelpArguments extends CommandArguments {
   description =
     "Show help for built-in commands. With no arguments, lists available builtins. With names, shows each command's help (equivalent to '<cmd> --help').";
   help = new BooleanArgument('h', 'help', 'display this help and exit');
-  positional = new PositionalArguments({ min: 0 });
+  positional = new PositionalArguments({
+    possibles: (context: ITabCompleteContext) => context.commandRegistry?.builtinCommands() ?? []
+  });
 }
 
 export class HelpCommand extends BuiltinCommand {
@@ -18,15 +20,7 @@ export class HelpCommand extends BuiltinCommand {
   }
 
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
-    const allBuiltins = context.commandRegistry?.builtinCommands() ?? [];
-
-    // Determine the current fragment the user is trying to complete.
-    const last = context.args.length > 0 ? context.args[context.args.length - 1] : '';
-    const filtered = allBuiltins.filter(cmd => cmd.startsWith(last));
-
-    return {
-      possibles: filtered
-    };
+    return await new HelpArguments().tabComplete(context);
   }
 
   protected async _run(context: IRunContext): Promise<number> {
