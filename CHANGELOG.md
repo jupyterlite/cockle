@@ -2,6 +2,48 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.0.0
+
+This is a major release introducing support for tab completion in built-in, external and javascript commands via `CommandArguments` classes. There are also new built-in commands `false`, `true`, `help` and `which`.
+
+The changes in external commands, command contexts and command argument classes are backwards incompatible, hence the major version bump.
+
+Thanks to new contributors @martinRenou and @nakul-py.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.3...6604492ecb2f804b3ccb5b6360dc12def6f68c24))
+
+### Enhancements made
+
+- Support pasting of multiple characters to the command line [#240](https://github.com/jupyterlite/cockle/pull/240) ([@ianthomas23](https://github.com/ianthomas23))
+- Use `Arguments.tabComplete` for builtin commands [#238](https://github.com/jupyterlite/cockle/pull/238) ([@ianthomas23](https://github.com/ianthomas23))
+- Expose `IShell.exitCode()` and use in exit code tests [#237](https://github.com/jupyterlite/cockle/pull/237) ([@ianthomas23](https://github.com/ianthomas23))
+- Adding `help` for builtin commands [#236](https://github.com/jupyterlite/cockle/pull/236) ([@nakul-py](https://github.com/nakul-py))
+- Rename `IExternalContext` as `IExternalRunContext` [#233](https://github.com/jupyterlite/cockle/pull/233) ([@ianthomas23](https://github.com/ianthomas23))
+- Pass optional dark/light mode boolean to `IShell.themeChange` [#232](https://github.com/jupyterlite/cockle/pull/232) ([@ianthomas23](https://github.com/ianthomas23))
+- Rename `Options` classes to `Arguments` [#231](https://github.com/jupyterlite/cockle/pull/231) ([@ianthomas23](https://github.com/ianthomas23))
+- Implement `true` and `false` commands [#229](https://github.com/jupyterlite/cockle/pull/229) ([@martinRenou](https://github.com/martinRenou))
+- Implement `which` command [#228](https://github.com/jupyterlite/cockle/pull/228) ([@martinRenou](https://github.com/martinRenou))
+- Add tab completion for external commands [#227](https://github.com/jupyterlite/cockle/pull/227) ([@ianthomas23](https://github.com/ianthomas23))
+- Add tab completion via `Options` classes in `JavaScriptCommands` [#226](https://github.com/jupyterlite/cockle/pull/226) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Fix display of help for some builtin commands [#235](https://github.com/jupyterlite/cockle/pull/235) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Update `demo.png` for 1.0.0 release [#241](https://github.com/jupyterlite/cockle/pull/241) ([@ianthomas23](https://github.com/ianthomas23))
+- Sort imports and add `src/commands/index.ts` [#239](https://github.com/jupyterlite/cockle/pull/239) ([@ianthomas23](https://github.com/ianthomas23))
+- List all playwright tests, even if they all pass [#230](https://github.com/jupyterlite/cockle/pull/230) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-07-21&to=2025-08-11&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-07-21..2025-08-11&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3AmartinRenou+updated%3A2025-07-21..2025-08-11&type=Issues) | [@nakul-py](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Anakul-py+updated%3A2025-07-21..2025-08-11&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.3
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v0.1.2...f8a4f57d35582fecdc95ba583b025a0f48e18097))
@@ -38,8 +80,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-06-26&to=2025-07-21&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-06-26..2025-07-21&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.2
 
