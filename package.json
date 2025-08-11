@@ -58,7 +58,7 @@
         "prettier": "^3.3.3",
         "source-map-loader": "^5.0.0",
         "ts-loader": "^9.5.1",
-        "typescript": "^5.4.5"
+        "typescript": "~5.5.4"
     },
     "eslintIgnore": [
         "node_modules",
