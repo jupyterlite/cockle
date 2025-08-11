@@ -167,7 +167,7 @@ test.describe('Shell', () => {
   });
 
   test.describe('command line editing', () => {
-    const { backspace, delete_, end, enter, home, leftArrow, next, prev } = keys;
+    const { backspace, delete_, end, enter, home, leftArrow, next, prev, rightArrow } = keys;
 
     // We can't explicitly check the cursor position without performing a visual test or decoding
     // the ANSI escape sequences, so here we use an echo command that will write to stdout and
@@ -210,6 +210,21 @@ test.describe('Shell', () => {
       ]);
       expect(output[0]).toMatch(/\r\nABZ CD\r\n/);
       expect(output[1]).toMatch(/\r\nAB CDY\r\n/);
+    });
+
+    test('should support paste of multiple characters at a time', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [
+        ['echo abcdef', enter],
+        ['echo abcdef', leftArrow, leftArrow, leftArrow, 'Z', enter],
+        ['echo abcdef', leftArrow, rightArrow, rightArrow, rightArrow, 'Z', enter],
+        ['xyz', leftArrow, leftArrow, leftArrow, leftArrow, 'echo ', enter],
+        ['xyz', leftArrow, leftArrow, leftArrow, leftArrow, leftArrow, leftArrow, 'echo ', enter]
+      ]);
+      expect(output[0]).toMatch(/\r\nabcdef\r\n/);
+      expect(output[1]).toMatch(/\r\nabcZdef\r\n/);
+      expect(output[2]).toMatch(/\r\nabcdefZ\r\n/);
+      expect(output[3]).toMatch(/\r\nxyz\r\n/);
+      expect(output[4]).toMatch(/\r\nxyz\r\n/);
     });
   });
 
