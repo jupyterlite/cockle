@@ -1,4 +1,4 @@
-import { ICommandRunner } from '../commands/command_runner';
+import { ICommandRunner } from '../commands';
 import { IRunContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 

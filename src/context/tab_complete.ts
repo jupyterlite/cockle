@@ -1,5 +1,5 @@
-import { CommandRegistry } from '../commands/command_registry';
-import { IStdinContext } from '../context/stdin_context';
+import { CommandRegistry } from '../commands';
+import { IStdinContext } from '../context';
 
 /**
  * Context within which to call ICommandRunner.tabComplete().
