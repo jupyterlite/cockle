@@ -1,5 +1,5 @@
-import { BorderTable, Table } from '../../src/layout';
 import { IOutput } from '../../src/io';
+import { BorderTable, Table } from '../../src/layout';
 
 class MockOutput implements IOutput {
   constructor(supportsAnsiEscapes: boolean = false) {

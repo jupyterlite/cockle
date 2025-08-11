@@ -1,6 +1,6 @@
 import { BuiltinCommand } from './builtin_command';
-import { CommandArguments } from '../arguments';
 import { BooleanArgument } from '../argument';
+import { CommandArguments } from '../arguments';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
 import { ITabCompleteResult } from '../tab_complete';

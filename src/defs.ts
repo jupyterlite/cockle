@@ -1,5 +1,4 @@
 import type { IObservableDisposable } from '@lumino/disposable';
-
 import { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
 import { IOutputCallback } from './callback';
 import { IExternalCommand } from './external_command';

@@ -1,9 +1,9 @@
-import { OutputFlag, ShellManager, Termios, delay } from '@jupyterlite/cockle';
+import { delay, OutputFlag, ShellManager, Termios } from '@jupyterlite/cockle';
 import { externalCommand } from './external_command';
 import { externalRun, externalTabComplete } from './external_command_tab';
 import { terminalInput } from './input_setup';
 import { keys } from './keys';
-import { shellSetupEmpty, shellSetupComplex, shellSetupSimple } from './shell_setup';
+import { shellSetupComplex, shellSetupEmpty, shellSetupSimple } from './shell_setup';
 
 async function setup() {
   const shellManager = new ShellManager();

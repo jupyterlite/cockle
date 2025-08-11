@@ -1,8 +1,6 @@
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
-
 import { proxy, wrap } from 'comlink';
-
 import { ansi } from './ansi';
 import {
   IMainIO,

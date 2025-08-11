@@ -1,6 +1,6 @@
 import { CommandModule } from './command_module';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
-import { IRunContext, IJavaScriptRunContext, ITabCompleteContext } from '../context';
+import { IJavaScriptRunContext, IRunContext, ITabCompleteContext } from '../context';
 import { FindCommandError, LoadCommandError, RunCommandError } from '../error_exit_code';
 import { JavaScriptInput } from '../io';
 import { ITabCompleteResult } from '../tab_complete';

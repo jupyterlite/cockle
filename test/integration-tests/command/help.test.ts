@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test, shellLineSimple } from '../utils';
+import { shellLineSimple, test } from '../utils';
 
 test.describe('built-in commands help coverage', () => {
   test('every built-in command has --help output', async ({ page }) => {
