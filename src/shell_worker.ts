@@ -1,5 +1,4 @@
 import { expose } from 'comlink';
-
 import { BaseShellWorker } from './base_shell_worker';
 import { IDriveFSOptions } from './drive_fs';
 

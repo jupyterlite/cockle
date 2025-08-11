@@ -7,7 +7,7 @@ import type {
   IJavaScriptTabCompleteContext,
   ITabCompleteResult
 } from '@jupyterlite/cockle';
-import { ExitCode, CommandArguments, PositionalArguments } from '@jupyterlite/cockle';
+import { CommandArguments, ExitCode, PositionalArguments } from '@jupyterlite/cockle';
 
 class TestArguments extends CommandArguments {
   positional = new PositionalArguments({

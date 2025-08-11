@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 async function inputLine(page, text: string, appendEnter: boolean = true) {
   for (const char of text) {

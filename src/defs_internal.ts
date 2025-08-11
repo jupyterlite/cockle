@@ -1,5 +1,4 @@
 import { ProxyMarked, Remote } from 'comlink';
-
 import { IWorkerIO } from './buffered_io';
 import { IInitDriveFSCallback, IOutputCallback } from './callback';
 import {

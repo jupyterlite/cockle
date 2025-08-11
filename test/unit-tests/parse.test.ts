@@ -1,5 +1,5 @@
 import { Aliases } from '../../src/aliases';
-import { CommandNode, PipeNode, RedirectNode, parse } from '../../src/parse';
+import { CommandNode, parse, PipeNode, RedirectNode } from '../../src/parse';
 
 function getAliases(): Aliases {
   const aliases = new Aliases();

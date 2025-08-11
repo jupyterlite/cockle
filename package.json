@@ -54,10 +54,11 @@
         "eslint": "^8.56.0",
         "eslint-config-prettier": "^9.1.0",
         "eslint-plugin-prettier": "^5.1.3",
+        "eslint-plugin-sort": "^4.0.0",
         "prettier": "^3.3.3",
         "source-map-loader": "^5.0.0",
         "ts-loader": "^9.5.1",
-        "typescript": "^5.4.5"
+        "typescript": "~5.5.4"
     },
     "eslintIgnore": [
         "node_modules",
@@ -80,7 +81,8 @@
             "sourceType": "module"
         },
         "plugins": [
-            "@typescript-eslint"
+            "@typescript-eslint",
+            "eslint-plugin-sort"
         ],
         "rules": {
             "@typescript-eslint/naming-convention": [
@@ -118,7 +120,38 @@
                 "all"
             ],
             "eqeqeq": "error",
-            "prefer-arrow-callback": "error"
+            "prefer-arrow-callback": "error",
+            "sort/imports": [
+                "warn",
+                {
+                    "caseSensitive": false,
+                    "groups": [
+                        {
+                            "regex": "^@",
+                            "order": 0
+                        },
+                        {
+                            "regex": "^\\./",
+                            "order": 20
+                        },
+                        {
+                            "regex": "^\\.\\./",
+                            "order": 30
+                        },
+                        {
+                            "type": "other",
+                            "order": 10
+                        }
+                    ],
+                    "typeOrder": "first"
+                }
+            ],
+            "sort/import-members": [
+                "error",
+                {
+                    "caseSensitive": false
+                }
+            ]
         }
     },
     "prettier": {

@@ -1,5 +1,4 @@
 import { PromiseDelegate } from '@lumino/coreutils';
-
 import { IMainIO, IStdinReply, IStdinRequest } from './defs';
 import { MainIO } from './main';
 import { ServiceWorkerUtils } from './service_worker_utils';

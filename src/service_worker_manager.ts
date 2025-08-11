@@ -1,5 +1,4 @@
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
-
 import { ShellManager } from './shell_manager';
 import { COCKLE_VERSION } from './version';
 

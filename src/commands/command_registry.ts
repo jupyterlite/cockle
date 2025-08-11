@@ -1,8 +1,8 @@
-import { BuiltinCommand } from '../builtin';
 import { CommandModule } from './command_module';
 import { CommandPackage } from './command_package';
 import { ICommandRunner } from './command_runner';
 import { ExternalCommandRunner } from './external_command_runner';
+import { BuiltinCommand } from '../builtin';
 import * as AllBuiltinCommands from '../builtin';
 import { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
 

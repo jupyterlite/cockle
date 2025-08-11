@@ -2,6 +2,7 @@ import { Aliases } from './aliases';
 import { ansi } from './ansi';
 import { IWorkerIO } from './buffered_io';
 import { ICommandLine } from './command_line';
+import { CommandModule, CommandModuleLoader, CommandPackage, CommandRegistry } from './commands';
 import { IRunContext } from './context';
 import { IShellImpl, IShellWorker } from './defs_internal';
 import { Environment } from './environment';
@@ -20,11 +21,7 @@ import {
   TerminalInput,
   TerminalOutput
 } from './io';
-import { CommandNode, PipeNode, parse } from './parse';
-import { CommandModule } from './commands/command_module';
-import { CommandModuleLoader } from './commands/command_module_loader';
-import { CommandPackage } from './commands/command_package';
-import { CommandRegistry } from './commands/command_registry';
+import { CommandNode, parse, PipeNode } from './parse';
 import { TabCompleter } from './tab_completer';
 import { joinURL } from './utils';
 

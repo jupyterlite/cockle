@@ -1,5 +1,5 @@
-import { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
 import { ICommandRunner } from './command_runner';
+import { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 import { ITabCompleteResult } from '../tab_complete';
