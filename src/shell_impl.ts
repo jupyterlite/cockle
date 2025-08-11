@@ -264,10 +264,10 @@ export class ShellImpl implements IShellWorker {
     const regex = /^[^A-Z~]*[A-Z~]/;
     const match = regex.exec(chars.slice(index + 2));
     if (match === null) {
-      return 1;  // Skip the [
+      return 1; // Skip the [
     }
 
-    const token = match[0]
+    const token = match[0];
     switch (token) {
       case 'A': // Up arrow
       case '1A':
@@ -278,7 +278,9 @@ export class ShellImpl implements IShellWorker {
         this._commandLine.cursorIndex = this._commandLine.text.length;
         // Re-output whole line.
         this.output(
-          ansi.eraseEndLine + ansi.eraseStartLine + `\r${this.environment.getPrompt()}${this._commandLine.text}`
+          ansi.eraseEndLine +
+            ansi.eraseStartLine +
+            `\r${this.environment.getPrompt()}${this._commandLine.text}`
         );
         break;
       }
@@ -345,7 +347,7 @@ export class ShellImpl implements IShellWorker {
       }
       default:
         // Unrecognised control sequence, ignore.
-        console.warn(`Unrecognised escape sequence '[${token}'`)
+        console.warn(`Unrecognised escape sequence '[${token}'`);
         break;
     }
 

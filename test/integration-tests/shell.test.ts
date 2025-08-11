@@ -220,11 +220,11 @@ test.describe('Shell', () => {
         ['xyz', leftArrow, leftArrow, leftArrow, leftArrow, 'echo ', enter],
         ['xyz', leftArrow, leftArrow, leftArrow, leftArrow, leftArrow, leftArrow, 'echo ', enter]
       ]);
-      expect(output[0]).toMatch(/\r\nabcdef\r\n/)
-      expect(output[1]).toMatch(/\r\nabcZdef\r\n/)
-      expect(output[2]).toMatch(/\r\nabcdefZ\r\n/)
-      expect(output[3]).toMatch(/\r\nxyz\r\n/)
-      expect(output[4]).toMatch(/\r\nxyz\r\n/)
+      expect(output[0]).toMatch(/\r\nabcdef\r\n/);
+      expect(output[1]).toMatch(/\r\nabcZdef\r\n/);
+      expect(output[2]).toMatch(/\r\nabcdefZ\r\n/);
+      expect(output[3]).toMatch(/\r\nxyz\r\n/);
+      expect(output[4]).toMatch(/\r\nxyz\r\n/);
     });
   });
 
