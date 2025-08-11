@@ -9,7 +9,7 @@ import {
   ServiceWorkerMainIO,
   SharedArrayBufferMainIO
 } from './buffered_io';
-import { IExternalContext } from './context';
+import { IExternalRunContext } from './context';
 import { IShell } from './defs';
 import { IRemoteShell } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
@@ -74,7 +74,7 @@ export abstract class BaseShell implements IShell {
       stderrSupportsAnsiEscapes
     );
 
-    const context: IExternalContext = {
+    const context: IExternalRunContext = {
       name,
       args,
       environment: externalEnvironment,

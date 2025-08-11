@@ -9,7 +9,7 @@ import { IExternalInput, IExternalOutput } from '../io';
 /**
  * Context used to run an external command.
  */
-export interface IExternalContext {
+export interface IExternalRunContext {
   name: string;
   args: string[];
   environment: ExternalEnvironment;

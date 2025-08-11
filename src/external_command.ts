@@ -1,11 +1,11 @@
-import { IExternalContext, IExternalTabCompleteContext } from './context';
+import { IExternalRunContext, IExternalTabCompleteContext } from './context';
 import { ITabCompleteResult } from './tab_complete';
 
 /**
  * Run an external command from the Shell.
  */
 export interface IExternalCommand {
-  (context: IExternalContext): Promise<number>;
+  (context: IExternalRunContext): Promise<number>;
 }
 
 /**
