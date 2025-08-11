@@ -228,93 +228,93 @@ test.describe('TabCompleter', () => {
 
   test.describe('tab complete builtin cockle-config command', () => {
     test('should show all subcommands if none mentioned', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', '\t'])).toMatch(
+      expect(await shellInputsSimple(page, ['c', 'o', '\t', '\t'])).toMatch(
         /^cockle-config \r\ncommand {2}module {3}package {2}stdin\r\n/
       );
     });
 
     test('should match a single subcommand', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 's', '\t'])).toMatch(
+      expect(await shellInputsSimple(page, ['c', 'o', '\t', 's', '\t'])).toMatch(
         /^cockle-config stdin $/
       );
     });
 
     test('should append space to a complete matching subcommand', async ({ page }) => {
       expect(
-        await shellInputsSimple(page, ['c', 'o', '\t ', 's', 't', 'd', 'i', 'n', '\t'])
+        await shellInputsSimple(page, ['c', 'o', '\t', 's', 't', 'd', 'i', 'n', '\t'])
       ).toMatch(/^cockle-config stdin $/);
     });
 
     test('should leave unchanged if no matching subcommand', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'x', '\t'])).toMatch(
+      expect(await shellInputsSimple(page, ['c', 'o', '\t', 'x', '\t'])).toMatch(
         /^cockle-config x$/
       );
     });
 
     test('should match stdin subcommand string possibles', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 's', 't', '\t', '\t'])).toMatch(
+      expect(await shellInputsSimple(page, ['c', 'o', '\t', 's', 't', '\t', '\t'])).toMatch(
         /^cockle-config stdin s$/
       );
 
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 's', 't', '\t', 's', '\t'])).toMatch(
+      expect(await shellInputsSimple(page, ['c', 'o', '\t', 's', 't', '\t', 's', '\t'])).toMatch(
         /^cockle-config stdin s\r\nsab {2}sw\r\n/
       );
 
       expect(
-        await shellInputsSimple(page, ['c', 'o', '\t ', 's', 't', '\t', 's', 'w', '\t'])
+        await shellInputsSimple(page, ['c', 'o', '\t', 's', 't', '\t', 's', 'w', '\t'])
       ).toMatch(/^cockle-config stdin sw $/);
 
       expect(
-        await shellInputsSimple(page, ['c', 'o', '\t ', 's', 't', '\t', 's', 'a', '\t'])
+        await shellInputsSimple(page, ['c', 'o', '\t', 's', 't', '\t', 's', 'a', '\t'])
       ).toMatch(/^cockle-config stdin sab $/);
     });
 
     test('should match command subcommand string possibles', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'c', '\t', 'j', '\t'])).toMatch(
+      expect(await shellInputsSimple(page, ['c', 'o', '\t', 'c', '\t', 'j', '\t'])).toMatch(
         /^cockle-config command j\r\njoin {5}js-tab {3}js-test\r\n/
       );
 
       expect(
-        await shellInputsSimple(page, ['c', 'o', '\t ', 'c', '\t', 'j', 's', '-', 't', 'e', '\t'])
+        await shellInputsSimple(page, ['c', 'o', '\t', 'c', '\t', 'j', 's', '-', 't', 'e', '\t'])
       ).toMatch(/^cockle-config command js-test $/);
     });
 
     test('should match module subcommand string possibles', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'm', '\t', 'w', '\t'])).toMatch(
+      expect(await shellInputsSimple(page, ['c', 'o', '\t', 'm', '\t', 'w', '\t'])).toMatch(
         /^cockle-config module wasm-test $/
       );
     });
 
     test('should match package subcommand string possibles', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', 'p', '\t', 'u', '\t'])).toMatch(
+      expect(await shellInputsSimple(page, ['c', 'o', '\t', 'p', '\t', 'u', '\t'])).toMatch(
         /^cockle-config package util-$/
       );
 
       expect(
-        await shellInputsSimple(page, ['c', 'o', '\t ', 'p', '\t', 'u', '\t', 'w', '\t'])
+        await shellInputsSimple(page, ['c', 'o', '\t', 'p', '\t', 'u', '\t', 'w', '\t'])
       ).toMatch(/^cockle-config package util-wasm $/);
     });
 
     test('should show -- arguments', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', '-', '-', '\t'])).toMatch(
+      expect(await shellInputsSimple(page, ['c', 'o', '\t', '-', '-', '\t'])).toMatch(
         /^cockle-config --\r\n--help {5}--version\r\n/
       );
     });
 
     test('should match a -- arguments', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', '-', '-', 'v', '\t'])).toMatch(
+      expect(await shellInputsSimple(page, ['c', 'o', '\t', '-', '-', 'v', '\t'])).toMatch(
         /^cockle-config --version $/
       );
     });
 
     test('should show - arguments', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', '-', '\t'])).toMatch(
+      expect(await shellInputsSimple(page, ['c', 'o', '\t', '-', '\t'])).toMatch(
         /^cockle-config -\r\n--help {5}--version {2}-h {9}-v\r\n/
       );
     });
 
     test('should match a - arguments', async ({ page }) => {
-      expect(await shellInputsSimple(page, ['c', 'o', '\t ', '-', 'h', '\t'])).toMatch(
+      expect(await shellInputsSimple(page, ['c', 'o', '\t', '-', 'h', '\t'])).toMatch(
         /^cockle-config -h $/
       );
     });
