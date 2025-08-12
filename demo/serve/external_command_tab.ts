@@ -13,7 +13,7 @@ import {
 
 class TestArguments extends CommandArguments {
   positional = new PositionalArguments({
-    possibles: (context: IExternalTabCompleteContext) => [
+    possibles: async (context: IExternalTabCompleteContext) => [
       'color',
       'environment',
       'exitCode',
@@ -28,7 +28,7 @@ class TestArguments extends CommandArguments {
 export async function externalTabComplete(
   context: IExternalTabCompleteContext
 ): Promise<IExternalTabCompleteResult> {
-  return new TestArguments().tabComplete(context);
+  return await new TestArguments().tabComplete(context);
 }
 
 export async function externalRun(context: IExternalRunContext): Promise<number> {

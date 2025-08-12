@@ -10,21 +10,21 @@ import { COCKLE_VERSION } from '../version';
 
 class CommandSubcommand extends SubcommandArguments {
   positional = new PositionalArguments({
-    possibles: (context: ITabCompleteContext) =>
+    possibles: async (context: ITabCompleteContext) =>
       context.commandRegistry ? context.commandRegistry.match(context.args.at(-1) || '') : []
   });
 }
 
 class ModuleSubcommand extends SubcommandArguments {
   positional = new PositionalArguments({
-    possibles: (context: ITabCompleteContext) =>
+    possibles: async (context: ITabCompleteContext) =>
       context.commandRegistry ? context.commandRegistry.allModules().map(module => module.name) : []
   });
 }
 
 class PackageSubcommand extends SubcommandArguments {
   positional = new PositionalArguments({
-    possibles: (context: ITabCompleteContext) => {
+    possibles: async (context: ITabCompleteContext) => {
       return context.commandRegistry ? [...context.commandRegistry.commandPackageMap.keys()] : [];
     }
   });
@@ -33,7 +33,7 @@ class PackageSubcommand extends SubcommandArguments {
 class StdinSubcommand extends SubcommandArguments {
   positional = new PositionalArguments({
     max: 1,
-    possibles: (context: ITabCompleteContext) =>
+    possibles: async (context: ITabCompleteContext) =>
       context.stdinContext ? context.stdinContext.shortNames : []
   });
 }

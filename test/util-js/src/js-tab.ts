@@ -11,7 +11,7 @@ import { CommandArguments, ExitCode, PositionalArguments } from '@jupyterlite/co
 
 class TestArguments extends CommandArguments {
   positional = new PositionalArguments({
-    possibles: (context: IJavaScriptTabCompleteContext) => [
+    possibles: async (context: IJavaScriptTabCompleteContext) => [
       'color',
       'environment',
       'exitCode',
