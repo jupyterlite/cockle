@@ -129,7 +129,7 @@ export namespace PositionalArguments {
      * The token for completion is context.args.at(-1) as it may be an empty string.
      * The possibles are subsequently filtered using startsWith(token-for-completion).
      */
-    possibles?: (context: ITabCompleteContext) => string[];
+    possibles?: (context: ITabCompleteContext) => Promise<string[]>;
   }
 }
 

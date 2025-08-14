@@ -191,7 +191,7 @@ export abstract class CommandArguments {
         } else {
           const possiblesCallback = positional.options.possibles;
           if (possiblesCallback !== undefined) {
-            return { possibles: possiblesCallback({ ...context, args: [arg, ...args] }) };
+            return { possibles: await possiblesCallback({ ...context, args: [arg, ...args] }) };
           }
         }
       }
