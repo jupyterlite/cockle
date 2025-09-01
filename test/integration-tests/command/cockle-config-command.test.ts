@@ -66,4 +66,31 @@ test.describe('cockle-config command', () => {
     const output1 = await shellLineSimple(page, 'cockle-config command c987');
     expect(output1).toMatch('\r\nError: Unknown command(s): c987\r\n');
   });
+
+  test('should filter on command type in command subcommand', async ({ page }) => {
+    const output0 = await shellLineSimple(page, 'cockle-config command');
+    expect(output0).toMatch(/│ clear\s+│ <builtin>\s+│/);
+    expect(output0).toMatch(/│ js-tab\s+│ js-tab\s+│/);
+    expect(output0).toMatch(/│ ls\s+│ coreutils\s+│/);
+
+    const output1 = await shellLineSimple(page, 'cockle-config command --builtin');
+    expect(output1).toMatch(/│ clear\s+│ <builtin>\s+│/);
+    expect(output1).not.toMatch(/│ js-tab\s+│ js-tab\s+│/);
+    expect(output1).not.toMatch(/│ ls\s+│ coreutils\s+│/);
+
+    const output2 = await shellLineSimple(page, 'cockle-config command --javascript');
+    expect(output2).not.toMatch(/│ clear\s+│ <builtin>\s+│/);
+    expect(output2).toMatch(/│ js-tab\s+│ js-tab\s+│/);
+    expect(output2).not.toMatch(/│ ls\s+│ coreutils\s+│/);
+
+    const output3 = await shellLineSimple(page, 'cockle-config command --wasm');
+    expect(output3).not.toMatch(/│ clear\s+│ <builtin>\s+│/);
+    expect(output3).not.toMatch(/│ js-tab\s+│ js-tab\s+│/);
+    expect(output3).toMatch(/│ ls\s+│ coreutils\s+│/);
+
+    const output4 = await shellLineSimple(page, 'cockle-config command -j -b');
+    expect(output4).toMatch(/│ clear\s+│ <builtin>\s+│/);
+    expect(output4).toMatch(/│ js-tab\s+│ js-tab\s+│/);
+    expect(output4).not.toMatch(/│ ls\s+│ coreutils\s+│/);
+  });
 });

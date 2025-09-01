@@ -1,6 +1,7 @@
 import { BuiltinCommand } from './builtin_command';
 import { BooleanArgument, PositionalArguments } from '../argument';
 import { CommandArguments, SubcommandArguments } from '../arguments';
+import { CommandType } from '../commands';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
@@ -9,6 +10,11 @@ import { ITabCompleteResult } from '../tab_complete';
 import { COCKLE_VERSION } from '../version';
 
 class CommandSubcommand extends SubcommandArguments {
+  help = new BooleanArgument('h', 'help', 'display this help and exit');
+  builtin = new BooleanArgument('b', 'builtin', 'display only builtin commands');
+  external = new BooleanArgument('e', 'external', 'display only external commands');
+  javascript = new BooleanArgument('j', 'javascript', 'display only javascript commands');
+  wasm = new BooleanArgument('w', 'wasm', 'display only wasm commands');
   positional = new PositionalArguments({
     possibles: async (context: ITabCompleteContext) =>
       context.commandRegistry ? context.commandRegistry.match(context.args.at(-1) || '') : []
@@ -93,20 +99,47 @@ export class CockleConfigCommand extends BuiltinCommand {
       this._writeModuleConfig(context, colorByColumn, subcommands.module.positional.strings);
     }
     if (subcommands.command.isSet) {
-      this._writeCommandConfig(context, colorByColumn, subcommands.command.positional.strings);
+      const { command } = subcommands;
+      if (command.help.isSet) {
+        command.writeHelp(stdout);
+        return ExitCode.SUCCESS;
+      }
+      this._writeCommandConfig(context, colorByColumn, command);
     }
 
     return ExitCode.SUCCESS;
   }
 
+  private _optionsToCommandType(subcommand: CommandSubcommand): CommandType {
+    let commandType = CommandType.None;
+    if (subcommand.builtin.isSet) {
+      commandType |= CommandType.Builtin;
+    }
+    if (subcommand.external.isSet) {
+      commandType |= CommandType.External;
+    }
+    if (subcommand.javascript.isSet) {
+      commandType |= CommandType.JavaScript;
+    }
+    if (subcommand.wasm.isSet) {
+      commandType |= CommandType.Wasm;
+    }
+    if (commandType === CommandType.None) {
+      // If no command type specified, want then all.
+      commandType = CommandType.All;
+    }
+    return commandType;
+  }
+
   private _writeCommandConfig(
     context: IRunContext,
     colorByColumn: Map<number, string> | undefined,
-    names: string[]
+    subcommand: CommandSubcommand
   ) {
     const { commandRegistry, stdout } = context;
+    const names = subcommand.positional.strings;
 
-    let commandNames = commandRegistry.allCommands();
+    let commandNames = commandRegistry.commandNames(this._optionsToCommandType(subcommand));
     if (names.length > 0) {
       const missing = names.filter(name => !commandNames.includes(name));
       if (missing.length > 0) {

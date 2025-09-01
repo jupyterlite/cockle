@@ -1,8 +1,8 @@
 import { CommandModule } from './command_module';
 import { CommandPackage } from './command_package';
 import { ICommandRunner } from './command_runner';
+import { CommandType } from './command_type';
 import { ExternalCommandRunner } from './external_command_runner';
-import { BuiltinCommand } from '../builtin';
 import * as AllBuiltinCommands from '../builtin';
 import { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
 
@@ -12,15 +12,6 @@ export class CommandRegistry {
     readonly callExternalTabComplete: ICallExternalTabComplete
   ) {
     this.registerBuiltinCommands(AllBuiltinCommands);
-  }
-
-  /**
-   * Return sequence of all command names in alphabetical order.
-   */
-  allCommands(): string[] {
-    const commands = Array.from(this._map.keys());
-    commands.sort();
-    return commands;
   }
 
   /**
@@ -36,18 +27,21 @@ export class CommandRegistry {
   }
 
   /**
-   * Return sequence of built-in commands ordered by name.
+   * Return sequence of command names, optionally filtered by commandType.
    */
-  builtinCommands(): string[] {
-    const names: string[] = [];
-    for (const name of this._map.keys()) {
-      const runner = this._map.get(name);
-      if (runner instanceof BuiltinCommand) {
-        names.push(name);
-      }
+  commandNames(commandType: CommandType = CommandType.All): string[] {
+    if (commandType === CommandType.None) {
+      return [];
+    } else if (commandType === CommandType.All) {
+      // Avoid the filter below.
+      return Array.from(this._map.keys()).sort();
+    } else {
+      // Filter by commandType.
+      return Array.from(this._map)
+        .filter(([name, runner]) => (runner.commandType & commandType) > 0)
+        .map(([name, runner]) => name)
+        .sort();
     }
-    names.sort();
-    return names;
   }
 
   /**
