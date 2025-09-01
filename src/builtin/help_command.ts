@@ -1,6 +1,7 @@
 import { BuiltinCommand } from './builtin_command';
 import { BooleanArgument, PositionalArguments } from '../argument';
 import { CommandArguments } from '../arguments';
+import { CommandType } from '../commands';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
 import { ITabCompleteResult } from '../tab_complete';
@@ -11,7 +12,7 @@ class HelpArguments extends CommandArguments {
   help = new BooleanArgument('h', 'help', 'display this help and exit');
   positional = new PositionalArguments({
     possibles: async (context: ITabCompleteContext) =>
-      context.commandRegistry?.builtinCommands() ?? []
+      context.commandRegistry?.commandNames(CommandType.Builtin) ?? []
   });
 }
 
@@ -34,7 +35,7 @@ export class HelpCommand extends BuiltinCommand {
     }
 
     const targets = parsed.positional.strings;
-    const builtins = commandRegistry ? commandRegistry.builtinCommands() : [];
+    const builtins = commandRegistry ? commandRegistry.commandNames(CommandType.Builtin) : [];
 
     if (targets.length === 0) {
       stdout.write('Built-in commands:\n');

@@ -1,4 +1,5 @@
 import { ICommandRunner } from './command_runner';
+import { CommandType } from './command_type';
 import { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
@@ -10,6 +11,10 @@ export class ExternalCommandRunner implements ICommandRunner {
     readonly callExternalCommand: ICallExternalCommand,
     readonly callExternalTabComplete: ICallExternalTabComplete | undefined
   ) {}
+
+  get commandType(): CommandType {
+    return CommandType.External;
+  }
 
   get moduleName() {
     return '<external>';

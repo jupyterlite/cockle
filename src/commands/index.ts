@@ -4,6 +4,7 @@ export * from './command_module';
 export * from './command_package';
 export * from './command_registry';
 export * from './command_runner';
+export * from './command_type';
 export * from './dynamically_loaded_command_runner';
 export * from './external_command_runner';
 export * from './javascript_command_runner';

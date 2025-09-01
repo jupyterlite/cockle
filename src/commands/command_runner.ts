@@ -1,3 +1,4 @@
+import { CommandType } from './command_type';
 import { IRunContext, ITabCompleteContext } from '../context';
 import { ITabCompleteResult } from '../tab_complete';
 
@@ -5,6 +6,7 @@ import { ITabCompleteResult } from '../tab_complete';
  * Runs a single named command in a particular runtime context.
  */
 export interface ICommandRunner {
+  get commandType(): CommandType;
   get moduleName(): string;
   names(): string[];
   get packageName(): string;

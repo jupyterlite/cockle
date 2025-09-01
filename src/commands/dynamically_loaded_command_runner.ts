@@ -1,5 +1,6 @@
 import { CommandModule } from './command_module';
 import { ICommandRunner } from './command_runner';
+import { CommandType } from './command_type';
 import { IRunContext } from '../context';
 
 /**
@@ -7,6 +8,8 @@ import { IRunContext } from '../context';
  */
 export abstract class DynamicallyLoadedCommandRunner implements ICommandRunner {
   constructor(readonly module: CommandModule) {}
+
+  abstract get commandType(): CommandType;
 
   get moduleName(): string {
     return this.module.moduleName;

@@ -1,4 +1,5 @@
 import { CommandModule } from './command_module';
+import { CommandType } from './command_type';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
 import { IRunContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
@@ -11,6 +12,10 @@ import { joinURL } from '../utils';
 export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
   constructor(readonly module: CommandModule) {
     super(module);
+  }
+
+  get commandType(): CommandType {
+    return CommandType.Wasm;
   }
 
   async run(context: IRunContext): Promise<number> {

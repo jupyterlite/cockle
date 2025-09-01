@@ -177,7 +177,7 @@ export abstract class CommandArguments {
           // Exact match, parse it.
           const subcommand = subcommands[arg];
           subcommand.set();
-          return subcommand._parseToTabComplete({ ...context, args: [arg, ...args] });
+          return await subcommand.tabComplete(context);
         }
       }
 
