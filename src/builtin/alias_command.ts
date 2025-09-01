@@ -11,8 +11,7 @@ class AliasArguments extends CommandArguments {
 
     Otherwise, an alias is defined for each NAME whose VALUE is given.
     A trailing space in VALUE causes the next word to be checked for
-    alias substitution when the alias is expanded.
-    `;
+    alias substitution when the alias is expanded.`;
 
   positional = new PositionalArguments();
   help = new BooleanArgument('h', 'help', 'display this help and exit');

@@ -17,14 +17,6 @@ export abstract class Argument {
     return this._isSet;
   }
 
-  get name(): string {
-    return this.shortName ? this.shortName : this.longName;
-  }
-
-  get prefixedName(): string {
-    return this.shortName ? `-${this.shortName}` : `--${this.longName}`;
-  }
-
   /**
    * Parse remaining args and return those args not consumed.
    */
