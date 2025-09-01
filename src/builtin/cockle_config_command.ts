@@ -40,7 +40,7 @@ class StdinSubcommand extends SubcommandArguments {
 
 class CockleConfigArguments extends CommandArguments {
   description =
-    'Inspect and optionally modify Cockle configuration. Without arguments prints all sections. Use subcommands to target specific areas (command, module, package, stdin).';
+    'Inspect and optionally modify Cockle configuration. Without arguments prints all sections. Use subcommands to target specific areas.';
   version = new BooleanArgument('v', 'version', 'show cockle version');
   help = new BooleanArgument('h', 'help', 'display this help and exit');
   subcommands = {

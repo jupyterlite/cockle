@@ -54,8 +54,10 @@ abstract class BaseTable {
 
   /**
    * Generator for output lines, one at a time.
+   * @param prefix String to insert at beginning of each line, default ''.
+   * @param suffix String to append to end of each line, default ''.
    */
-  *lines(): Generator<string> {
+  *lines(prefix: string = '', suffix: string = ''): Generator<string> {
     const { sortByColumn } = this.options;
     if (sortByColumn !== undefined) {
       // Sort rows in place.
@@ -78,7 +80,7 @@ abstract class BaseTable {
 
     const topSpacer = this.horizontalSpacer(HorizontalSpacerType.TOP);
     if (topSpacer !== undefined) {
-      yield rtrim(topSpacer);
+      yield prefix  + rtrim(topSpacer) + suffix;
     }
 
     for (const headerRow of this._headerRows) {
@@ -89,12 +91,12 @@ abstract class BaseTable {
         line += item + ' '.repeat(this._columnWidths[i] - item.length);
       }
       line += this.verticalSpacer(VerticalSpacerType.RIGHT);
-      yield rtrim(line);
+      yield prefix + rtrim(line) + suffix;
     }
     if (this._headerRows.length > 0) {
       const middleSpacer = this.horizontalSpacer(HorizontalSpacerType.MIDDLE);
       if (middleSpacer !== undefined) {
-        yield rtrim(middleSpacer);
+        yield prefix + rtrim(middleSpacer) + suffix;
       }
     }
     for (const row of this._rows) {
@@ -109,12 +111,12 @@ abstract class BaseTable {
         line += ' '.repeat(this._columnWidths[i] - item.length);
       }
       line += this.verticalSpacer(VerticalSpacerType.RIGHT);
-      yield rtrim(line);
+      yield prefix + rtrim(line) + suffix;
     }
 
     const bottomSpacer = this.horizontalSpacer(HorizontalSpacerType.BOTTOM);
     if (bottomSpacer !== undefined) {
-      yield rtrim(bottomSpacer);
+      yield prefix + rtrim(bottomSpacer) + suffix;
     }
   }
 
@@ -125,6 +127,13 @@ abstract class BaseTable {
   protected abstract horizontalSpacer(type: HorizontalSpacerType): string | undefined;
 
   /**
+   * Returns number of rows in body of table. Does not include header rows.
+   */
+  get rowCount(): number {
+    return this._rows.length;
+  }
+
+  /**
    * Return vertical spacer, i.e. spacer between adjacent columns in the same row.
    */
   protected abstract verticalSpacer(type: VerticalSpacerType): string;
@@ -133,11 +142,11 @@ abstract class BaseTable {
    * Write table to output.
    * @param output Output to write to.
    * @param prefix String to insert at beginning of each line, default ''.
-   * @param suffix String to append to end of each line, default '\n.
+   * @param suffix String to append to end of each line, default '\n'.
    */
   write(output: IOutput, prefix: string = '', suffix: string = '\n') {
-    for (const line of this.lines()) {
-      output.write(prefix + line + suffix);
+    for (const line of this.lines(prefix, suffix)) {
+      output.write(line);
     }
   }
 

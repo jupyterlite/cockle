@@ -2,6 +2,7 @@ import { Argument, PositionalArguments, PositionalPathArguments } from './argume
 import { ITabCompleteContext } from './context';
 import { GeneralError } from './error_exit_code';
 import { IOutput } from './io';
+import { Table } from './layout';
 import { ITabCompleteResult, PathType } from './tab_complete';
 
 /**
@@ -59,27 +60,36 @@ export abstract class CommandArguments {
     if (this.description) {
       yield this.description;
     }
+
     // Dynamically create help text from arguments.
-    let hasOptions = false;
+    const optionsTable = new Table({ spacerSize: 3 });
     for (const arg of Object.values(this)) {
-      if (arg instanceof Argument && !(arg instanceof PositionalArguments)) {
-        if (!hasOptions) {
-          yield 'options:';
-          hasOptions = true;
+      if (arg instanceof Argument) {
+        const { longName, shortName } = arg;
+        if (longName || shortName) {
+          let names = shortName ? `-${shortName}` : '  ';
+          if (longName) {
+            names += (shortName ? ', ' : '  ') + `--${longName}`;
+          }
+          optionsTable.addRow([names, arg.description])
         }
-        const name = arg.prefixedName;
-        const spaces = Math.max(1, 12 - name.length);
-        yield `    ${name}${' '.repeat(spaces)}${arg.description}`;
       }
     }
+    if (optionsTable.rowCount > 0) {
+      yield ''
+      yield 'options:';
+      yield *optionsTable.lines('    ');
+    }
 
-    const { subcommands } = this;
-    if (subcommands !== undefined) {
-      yield '';
-      yield 'subcommands:';
-      for (const sub of Object.values(subcommands)) {
-        const spaces = Math.max(1, 12 - sub.name.length);
-        yield `    ${sub.name}${' '.repeat(spaces)}${sub.description}`;
+    if (this.subcommands !== undefined) {
+      const table = new Table({ spacerSize: 3 });
+      for (const sub of Object.values(this.subcommands)) {
+        table.addRow([sub.name, sub.description]);
+      }
+      if (table.rowCount > 0) {
+        yield '';
+        yield 'subcommands:';
+        yield *table.lines('    ');
       }
     }
   }

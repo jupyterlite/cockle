@@ -16,7 +16,7 @@ test.describe('built-in commands help coverage', () => {
     // Run each built-in command sequentially to check `--help` output
     for (const cmd of builtins) {
       const output = await shellLineSimple(page, `${cmd} --help`);
-      expect(output, `${cmd} --help should produce output`).toMatch(/\S/);
+      expect(output, `${cmd} --help should mention --help`).toMatch(/--help/);
       expect(output, `${cmd} --help should mention -h`).toMatch(/-h/);
     }
   });
