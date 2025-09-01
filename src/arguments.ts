@@ -71,14 +71,14 @@ export abstract class CommandArguments {
           if (longName) {
             names += (shortName ? ', ' : '  ') + `--${longName}`;
           }
-          optionsTable.addRow([names, arg.description])
+          optionsTable.addRow([names, arg.description]);
         }
       }
     }
     if (optionsTable.rowCount > 0) {
-      yield ''
+      yield '';
       yield 'options:';
-      yield *optionsTable.lines('    ');
+      yield* optionsTable.lines('    ');
     }
 
     if (this.subcommands !== undefined) {
@@ -89,7 +89,7 @@ export abstract class CommandArguments {
       if (table.rowCount > 0) {
         yield '';
         yield 'subcommands:';
-        yield *table.lines('    ');
+        yield* table.lines('    ');
       }
     }
   }

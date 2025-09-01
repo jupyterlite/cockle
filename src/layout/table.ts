@@ -80,7 +80,7 @@ abstract class BaseTable {
 
     const topSpacer = this.horizontalSpacer(HorizontalSpacerType.TOP);
     if (topSpacer !== undefined) {
-      yield prefix  + rtrim(topSpacer) + suffix;
+      yield prefix + rtrim(topSpacer) + suffix;
     }
 
     for (const headerRow of this._headerRows) {
