@@ -14,10 +14,11 @@ export class TabCompleter {
     const suffix = commandLine.text.slice(commandLine.cursorIndex);
 
     const parsed = parse(text, false);
+    const lastParsedNode = parsed.at(-1); // Deal with multiple commands in commandLine.
     const [lastToken, isCommand] = text.endsWith(' ')
       ? [null, false]
-      : parsed.length > 0
-        ? parsed[parsed.length - 1].lastToken()
+      : lastParsedNode !== undefined
+        ? lastParsedNode.lastToken()
         : [null, true];
     let tokenToComplete = lastToken?.value ?? '';
 
@@ -25,8 +26,8 @@ export class TabCompleter {
     let tabCompleteResult: ITabCompleteResult = { pathType: PathType.Any };
     if (isCommand) {
       tabCompleteResult = { possibles: this._getPossibleCompletionsCommand(tokenToComplete) };
-    } else if (parsed.length > 0 && parsed[0] instanceof CommandNode) {
-      const commandNode = parsed[0] as CommandNode;
+    } else if (lastParsedNode instanceof CommandNode) {
+      const commandNode = lastParsedNode as CommandNode;
       const name = commandNode.name.value;
       const runner = this.context.commandRegistry.get(name);
       if (runner !== null && runner.tabComplete !== undefined) {
