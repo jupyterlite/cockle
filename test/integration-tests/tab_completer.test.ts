@@ -319,4 +319,39 @@ test.describe('TabCompleter', () => {
       );
     });
   });
+
+  test.describe('tab complete last command of multiple commands', () => {
+    test('should complete last command name', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['u', 'n', 'a', 'm', 'e', ';', 'a', 'l', '\t'])).toMatch(
+        /^uname;alias $/
+      );
+    });
+
+    test('should complete last builtin command', async ({ page }) => {
+      expect(
+        await shellInputsSimple(page, ['u', 'n', 'a', '\t', ';', 'c', 'o', '\t', 's', '\t'])
+      ).toMatch(/^uname ;cockle-config stdin $/);
+    });
+
+    test('should complete last javascript command', async ({ page }) => {
+      expect(
+        await shellInputsSimple(page, [
+          'u',
+          'n',
+          'a',
+          '\t',
+          ';',
+          'j',
+          's',
+          '\t',
+          'a',
+          '\t',
+          'c',
+          '\t'
+        ])
+      ).toMatch(/^uname ;js-tab color $/);
+    });
+
+    // See external-command.test.ts for equivalent external command test.
+  });
 });

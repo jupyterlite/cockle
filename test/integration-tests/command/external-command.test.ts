@@ -246,4 +246,38 @@ test.describe('tab complete js-tab command', () => {
     });
     expect(output).toMatch(/^external-tab name exitCode $/);
   });
+
+  test('should complete last external command name', async ({ page }) => {
+    const output = await page.evaluate(async cmdName => {
+      const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
+      const { shell, output } = await shellSetupEmpty({ externalCommands });
+      await terminalInput(shell, ['u', 'n', 'a', '\t', ';', 'e', 'x', 't', '\t', 't', '\t']);
+      return output.text;
+    });
+    expect(output).toMatch(/^uname ;external-tab $/);
+  });
+
+  test('should complete last external command argument', async ({ page }) => {
+    const output = await page.evaluate(async cmdName => {
+      const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
+      const { shell, output } = await shellSetupEmpty({ externalCommands });
+      await terminalInput(shell, [
+        'u',
+        'n',
+        'a',
+        '\t',
+        ';',
+        'e',
+        'x',
+        't',
+        '\t',
+        't',
+        '\t',
+        'c',
+        '\t'
+      ]);
+      return output.text;
+    });
+    expect(output).toMatch(/^uname ;external-tab color $/);
+  });
 });
