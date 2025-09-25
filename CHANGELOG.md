@@ -2,6 +2,32 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.0
+
+Cockle 1.1.0 adds enhancements to the `cockle-config` command, help for built-in commands, and tab completion, and fixes a bug in filename tab completion. `git2cpp` has been added to the test suite and demo deployment as it has started to become useful; further enhancements to `git2cpp` will follow.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.0.0...545a3c1515fa7970b92b9e5acd54e9e0e3b59def))
+
+### Enhancements made
+
+- Add `git2cpp` to demo and tests [#246](https://github.com/jupyterlite/cockle/pull/246) ([@ianthomas23](https://github.com/ianthomas23))
+- Support tab completion of the last of multiple commands [#245](https://github.com/jupyterlite/cockle/pull/245) ([@ianthomas23](https://github.com/ianthomas23))
+- Support filtering by command type in `cockle-config command` [#244](https://github.com/jupyterlite/cockle/pull/244) ([@ianthomas23](https://github.com/ianthomas23))
+- Show both short and long name options for builtin command help [#243](https://github.com/jupyterlite/cockle/pull/243) ([@ianthomas23](https://github.com/ianthomas23))
+- Make PositionalArguments.possibles async [#242](https://github.com/jupyterlite/cockle/pull/242) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Fix tab complete at dot in filename [#248](https://github.com/jupyterlite/cockle/pull/248) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-08-11&to=2025-09-25&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-08-11..2025-09-25&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 1.0.0
 
 This is a major release introducing support for tab completion in built-in, external and javascript commands via `CommandArguments` classes. There are also new built-in commands `false`, `true`, `help` and `which`.
@@ -41,8 +67,6 @@ Thanks to new contributors @martinRenou and @nakul-py.
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-07-21&to=2025-08-11&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-07-21..2025-08-11&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3AmartinRenou+updated%3A2025-07-21..2025-08-11&type=Issues) | [@nakul-py](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Anakul-py+updated%3A2025-07-21..2025-08-11&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.3
 
