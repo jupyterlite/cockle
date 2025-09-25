@@ -106,8 +106,10 @@ export class TabCompleter {
     }
 
     const endsWithSlash = tokenToComplete.endsWith('/');
-    const doubleDot = tokenToComplete.endsWith('..');
-    const singleDot = !doubleDot && tokenToComplete.endsWith('.');
+    const prev = [undefined, '/'];
+    const doubleDot = tokenToComplete.endsWith('..') && prev.includes(tokenToComplete.at(-3));
+    const singleDot =
+      !doubleDot && tokenToComplete.endsWith('.') && prev.includes(tokenToComplete.at(-2));
     const isDot = singleDot || doubleDot;
 
     if (doubleDot) {
