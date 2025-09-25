@@ -1,5 +1,6 @@
 {
   "packages": {
+    "git2cpp": {},
     "lua": {},
     "nano": {},
     "tree": {},
@@ -21,9 +22,15 @@
     "vim": {}
   },
   "aliases": {
+    "git": "git2cpp",
     "vi": "vim"
   },
   "environment": {
-    "ENV_VAR_FROM_COCKLE_CONFIG": "xyz123"
+    "ENV_VAR_FROM_COCKLE_CONFIG": "xyz123",
+    "GIT_CORS_PROXY": "https://corsproxy.io/?url=",
+    "GIT_AUTHOR_NAME": "Jane Doe",
+    "GIT_AUTHOR_EMAIL": "jane.doe@blabla.com",
+    "GIT_COMMITTER_NAME": "Jane Doe",
+    "GIT_COMMITTER_EMAIL": "jane.doe@blabla.com"
   }
 }
