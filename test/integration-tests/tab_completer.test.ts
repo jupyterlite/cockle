@@ -199,6 +199,39 @@ test.describe('TabCompleter', () => {
         /^ls \r\ndirA\/ {2}file1 {2}file2\r\n/
       );
     });
+
+    test('should complete at dot in filename', async ({ page }) => {
+      const options = {
+        initialFiles: { 'a.txt': '' }
+      };
+      expect(await shellInputsSimple(page, ['l', 's', ' ', 'a', '\t'], options)).toMatch(
+        /^ls a.txt $/
+      );
+      expect(await shellInputsSimple(page, ['l', 's', ' ', 'a', '.', '\t'], options)).toMatch(
+        /^ls a.txt $/
+      );
+      expect(await shellInputsSimple(page, ['l', 's', ' ', 'a', '.', 't', '\t'], options)).toMatch(
+        /^ls a.txt $/
+      );
+    });
+
+    test('should complete at two dots in filename', async ({ page }) => {
+      const options = {
+        initialFiles: { 'b..txt': '' }
+      };
+      expect(await shellInputsSimple(page, ['l', 's', ' ', 'b', '\t'], options)).toMatch(
+        /^ls b..txt $/
+      );
+      expect(await shellInputsSimple(page, ['l', 's', ' ', 'b', '.', '\t'], options)).toMatch(
+        /^ls b..txt $/
+      );
+      expect(await shellInputsSimple(page, ['l', 's', ' ', 'b', '.', '.', '\t'], options)).toMatch(
+        /^ls b..txt $/
+      );
+      expect(
+        await shellInputsSimple(page, ['l', 's', ' ', 'b', '.', '.', 't', '\t'], options)
+      ).toMatch(/^ls b..txt $/);
+    });
   });
 
   test.describe('tab complete builtin cd command', () => {
