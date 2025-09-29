@@ -17,7 +17,9 @@ class CommandSubcommand extends SubcommandArguments {
   wasm = new BooleanArgument('w', 'wasm', 'display only wasm commands');
   positional = new PositionalArguments({
     possibles: async (context: ITabCompleteContext) =>
-      context.commandRegistry ? context.commandRegistry.match(context.args.at(-1) || '') : []
+      context.commandRegistry
+        ? context.commandRegistry.match(context.args.at(-1) || '', optionsToCommandType(this))
+        : []
   });
 }
 
@@ -110,27 +112,6 @@ export class CockleConfigCommand extends BuiltinCommand {
     return ExitCode.SUCCESS;
   }
 
-  private _optionsToCommandType(subcommand: CommandSubcommand): CommandType {
-    let commandType = CommandType.None;
-    if (subcommand.builtin.isSet) {
-      commandType |= CommandType.Builtin;
-    }
-    if (subcommand.external.isSet) {
-      commandType |= CommandType.External;
-    }
-    if (subcommand.javascript.isSet) {
-      commandType |= CommandType.JavaScript;
-    }
-    if (subcommand.wasm.isSet) {
-      commandType |= CommandType.Wasm;
-    }
-    if (commandType === CommandType.None) {
-      // If no command type specified, want then all.
-      commandType = CommandType.All;
-    }
-    return commandType;
-  }
-
   private _writeCommandConfig(
     context: IRunContext,
     colorByColumn: Map<number, string> | undefined,
@@ -139,7 +120,7 @@ export class CockleConfigCommand extends BuiltinCommand {
     const { commandRegistry, stdout } = context;
     const names = subcommand.positional.strings;
 
-    let commandNames = commandRegistry.commandNames(this._optionsToCommandType(subcommand));
+    let commandNames = commandRegistry.commandNames(optionsToCommandType(subcommand));
     if (names.length > 0) {
       const missing = names.filter(name => !commandNames.includes(name));
       if (missing.length > 0) {
@@ -250,4 +231,25 @@ export class CockleConfigCommand extends BuiltinCommand {
     const { stdout } = context;
     stdout.write(`cockle ${COCKLE_VERSION}\n`);
   }
+}
+
+function optionsToCommandType(subcommand: CommandSubcommand): CommandType {
+  let commandType = CommandType.None;
+  if (subcommand.builtin.isSet) {
+    commandType |= CommandType.Builtin;
+  }
+  if (subcommand.external.isSet) {
+    commandType |= CommandType.External;
+  }
+  if (subcommand.javascript.isSet) {
+    commandType |= CommandType.JavaScript;
+  }
+  if (subcommand.wasm.isSet) {
+    commandType |= CommandType.Wasm;
+  }
+  if (commandType === CommandType.None) {
+    // If no command type specified, want then all.
+    commandType = CommandType.All;
+  }
+  return commandType;
 }

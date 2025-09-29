@@ -156,7 +156,7 @@ export abstract class CommandArguments {
    * Parse arguments to tab complete the final one.
    */
   private async _parseToTabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
-    const { args } = context;
+    let { args } = context;
     const { positional } = this;
     const subcommands = this.subcommands ?? {};
     let firstArg = true;
@@ -191,8 +191,14 @@ export abstract class CommandArguments {
             return { possibles: shortNamePossibles.concat(longNamePossibles) };
           }
         } else {
-          // Not final arg so parse as usual.
-          // In fact just ignore it, which is no good if it wants to consume further args.
+          // Usual parsing of short or long name argument.
+          if (arg.startsWith('--')) {
+            const longName = arg.slice(2);
+            args = this._findByLongName(longName).parse(arg, args);
+          } else {
+            const shortName = arg.slice(1);
+            args = this._findByShortName(shortName).parse(arg, args);
+          }
         }
       } else if (positional !== undefined) {
         // Jump straight to last argument as the preceding ones are independent of it.
