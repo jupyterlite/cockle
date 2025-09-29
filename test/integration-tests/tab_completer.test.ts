@@ -351,6 +351,38 @@ test.describe('TabCompleter', () => {
         /^cockle-config -h $/
       );
     });
+
+    test('should take into account already parsed arguments', async ({ page }) => {
+      // cockle-config command flags (-b, -e, -j, -w) are useful here.
+      const output0 = await shellInputsSimple(page, 'co\tc\t\t'.split(''));
+      expect(output0).toMatch('history');
+      expect(output0).toMatch('js-tab');
+      expect(output0).toMatch('sha256sum');
+
+      // -b
+      const output1 = await shellInputsSimple(page, 'co\tc\t-b \t'.split(''));
+      expect(output1).toMatch('history');
+      expect(output1).not.toMatch('js-tab');
+      expect(output1).not.toMatch('sha256sum');
+
+      // -j
+      const output2 = await shellInputsSimple(page, 'co\tc\t-j js-t\t'.split(''));
+      expect(output2).not.toMatch('history');
+      expect(output2).toMatch('js-tab');
+      expect(output2).not.toMatch('sha256sum');
+
+      // -w
+      const output3 = await shellInputsSimple(page, 'co\tc\t-w \t'.split(''));
+      expect(output3).not.toMatch('history');
+      expect(output3).not.toMatch('js-tab');
+      expect(output3).toMatch('sha256sum');
+
+      // -b -w
+      const output4 = await shellInputsSimple(page, 'co\tc\t-b -w \t'.split(''));
+      expect(output4).toMatch('history');
+      expect(output4).not.toMatch('js-tab');
+      expect(output4).toMatch('sha256sum');
+    });
   });
 
   test.describe('tab complete last command of multiple commands', () => {

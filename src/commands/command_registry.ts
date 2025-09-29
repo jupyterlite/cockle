@@ -52,8 +52,8 @@ export class CommandRegistry {
     return this._map.get(name) ?? null;
   }
 
-  match(start: string): string[] {
-    return [...this._map.keys()].filter(name => name.startsWith(start)).sort();
+  match(start: string, commandType: CommandType = CommandType.All): string[] {
+    return this.commandNames(commandType).filter(name => name.startsWith(start));
   }
 
   registerBuiltinCommands(commands: any) {
