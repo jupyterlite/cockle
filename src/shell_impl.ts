@@ -716,11 +716,21 @@ export class ShellImpl implements IShellWorker {
     }
 
     this._darkMode = darkMode;
+
+    // Set prompt color.
     if (this._options.color) {
       this._stderr.prefix = darkMode ? ansi.styleBrightRed : ansi.styleRed;
 
       const promptColor = darkMode ? ansi.styleBoldGreen : ansi.styleGreen;
       this._runContext.environment.set('PS1', promptColor + 'js-shell:' + ansi.styleReset + ' ');
+    }
+
+    // Set/delete environment variable.
+    const envVarName = 'COCKLE_DARK_MODE';
+    if (darkMode === undefined) {
+      this.environment.delete(envVarName)
+    } else {
+      this.environment.set(envVarName, darkMode ? '1': '0');
     }
   }
 

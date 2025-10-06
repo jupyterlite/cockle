@@ -493,12 +493,14 @@ test.describe('Shell', () => {
           await delay(10);
           await shell.inputLine('');
           await delay(10);
-          return output.text;
+          const ret0 = output.textAndClear();
+          await shell.inputLine('env|grep DARK_MODE --color=never');
+          return [ret0, output.text];
         }, mode);
         // Note: shell cannot handle determining the terminal background color unless it is
         // connected to a real terminal (e.g. xtermjs) or the required ansi sequence is mocked.
         // Here only testing mode being known dark or light.
-        const lines = output.split('\r\n');
+        const lines = output[0].split('\r\n');
         const promptLine = lines[1];
         // Extract color from the start of the prompt.
         // These checks will change if the prompt color is changed.
@@ -509,6 +511,8 @@ test.describe('Shell', () => {
         } else {
           throw Error('Unexpected dark/light mode value');
         }
+
+        expect(output[1]).toMatch(mode === 'dark' ? 'COCKLE_DARK_MODE=1' : 'COCKLE_DARK_MODE=0')
       });
     });
   });
