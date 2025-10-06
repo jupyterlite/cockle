@@ -728,9 +728,9 @@ export class ShellImpl implements IShellWorker {
     // Set/delete environment variable.
     const envVarName = 'COCKLE_DARK_MODE';
     if (darkMode === undefined) {
-      this.environment.delete(envVarName)
+      this.environment.delete(envVarName);
     } else {
-      this.environment.set(envVarName, darkMode ? '1': '0');
+      this.environment.set(envVarName, darkMode ? '1' : '0');
     }
   }
 

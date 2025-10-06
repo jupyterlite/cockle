@@ -512,7 +512,7 @@ test.describe('Shell', () => {
           throw Error('Unexpected dark/light mode value');
         }
 
-        expect(output[1]).toMatch(mode === 'dark' ? 'COCKLE_DARK_MODE=1' : 'COCKLE_DARK_MODE=0')
+        expect(output[1]).toMatch(mode === 'dark' ? 'COCKLE_DARK_MODE=1' : 'COCKLE_DARK_MODE=0');
       });
     });
   });
