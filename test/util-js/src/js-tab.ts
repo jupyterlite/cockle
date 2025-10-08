@@ -17,6 +17,7 @@ class TestArguments extends CommandArguments {
       'exitCode',
       'name',
       'readfile',
+      'shellId',
       'stderr',
       'stdin',
       'stdout',
@@ -108,6 +109,10 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
       context.stderr.write(`Unable to open file ${filename} for writing`);
       return ExitCode.GENERAL_ERROR;
     }
+  }
+
+  if (args.includes('shellId')) {
+    context.stdout.write(`shellId: ${context.shellId}\n`);
   }
 
   if (args.includes('exitCode')) {

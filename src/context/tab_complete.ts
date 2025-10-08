@@ -11,6 +11,8 @@ export interface ITabCompleteContext {
    */
   args: string[];
 
+  shellId: string;
+
   // The following are typed as optional so that an IJavaScriptTabCompleteContext can be passed
   // around as an ITabCompleteContext. In reality they are always set for built-in commands.
   // Need to do this better.

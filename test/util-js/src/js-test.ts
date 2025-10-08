@@ -86,6 +86,10 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
     }
   }
 
+  if (args.includes('shellId')) {
+    context.stdout.write(`shellId: ${context.shellId}\n`);
+  }
+
   if (args.includes('exitCode')) {
     return ExitCode.GENERAL_ERROR;
   }

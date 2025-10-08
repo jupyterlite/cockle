@@ -57,6 +57,7 @@ export class ShellImpl implements IShellWorker {
       ),
       environment: new Environment(options.color),
       history: new History(),
+      shellId: options.shellId,
       terminate: this.terminate.bind(this),
       stdin: this._dummyInput,
       stdout: this._dummyOutput,

@@ -201,14 +201,25 @@ cmdName.forEach(cmdName => {
       const lines = output.split('\r\n');
       expect(lines[1]).toMatch(/^ABCDEFGHIJKLMNOPQRSTUVWXYZ/);
     });
+
+    test('should write shellId', async ({ page }) => {
+      const output = await page.evaluate(async cmdName => {
+        const { shellSetupEmpty } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ shellId: 'someShellId1234' });
+        await shell.inputLine(`${cmdName} shellId`);
+        return output.text;
+      }, cmdName);
+      expect(output).toMatch('\r\nshellId: someShellId1234\r\n');
+    });
   });
 });
 
 test.describe('tab complete js-tab command', () => {
   test('should show all positional arguments', async ({ page }) => {
-    expect(await shellInputsSimple(page, ['j', 's', '-', 't', 'a', '\t', '\t'])).toMatch(
-      /^js-tab \r\ncolor {8}exitCode {5}readfile {5}stdin {8}writefile\r\nenvironment {2}name {9}stderr {7}stdout\r\n/
-    );
+    const output = await shellInputsSimple(page, ['j', 's', '-', 't', 'a', '\t', '\t']);
+    const lines = output.split('\r\n');
+    expect(lines[1]).toEqual('color        exitCode     readfile     stderr       stdout');
+    expect(lines[2]).toEqual('environment  name         shellId      stdin        writefile');
   });
 
   test('should match the single possible starting with letter w', async ({ page }) => {
@@ -217,8 +228,8 @@ test.describe('tab complete js-tab command', () => {
     );
   });
 
-  test('should complete common start string s', async ({ page }) => {
-    expect(await shellInputsSimple(page, ['j', 's', '-', 't', 'a', '\t', 's', '\t'])).toMatch(
+  test('should complete common start string st', async ({ page }) => {
+    expect(await shellInputsSimple(page, ['j', 's', '-', 't', 'a', '\t', 's', 't', '\t'])).toMatch(
       /^js-tab std$/
     );
   });
