@@ -4,7 +4,7 @@
 
 import { ITabCompleteContext } from './context';
 import { GeneralError } from './error_exit_code';
-import { PathType } from './tab_complete';
+import { ITabCompleteResult, PathType } from './tab_complete';
 
 export abstract class Argument {
   constructor(
@@ -121,7 +121,7 @@ export namespace PositionalArguments {
      * The token for completion is context.args.at(-1) as it may be an empty string.
      * The possibles are subsequently filtered using startsWith(token-for-completion).
      */
-    possibles?: (context: ITabCompleteContext) => Promise<string[]>;
+    tabComplete?: (context: ITabCompleteContext) => Promise<ITabCompleteResult>;
   }
 }
 

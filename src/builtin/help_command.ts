@@ -11,8 +11,9 @@ class HelpArguments extends CommandArguments {
     "Show help for built-in commands. With no arguments, lists available builtins. With names, shows each command's help (equivalent to '<cmd> --help').";
   help = new BooleanArgument('h', 'help', 'display this help and exit');
   positional = new PositionalArguments({
-    possibles: async (context: ITabCompleteContext) =>
-      context.commandRegistry?.commandNames(CommandType.Builtin) ?? []
+    tabComplete: async (context: ITabCompleteContext) => ({
+      possibles: context.commandRegistry?.commandNames(CommandType.Builtin) ?? []
+    })
   });
 }
 
