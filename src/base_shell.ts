@@ -78,6 +78,7 @@ export abstract class BaseShell implements IShell {
       name,
       args,
       environment: externalEnvironment,
+      shellId: this._shellId,
       stdin,
       stdout,
       stderr
@@ -104,7 +105,7 @@ export abstract class BaseShell implements IShell {
       return {};
     }
 
-    return await tabComplete({ name, args });
+    return await tabComplete({ name, args, shellId: this._shellId });
   }
 
   dispose(): void {

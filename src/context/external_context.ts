@@ -13,6 +13,7 @@ export interface IExternalRunContext {
   name: string;
   args: string[];
   environment: ExternalEnvironment;
+  shellId: string;
   stdin: IExternalInput;
   stdout: IExternalOutput;
   stderr: IExternalOutput;
@@ -27,4 +28,6 @@ export interface IExternalTabCompleteContext {
    * Command arguments. The last argument is the one to tab complete and may be an empty string.
    */
   args: string[];
+
+  shellId: string;
 }

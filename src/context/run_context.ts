@@ -19,6 +19,7 @@ export interface IRunContext {
   aliases: Aliases;
   commandRegistry: CommandRegistry;
   history: History;
+  shellId: string;
   terminate: ITerminateCallback;
   stdin: IInput;
   stdout: IOutput;

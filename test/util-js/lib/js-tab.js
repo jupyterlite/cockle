@@ -1,6 +1,17 @@
 var Module = (function (exports) {
     'use strict';
 
+    /**
+     * ANSI escape sequences.
+     */
+    const ESC = '\x1B[';
+    const ansi = {
+        styleReset: ESC + '1;0m',
+        styleBrightBlue: ESC + '0;94m',
+        styleBrightPurple: ESC + '0;95m',
+        styleGreen: ESC + '0;32m',
+        styleYellow: ESC + '0;33m'};
+
     const ExitCode = {
         SUCCESS: 0,
         GENERAL_ERROR: 1};
@@ -32,12 +43,6 @@ var Module = (function (exports) {
         }
         get isSet() {
             return this._isSet;
-        }
-        get name() {
-            return this.shortName ? this.shortName : this.longName;
-        }
-        get prefixedName() {
-            return this.shortName ? `-${this.shortName}` : `--${this.longName}`;
         }
         /**
          * Parse remaining args and return those args not consumed.
@@ -93,12 +98,203 @@ var Module = (function (exports) {
         }
         _strings = [];
     }
-    class PositionalPathsArguments extends PositionalArguments {
+    class PositionalPathArguments extends PositionalArguments {
         options;
         constructor(options = {}) {
             super(options);
             this.options = options;
         }
+    }
+
+    /**
+     * Trim whitespace from end of string.
+     */
+    function rtrim(text) {
+        return text.replace(/\s+$/, '');
+    }
+
+    /**
+     * Type of horizontal spacer, such as between the header and rows.
+     */
+    var HorizontalSpacerType;
+    (function (HorizontalSpacerType) {
+        HorizontalSpacerType[HorizontalSpacerType["TOP"] = 0] = "TOP";
+        HorizontalSpacerType[HorizontalSpacerType["MIDDLE"] = 1] = "MIDDLE";
+        HorizontalSpacerType[HorizontalSpacerType["BOTTOM"] = 2] = "BOTTOM";
+    })(HorizontalSpacerType || (HorizontalSpacerType = {}));
+    /**
+     * Type of vertical spacer used between adjacent columns in the same row.
+     */
+    var VerticalSpacerType;
+    (function (VerticalSpacerType) {
+        VerticalSpacerType[VerticalSpacerType["LEFT"] = 0] = "LEFT";
+        VerticalSpacerType[VerticalSpacerType["INNER"] = 1] = "INNER";
+        VerticalSpacerType[VerticalSpacerType["RIGHT"] = 2] = "RIGHT";
+    })(VerticalSpacerType || (VerticalSpacerType = {}));
+    /**
+     * Abstract base class for table which displays a 2D grid of headers and rows with each column sized
+     * to fit its longest item. The number of columns is given by the maximum number of items in all
+     * rows ahd header rows; rows with fewer items are right-padded with empty strings. It does not
+     * care about terminal width or height, so may overrun in width and take up more than page.
+     */
+    class BaseTable {
+        options;
+        constructor(options) {
+            this.options = options;
+        }
+        addHeaderRow(headerRow) {
+            this._headerRows.push(headerRow);
+            this._updateColumnWidths(headerRow);
+        }
+        addRow(row) {
+            this._rows.push(row);
+            this._updateColumnWidths(row);
+        }
+        /**
+         * Return a default colorByColumn map for clients that want to color columns but don't want to
+         * define their own.
+         */
+        static defaultColorByColumn() {
+            return new Map([
+                [1, ansi.styleBrightBlue],
+                [2, ansi.styleBrightPurple],
+                [3, ansi.styleGreen],
+                [4, ansi.styleYellow]
+            ]);
+        }
+        /**
+         * Generator for output lines, one at a time.
+         * @param prefix String to insert at beginning of each line, default ''.
+         * @param suffix String to append to end of each line, default ''.
+         */
+        *lines(prefix = '', suffix = '') {
+            const { sortByColumn } = this.options;
+            if (sortByColumn !== undefined) {
+                // Sort rows in place.
+                const compareColumn = (columnIndex, a, b) => {
+                    const sortColumn = sortByColumn[columnIndex];
+                    if (a[sortColumn] < b[sortColumn]) {
+                        return -1;
+                    }
+                    else if (a[sortColumn] > b[sortColumn]) {
+                        return 1;
+                    }
+                    else if (sortByColumn.length > columnIndex + 1) {
+                        // This column matches, sort by next column.
+                        return compareColumn(columnIndex + 1, a, b);
+                    }
+                    return 0;
+                };
+                this._rows.sort((a, b) => compareColumn(0, a, b));
+            }
+            const nColumns = this._columnWidths.length;
+            const topSpacer = this.horizontalSpacer(HorizontalSpacerType.TOP);
+            if (topSpacer !== undefined) {
+                yield prefix + rtrim(topSpacer) + suffix;
+            }
+            for (const headerRow of this._headerRows) {
+                let line = '';
+                for (let i = 0; i < nColumns; i++) {
+                    line += this.verticalSpacer(i === 0 ? VerticalSpacerType.LEFT : VerticalSpacerType.INNER);
+                    const item = headerRow[i] ?? '';
+                    line += item + ' '.repeat(this._columnWidths[i] - item.length);
+                }
+                line += this.verticalSpacer(VerticalSpacerType.RIGHT);
+                yield prefix + rtrim(line) + suffix;
+            }
+            if (this._headerRows.length > 0) {
+                const middleSpacer = this.horizontalSpacer(HorizontalSpacerType.MIDDLE);
+                if (middleSpacer !== undefined) {
+                    yield prefix + rtrim(middleSpacer) + suffix;
+                }
+            }
+            for (const row of this._rows) {
+                let line = '';
+                for (let i = 0; i < nColumns; i++) {
+                    line += this.verticalSpacer(i === 0 ? VerticalSpacerType.LEFT : VerticalSpacerType.INNER);
+                    const item = row[i] ?? '';
+                    if (item) {
+                        const color = this.options.colorByColumn?.get(i);
+                        line += color !== undefined ? color + item + ansi.styleReset : item;
+                    }
+                    line += ' '.repeat(this._columnWidths[i] - item.length);
+                }
+                line += this.verticalSpacer(VerticalSpacerType.RIGHT);
+                yield prefix + rtrim(line) + suffix;
+            }
+            const bottomSpacer = this.horizontalSpacer(HorizontalSpacerType.BOTTOM);
+            if (bottomSpacer !== undefined) {
+                yield prefix + rtrim(bottomSpacer) + suffix;
+            }
+        }
+        /**
+         * Returns number of rows in body of table. Does not include header rows.
+         */
+        get rowCount() {
+            return this._rows.length;
+        }
+        /**
+         * Write table to output.
+         * @param output Output to write to.
+         * @param prefix String to insert at beginning of each line, default ''.
+         * @param suffix String to append to end of each line, default '\n'.
+         */
+        write(output, prefix = '', suffix = '\n') {
+            for (const line of this.lines(prefix, suffix)) {
+                output.write(line);
+            }
+        }
+        _updateColumnWidths(row) {
+            const widths = row.map(str => str.length);
+            const n = Math.min(this._columnWidths.length, widths.length);
+            for (let i = 0; i < n; i++) {
+                this._columnWidths[i] = Math.max(this._columnWidths[i], widths[i]);
+            }
+            if (widths.length > n) {
+                this._columnWidths.push(...widths.slice(n));
+            }
+        }
+        _columnWidths = [];
+        _headerRows = [];
+        _rows = [];
+    }
+    /**
+     * Simple table with horizontal line between header and rows such as:
+     *
+     * header1  header2
+     * ────────────────
+     * aaaa     bbb
+     * cc       dd
+     */
+    class Table extends BaseTable {
+        constructor(options = {}) {
+            super(options);
+            const separatorSize = options.spacerSize ?? 2;
+            this._spacer = ' '.repeat(separatorSize);
+            this._spacersAtEnds = options.spacersAtEnds ?? false;
+        }
+        horizontalSpacer(type) {
+            if (type === HorizontalSpacerType.MIDDLE) {
+                const totalWidth = this._columnWidths.reduce((acc, value) => acc + value) + this._totalSeparatorSize();
+                return '─'.repeat(totalWidth);
+            }
+            return undefined;
+        }
+        verticalSpacer(type) {
+            if (type === VerticalSpacerType.INNER || this._spacersAtEnds) {
+                return this._spacer;
+            }
+            return '';
+        }
+        _totalSeparatorSize() {
+            let nSpacers = this._columnWidths.length - 1;
+            if (this._spacersAtEnds) {
+                nSpacers += 2;
+            }
+            return nSpacers * this._spacer.length;
+        }
+        _spacer;
+        _spacersAtEnds;
     }
 
     /**
@@ -158,22 +354,38 @@ var Module = (function (exports) {
             }
         }
         *_help() {
-            // Dynamically create help text from arguments.
-            for (const [key, arg] of Object.entries(this)) {
-                if (key === 'subcommands') {
-                    break;
-                }
-                const name = arg.prefixedName;
-                const spaces = Math.max(1, 12 - name.length);
-                yield `    ${name}${' '.repeat(spaces)}${arg.description}`;
+            // Emit description first if present.
+            if (this.description) {
+                yield this.description;
             }
-            if ('subcommands' in this) {
-                const subcommands = this['subcommands'];
+            // Dynamically create help text from arguments.
+            const optionsTable = new Table({ spacerSize: 3 });
+            for (const arg of Object.values(this)) {
+                if (arg instanceof Argument) {
+                    const { longName, shortName } = arg;
+                    if (longName || shortName) {
+                        let names = shortName ? `-${shortName}` : '  ';
+                        if (longName) {
+                            names += (shortName ? ', ' : '  ') + `--${longName}`;
+                        }
+                        optionsTable.addRow([names, arg.description]);
+                    }
+                }
+            }
+            if (optionsTable.rowCount > 0) {
                 yield '';
-                yield 'subcommands:';
-                for (const sub of Object.values(subcommands)) {
-                    const spaces = Math.max(1, 12 - sub.name.length);
-                    yield `    ${sub.name}${' '.repeat(spaces)}${sub.description}`;
+                yield 'options:';
+                yield* optionsTable.lines('    ');
+            }
+            if (this.subcommands !== undefined) {
+                const table = new Table({ spacerSize: 3 });
+                for (const sub of Object.values(this.subcommands)) {
+                    table.addRow([sub.name, sub.description]);
+                }
+                if (table.rowCount > 0) {
+                    yield '';
+                    yield 'subcommands:';
+                    yield* table.lines('    ');
                 }
             }
         }
@@ -234,7 +446,7 @@ var Module = (function (exports) {
          * Parse arguments to tab complete the final one.
          */
         async _parseToTabComplete(context) {
-            const { args } = context;
+            let { args } = context;
             const { positional } = this;
             const subcommands = this.subcommands ?? {};
             let firstArg = true;
@@ -252,7 +464,7 @@ var Module = (function (exports) {
                         // Exact match, parse it.
                         const subcommand = subcommands[arg];
                         subcommand.set();
-                        return subcommand._parseToTabComplete({ ...context, args: [arg, ...args] });
+                        return await subcommand.tabComplete(context);
                     }
                 }
                 if (arg.startsWith('-')) {
@@ -266,16 +478,27 @@ var Module = (function (exports) {
                             return { possibles: shortNamePossibles.concat(longNamePossibles) };
                         }
                     }
+                    else {
+                        // Usual parsing of short or long name argument.
+                        if (arg.startsWith('--')) {
+                            const longName = arg.slice(2);
+                            args = this._findByLongName(longName).parse(arg, args);
+                        }
+                        else {
+                            const shortName = arg.slice(1);
+                            args = this._findByShortName(shortName).parse(arg, args);
+                        }
+                    }
                 }
                 else if (positional !== undefined) {
                     // Jump straight to last argument as the preceding ones are independent of it.
-                    if (positional instanceof PositionalPathsArguments) {
+                    if (positional instanceof PositionalPathArguments) {
                         return { pathType: positional.options.pathType ?? PathType.Any };
                     }
                     else {
                         const possiblesCallback = positional.options.possibles;
                         if (possiblesCallback !== undefined) {
-                            return { possibles: possiblesCallback({ ...context, args: [arg, ...args] }) };
+                            return { possibles: await possiblesCallback({ ...context, args: [arg, ...args] }) };
                         }
                     }
                 }
@@ -289,6 +512,7 @@ var Module = (function (exports) {
         }
         positional;
         subcommands;
+        description;
     }
 
     /**
@@ -296,12 +520,13 @@ var Module = (function (exports) {
      */
     class TestArguments extends CommandArguments {
         positional = new PositionalArguments({
-            possibles: (context) => [
+            possibles: async (context) => [
                 'color',
                 'environment',
                 'exitCode',
                 'name',
                 'readfile',
+                'shellId',
                 'stderr',
                 'stdin',
                 'stdout',
@@ -387,6 +612,9 @@ var Module = (function (exports) {
                 context.stderr.write(`Unable to open file ${filename} for writing`);
                 return ExitCode.GENERAL_ERROR;
             }
+        }
+        if (args.includes('shellId')) {
+            context.stdout.write(`shellId: ${context.shellId}\n`);
         }
         if (args.includes('exitCode')) {
             return ExitCode.GENERAL_ERROR;

@@ -191,6 +191,19 @@ cmdName.forEach(cmdName => {
       const lines = output.split('\r\n');
       expect(lines[1]).toMatch(/^ABCDEFGHIJKLMNOPQRSTUVWXYZ/);
     });
+
+    test('should write shellId', async ({ page }) => {
+      const output = await page.evaluate(async cmdName => {
+        const { externalCommands, shellSetupEmpty } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({
+          externalCommands,
+          shellId: 'someShellId9876'
+        });
+        await shell.inputLine(`${cmdName} shellId`);
+        return output.text;
+      }, cmdName);
+      expect(output).toMatch('\r\nshellId: someShellId9876\r\n');
+    });
   });
 });
 
@@ -202,9 +215,9 @@ test.describe('tab complete js-tab command', () => {
       await terminalInput(shell, ['e', 'x', 't', '\t', 't', '\t', '\t']);
       return output.text;
     });
-    expect(output).toMatch(
-      /^external-tab \r\ncolor {8}exitCode {5}stderr {7}stdout\r\nenvironment {2}name {9}stdin\r\n/
-    );
+    const lines = output.split('\r\n');
+    expect(lines[1]).toEqual('color        exitCode     shellId      stdin');
+    expect(lines[2]).toEqual('environment  name         stderr       stdout');
   });
 
   test('should match the single possible starting with letter n', async ({ page }) => {
@@ -217,11 +230,11 @@ test.describe('tab complete js-tab command', () => {
     expect(output).toMatch(/^external-tab name $/);
   });
 
-  test('should complete common start string s', async ({ page }) => {
+  test('should complete common start string st', async ({ page }) => {
     const output = await page.evaluate(async cmdName => {
       const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty({ externalCommands });
-      await terminalInput(shell, ['e', 'x', 't', '\t', 't', '\t', 's', '\t']);
+      await terminalInput(shell, ['e', 'x', 't', '\t', 't', '\t', 's', 't', '\t']);
       return output.text;
     });
     expect(output).toMatch(/^external-tab std$/);

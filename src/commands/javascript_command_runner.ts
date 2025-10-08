@@ -27,13 +27,14 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
     }
 
     // Narrow context passed to JavaScript command so that we don't leak cockle internals.
-    const { args, environment, fileSystem, stdout, stderr } = context;
+    const { args, environment, fileSystem, shellId, stdout, stderr } = context;
     const stdin = new JavaScriptInput(context.stdin);
     const jsContext: IJavaScriptRunContext = {
       name,
       args,
       environment,
       fileSystem,
+      shellId,
       stdin,
       stdout,
       stderr
@@ -51,9 +52,9 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
     const jsModule = this.module.loader.getJavaScriptModule(this.packageName, this.moduleName);
     if (jsModule !== undefined && Object.prototype.hasOwnProperty.call(jsModule, 'tabComplete')) {
       if (jsModule.tabComplete !== undefined) {
-        const { name, args } = context;
+        const { name, args, shellId } = context;
         try {
-          return await jsModule.tabComplete({ name, args });
+          return await jsModule.tabComplete({ name, args, shellId });
         } catch (err) {
           // Do nothing, returns empty default below.
         }

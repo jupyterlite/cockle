@@ -55,6 +55,10 @@ export async function externalCommand(context: IExternalRunContext): Promise<num
     }
   }
 
+  if (args.includes('shellId')) {
+    context.stdout.write(`shellId: ${context.shellId}\n`);
+  }
+
   if (args.includes('exitCode')) {
     return ExitCode.GENERAL_ERROR;
   }

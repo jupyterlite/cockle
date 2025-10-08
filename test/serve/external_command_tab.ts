@@ -18,6 +18,7 @@ class TestArguments extends CommandArguments {
       'environment',
       'exitCode',
       'name',
+      'shellId',
       'stderr',
       'stdin',
       'stdout'
@@ -82,6 +83,10 @@ export async function externalRun(context: IExternalRunContext): Promise<number>
         stdout.write(chars.toUpperCase());
       }
     }
+  }
+
+  if (args.includes('shellId')) {
+    context.stdout.write(`shellId: ${context.shellId}\n`);
   }
 
   if (args.includes('exitCode')) {

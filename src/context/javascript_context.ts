@@ -10,6 +10,7 @@ export interface IJavaScriptRunContext {
   args: string[];
   fileSystem: IFileSystem;
   environment: Environment;
+  shellId: string;
   stdin: IJavaScriptInput;
   stdout: IOutput;
   stderr: IOutput;
@@ -24,4 +25,6 @@ export interface IJavaScriptTabCompleteContext {
    * Command arguments. The last argument is the one to tab complete and may be an empty string.
    */
   args: string[];
+
+  shellId: string;
 }

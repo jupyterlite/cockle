@@ -84,6 +84,9 @@ var Module = (function (exports) {
                 return ExitCode.GENERAL_ERROR;
             }
         }
+        if (args.includes('shellId')) {
+            context.stdout.write(`shellId: ${context.shellId}\n`);
+        }
         if (args.includes('exitCode')) {
             return ExitCode.GENERAL_ERROR;
         }
