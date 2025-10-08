@@ -10,7 +10,9 @@ class WhichArguments extends CommandArguments {
     'Locate built-in commands by name. Prints each given command if it exists, otherwise an error message.';
   help = new BooleanArgument('h', 'help', 'display this help and exit');
   positional = new PositionalArguments({
-    possibles: async (context: ITabCompleteContext) => context.commandRegistry?.commandNames() ?? []
+    tabComplete: async (context: ITabCompleteContext) => ({
+      possibles: context.commandRegistry?.commandNames() ?? []
+    })
   });
 }
 

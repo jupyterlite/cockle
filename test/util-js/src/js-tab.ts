@@ -11,18 +11,20 @@ import { CommandArguments, ExitCode, PositionalArguments } from '@jupyterlite/co
 
 class TestArguments extends CommandArguments {
   positional = new PositionalArguments({
-    possibles: async (context: IJavaScriptTabCompleteContext) => [
-      'color',
-      'environment',
-      'exitCode',
-      'name',
-      'readfile',
-      'shellId',
-      'stderr',
-      'stdin',
-      'stdout',
-      'writefile'
-    ]
+    tabComplete: async (context: IJavaScriptTabCompleteContext) => ({
+      possibles: [
+        'color',
+        'environment',
+        'exitCode',
+        'name',
+        'readfile',
+        'shellId',
+        'stderr',
+        'stdin',
+        'stdout',
+        'writefile'
+      ]
+    })
   });
 }
 

@@ -496,9 +496,9 @@ var Module = (function (exports) {
                         return { pathType: positional.options.pathType ?? PathType.Any };
                     }
                     else {
-                        const possiblesCallback = positional.options.possibles;
-                        if (possiblesCallback !== undefined) {
-                            return { possibles: await possiblesCallback({ ...context, args: [arg, ...args] }) };
+                        const tabCompleteCallback = positional.options.tabComplete;
+                        if (tabCompleteCallback !== undefined) {
+                            return await tabCompleteCallback({ ...context, args: [arg, ...args] });
                         }
                     }
                 }
@@ -520,18 +520,20 @@ var Module = (function (exports) {
      */
     class TestArguments extends CommandArguments {
         positional = new PositionalArguments({
-            possibles: async (context) => [
-                'color',
-                'environment',
-                'exitCode',
-                'name',
-                'readfile',
-                'shellId',
-                'stderr',
-                'stdin',
-                'stdout',
-                'writefile'
-            ]
+            tabComplete: async (context) => ({
+                possibles: [
+                    'color',
+                    'environment',
+                    'exitCode',
+                    'name',
+                    'readfile',
+                    'shellId',
+                    'stderr',
+                    'stdin',
+                    'stdout',
+                    'writefile'
+                ]
+            })
         });
     }
     async function run(context) {

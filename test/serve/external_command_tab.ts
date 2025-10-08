@@ -13,16 +13,18 @@ import {
 
 class TestArguments extends CommandArguments {
   positional = new PositionalArguments({
-    possibles: async (context: IExternalTabCompleteContext) => [
-      'color',
-      'environment',
-      'exitCode',
-      'name',
-      'shellId',
-      'stderr',
-      'stdin',
-      'stdout'
-    ]
+    tabComplete: async (context: IExternalTabCompleteContext) => ({
+      possibles: [
+        'color',
+        'environment',
+        'exitCode',
+        'name',
+        'shellId',
+        'stderr',
+        'stdin',
+        'stdout'
+      ]
+    })
   });
 }
 

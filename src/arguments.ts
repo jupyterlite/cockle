@@ -205,9 +205,9 @@ export abstract class CommandArguments {
         if (positional instanceof PositionalPathArguments) {
           return { pathType: positional.options.pathType ?? PathType.Any };
         } else {
-          const possiblesCallback = positional.options.possibles;
-          if (possiblesCallback !== undefined) {
-            return { possibles: await possiblesCallback({ ...context, args: [arg, ...args] }) };
+          const tabCompleteCallback = positional.options.tabComplete;
+          if (tabCompleteCallback !== undefined) {
+            return await tabCompleteCallback({ ...context, args: [arg, ...args] });
           }
         }
       }

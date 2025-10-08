@@ -16,33 +16,37 @@ class CommandSubcommand extends SubcommandArguments {
   javascript = new BooleanArgument('j', 'javascript', 'display only javascript commands');
   wasm = new BooleanArgument('w', 'wasm', 'display only wasm commands');
   positional = new PositionalArguments({
-    possibles: async (context: ITabCompleteContext) =>
-      context.commandRegistry
-        ? context.commandRegistry.match(context.args.at(-1) || '', optionsToCommandType(this))
-        : []
+    tabComplete: async (context: ITabCompleteContext) => ({
+      possibles:
+        context.commandRegistry?.match(context.args.at(-1) || '', optionsToCommandType(this)) ?? []
+    })
   });
 }
 
 class ModuleSubcommand extends SubcommandArguments {
   positional = new PositionalArguments({
-    possibles: async (context: ITabCompleteContext) =>
-      context.commandRegistry ? context.commandRegistry.allModules().map(module => module.name) : []
+    tabComplete: async (context: ITabCompleteContext) => ({
+      possibles: context.commandRegistry?.allModules().map(module => module.name) ?? []
+    })
   });
 }
 
 class PackageSubcommand extends SubcommandArguments {
   positional = new PositionalArguments({
-    possibles: async (context: ITabCompleteContext) => {
-      return context.commandRegistry ? [...context.commandRegistry.commandPackageMap.keys()] : [];
-    }
+    tabComplete: async (context: ITabCompleteContext) => ({
+      possibles: context.commandRegistry
+        ? [...context.commandRegistry.commandPackageMap.keys()]
+        : []
+    })
   });
 }
 
 class StdinSubcommand extends SubcommandArguments {
   positional = new PositionalArguments({
     max: 1,
-    possibles: async (context: ITabCompleteContext) =>
-      context.stdinContext ? context.stdinContext.shortNames : []
+    tabComplete: async (context: ITabCompleteContext) => ({
+      possibles: context.stdinContext?.shortNames ?? []
+    })
   });
 }
 
