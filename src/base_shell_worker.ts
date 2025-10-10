@@ -23,7 +23,7 @@ export abstract class BaseShellWorker implements IShellWorker {
     // Create IWorkerIO equivalents of the IMainIO used in the main UI thread (BaseShell class).
     this._stdinContext = new StdinContext(setMainIOCallback, this._setWorkerIO.bind(this));
 
-     const termios = new Termios.Termios();
+    const termios = new Termios.Termios();
 
     if (options.supportsServiceWorker) {
       this._serviceWorkerWorkerIO = new ServiceWorkerWorkerIO(

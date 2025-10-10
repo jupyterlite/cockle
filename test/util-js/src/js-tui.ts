@@ -11,24 +11,26 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
 
   // Disable canonical mode (buffered I/O) and echo from stdin to stdout.
   const oldTermios = termios.get();
-  let newTermios = Termios.cloneFlags(oldTermios);
-  newTermios.c_lflag &= (~Termios.LocalFlag.ICANON & ~Termios.LocalFlag.ECHO);
+  const newTermios = Termios.cloneFlags(oldTermios);
+  newTermios.c_lflag &= ~Termios.LocalFlag.ICANON & ~Termios.LocalFlag.ECHO;
   termios.set(newTermios);
 
   stdout.write(ansi.enableAlternativeBuffer);
 
   let useColor = true;
   let text = '';
+  let stop = false;
 
-  while (true) {
+  while (!stop) {
     await render(context, useColor, text);
 
-    const input = await stdin.readAsync(null)
+    const input = await stdin.readAsync(null);
     if (input.length < 1 || input[0] === '\x04') {
-      break;
+      stop = true;
+    } else {
+      text += input;
+      useColor = !useColor;
     }
-    text += input;
-    useColor = !useColor;
   }
 
   stdout.write(ansi.disableAlternativeBuffer);
@@ -43,7 +45,7 @@ async function render(context: IJavaScriptRunContext, useColor: boolean, text: s
   stdout.write(ansi.eraseScreen);
   stdout.write(ansi.cursorHome);
 
-  const prefix = useColor ? ansi.styleBrightBlue: '';
+  const prefix = useColor ? ansi.styleBrightBlue : '';
   const suffix = useColor ? ansi.styleReset : '';
-  stdout.write(prefix + "Hello: " + text + suffix);
+  stdout.write(prefix + 'Hello: ' + text + suffix);
 }

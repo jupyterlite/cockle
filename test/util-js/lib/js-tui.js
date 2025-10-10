@@ -210,20 +210,23 @@ var Module = (function (exports) {
         }
         // Disable canonical mode (buffered I/O) and echo from stdin to stdout.
         const oldTermios = termios.get();
-        let newTermios = Termios.cloneFlags(oldTermios);
-        newTermios.c_lflag &= (~Termios.LocalFlag.ICANON & ~Termios.LocalFlag.ECHO);
+        const newTermios = Termios.cloneFlags(oldTermios);
+        newTermios.c_lflag &= ~Termios.LocalFlag.ICANON & ~Termios.LocalFlag.ECHO;
         termios.set(newTermios);
         stdout.write(ansi.enableAlternativeBuffer);
         let useColor = true;
         let text = '';
-        while (true) {
+        let stop = false;
+        while (!stop) {
             await render(context, useColor, text);
             const input = await stdin.readAsync(null);
             if (input.length < 1 || input[0] === '\x04') {
-                break;
+                stop = true;
             }
-            text += input;
-            useColor = !useColor;
+            else {
+                text += input;
+                useColor = !useColor;
+            }
         }
         stdout.write(ansi.disableAlternativeBuffer);
         // Restore original termios settings.
@@ -236,7 +239,7 @@ var Module = (function (exports) {
         stdout.write(ansi.cursorHome);
         const prefix = useColor ? ansi.styleBrightBlue : '';
         const suffix = useColor ? ansi.styleReset : '';
-        stdout.write(prefix + "Hello: " + text + suffix);
+        stdout.write(prefix + 'Hello: ' + text + suffix);
     }
 
     exports.run = run;
