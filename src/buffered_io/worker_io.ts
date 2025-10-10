@@ -1,10 +1,13 @@
 import { PromiseDelegate } from '@lumino/coreutils';
 import { IWorkerIO } from './defs';
 import { IOutputCallback } from '../callback';
-import { InputFlag, ITermios, LocalFlag, OutputFlag, Termios } from '../termios';
+import { Termios } from '../termios';
 
 export abstract class WorkerIO implements IWorkerIO {
-  constructor(readonly outputCallback: IOutputCallback) {}
+  constructor(
+    readonly outputCallback: IOutputCallback,
+    readonly termios: Termios.Termios
+  ) {}
 
   async canEnable(): Promise<void> {
     await this._available?.promise;
@@ -35,15 +38,6 @@ export abstract class WorkerIO implements IWorkerIO {
 
   abstract readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]>;
 
-  setTermios(iTermios: ITermios): void {
-    this.termios.set(iTermios);
-    this._writeColumn = 0;
-  }
-
-  get termios(): Termios {
-    return this._termios;
-  }
-
   utf8ArrayToString(chars: Int8Array): string {
     if (this._utf8Decoder === undefined) {
       this._utf8Decoder = new TextDecoder('utf8');
@@ -66,8 +60,9 @@ export abstract class WorkerIO implements IWorkerIO {
 
   protected _maybeEchoToOutput(chars: number[]): void {
     const NL = 10; // Linefeed \n
-    const echo = (this.termios.c_lflag & LocalFlag.ECHO) > 0;
-    const echoNL = (this.termios.c_lflag & LocalFlag.ECHONL) > 0;
+    const termiosFlags = this.termios.get();
+    const echo = (termiosFlags.c_lflag & Termios.LocalFlag.ECHO) > 0;
+    const echoNL = (termiosFlags.c_lflag & Termios.LocalFlag.ECHONL) > 0;
     if (!echo && !echoNL) {
       return;
     }
@@ -96,13 +91,14 @@ export abstract class WorkerIO implements IWorkerIO {
   protected _processReadChars(chars: number[]): number[] {
     const NL = 10; // Linefeed \n
     const CR = 13; // Carriage return \r
+    const termiosFlags = this.termios.get();
 
     const ret: number[] = [];
     for (const char of chars) {
       switch (char) {
         case CR:
-          if ((this.termios.c_iflag & InputFlag.IGNCR) === 0) {
-            if ((this.termios.c_iflag & InputFlag.ICRNL) > 0) {
+          if ((termiosFlags.c_iflag & Termios.InputFlag.IGNCR) === 0) {
+            if ((termiosFlags.c_iflag & Termios.InputFlag.ICRNL) > 0) {
               ret.push(NL);
             } else {
               ret.push(CR);
@@ -110,7 +106,7 @@ export abstract class WorkerIO implements IWorkerIO {
           }
           break;
         case NL:
-          if ((this.termios.c_iflag & InputFlag.INLCR) > 0) {
+          if ((termiosFlags.c_iflag & Termios.InputFlag.INLCR) > 0) {
             ret.push(CR);
           } else {
             ret.push(NL);
@@ -127,8 +123,9 @@ export abstract class WorkerIO implements IWorkerIO {
   protected _processWriteChars(chars: Int8Array | number[]): number[] {
     const NL = 10; // Linefeed \n
     const CR = 13; // Carriage return \r
+    const termiosFlags = this.termios.get();
+    const { c_oflag } = termiosFlags;
 
-    const { c_oflag } = this.termios;
     let inEscape = false;
     let startEscape = 0;
     const ret: number[] = [];
@@ -142,11 +139,11 @@ export abstract class WorkerIO implements IWorkerIO {
 
       switch (char) {
         case NL:
-          if (this._writeColumn === 0 && (c_oflag & OutputFlag.ONOCR) > 0) {
+          if (this._writeColumn === 0 && (c_oflag & Termios.OutputFlag.ONOCR) > 0) {
             break;
           }
           this._writeColumn = 0;
-          if ((c_oflag & OutputFlag.ONLCR) > 0) {
+          if ((c_oflag & Termios.OutputFlag.ONLCR) > 0) {
             ret.push(CR, NL);
           } else {
             ret.push(NL);
@@ -192,9 +189,8 @@ export abstract class WorkerIO implements IWorkerIO {
 
   private _available?: PromiseDelegate<void>;
   protected _enabled: boolean = false;
-  private _termios = new Termios();
-  protected _writeColumn = 0;
   private _utf8Decoder?: TextDecoder;
+  protected _writeColumn = 0;
 
   protected _readBuffer: number[] = [];
 }

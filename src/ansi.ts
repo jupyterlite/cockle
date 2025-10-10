@@ -9,6 +9,9 @@ function clamp(n: number): number {
 }
 
 export const ansi = {
+  enableAlternativeBuffer: ESC + '?1049h',
+  disableAlternativeBuffer: ESC + '?1049l',
+
   cursorUp: (count = 1) => (count > 0 ? ESC + count + 'A' : ''),
   cursorDown: (count = 1) => (count > 0 ? ESC + count + 'B' : ''),
   cursorRight: (count = 1) => (count > 0 ? ESC + count + 'C' : ''),

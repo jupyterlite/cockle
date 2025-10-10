@@ -1,4 +1,4 @@
-import { delay, OutputFlag, ShellManager, Termios } from '@jupyterlite/cockle';
+import { delay, ShellManager, Termios } from '@jupyterlite/cockle';
 import { externalCommand } from './external_command';
 import { externalRun, externalTabComplete } from './external_command_tab';
 import { terminalInput } from './input_setup';
@@ -14,7 +14,6 @@ async function setup() {
   ];
 
   const cockle = {
-    OutputFlag,
     Termios,
     delay,
     externalCommands,

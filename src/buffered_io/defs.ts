@@ -1,6 +1,5 @@
 import type { IDisposable } from '@lumino/disposable';
 import { IOutputCallback } from '../callback';
-import { ITermios, Termios } from '../termios';
 
 export interface IMainIO extends IDisposable {
   disable(): Promise<void>;
@@ -19,8 +18,6 @@ export interface IWorkerIO {
   read(maxChars: number | null): number[];
   // timeoutMs of 0 means no timeout, wait forever.
   readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]>;
-  setTermios(iTermios: ITermios): void;
-  get termios(): Termios;
   utf8ArrayToString(chars: Int8Array): string;
   write(text: string | Int8Array | number[]): void;
 }

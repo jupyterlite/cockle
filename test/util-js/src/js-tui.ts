@@ -1,0 +1,49 @@
+import type { IJavaScriptRunContext } from '@jupyterlite/cockle';
+import { ansi, ExitCode, Termios } from '@jupyterlite/cockle';
+
+export async function run(context: IJavaScriptRunContext): Promise<number> {
+  const { name, stdin, stdout, termios } = context;
+
+  if (!stdout.supportsAnsiEscapes()) {
+    context.stderr.write(`${name} aborting, stdout is not a tty`);
+    return ExitCode.GENERAL_ERROR;
+  }
+
+  // Disable canonical mode (buffered I/O) and echo from stdin to stdout.
+  const oldTermios = termios.get();
+  let newTermios = Termios.cloneFlags(oldTermios);
+  newTermios.c_lflag &= (~Termios.LocalFlag.ICANON & ~Termios.LocalFlag.ECHO);
+  termios.set(newTermios);
+
+  stdout.write(ansi.enableAlternativeBuffer);
+
+  let useColor = true;
+  let text = '';
+
+  while (true) {
+    await render(context, useColor, text);
+
+    const input = await stdin.readAsync(null)
+    if (input.length < 1 || input[0] === '\x04') {
+      break;
+    }
+    text += input;
+    useColor = !useColor;
+  }
+
+  stdout.write(ansi.disableAlternativeBuffer);
+  // Restore original termios settings.
+  termios.set(oldTermios);
+
+  return ExitCode.SUCCESS;
+}
+
+async function render(context: IJavaScriptRunContext, useColor: boolean, text: string) {
+  const { stdout } = context;
+  stdout.write(ansi.eraseScreen);
+  stdout.write(ansi.cursorHome);
+
+  const prefix = useColor ? ansi.styleBrightBlue: '';
+  const suffix = useColor ? ansi.styleReset : '';
+  stdout.write(prefix + "Hello: " + text + suffix);
+}

@@ -14,12 +14,12 @@ test.describe('termios', () => {
 
           let cmdText = 'check_termios';
           if (flag !== 'default') {
-            const { OutputFlag, Termios } = globalThis.cockle;
-            const termios = new Termios();
+            const { Termios } = globalThis.cockle;
+            const termios = new Termios.Flags();
             const oflag =
               flag === 'enabled'
-                ? termios.c_oflag | OutputFlag.ONLCR
-                : termios.c_oflag & ~OutputFlag.ONLCR;
+                ? termios.c_oflag | Termios.OutputFlag.ONLCR
+                : termios.c_oflag & ~Termios.OutputFlag.ONLCR;
             cmdText += ` --oflag ${oflag}`;
           }
           const cmd = shell.inputLine(cmdText);
