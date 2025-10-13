@@ -93,10 +93,10 @@ export abstract class BaseShellWorker implements IShellWorker {
       }
       await this._workerIO?.enable();
     } else {
-      await this._workerIO?.disable();
       if (this._enableBufferedStdinCallback) {
         await this._enableBufferedStdinCallback(false);
       }
+      await this._workerIO?.disable();
     }
   }
 
