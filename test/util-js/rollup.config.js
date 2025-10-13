@@ -1,7 +1,7 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
 
-const inputs = ['js-tab.ts', 'js-test.ts']
+const inputs = ['js-tab.ts', 'js-test.ts', 'js-tui.ts']
 
 const config = [];
 inputs.forEach((x) => {

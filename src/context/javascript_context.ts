@@ -1,6 +1,7 @@
 import { Environment } from '../environment';
 import { IFileSystem } from '../file_system';
 import { IJavaScriptInput, IOutput } from '../io';
+import { Termios } from '../termios';
 
 /**
  * Mininal context used to run imported JavaScript commands.
@@ -14,6 +15,7 @@ export interface IJavaScriptRunContext {
   stdin: IJavaScriptInput;
   stdout: IOutput;
   stderr: IOutput;
+  termios: Termios.ITermios;
 }
 
 /**

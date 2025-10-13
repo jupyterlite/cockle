@@ -7,7 +7,8 @@
     "util-js": {
       "modules": {
         "js-tab": {},
-        "js-test": {}
+        "js-test": {},
+        "js-tui": {}
       },
       "local_directory": "../test/util-js/lib",
       "wasm": false

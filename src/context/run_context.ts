@@ -7,6 +7,7 @@ import { Environment } from '../environment';
 import { IFileSystem } from '../file_system';
 import { History } from '../history';
 import { IInput, IOutput } from '../io';
+import { Termios } from '../termios';
 
 /**
  * Full context used to run builtin and WebAssembly commands.
@@ -24,6 +25,7 @@ export interface IRunContext {
   stdin: IInput;
   stdout: IOutput;
   stderr: IOutput;
+  termios: Termios.ITermios;
   workerIO: IWorkerIO;
   commandModuleCache: CommandModuleCache;
   stdinContext: IStdinContext;

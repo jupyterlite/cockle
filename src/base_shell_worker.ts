@@ -3,6 +3,7 @@ import { StdinContext } from './context';
 import { IShellWorker } from './defs_internal';
 import { IDriveFSOptions } from './drive_fs';
 import { ShellImpl } from './shell_impl';
+import { Termios } from './termios';
 
 /**
  * Abstract base class for web worker running ShellImpl.
@@ -22,9 +23,12 @@ export abstract class BaseShellWorker implements IShellWorker {
     // Create IWorkerIO equivalents of the IMainIO used in the main UI thread (BaseShell class).
     this._stdinContext = new StdinContext(setMainIOCallback, this._setWorkerIO.bind(this));
 
+    const termios = new Termios.Termios();
+
     if (options.supportsServiceWorker) {
       this._serviceWorkerWorkerIO = new ServiceWorkerWorkerIO(
         outputCallback,
+        termios,
         options.baseUrl ?? '',
         options.browsingContextId ?? '',
         options.shellId
@@ -33,8 +37,9 @@ export abstract class BaseShellWorker implements IShellWorker {
     }
     if (options.sharedArrayBuffer !== undefined) {
       this._sharedArrayBufferWorkerIO = new SharedArrayBufferWorkerIO(
-        options.sharedArrayBuffer,
-        outputCallback
+        outputCallback,
+        termios,
+        options.sharedArrayBuffer
       );
       this._stdinContext.setAvailable('sab', true);
     }
@@ -72,7 +77,8 @@ export abstract class BaseShellWorker implements IShellWorker {
       initDriveFSCallback: this.initDriveFS.bind(this),
       terminateCallback: this._terminateCallback.bind(this),
       workerIO: this._workerIO,
-      stdinContext: this._stdinContext
+      stdinContext: this._stdinContext,
+      termios
     });
     await this._shellImpl.initialize();
   }
@@ -87,10 +93,10 @@ export abstract class BaseShellWorker implements IShellWorker {
       }
       await this._workerIO?.enable();
     } else {
-      await this._workerIO?.disable();
       if (this._enableBufferedStdinCallback) {
         await this._enableBufferedStdinCallback(false);
       }
+      await this._workerIO?.disable();
     }
   }
 

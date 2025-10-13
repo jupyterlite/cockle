@@ -11,6 +11,7 @@ import {
 } from './callback_internal';
 import { IStdinContext } from './context';
 import { IShell } from './defs';
+import { Termios } from './termios';
 
 /**
  * Representation of external commmand in the web worker, real external commands exists in the
@@ -92,5 +93,6 @@ export namespace IShellImpl {
     terminateCallback: IShellWorker.IProxyTerminateCallback;
     workerIO: IWorkerIO;
     stdinContext: IStdinContext;
+    termios: Termios.Termios;
   }
 }

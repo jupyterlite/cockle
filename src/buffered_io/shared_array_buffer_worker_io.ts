@@ -2,10 +2,15 @@ import { IWorkerIO } from './defs';
 import { SAB } from './sab';
 import { WorkerIO } from './worker_io';
 import { IOutputCallback } from '../callback';
+import { Termios } from '../termios';
 
 export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
-  constructor(sharedArrayBuffer: SharedArrayBuffer, outputCallback: IOutputCallback) {
-    super(outputCallback);
+  constructor(
+    outputCallback: IOutputCallback,
+    termios: Termios.Termios,
+    sharedArrayBuffer: SharedArrayBuffer
+  ) {
+    super(outputCallback, termios);
     const readLength = SAB.maxChars + 3;
     this._sharedArrayBuffer = sharedArrayBuffer;
     this._intArray = new Int32Array(this._sharedArrayBuffer, 0, readLength);

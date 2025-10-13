@@ -45,6 +45,8 @@ export class ShellImpl implements IShellWorker {
       mountpoint: options.mountpoint ?? '/drive'
     };
 
+    const workerIO = options.workerIO;
+
     // Content within which commands are run.
     this._runContext = {
       name: '',
@@ -62,7 +64,8 @@ export class ShellImpl implements IShellWorker {
       stdin: this._dummyInput,
       stdout: this._dummyOutput,
       stderr: this._dummyOutput,
-      workerIO: options.workerIO,
+      termios: options.termios,
+      workerIO,
       commandModuleCache: this._commandModuleLoader.cache,
       stdinContext: options.stdinContext
     };
@@ -437,8 +440,8 @@ export class ShellImpl implements IShellWorker {
     this._themeStatus = ThemeStatus.Changing;
 
     await this._options.enableBufferedStdinCallback(true);
-    const { workerIO } = this._options;
-    workerIO.termios.setRawMode();
+    const { termios, workerIO } = this._options;
+    termios.setRawMode();
 
     // Operating System Command to get terminal background color.
     // https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Operating-System-Commands
@@ -449,7 +452,7 @@ export class ShellImpl implements IShellWorker {
     const chars = await workerIO.readAsync(null, timeoutMs);
     console.debug('Cockle theme change', Date.now() - start, 'ms');
 
-    workerIO.termios.setDefaultShell();
+    termios.setDefaultShell();
     await this._options.enableBufferedStdinCallback(false);
 
     this._themeStatus = ThemeStatus.Ok;
@@ -608,7 +611,7 @@ export class ShellImpl implements IShellWorker {
     }
 
     await this._options.enableBufferedStdinCallback(true);
-    this._runContext.workerIO.termios.setDefaultWasm();
+    this._options.termios.setDefaultWasm();
 
     this.history.add(cmdText);
 
@@ -649,7 +652,7 @@ export class ShellImpl implements IShellWorker {
       exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
       this._setExitCode(exitCode);
 
-      this._runContext.workerIO.termios.setDefaultShell();
+      this._options.termios.setDefaultShell();
       await this._options.enableBufferedStdinCallback(false);
     }
   }

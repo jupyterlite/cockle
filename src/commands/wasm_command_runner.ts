@@ -5,7 +5,7 @@ import { IRunContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import { IOutput } from '../io';
-import { ITermios } from '../termios';
+import { Termios } from '../termios';
 import type { MainModule } from '../types/wasm_module';
 import { joinURL } from '../utils';
 
@@ -19,7 +19,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
   }
 
   async run(context: IRunContext): Promise<number> {
-    const { name, args, workerIO, fileSystem, stdin, stdout, stderr } = context;
+    const { name, args, workerIO, fileSystem, stdin, stdout, stderr, termios } = context;
     const { wasmBaseUrl } = this.module.loader;
 
     const start = Date.now();
@@ -28,15 +28,13 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       throw new FindCommandError(name);
     }
 
-    function getTermios(tty: any): ITermios {
-      const { termios } = workerIO;
-      termios.log('Termios get');
-      return termios.clone();
+    function getTermios(tty: any): Termios.IFlags {
+      return termios.get();
     }
 
-    function setTermios(tty: any, optional_actions: any, data: ITermios) {
+    function setTermios(tty: any, optional_actions: any, data: Termios.IFlags) {
       // TODO: handle optional_actions
-      workerIO.setTermios(data);
+      termios.set(data);
       return 0;
     }
 
