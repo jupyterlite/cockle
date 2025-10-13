@@ -4,7 +4,7 @@ import { IWorkerIO } from './buffered_io';
 import { ICommandLine } from './command_line';
 import { CommandModule, CommandModuleLoader, CommandPackage, CommandRegistry } from './commands';
 import { IRunContext } from './context';
-import { IShellImpl, IShellWorker } from './defs_internal';
+import { IShellImpl } from './defs_internal';
 import { Environment } from './environment';
 import { ErrorExitCode, FindCommandError, GeneralError } from './error_exit_code';
 import { ExitCode } from './exit_code';
@@ -28,7 +28,7 @@ import { joinURL } from './utils';
 /**
  * Shell implementation.
  */
-export class ShellImpl implements IShellWorker {
+export class ShellImpl implements IShellImpl {
   constructor(options: IShellImpl.IOptions) {
     this._options = options;
     this._commandModuleLoader = new CommandModuleLoader(

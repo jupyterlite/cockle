@@ -1,7 +1,6 @@
-import type { IJavaScriptRunContext } from '@jupyterlite/cockle';
-import { ansi, ExitCode, Termios } from '@jupyterlite/cockle';
+import { ansi, ExitCode, IExternalRunContext, Termios } from '@jupyterlite/cockle';
 
-export async function run(context: IJavaScriptRunContext): Promise<number> {
+export async function externalTuiCommand(context: IExternalRunContext): Promise<number> {
   const { name, stdin, stdout, termios } = context;
 
   if (!stdout.supportsAnsiEscapes()) {
@@ -41,12 +40,12 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
   return ExitCode.SUCCESS;
 }
 
-async function render(context: IJavaScriptRunContext, useColor: boolean, text: string) {
+async function render(context: IExternalRunContext, useColor: boolean, text: string) {
   const { stdout } = context;
   stdout.write(ansi.eraseScreen);
   stdout.write(ansi.cursorHome);
 
-  const prefix = useColor ? ansi.styleBrightBlue : '';
+  const prefix = useColor ? ansi.styleBrightPurple : '';
   const suffix = useColor ? ansi.styleReset : '';
-  stdout.write(prefix + 'Hello: ' + text + suffix);
+  stdout.write(prefix + 'external-tui: ' + text + suffix);
 }

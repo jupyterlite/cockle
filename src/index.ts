@@ -17,6 +17,7 @@ export { IDriveFSOptions } from './drive_fs';
 export * from './exit_code';
 export { IExternalCommand, IExternalTabCompleteResult } from './external_command';
 export { ExternalEnvironment } from './external_environment';
+export { ExternalTermios } from './external_termios';
 export { IFileSystem } from './file_system';
 export * from './io';
 export * from './layout';

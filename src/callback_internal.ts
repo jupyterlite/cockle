@@ -1,4 +1,5 @@
 import { IExternalTabCompleteResult } from './external_command';
+import { Termios } from './termios';
 
 /**
  * Internal callbacks used by a shell impl/worker to call functions in the shell.
@@ -14,7 +15,8 @@ export interface ICallExternalCommand {
     environment: { [key: string]: string },
     stdinIsTerminal: boolean,
     stdoutSupportsAnsiEscapes: boolean,
-    stderrSupportsAnsiEscapes: boolean
+    stderrSupportsAnsiEscapes: boolean,
+    termiosFlags: Termios.IFlags
   ): Promise<{ exitCode: number; environmentChanges?: { [key: string]: string | undefined } }>;
 }
 

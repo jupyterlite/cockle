@@ -4,6 +4,7 @@ import { Terminal } from '@xterm/xterm';
 import { IDemo } from './defs';
 import { externalCommand } from './external_command';
 import { externalRun, externalTabComplete } from './external_command_tab';
+import { externalTuiCommand } from './external_command_tui';
 
 export class Demo {
   constructor(options: IDemo.IOptions) {
@@ -32,7 +33,8 @@ export class Demo {
       shellManager,
       externalCommands: [
         { name: 'external-cmd', command: externalCommand },
-        { name: 'external-tab', command: externalRun, tabComplete: externalTabComplete }
+        { name: 'external-tab', command: externalRun, tabComplete: externalTabComplete },
+        { name: 'external-tui', command: externalTuiCommand }
       ],
       initialDirectories: ['dir'],
       initialFiles: {

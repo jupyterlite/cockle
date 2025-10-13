@@ -42,7 +42,8 @@ export class ExternalCommandRunner implements ICommandRunner {
       Object.fromEntries(environment),
       stdin.isTerminal(),
       stdout.supportsAnsiEscapes(),
-      stderr.supportsAnsiEscapes()
+      stderr.supportsAnsiEscapes(),
+      context.termios.get()
     );
 
     if (environmentChanges !== undefined) {
