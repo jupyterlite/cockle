@@ -5,13 +5,43 @@ var Module = (function (exports) {
      * ANSI escape sequences.
      */
     const ESC = '\x1B[';
+    function clamp(n) {
+        return Math.min(Math.max(Math.round(n), 0), 255);
+    }
     const ansi = {
         enableAlternativeBuffer: ESC + '?1049h',
         disableAlternativeBuffer: ESC + '?1049l',
+        cursorUp: (count = 1) => (count > 0 ? ESC + count + 'A' : ''),
+        cursorDown: (count = 1) => (count > 0 ? ESC + count + 'B' : ''),
+        cursorRight: (count = 1) => (count > 0 ? ESC + count + 'C' : ''),
+        cursorLeft: (count = 1) => (count > 0 ? ESC + count + 'D' : ''),
         cursorHome: ESC + 'H',
         eraseScreen: ESC + '2J',
+        eraseSavedLines: ESC + '3J',
+        eraseEndLine: ESC + 'K',
+        eraseStartLine: ESC + '1K',
+        styleRGB: (r, g, b, foreground = true) => {
+            const code = foreground ? '38' : '48';
+            return `${ESC}${code};2;${clamp(r)};${clamp(g)};${clamp(b)}m`;
+        },
         styleReset: ESC + '1;0m',
-        styleBrightBlue: ESC + '0;94m'};
+        styleBoldRed: ESC + '1;31m',
+        styleBoldGreen: ESC + '1;32m',
+        styleBrightRed: ESC + '0;91m',
+        styleBrightGreen: ESC + '0;92m',
+        styleBrightYellow: ESC + '0;93m',
+        styleBrightBlue: ESC + '0;94m',
+        styleBrightPurple: ESC + '0;95m',
+        styleBrightCyan: ESC + '0;96m',
+        styleRed: ESC + '0;31m',
+        styleGreen: ESC + '0;32m',
+        styleYellow: ESC + '0;33m',
+        styleBlue: ESC + '0;34m',
+        stylePurple: ESC + '0;35m',
+        styleCyan: ESC + '0;36m',
+        showCursor: ESC + '?25h',
+        hideCursor: ESC + '?25l'
+    };
 
     const ExitCode = {
         SUCCESS: 0,
@@ -212,25 +242,28 @@ var Module = (function (exports) {
         const oldTermios = termios.get();
         const newTermios = Termios.cloneFlags(oldTermios);
         newTermios.c_lflag &= ~Termios.LocalFlag.ICANON & ~Termios.LocalFlag.ECHO;
-        termios.set(newTermios);
-        stdout.write(ansi.enableAlternativeBuffer);
-        let useColor = true;
-        let text = '';
-        let stop = false;
-        while (!stop) {
-            await render(context, useColor, text);
-            const input = await stdin.readAsync(null);
-            if (input.length < 1 || input[0] === '\x04') {
-                stop = true;
-            }
-            else {
-                text += input;
-                useColor = !useColor;
+        try {
+            termios.set(newTermios);
+            stdout.write(ansi.enableAlternativeBuffer);
+            let useColor = true;
+            let text = '';
+            let stop = false;
+            while (!stop) {
+                await render(context, useColor, text);
+                const input = await stdin.readAsync(null);
+                if (input.length < 1 || input[0] === '\x04') {
+                    stop = true;
+                }
+                else {
+                    text += input;
+                    useColor = !useColor;
+                }
             }
         }
-        stdout.write(ansi.disableAlternativeBuffer);
-        // Restore original termios settings.
-        termios.set(oldTermios);
+        finally {
+            stdout.write(ansi.disableAlternativeBuffer);
+            termios.set(oldTermios);
+        }
         return ExitCode.SUCCESS;
     }
     async function render(context, useColor, text) {

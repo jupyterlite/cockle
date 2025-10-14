@@ -39,15 +39,6 @@ interface IOptionsCommon {
 }
 
 interface IShellCommon {
-  exitCode: number;
-  externalInput(maxChars: number | null): Promise<string>;
-  externalOutput(text: string, isStderr: boolean): void;
-  input(char: string): Promise<void>;
-  setSize(rows: number, columns: number): Promise<void>;
-  start(): Promise<void>;
-}
-
-export interface IShellWorker extends IShellCommon {
   // Handle any lazy initialization activities.
   // Callback proxies need to be separate arguments, they cannot be in IOptions.
   initialize(
@@ -61,8 +52,20 @@ export interface IShellWorker extends IShellCommon {
     terminateCallback: IShellWorker.IProxyTerminateCallback
   ): void;
 
+  exitCode: number;
+  externalInput(maxChars: number | null): Promise<string>;
+  externalOutput(text: string, isStderr: boolean): void;
+  input(char: string): Promise<void>;
+  setSize(rows: number, columns: number): Promise<void>;
+  start(): Promise<void>;
   themeChange(isDark?: boolean): Promise<void>;
 }
+
+export interface IShellWorker extends IShellCommon {
+  externalSetTermios(flags: Termios.IFlags): void;
+}
+
+export interface IShellImpl extends IShellCommon {}
 
 export namespace IShellWorker {
   export interface IProxyCallExternalCommand extends ICallExternalCommand, ProxyMarked {}

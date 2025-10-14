@@ -16,7 +16,9 @@ import { DownloadTracker } from './download_tracker';
 import { ExitCode } from './exit_code';
 import { IExternalCommand, IExternalTabCompleteResult } from './external_command';
 import { ExternalEnvironment } from './external_environment';
+import { ExternalTermios } from './external_termios';
 import { ExternalInput, ExternalOutput } from './io';
+import { Termios } from './termios';
 
 /**
  * Abstract base class for Shell that external libraries use.
@@ -51,7 +53,8 @@ export abstract class BaseShell implements IShell {
     environment: { [key: string]: string },
     stdinIsTerminal: boolean,
     stdoutSupportsAnsiEscapes: boolean,
-    stderrSupportsAnsiEscapes: boolean
+    stderrSupportsAnsiEscapes: boolean,
+    termiosFlags: Termios.IFlags
   ): Promise<{ exitCode: number; environmentChanges?: { [key: string]: string | undefined } }> {
     const commandOptions = this._externalCommands.get(name);
     if (commandOptions === undefined) {
@@ -73,6 +76,7 @@ export abstract class BaseShell implements IShell {
       text => this._remote!.externalOutput(text, true),
       stderrSupportsAnsiEscapes
     );
+    const termios = new ExternalTermios(termiosFlags, this._remote!.externalSetTermios);
 
     const context: IExternalRunContext = {
       name,
@@ -81,7 +85,8 @@ export abstract class BaseShell implements IShell {
       shellId: this._shellId,
       stdin,
       stdout,
-      stderr
+      stderr,
+      termios
     };
     const exitCode = await command(context);
     return { exitCode, environmentChanges: externalEnvironment.changed };

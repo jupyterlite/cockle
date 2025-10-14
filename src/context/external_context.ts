@@ -5,6 +5,7 @@
 
 import { ExternalEnvironment } from '../external_environment';
 import { IExternalInput, IExternalOutput } from '../io';
+import { Termios } from '../termios';
 
 /**
  * Context used to run an external command.
@@ -17,6 +18,7 @@ export interface IExternalRunContext {
   stdin: IExternalInput;
   stdout: IExternalOutput;
   stderr: IExternalOutput;
+  termios: Termios.ITermios;
 }
 
 /**

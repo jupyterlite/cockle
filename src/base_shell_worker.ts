@@ -23,12 +23,10 @@ export abstract class BaseShellWorker implements IShellWorker {
     // Create IWorkerIO equivalents of the IMainIO used in the main UI thread (BaseShell class).
     this._stdinContext = new StdinContext(setMainIOCallback, this._setWorkerIO.bind(this));
 
-    const termios = new Termios.Termios();
-
     if (options.supportsServiceWorker) {
       this._serviceWorkerWorkerIO = new ServiceWorkerWorkerIO(
         outputCallback,
-        termios,
+        this._termios,
         options.baseUrl ?? '',
         options.browsingContextId ?? '',
         options.shellId
@@ -38,7 +36,7 @@ export abstract class BaseShellWorker implements IShellWorker {
     if (options.sharedArrayBuffer !== undefined) {
       this._sharedArrayBufferWorkerIO = new SharedArrayBufferWorkerIO(
         outputCallback,
-        termios,
+        this._termios,
         options.sharedArrayBuffer
       );
       this._stdinContext.setAvailable('sab', true);
@@ -78,7 +76,7 @@ export abstract class BaseShellWorker implements IShellWorker {
       terminateCallback: this._terminateCallback.bind(this),
       workerIO: this._workerIO,
       stdinContext: this._stdinContext,
-      termios
+      termios: this._termios
     });
     await this._shellImpl.initialize();
   }
@@ -110,6 +108,10 @@ export abstract class BaseShellWorker implements IShellWorker {
 
   externalOutput(text: string, isStderr: boolean): void {
     this._shellImpl?.externalOutput(text, isStderr);
+  }
+
+  externalSetTermios(flags: Termios.IFlags): void {
+    this._termios.set(flags);
   }
 
   /**
@@ -164,5 +166,6 @@ export abstract class BaseShellWorker implements IShellWorker {
   private _stdinContext?: StdinContext;
   private _serviceWorkerWorkerIO?: ServiceWorkerWorkerIO;
   private _sharedArrayBufferWorkerIO?: SharedArrayBufferWorkerIO;
+  private _termios = new Termios.Termios();
   private _workerIO?: IWorkerIO;
 }
