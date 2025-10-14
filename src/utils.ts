@@ -2,6 +2,10 @@ export async function delay(milliseconds: number = 10): Promise<void> {
   await new Promise(f => setTimeout(f, milliseconds));
 }
 
+export function isLetter(char: number): boolean {
+  return (char >= 65 && char <= 90) || (char >= 97 && char <= 122);
+}
+
 /**
  * Join a baseUrl to a path, ensuring there is exactly one slash at the join position.
  */

@@ -1,7 +1,9 @@
 import { PromiseDelegate } from '@lumino/coreutils';
 import { IWorkerIO } from './defs';
+import { ansi } from '../ansi';
 import { IOutputCallback } from '../callback';
 import { Termios } from '../termios';
+import { isLetter } from '../utils';
 
 export abstract class WorkerIO implements IWorkerIO {
   constructor(
@@ -126,15 +128,42 @@ export abstract class WorkerIO implements IWorkerIO {
     const termiosFlags = this.termios.get();
     const { c_oflag } = termiosFlags;
 
-    let inEscape = false;
-    let startEscape = 0;
     const ret: number[] = [];
     for (let i = 0; i < chars.length; i++) {
       const char = chars[i];
 
-      if (!inEscape && char === 27) {
-        inEscape = true;
-        startEscape = i;
+      if (char === 27) {
+        // Escape character '\x1B'
+        const nextChar = chars.at(i + 1);
+        if (nextChar === 91 || nextChar === 93) {
+          // '[' or ']'
+          // ANSI escape sequence.
+          const isOpenBracket = chars[i + 1] === 91;
+          const slice = chars.slice(i + 2);
+          const index = slice.findIndex(ch =>
+            isOpenBracket ? isLetter(ch) : ch === 7 || ch === 27
+          );
+
+          if (index > 0) {
+            const sequence = chars.slice(i, i + index + 3);
+            ret.push(...sequence);
+            i += index + 2;
+
+            const asString = String.fromCharCode(...sequence);
+            if (!this._inAlternativeBuffer && asString === ansi.enableAlternativeBuffer) {
+              this._inAlternativeBuffer = true;
+            } else if (this._inAlternativeBuffer && asString === ansi.disableAlternativeBuffer) {
+              this._inAlternativeBuffer = false;
+            }
+            continue; // No further processing of escape sequence.
+          }
+        } else if (nextChar !== undefined) {
+          // ESC followed by single char.
+          const sequence = chars.slice(i, i + 2);
+          ret.push(...sequence);
+          i += 1;
+          continue; // No further processing of escape sequence.
+        }
       }
 
       switch (char) {
@@ -150,20 +179,11 @@ export abstract class WorkerIO implements IWorkerIO {
           }
           break;
         default:
-          if (!inEscape && char >= 32) {
+          if (!this._inAlternativeBuffer && char >= 32) {
             this._writeColumn++;
           }
           ret.push(char);
           break;
-      }
-
-      if (
-        inEscape &&
-        i > startEscape + 2 &&
-        ((char >= 65 && char <= 90) || (char >= 97 && char <= 122))
-      ) {
-        // Crude identification of end of ansi escape sequence.
-        inEscape = false;
       }
     }
 
@@ -189,6 +209,7 @@ export abstract class WorkerIO implements IWorkerIO {
 
   private _available?: PromiseDelegate<void>;
   protected _enabled: boolean = false;
+  private _inAlternativeBuffer = false;
   private _utf8Decoder?: TextDecoder;
   protected _writeColumn = 0;
 
