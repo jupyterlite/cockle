@@ -4,6 +4,7 @@ import { ICommandLine } from './command_line';
 import { IRunContext } from './context';
 import { CommandNode, parse } from './parse';
 import { ITabCompleteResult, PathType } from './tab_complete';
+import { Termios } from './termios';
 import { RuntimeExports } from './types/wasm_module';
 import { longestStartsWith, toColumns } from './utils';
 
@@ -13,7 +14,8 @@ export class TabCompleter {
    */
   constructor(
     readonly context: IRunContext,
-    readonly enableBufferedStdinCallback: IEnableBufferedStdinCallback
+    readonly enableBufferedStdinCallback: IEnableBufferedStdinCallback,
+    readonly termios: Termios.Termios
   ) {}
 
   async complete(commandLine: ICommandLine): Promise<ICommandLine> {
@@ -205,7 +207,7 @@ export class TabCompleter {
     workerIO.write('\n' + prompt);
 
     await this.enableBufferedStdinCallback(true);
-    workerIO.termios.setRawMode();
+    this.termios.setRawMode();
 
     let ret = false;
     let haveResponse = false;
@@ -224,7 +226,7 @@ export class TabCompleter {
       }
     }
 
-    workerIO.termios.setDefaultShell();
+    this.termios.setDefaultShell();
     await this.enableBufferedStdinCallback(false);
     return ret;
   }
