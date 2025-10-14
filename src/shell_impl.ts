@@ -83,7 +83,8 @@ export class ShellImpl implements IShellImpl {
 
     this._tabCompleter = new TabCompleter(
       this._runContext,
-      this._options.enableBufferedStdinCallback
+      this._options.enableBufferedStdinCallback,
+      this._options.termios
     );
   }
 
