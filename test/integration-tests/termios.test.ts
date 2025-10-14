@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { shellInputsSimple, test } from './utils';
+import { test } from './utils';
 
 const flagOptions = [{ flag: 'default' }, { flag: 'enabled' }, { flag: 'disabled' }];
 
@@ -14,7 +14,7 @@ test.describe('termios', () => {
 
           let cmdText = 'check_termios';
           if (flag !== 'default') {
-            const termios = (new Termios.Termios).get();
+            const termios = new Termios.Termios().get();
             const oflag =
               flag === 'enabled'
                 ? termios.c_oflag | Termios.OutputFlag.ONLCR
@@ -52,7 +52,7 @@ test.describe('termios', () => {
           const { EOT } = keys;
 
           let cmdText = 'check_termios';
-          let oflag = (new Termios.Termios).get().c_oflag;
+          let oflag = new Termios.Termios().get().c_oflag;
           if (want) {
             oflag |= Termios.OutputFlag.ONOCR;
           } else {
@@ -71,9 +71,9 @@ test.describe('termios', () => {
 
         if (want) {
           // Note only a single \n after the 'a', others in output column 0 are suppressed.
-          expect(output).toEqual('check_termios --oflag 21\r\na\r\na\r\n')
+          expect(output).toEqual('check_termios --oflag 21\r\na\r\na\r\n');
         } else {
-          expect(output).toEqual('check_termios --oflag 5\r\na\r\na\r\n\r\n\r\n')
+          expect(output).toEqual('check_termios --oflag 5\r\na\r\na\r\n\r\n\r\n');
         }
       });
     });
