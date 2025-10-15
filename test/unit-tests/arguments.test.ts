@@ -51,8 +51,12 @@ describe('CommandArguments', () => {
   });
 
   test('should validate length of argument short and long names', () => {
-    expect(() => new BooleanArgument('ff', '', 'some flag')).toThrow(/Argument shortName ff must be a string of length 1/);
-    expect(() => new BooleanArgument('', 'f', 'some flag')).toThrow(/Argument longName f must be a string of length greater than 1/);
+    expect(() => new BooleanArgument('ff', '', 'some flag')).toThrow(
+      /Argument shortName ff must be a string of length 1/
+    );
+    expect(() => new BooleanArgument('', 'f', 'some flag')).toThrow(
+      /Argument longName f must be a string of length greater than 1/
+    );
   });
 
   test('should throw error on unrecognised argument', () => {
