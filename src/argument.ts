@@ -11,7 +11,14 @@ export abstract class Argument {
     readonly shortName: string,
     readonly longName: string,
     readonly description: string
-  ) {}
+  ) {
+    if (!(shortName.length === 0 || shortName.length === 1)) {
+      throw new GeneralError(`Argument shortName ${shortName} must be a string of length 1`);
+    }
+    if (!(longName.length === 0 || longName.length > 1)) {
+      throw new GeneralError(`Argument longName ${longName} must be a string of length greater than 1`);
+    }
+  }
 
   get isSet(): boolean {
     return this._isSet;
