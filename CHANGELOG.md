@@ -2,6 +2,33 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.2.0
+
+Cockle 1.2.0 is a minor release adding support for changing termios settings in external commands (running in main UI thread) and javascript commands (running in cockle WebWorker), some improvements to tab completion using `Argument` classes, and a new environment variables `COCKLE_DARK_MODE` so that external/javascript commands can use colours based on whether the attached terminal is in dark or light mode.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.1.0...2795c7e57ecd59220bf6065f63efcfea6c138a75))
+
+### Enhancements made
+
+- Support changing termios settings in TypeScript external commands [#254](https://github.com/jupyterlite/cockle/pull/254) ([@ianthomas23](https://github.com/ianthomas23))
+- Support changing termios settings in JavaScript commands [#253](https://github.com/jupyterlite/cockle/pull/253) ([@ianthomas23](https://github.com/ianthomas23))
+- Allow `PositionalArguments` to return `pathType` as well as possible matches [#252](https://github.com/jupyterlite/cockle/pull/252) ([@ianthomas23](https://github.com/ianthomas23))
+- Add `shellId` to all run and tab complete `Context` classes [#251](https://github.com/jupyterlite/cockle/pull/251) ([@ianthomas23](https://github.com/ianthomas23))
+- Use env var COCKLE_DARK_MODE to record if dark mode or not [#250](https://github.com/jupyterlite/cockle/pull/250) ([@ianthomas23](https://github.com/ianthomas23))
+- Account for previous flags in tab completion possibles callback [#249](https://github.com/jupyterlite/cockle/pull/249) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Correct handling of multiple adjacent newlines [#255](https://github.com/jupyterlite/cockle/pull/255) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-09-25&to=2025-10-15&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-09-25..2025-10-15&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 1.1.0
 
 Cockle 1.1.0 adds enhancements to the `cockle-config` command, help for built-in commands, and tab completion, and fixes a bug in filename tab completion. `git2cpp` has been added to the test suite and demo deployment as it has started to become useful; further enhancements to `git2cpp` will follow.
@@ -25,8 +52,6 @@ Cockle 1.1.0 adds enhancements to the `cockle-config` command, help for built-in
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-08-11&to=2025-09-25&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-08-11..2025-09-25&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 1.0.0
 
