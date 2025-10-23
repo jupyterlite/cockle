@@ -93,4 +93,18 @@ test.describe('cockle-config command', () => {
     expect(output4).toMatch(/│ js-tab\s+│ js-tab\s+│/);
     expect(output4).not.toMatch(/│ ls\s+│ coreutils\s+│/);
   });
+
+  test('should combine boolean shortName arguments in command subcommand', async ({ page }) => {
+    let output0 = await shellLineSimple(page, 'cockle-config command -j -b');
+    output0 = output0.slice(output0.indexOf('\r\n'))
+
+    let output1 = await shellLineSimple(page, 'cockle-config command -b -j');
+    expect(output1.slice(output1.indexOf('\r\n'))).toEqual(output0);
+
+    let output2 = await shellLineSimple(page, 'cockle-config command -bj');
+    expect(output2.slice(output2.indexOf('\r\n'))).toEqual(output0);
+
+    let output3 = await shellLineSimple(page, 'cockle-config command -jb');
+    expect(output3.slice(output3.indexOf('\r\n'))).toEqual(output0);
+  });
 });
