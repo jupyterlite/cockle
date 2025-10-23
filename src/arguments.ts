@@ -190,7 +190,7 @@ export abstract class CommandArguments {
           if (arg.startsWith('--')) {
             return { possibles: longNamePossibles };
           } else if (arg.length > 2) {
-            return {}
+            return {};
           } else {
             const shortNamePossibles = Object.keys(this._shortNameArguments).map(x => '-' + x);
             return { possibles: shortNamePossibles.concat(longNamePossibles) };

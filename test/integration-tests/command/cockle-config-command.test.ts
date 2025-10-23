@@ -96,15 +96,15 @@ test.describe('cockle-config command', () => {
 
   test('should combine boolean shortName arguments in command subcommand', async ({ page }) => {
     let output0 = await shellLineSimple(page, 'cockle-config command -j -b');
-    output0 = output0.slice(output0.indexOf('\r\n'))
+    output0 = output0.slice(output0.indexOf('\r\n'));
 
-    let output1 = await shellLineSimple(page, 'cockle-config command -b -j');
+    const output1 = await shellLineSimple(page, 'cockle-config command -b -j');
     expect(output1.slice(output1.indexOf('\r\n'))).toEqual(output0);
 
-    let output2 = await shellLineSimple(page, 'cockle-config command -bj');
+    const output2 = await shellLineSimple(page, 'cockle-config command -bj');
     expect(output2.slice(output2.indexOf('\r\n'))).toEqual(output0);
 
-    let output3 = await shellLineSimple(page, 'cockle-config command -jb');
+    const output3 = await shellLineSimple(page, 'cockle-config command -jb');
     expect(output3.slice(output3.indexOf('\r\n'))).toEqual(output0);
   });
 });
