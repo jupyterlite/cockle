@@ -127,8 +127,11 @@ export abstract class CommandArguments {
           const longName = arg.slice(2);
           args = this._findByLongName(longName).parse(arg, args);
         } else {
-          const shortName = arg.slice(1);
-          args = this._findByShortName(shortName).parse(arg, args);
+          // One or more shortName arguments.
+          for (const shortName of arg.slice(1).split('')) {
+            args = this._findByShortName(shortName).parse(arg, args);
+            // if consumed further args, what to do?
+          }
         }
       } else if (positional !== undefined) {
         inPositional = true;
@@ -186,6 +189,8 @@ export abstract class CommandArguments {
           const longNamePossibles = Object.keys(this._longNameArguments).map(x => '--' + x);
           if (arg.startsWith('--')) {
             return { possibles: longNamePossibles };
+          } else if (arg.length > 2) {
+            return {};
           } else {
             const shortNamePossibles = Object.keys(this._shortNameArguments).map(x => '-' + x);
             return { possibles: shortNamePossibles.concat(longNamePossibles) };
@@ -196,8 +201,11 @@ export abstract class CommandArguments {
             const longName = arg.slice(2);
             args = this._findByLongName(longName).parse(arg, args);
           } else {
-            const shortName = arg.slice(1);
-            args = this._findByShortName(shortName).parse(arg, args);
+            // One or more shortName arguments.
+            for (const shortName of arg.slice(1).split('')) {
+              args = this._findByShortName(shortName).parse(arg, args);
+              // if consumed further args, what to do?
+            }
           }
         }
       } else if (positional !== undefined) {

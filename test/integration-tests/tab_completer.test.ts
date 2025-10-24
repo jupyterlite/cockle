@@ -383,6 +383,28 @@ test.describe('TabCompleter', () => {
       expect(output4).not.toMatch('js-tab');
       expect(output4).toMatch('sha256sum');
     });
+
+    ['-b -j', '-j -b', '-bj', '-jb'].forEach(args => {
+      test(`should filter on combined boolean shortName arguments ${args}`, async ({ page }) => {
+        const baseCmdLine = `cockle-config command ${args} `;
+
+        const output0 = await shellInputsSimple(page, (baseCmdLine + 'j\t').split(''));
+        expect(output0).toEqual(baseCmdLine + 'js-t');
+
+        const output1 = await shellInputsSimple(page, (baseCmdLine + 'js-t\t').split(''));
+        expect(output1).toMatch(baseCmdLine + 'js-t\r\njs-tab   js-test\r\n');
+
+        const output2 = await shellInputsSimple(page, (baseCmdLine + 'h\t').split(''));
+        // Note does not match `head` which is a wasm command.
+        expect(output2).toMatch(baseCmdLine + 'h\r\nhelp     history\r\n');
+
+        const output3 = await shellInputsSimple(page, (baseCmdLine + 'hi\t').split(''));
+        expect(output3).toEqual(baseCmdLine + 'history ');
+
+        const output4 = await shellInputsSimple(page, (baseCmdLine + 'b\t').split(''));
+        expect(output4).toEqual(baseCmdLine + 'b');
+      });
+    });
   });
 
   test.describe('tab complete last command of multiple commands', () => {
