@@ -52,8 +52,8 @@ export abstract class BaseShell implements IShell {
     args: string[],
     environment: { [key: string]: string },
     stdinIsTerminal: boolean,
-    stdoutSupportsAnsiEscapes: boolean,
-    stderrSupportsAnsiEscapes: boolean,
+    stdoutIsTerminal: boolean,
+    stderrIsTerminal: boolean,
     termiosFlags: Termios.IFlags
   ): Promise<{ exitCode: number; environmentChanges?: { [key: string]: string | undefined } }> {
     const commandOptions = this._externalCommands.get(name);
@@ -70,11 +70,11 @@ export abstract class BaseShell implements IShell {
     );
     const stdout = new ExternalOutput(
       text => this._remote!.externalOutput(text, false),
-      stdoutSupportsAnsiEscapes
+      stdoutIsTerminal
     );
     const stderr = new ExternalOutput(
       text => this._remote!.externalOutput(text, true),
-      stderrSupportsAnsiEscapes
+      stderrIsTerminal
     );
     const termios = new ExternalTermios(termiosFlags, this._remote!.externalSetTermios);
 

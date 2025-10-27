@@ -9,20 +9,24 @@ export interface IExternalOutput extends IOutput {}
 export class ExternalOutput implements IExternalOutput {
   constructor(
     readonly callback: (text: string) => void,
-    supportsAnsiEscapes: boolean
+    isTerminal: boolean
   ) {
-    this._supportsAnsiEscapes = supportsAnsiEscapes;
+    this._isTerminal = isTerminal;
   }
 
   flush(): void {}
 
+  isTerminal(): boolean {
+    return this._isTerminal;
+  }
+
   supportsAnsiEscapes(): boolean {
-    return this._supportsAnsiEscapes;
+    return this._isTerminal;
   }
 
   write(text: string): void {
     this.callback(text);
   }
 
-  private _supportsAnsiEscapes: boolean;
+  private _isTerminal: boolean;
 }

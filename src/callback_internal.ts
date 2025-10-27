@@ -14,8 +14,8 @@ export interface ICallExternalCommand {
     args: string[],
     environment: { [key: string]: string },
     stdinIsTerminal: boolean,
-    stdoutSupportsAnsiEscapes: boolean,
-    stderrSupportsAnsiEscapes: boolean,
+    stdoutIsTerminal: boolean,
+    stderrIsTerminal: boolean,
     termiosFlags: Termios.IFlags
   ): Promise<{ exitCode: number; environmentChanges?: { [key: string]: string | undefined } }>;
 }

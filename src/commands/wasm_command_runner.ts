@@ -124,7 +124,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
 
           if (Object.prototype.hasOwnProperty.call(module, 'ENV')) {
             // Copy environment variables into command.
-            context.environment.copyIntoCommand(module.ENV!, stdout.supportsAnsiEscapes());
+            context.environment.copyIntoCommand(module.ENV!, stdout.isTerminal());
           }
 
           if (Object.prototype.hasOwnProperty.call(module, 'TTY')) {
@@ -173,7 +173,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
    * With this, WebAssembly commands can use `isatty` correctly.
    */
   private _outputHandler(output: IOutput): ((x: number) => void) | undefined {
-    if (!output.supportsAnsiEscapes()) {
+    if (!output.isTerminal()) {
       return (x: number) => output.write(String.fromCharCode(x));
     }
     return undefined;

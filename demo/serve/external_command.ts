@@ -23,7 +23,7 @@ export async function externalCommand(context: IExternalRunContext): Promise<num
 
   if (args.includes('color')) {
     const { stdout } = context;
-    const useColor = stdout.supportsAnsiEscapes();
+    const useColor = stdout.isTerminal();
     for (let j = 0; j < 16; j++) {
       let line = '';
       for (let i = 0; i < 32; i++) {

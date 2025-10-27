@@ -3,7 +3,7 @@ import { ansi, ExitCode, IExternalRunContext, Termios } from '@jupyterlite/cockl
 export async function externalTuiCommand(context: IExternalRunContext): Promise<number> {
   const { name, stdin, stdout, termios } = context;
 
-  if (!stdout.supportsAnsiEscapes()) {
+  if (!stdout.isTerminal()) {
     context.stderr.write(`${name} aborting, stdout is not a tty`);
     return ExitCode.GENERAL_ERROR;
   }

@@ -40,6 +40,12 @@ var Module = (function (exports) {
             this.shortName = shortName;
             this.longName = longName;
             this.description = description;
+            if (!(shortName.length === 0 || shortName.length === 1)) {
+                throw new GeneralError(`Argument shortName ${shortName} must be a string of length 1`);
+            }
+            if (!(longName.length === 0 || longName.length > 1)) {
+                throw new GeneralError(`Argument longName ${longName} must be a string of length greater than 1`);
+            }
         }
         get isSet() {
             return this._isSet;
@@ -418,8 +424,11 @@ var Module = (function (exports) {
                         args = this._findByLongName(longName).parse(arg, args);
                     }
                     else {
-                        const shortName = arg.slice(1);
-                        args = this._findByShortName(shortName).parse(arg, args);
+                        // One or more shortName arguments.
+                        for (const shortName of arg.slice(1).split('')) {
+                            args = this._findByShortName(shortName).parse(arg, args);
+                            // if consumed further args, what to do?
+                        }
                     }
                 }
                 else if (positional !== undefined) {
@@ -473,6 +482,9 @@ var Module = (function (exports) {
                         if (arg.startsWith('--')) {
                             return { possibles: longNamePossibles };
                         }
+                        else if (arg.length > 2) {
+                            return {};
+                        }
                         else {
                             const shortNamePossibles = Object.keys(this._shortNameArguments).map(x => '-' + x);
                             return { possibles: shortNamePossibles.concat(longNamePossibles) };
@@ -485,8 +497,11 @@ var Module = (function (exports) {
                             args = this._findByLongName(longName).parse(arg, args);
                         }
                         else {
-                            const shortName = arg.slice(1);
-                            args = this._findByShortName(shortName).parse(arg, args);
+                            // One or more shortName arguments.
+                            for (const shortName of arg.slice(1).split('')) {
+                                args = this._findByShortName(shortName).parse(arg, args);
+                                // if consumed further args, what to do?
+                            }
                         }
                     }
                 }
@@ -554,7 +569,7 @@ var Module = (function (exports) {
         }
         if (args.includes('color')) {
             const { stdout } = context;
-            const useColor = stdout.supportsAnsiEscapes();
+            const useColor = stdout.isTerminal();
             for (let j = 0; j < 16; j++) {
                 let line = '';
                 for (let i = 0; i < 32; i++) {

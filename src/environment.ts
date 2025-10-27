@@ -32,9 +32,9 @@ export class Environment extends Map<string, string> {
   /**
    * Copy environment variables into a command before it is run.
    */
-  copyIntoCommand(target: { [key: string]: string }, supportsAnsiEscapes: boolean) {
+  copyIntoCommand(target: { [key: string]: string }, isTerminal: boolean) {
     for (const [key, value] of this.entries()) {
-      if (supportsAnsiEscapes || key !== 'TERM') {
+      if (isTerminal || key !== 'TERM') {
         target[key] = value;
       }
     }

@@ -4,7 +4,7 @@ import { ansi, ExitCode, Termios } from '@jupyterlite/cockle';
 export async function run(context: IJavaScriptRunContext): Promise<number> {
   const { name, stdin, stdout, termios } = context;
 
-  if (!stdout.supportsAnsiEscapes()) {
+  if (!stdout.isTerminal()) {
     context.stderr.write(`${name} aborting, stdout is not a tty`);
     return ExitCode.GENERAL_ERROR;
   }
