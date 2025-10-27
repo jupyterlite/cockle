@@ -29,7 +29,7 @@ export class ClearCommand extends BuiltinCommand {
       return ExitCode.SUCCESS;
     }
 
-    if (stdout.supportsAnsiEscapes()) {
+    if (stdout.isTerminal()) {
       stdout.write(ansi.eraseScreen + ansi.eraseSavedLines + ansi.cursorHome);
     }
     return ExitCode.SUCCESS;

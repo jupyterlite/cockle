@@ -2,21 +2,25 @@ import { IOutput } from '../../src/io';
 import { BorderTable, Table } from '../../src/layout';
 
 class MockOutput implements IOutput {
-  constructor(supportsAnsiEscapes: boolean = false) {
-    this._supportsAnsiEscapes = supportsAnsiEscapes;
+  constructor(isTerminal: boolean = false) {
+    this._isTerminal = isTerminal;
   }
 
   flush() {}
 
+  isTerminal(): boolean {
+    return this._isTerminal;
+  }
+
   supportsAnsiEscapes(): boolean {
-    return this._supportsAnsiEscapes;
+    return this._isTerminal;
   }
 
   write(text: string): void {
     this.text.push(text);
   }
 
-  private _supportsAnsiEscapes;
+  private _isTerminal;
   text: string[] = [];
 }
 

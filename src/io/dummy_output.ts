@@ -7,6 +7,10 @@ import { IOutput } from './output';
 export class DummyOutput implements IOutput {
   flush(): void {}
 
+  isTerminal(): boolean {
+    return false;
+  }
+
   supportsAnsiEscapes(): boolean {
     return false;
   }

@@ -83,7 +83,7 @@ export class CockleConfigCommand extends BuiltinCommand {
     }
 
     const colorByColumn =
-      stdout.supportsAnsiEscapes() && environment.color
+      stdout.isTerminal() && environment.color
         ? BorderTable.defaultColorByColumn()
         : undefined;
 

@@ -11,6 +11,10 @@ export abstract class BufferedOutput implements IOutput {
 
   abstract flush(): void;
 
+  isTerminal(): boolean {
+    return false;
+  }
+
   supportsAnsiEscapes(): boolean {
     return false;
   }

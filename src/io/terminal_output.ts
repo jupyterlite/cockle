@@ -13,6 +13,10 @@ export class TerminalOutput implements IOutput {
 
   flush(): void {}
 
+  isTerminal(): boolean {
+    return true;
+  }
+
   supportsAnsiEscapes(): boolean {
     return true;
   }

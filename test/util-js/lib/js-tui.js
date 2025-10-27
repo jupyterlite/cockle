@@ -234,7 +234,7 @@ var Module = (function (exports) {
 
     async function run(context) {
         const { name, stdin, stdout, termios } = context;
-        if (!stdout.supportsAnsiEscapes()) {
+        if (!stdout.isTerminal()) {
             context.stderr.write(`${name} aborting, stdout is not a tty`);
             return ExitCode.GENERAL_ERROR;
         }
