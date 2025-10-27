@@ -1,5 +1,4 @@
 export interface IOutput {
-
   flush(): void;
 
   isTerminal(): boolean;

@@ -83,9 +83,7 @@ export class CockleConfigCommand extends BuiltinCommand {
     }
 
     const colorByColumn =
-      stdout.isTerminal() && environment.color
-        ? BorderTable.defaultColorByColumn()
-        : undefined;
+      stdout.isTerminal() && environment.color ? BorderTable.defaultColorByColumn() : undefined;
 
     const showAll = context.args.length === 0;
     if (showAll || args.version.isSet) {
