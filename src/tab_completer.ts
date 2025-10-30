@@ -1,13 +1,22 @@
 import { ansi } from './ansi';
+import { IEnableBufferedStdinCallback } from './callback_internal';
 import { ICommandLine } from './command_line';
 import { IRunContext } from './context';
 import { CommandNode, parse } from './parse';
 import { ITabCompleteResult, PathType } from './tab_complete';
+import { Termios } from './termios';
 import { RuntimeExports } from './types/wasm_module';
 import { longestStartsWith, toColumns } from './utils';
 
 export class TabCompleter {
-  constructor(readonly context: IRunContext) {}
+  /**
+   * Note: do not use context's stdin/stdout/stderr, use context.workerIO instead.
+   */
+  constructor(
+    readonly context: IRunContext,
+    readonly enableBufferedStdinCallback: IEnableBufferedStdinCallback,
+    readonly termios: Termios.Termios
+  ) {}
 
   async complete(commandLine: ICommandLine): Promise<ICommandLine> {
     const text = commandLine.text.slice(0, commandLine.cursorIndex);
@@ -164,11 +173,62 @@ export class TabCompleter {
     suffix: string,
     possibles: string[]
   ): Promise<void> {
-    // Write all the possibles in columns across the terminal, and re-output the same command line.
+    // Write all the possibles completions in columns across the terminal, and re-output the same
+    // command line. Maybe prompt user first, if there are many possible completions.
     const { environment } = this.context;
     const lines = toColumns(possibles, environment.getNumber('COLUMNS') ?? 0);
-    const output = `\n${lines.join('\n')}\n${environment.getPrompt()}${commandLine.text}`;
-    this.context.workerIO.write(output + ansi.cursorLeft(suffix.length));
+
+    // Display immediately or prompt user to confirm first?
+    const termLines = environment.getNumber('LINES');
+    let showPossibles = true;
+    if (possibles.length > 99 || (termLines !== null && lines.length > termLines - 2)) {
+      showPossibles = await this._yesNoPrompt(
+        `Display all ${possibles.length} possibilities (y or n)?`
+      );
+    }
+
+    if (showPossibles) {
+      this.context.workerIO.write('\n' + lines.join('\n') + '\n');
+    } else {
+      this.context.workerIO.write('\n');
+    }
+
+    // Rewrite prompt and command line.
+    this.context.workerIO.write(
+      environment.getPrompt() + commandLine.text + ansi.cursorLeft(suffix.length)
+    );
+  }
+
+  /**
+   * Prompt the user
+   */
+  private async _yesNoPrompt(prompt: string): Promise<boolean> {
+    const { workerIO } = this.context;
+    workerIO.write('\n' + prompt);
+
+    await this.enableBufferedStdinCallback(true);
+    this.termios.setRawMode();
+
+    let ret = false;
+    let haveResponse = false;
+    while (!haveResponse) {
+      const read = await workerIO.readAsync(1, 0);
+      if (read.length > 0) {
+        const char = read[0];
+        if (char === 121) {
+          // 121='y'
+          ret = true;
+          haveResponse = true;
+        } else if ([3, 4, 110].includes(char)) {
+          // 3=ETX, 4=EOT, 110='n'
+          haveResponse = true;
+        }
+      }
+    }
+
+    this.termios.setDefaultShell();
+    await this.enableBufferedStdinCallback(false);
+    return ret;
   }
 }
 
