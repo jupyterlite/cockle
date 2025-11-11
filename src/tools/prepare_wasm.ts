@@ -161,10 +161,10 @@ if (fs.existsSync(envPath)) {
 if (wasmPackageInfo === undefined) {
   // Add version restrictions to wasmPackageNames.
   const packageNamesAndVersions = wasmPackageNames.map(name => {
-    let version: string | undefined = cockleConfig.packages[name]['version']?.trim();
+    const version: string | undefined = cockleConfig.packages[name]['version']?.trim();
     if (version) {
       const modifier = version.match(/^\d+/) ? '=' : '';
-      return `"${name}${modifier}${version}"`;  // In quotes to avoid problems with whitespace.
+      return `"${name}${modifier}${version}"`; // In quotes to avoid problems with whitespace.
     }
     return name;
   });
@@ -172,7 +172,7 @@ if (wasmPackageInfo === undefined) {
   const suffix = `--platform=${PLATFORM} ${getChannelsString()}`;
   console.log(`Creating new environment in ${envPath}`);
   const createEnvCmd = `${micromambaCmd} create -p ${envPath} -y ${packageNamesAndVersions.join(' ')} ${suffix}`;
-  console.log(createEnvCmd)
+  console.log(createEnvCmd);
   console.log(execSync(createEnvCmd).toString());
 
   // Obtain wasm package info such as version and build string.
