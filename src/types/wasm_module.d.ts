@@ -24,13 +24,18 @@ declare namespace RuntimeExports {
     export { ErrnoError };
     export { FSStream };
     export { FSNode };
-    export function lookupPath(path: any, opts?: {}): {
-      path: string;
-      node?: undefined;
-    } | {
-      path: string;
-      node: any;
-    };
+    export function lookupPath(
+      path: any,
+      opts?: {}
+    ):
+      | {
+          path: string;
+          node?: undefined;
+        }
+      | {
+          path: string;
+          node: any;
+        };
     export function getPath(node: any): any;
     export function hashName(parentid: any, name: any): number;
     export function hashAddNode(node: any): void;
@@ -121,7 +126,14 @@ declare namespace RuntimeExports {
     export function isClosed(stream: any): boolean;
     export function llseek(stream: any, offset: any, whence: any): any;
     export function read(stream: any, buffer: any, offset: any, length: any, position: any): any;
-    export function write(stream: any, buffer: any, offset: any, length: any, position: any, canOwn: any): any;
+    export function write(
+      stream: any,
+      buffer: any,
+      offset: any,
+      length: any,
+      position: any,
+      canOwn: any
+    ): any;
     export function mmap(stream: any, length: any, position: any, prot: any, flags: any): any;
     export function msync(stream: any, buffer: any, offset: any, length: any, mmapFlags: any): any;
     export function ioctl(stream: any, cmd: any, arg: any): any;
@@ -137,7 +149,10 @@ declare namespace RuntimeExports {
     export function init(input: any, output: any, error: any): void;
     export function quit(): void;
     export function findObject(path: any, dontResolveLastLink: any): any;
-    export function analyzePath(path: any, dontResolveLastLink: any): {
+    export function analyzePath(
+      path: any,
+      dontResolveLastLink: any
+    ): {
       isRoot: boolean;
       exists: boolean;
       error: number;
@@ -149,11 +164,30 @@ declare namespace RuntimeExports {
       parentObject: any;
     };
     export function createPath(parent: any, path: any, canRead: any, canWrite: any): any;
-    export function createFile(parent: any, name: any, properties: any, canRead: any, canWrite: any): any;
-    export function createDataFile(parent: any, name: any, data: any, canRead: any, canWrite: any, canOwn: any): void;
+    export function createFile(
+      parent: any,
+      name: any,
+      properties: any,
+      canRead: any,
+      canWrite: any
+    ): any;
+    export function createDataFile(
+      parent: any,
+      name: any,
+      data: any,
+      canRead: any,
+      canWrite: any,
+      canOwn: any
+    ): void;
     export function createDevice(parent: any, name: any, input: any, output: any): any;
     export function forceLoadFile(obj: any): boolean;
-    export function createLazyFile(parent: any, name: any, url: any, canRead: any, canWrite: any): any;
+    export function createLazyFile(
+      parent: any,
+      name: any,
+      url: any,
+      canRead: any,
+      canWrite: any
+    ): any;
     export function absolutePath(): void;
     export function createFolder(): void;
     export function createLink(): void;
@@ -334,7 +368,18 @@ declare namespace RuntimeExports {
   }
   function FS_createPath(...args: any[]): any;
   function FS_createDataFile(...args: any[]): any;
-  function FS_createPreloadedFile(parent: any, name: any, url: any, canRead: any, canWrite: any, onload: any, onerror: any, dontCreateFile: any, canOwn: any, preFinish: any): void;
+  function FS_createPreloadedFile(
+    parent: any,
+    name: any,
+    url: any,
+    canRead: any,
+    canWrite: any,
+    onload: any,
+    onerror: any,
+    dontCreateFile: any,
+    canOwn: any,
+    preFinish: any
+  ): void;
   function FS_unlink(...args: any[]): any;
   function FS_createLazyFile(...args: any[]): any;
   function FS_createDevice(...args: any[]): any;
@@ -390,4 +435,4 @@ interface WasmModule {
 
 export type MainModule = WasmModule & typeof RuntimeExports;
 export type IWebAssemblyModule = typeof MainModuleFactory;
-export default function MainModuleFactory (options?: unknown): Promise<MainModule>;
+export default function MainModuleFactory(options?: unknown): Promise<MainModule>;
