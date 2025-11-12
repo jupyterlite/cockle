@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <emscripten/version.h>
 
 int argsInclude(int argc, char** argv, char* check) {
   for (int i = 1; i < argc; i++) {
@@ -87,6 +88,10 @@ int main(int argc, char** argv) {
     }
     fprintf(fp, "File written by wasm-test");
     fclose(fp);
+  }
+
+  if (argsInclude(argc, argv, "emscripten")) {
+    printf("Emscripten version: %d.%d.%d\n", __EMSCRIPTEN_major__, __EMSCRIPTEN_minor__, __EMSCRIPTEN_tiny__);
   }
 
   if (argsInclude(argc, argv, "exitCode")) {
