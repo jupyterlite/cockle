@@ -1,6 +1,6 @@
 /**
  * This file is created by the emscripten build process of the cockle_fs package so that it
- * matches the version of emscripten (3.1.73) that is used for WebAssembly command packages.
+ * matches the version of emscripten (4.0.9) that is used for WebAssembly command packages.
  *
  * Modified to add extra optional functions and properties to WasmModule such as ENV and
  * getEnvStrings, and to add IWebAssemblyModule.
@@ -18,16 +18,16 @@ declare namespace RuntimeExports {
     export let currentPath: string;
     export let initialized: boolean;
     export let ignorePermissions: boolean;
-    export { ErrnoError };
     export let filesystems: any;
     export let syncFSRequests: number;
     export let readFiles: {};
+    export { ErrnoError };
     export { FSStream };
     export { FSNode };
-    export function lookupPath(
-      path: any,
-      opts?: {}
-    ): {
+    export function lookupPath(path: any, opts?: {}): {
+      path: string;
+      node?: undefined;
+    } | {
       path: string;
       node: any;
     };
@@ -53,6 +53,7 @@ declare namespace RuntimeExports {
     export function mayCreate(dir: any, name: any): any;
     export function mayDelete(dir: any, name: any, isdir: any): any;
     export function mayOpen(node: any, flags: any): any;
+    export function checkOpExists(op: any, err: any): any;
     export let MAX_OPEN_FDS: number;
     export function nextfd(): number;
     export function getStreamChecked(fd: any): any;
@@ -60,6 +61,7 @@ declare namespace RuntimeExports {
     export function createStream(stream: any, fd?: number): any;
     export function closeStream(fd: any): void;
     export function dupStream(origStream: any, fd?: number): any;
+    export function doSetAttr(stream: any, node: any, attr: any): void;
     export namespace chrdev_stream_ops {
       function open(stream: any): void;
       function llseek(): never;
@@ -75,7 +77,9 @@ declare namespace RuntimeExports {
     export function unmount(mountpoint: any): void;
     export function lookup(parent: any, name: any): any;
     export function mknod(path: any, mode: any, dev: any): any;
-    export function statfs(path: any): {
+    export function statfs(path: any): any;
+    export function statfsStream(stream: any): any;
+    export function statfsNode(node: any): {
       bsize: number;
       frsize: number;
       blocks: number;
@@ -98,13 +102,17 @@ declare namespace RuntimeExports {
     export function unlink(path: any): void;
     export function readlink(path: any): any;
     export function stat(path: any, dontFollow: any): any;
+    export function fstat(fd: any): any;
     export function lstat(path: any): any;
+    export function doChmod(stream: any, node: any, mode: any, dontFollow: any): void;
     export function chmod(path: any, mode: any, dontFollow: any): void;
     export function lchmod(path: any, mode: any): void;
     export function fchmod(fd: any, mode: any): void;
+    export function doChown(stream: any, node: any, dontFollow: any): void;
     export function chown(path: any, uid: any, gid: any, dontFollow: any): void;
     export function lchown(path: any, uid: any, gid: any): void;
     export function fchown(fd: any, uid: any, gid: any): void;
+    export function doTruncate(stream: any, node: any, len: any): void;
     export function truncate(path: any, len: any): void;
     export function ftruncate(fd: any, len: any): void;
     export function utime(path: any, atime: any, mtime: any): void;
@@ -113,15 +121,7 @@ declare namespace RuntimeExports {
     export function isClosed(stream: any): boolean;
     export function llseek(stream: any, offset: any, whence: any): any;
     export function read(stream: any, buffer: any, offset: any, length: any, position: any): any;
-    export function write(
-      stream: any,
-      buffer: any,
-      offset: any,
-      length: any,
-      position: any,
-      canOwn: any
-    ): any;
-    export function allocate(stream: any, offset: any, length: any): void;
+    export function write(stream: any, buffer: any, offset: any, length: any, position: any, canOwn: any): any;
     export function mmap(stream: any, length: any, position: any, prot: any, flags: any): any;
     export function msync(stream: any, buffer: any, offset: any, length: any, mmapFlags: any): any;
     export function ioctl(stream: any, cmd: any, arg: any): any;
@@ -137,10 +137,7 @@ declare namespace RuntimeExports {
     export function init(input: any, output: any, error: any): void;
     export function quit(): void;
     export function findObject(path: any, dontResolveLastLink: any): any;
-    export function analyzePath(
-      path: any,
-      dontResolveLastLink: any
-    ): {
+    export function analyzePath(path: any, dontResolveLastLink: any): {
       isRoot: boolean;
       exists: boolean;
       error: number;
@@ -152,30 +149,11 @@ declare namespace RuntimeExports {
       parentObject: any;
     };
     export function createPath(parent: any, path: any, canRead: any, canWrite: any): any;
-    export function createFile(
-      parent: any,
-      name: any,
-      properties: any,
-      canRead: any,
-      canWrite: any
-    ): any;
-    export function createDataFile(
-      parent: any,
-      name: any,
-      data: any,
-      canRead: any,
-      canWrite: any,
-      canOwn: any
-    ): void;
+    export function createFile(parent: any, name: any, properties: any, canRead: any, canWrite: any): any;
+    export function createDataFile(parent: any, name: any, data: any, canRead: any, canWrite: any, canOwn: any): void;
     export function createDevice(parent: any, name: any, input: any, output: any): any;
     export function forceLoadFile(obj: any): boolean;
-    export function createLazyFile(
-      parent: any,
-      name: any,
-      url: any,
-      canRead: any,
-      canWrite: any
-    ): any;
+    export function createLazyFile(parent: any, name: any, url: any, canRead: any, canWrite: any): any;
     export function absolutePath(): void;
     export function createFolder(): void;
     export function createLink(): void;
@@ -354,41 +332,12 @@ declare namespace RuntimeExports {
       function llseek(stream: any, offset: any, whence: any): any;
     }
   }
-  let HEAPF32: any;
-  let HEAPF64: any;
-  let HEAP_DATA_VIEW: any;
-  let HEAP8: any;
-  let HEAPU8: any;
-  let HEAP16: any;
-  let HEAPU16: any;
-  let HEAP32: any;
-  let HEAPU32: any;
-  let HEAP64: any;
-  let HEAPU64: any;
-  let FS_createPath: any;
-  function FS_createDataFile(
-    parent: any,
-    name: any,
-    fileData: any,
-    canRead: any,
-    canWrite: any,
-    canOwn: any
-  ): void;
-  function FS_createPreloadedFile(
-    parent: any,
-    name: any,
-    url: any,
-    canRead: any,
-    canWrite: any,
-    onload: any,
-    onerror: any,
-    dontCreateFile: any,
-    canOwn: any,
-    preFinish: any
-  ): void;
-  function FS_unlink(path: any): any;
-  let FS_createLazyFile: any;
-  let FS_createDevice: any;
+  function FS_createPath(...args: any[]): any;
+  function FS_createDataFile(...args: any[]): any;
+  function FS_createPreloadedFile(parent: any, name: any, url: any, canRead: any, canWrite: any, onload: any, onerror: any, dontCreateFile: any, canOwn: any, preFinish: any): void;
+  function FS_unlink(...args: any[]): any;
+  function FS_createLazyFile(...args: any[]): any;
+  function FS_createDevice(...args: any[]): any;
   let addRunDependency: any;
   let removeRunDependency: any;
 }
@@ -423,6 +372,9 @@ declare class FSNode {
   name: any;
   mode: any;
   rdev: any;
+  atime: number;
+  mtime: number;
+  ctime: number;
   set read(val: boolean);
   get read(): boolean;
   set write(val: boolean);
@@ -437,6 +389,5 @@ interface WasmModule {
 }
 
 export type MainModule = WasmModule & typeof RuntimeExports;
-export default function MainModuleFactory(options?: unknown): Promise<MainModule>;
-
 export type IWebAssemblyModule = typeof MainModuleFactory;
+export default function MainModuleFactory (options?: unknown): Promise<MainModule>;
