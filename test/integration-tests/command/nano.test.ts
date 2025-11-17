@@ -15,7 +15,7 @@ test.describe('nano command', () => {
         const { shell } = await shellSetupEmpty({ color: true, stdinOption });
         const exit = '\x18'; // Ctrl-X
         await Promise.all([shell.inputLine('nano'), terminalInput(shell, [exit])]);
-      });
+      }, stdinOption);
       // If nano does not close, test will timeout.
     });
 
@@ -48,7 +48,7 @@ test.describe('nano command', () => {
         output.clear();
         await shell.inputLine('cat out');
         return output.text;
-      });
+      }, stdinOption);
       expect(output).toMatch(/^cat out\r\nabc\r\ndef\r\n/);
     });
 
@@ -66,7 +66,7 @@ test.describe('nano command', () => {
         output.clear();
         await shell.inputLine('cat file2');
         return output.text;
-      });
+      }, stdinOption);
       expect(output).toMatch(/^cat file2\r\nSome other file\r\nNew\r\nSecond line\r\n/);
     });
 
@@ -86,7 +86,7 @@ test.describe('nano command', () => {
         output.clear();
         await shell.inputLine('cat file2');
         return output.text;
-      });
+      }, stdinOption);
       expect(output).toMatch(/^cat file2\r\nSecond line\r\n/);
     });
   });

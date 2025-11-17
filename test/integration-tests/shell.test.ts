@@ -370,7 +370,7 @@ test.describe('Shell', () => {
             globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', EOT])
           ]);
           return output.text;
-        });
+        }, stdinOption);
         expect(output).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
       });
 
@@ -386,7 +386,7 @@ test.describe('Shell', () => {
             globalThis.cockle.terminalInput(shell, ['a', downArrow, 'b', EOT])
           ]);
           return output.text;
-        });
+        }, stdinOption);
         expect(output).toMatch('wc\r\na\x1B[Bb      0       1       5\r\n');
       });
 
@@ -407,7 +407,7 @@ test.describe('Shell', () => {
           ]);
           const ret1 = output.text;
           return [ret0, ret1];
-        });
+        }, stdinOption);
         expect(output[0]).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
         expect(output[1]).toMatch(/^wc\r\nde f {6}0 {7}2 {7}4\r\n/);
       });
@@ -443,7 +443,7 @@ test.describe('Shell', () => {
           output.clear();
           await shell.inputLine('cat out');
           return output.text;
-        });
+        }, stdinOption);
         expect(output).toMatch(/^cat out\r\nabcZz\r\n/);
       });
     });

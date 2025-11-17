@@ -15,7 +15,7 @@ test.describe('vim command', () => {
         const { shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell } = await shellSetupEmpty({ color: true, stdinOption });
         await Promise.all([shell.inputLine('vim'), terminalInput(shell, ['\x1b', ':', 'q', '\r'])]);
-      });
+      }, stdinOption);
     });
 
     test(`should create new file using ${stdinOption}`, async ({ page }) => {
@@ -46,7 +46,7 @@ test.describe('vim command', () => {
         output.clear();
         await shell.inputLine('cat out');
         return output.text;
-      });
+      }, stdinOption);
       expect(output).toMatch(/^cat out\r\nhi QW\r\n/);
     });
 
@@ -61,7 +61,7 @@ test.describe('vim command', () => {
         output.clear();
         await shell.inputLine('cat file2');
         return output.text;
-      });
+      }, stdinOption);
       expect(output).toMatch(/^cat file2\r\nSome other file\r\nNew\r\nSecond line\r\n/);
     });
 
@@ -76,7 +76,7 @@ test.describe('vim command', () => {
         output.clear();
         await shell.inputLine('cat file2');
         return output.text;
-      });
+      }, stdinOption);
       expect(output).toMatch(/^cat file2\r\nSecond line\r\n/);
     });
 
@@ -100,7 +100,7 @@ test.describe('vim command', () => {
         output.clear();
         await shell.inputLine('cat out');
         return output.text;
-      });
+      }, stdinOption);
       expect(output).toMatch(/^cat out\r\naXYbc\r\ndef\r\n/);
     });
   });
