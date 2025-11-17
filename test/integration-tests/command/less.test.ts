@@ -17,7 +17,7 @@ test.describe('less command', () => {
           shell.inputLine('less file2'),
           terminalInput(shell, ['q']) // q key to exit.
         ]);
-      });
+      }, stdinOption);
       // If less does not close, test will timeout.
     });
   });

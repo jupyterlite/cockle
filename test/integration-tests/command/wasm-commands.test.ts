@@ -116,7 +116,7 @@ test.describe('wasm-test', () => {
           globalThis.cockle.terminalInput(shell, ['a', 'B', ' ', 'c', keys.EOT])
         ]);
         return output.text;
-      });
+      }, stdinOption);
       expect(output).toMatch(/^wasm-test stdin\r\naABB {2}cC\r\n/);
     });
   });
