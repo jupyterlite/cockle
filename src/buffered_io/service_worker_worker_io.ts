@@ -21,7 +21,7 @@ export class ServiceWorkerWorkerIO extends WorkerIO implements IWorkerIO {
       throw new Error('ServiceWorkerWorkerIO.poll when disabled');
     }
 
-  timeoutMs = timeoutMs < 0 ? Infinity : timeoutMs;
+    timeoutMs = timeoutMs < 0 ? Infinity : timeoutMs;
     let readable = this._readBuffer.length > 0;
     if (!readable && timeoutMs > 0) {
       const chars = this._utils.getStdin(timeoutMs);
