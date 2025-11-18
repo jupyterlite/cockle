@@ -11,121 +11,57 @@ export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
     sharedArrayBuffer: SharedArrayBuffer
   ) {
     super(outputCallback, termios);
-    const readLength = SAB.maxChars + 3;
+    const readLength = SAB.maxChars + 4;
     this._sharedArrayBuffer = sharedArrayBuffer;
     this._intArray = new Int32Array(this._sharedArrayBuffer, 0, readLength);
   }
 
-  /**
-   * Poll for whether readable (there is input ready to read) and/or writable.
-   * Currently assumes always writable.
-   */
-  poll(timeoutMs: number): number {
-    if (!this._enabled) {
-      throw new Error('SharedArrayBufferWorkerIO.poll when disabled');
+  protected _getStdin(timeoutMs: number): string {
+    if (Atomics.load(this._intArray, SAB.REQUEST_INDEX) !== SAB.NO_REQUEST_VALUE) {
+      console.error('SharedArrayBuffer stdin request already pending');
     }
 
-    // Constants.
-    const POLLIN = 1;
-    const POLLOUT = 4;
+    // Request stdin from main worker.
+    Atomics.store(this._intArray, SAB.REQUEST_INDEX, SAB.REQUEST_VALUE);
+    Atomics.store(this._intArray, SAB.TIMEOUT_INDEX, SAB.encodeTimeout(timeoutMs));
+    Atomics.notify(this._intArray, SAB.REQUEST_INDEX, 1);
 
-    const writable = true;
-
-    if (this._readBuffer.length > 0) {
-      return POLLIN | (writable ? POLLOUT : 0);
+    Atomics.wait(this._intArray, SAB.REQUEST_INDEX, SAB.REQUEST_VALUE);
+    const len = Atomics.load(this._intArray, SAB.LENGTH_INDEX);
+    let ret = '';
+    for (let i = 0; i < len; i++) {
+      ret += String.fromCharCode(Atomics.load(this._intArray, SAB.START_INDEX + i));
     }
-
-    if (timeoutMs < 0) {
-      timeoutMs = Infinity;
-    }
-    const readableCheck = Atomics.wait(this._intArray, SAB.MAIN, this._readCount, timeoutMs);
-    const readable = readableCheck === 'not-equal';
-    return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
+    return ret;
   }
 
-  read(maxChars: number | null): number[] {
-    if (!this._enabled) {
-      throw new Error('SharedArrayBufferWorkerIO.read when disabled');
+  protected async _getStdinAsync(timeoutMs: number): Promise<string> {
+    if (Atomics.load(this._intArray, SAB.REQUEST_INDEX) !== SAB.NO_REQUEST_VALUE) {
+      console.error('SharedArrayBuffer stdin request already pending');
     }
 
-    if (maxChars !== null && maxChars <= 0) {
-      return [];
-    }
-
-    if (this._readBuffer.length > 0) {
-      // If have cached read data just return that.
-      return this._readFromBuffer(maxChars);
-    }
-
-    Atomics.wait(this._intArray, SAB.MAIN, this._readCount);
-
-    return this._postRead(maxChars);
-  }
-
-  async readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]> {
-    if (!this._enabled) {
-      throw new Error('SharedArrayBufferWorkerIO.readAsync when disabled');
-    }
-
-    if (maxChars !== null && maxChars <= 0) {
-      return [];
-    }
-
-    if (this._readBuffer.length > 0) {
-      // If have cached read data just return that.
-      return this._readFromBuffer(maxChars);
-    }
+    // Request stdin from main worker.
+    Atomics.store(this._intArray, SAB.REQUEST_INDEX, SAB.REQUEST_VALUE);
+    Atomics.store(this._intArray, SAB.TIMEOUT_INDEX, SAB.encodeTimeout(timeoutMs));
+    Atomics.notify(this._intArray, SAB.REQUEST_INDEX, 1);
 
     const { async, value } = Atomics.waitAsync(
       this._intArray,
-      SAB.MAIN,
-      this._readCount,
-      timeoutMs > 0 ? timeoutMs : Infinity
+      SAB.REQUEST_INDEX,
+      SAB.REQUEST_VALUE
     );
     if (async) {
       await value;
     }
 
-    return this._postRead(maxChars);
-  }
-
-  private _postRead(maxChars: number | null): number[] {
-    const readCount = Atomics.load(this._intArray, SAB.MAIN);
-    if (readCount === this._readCount) {
-      return [];
-    }
-
-    const read = this._loadFromSharedArrayBuffer();
-    this._readCount++;
-
-    // Notify main worker that chars have been read and new ones can be stored.
-    Atomics.store(this._intArray, SAB.WORKER, this._readCount);
-    Atomics.notify(this._intArray, SAB.WORKER, 1);
-
-    this._readBuffer = this._processReadChars(read);
-    this._maybeEchoToOutput(this._readBuffer);
-    return this._readFromBuffer(maxChars);
-  }
-
-  protected _clear() {
-    this._intArray[SAB.MAIN] = 0;
-    this._intArray[SAB.WORKER] = 0;
-    this._readCount = 0;
-  }
-
-  /**
-   * Load the character from the shared array buffer and return it.
-   */
-  private _loadFromSharedArrayBuffer(): number[] {
-    const len = Atomics.load(this._intArray, SAB.LENGTH);
-    const ret: number[] = [];
+    const len = Atomics.load(this._intArray, SAB.LENGTH_INDEX);
+    let ret = '';
     for (let i = 0; i < len; i++) {
-      ret.push(Atomics.load(this._intArray, SAB.START + i));
+      ret += String.fromCharCode(Atomics.load(this._intArray, SAB.START_INDEX + i));
     }
     return ret;
   }
 
-  private _sharedArrayBuffer: SharedArrayBuffer;
   private _intArray: Int32Array;
-  private _readCount: number = 0;
+  private _sharedArrayBuffer: SharedArrayBuffer;
 }

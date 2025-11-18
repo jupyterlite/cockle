@@ -21,7 +21,6 @@ export abstract class WorkerIO implements IWorkerIO {
     }
 
     this._enabled = false;
-    this._clear();
     this._available?.resolve();
   }
 
@@ -34,11 +33,66 @@ export abstract class WorkerIO implements IWorkerIO {
     return this._enabled;
   }
 
-  abstract poll(timeoutMs: number): number;
+  poll(timeoutMs: number): number {
+    if (!this._enabled) {
+      throw new Error('WorkerIO.poll when disabled');
+    }
 
-  abstract read(maxChars: number | null): number[];
+    let readable = this._readBuffer.length > 0;
+    // Negative timeoutMs means wait forever (infinite timeout).
+    if (!readable && timeoutMs !== 0) {
+      const chars = this._getStdin(timeoutMs);
+      this._postRead(chars);
+      // If chars.length > 0 then there are characters to read, so readable is true.
+      readable = this._readBuffer.length > 0;
+    }
 
-  abstract readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]>;
+    // Constants.
+    const POLLIN = 1;
+    const POLLOUT = 4;
+
+    const writable = true;
+    return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
+  }
+
+  read(maxChars: number | null): number[] {
+    if (!this._enabled) {
+      throw new Error('WorkerIO.read when disabled');
+    }
+
+    if (maxChars !== null && maxChars <= 0) {
+      return [];
+    }
+
+    if (this._readBuffer.length > 0) {
+      // If have cached read data just return that.
+      return this._readFromBuffer(maxChars);
+    }
+
+    const chars = this._getStdin(-1);
+    this._postRead(chars);
+    return this._readFromBuffer(maxChars);
+  }
+
+  async readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]> {
+    if (!this._enabled) {
+      throw new Error('WorkerIO.readAsync when disabled');
+    }
+
+    if (maxChars !== null && maxChars <= 0) {
+      return [];
+    }
+
+    if (this._readBuffer.length > 0) {
+      // If have cached read data just return that.
+      return this._readFromBuffer(maxChars);
+    }
+
+    // Negative timeoutMs means wait forever (infinite timeout).
+    const chars = await this._getStdinAsync(timeoutMs);
+    this._postRead(chars);
+    return this._readFromBuffer(maxChars);
+  }
 
   utf8ArrayToString(chars: Int8Array): string {
     if (this._utf8Decoder === undefined) {
@@ -58,7 +112,9 @@ export abstract class WorkerIO implements IWorkerIO {
     this.outputCallback(String.fromCharCode(...chars));
   }
 
-  protected abstract _clear(): void;
+  protected abstract _getStdin(timeoutMs: number): string;
+
+  protected abstract _getStdinAsync(timeoutMs: number): Promise<string>;
 
   protected _maybeEchoToOutput(chars: number[]): void {
     const NL = 10; // Linefeed \n
@@ -88,6 +144,13 @@ export abstract class WorkerIO implements IWorkerIO {
     if (ret.length > 0) {
       this.write(ret);
     }
+  }
+
+  protected _postRead(chars: string): void {
+    const read = chars.split('').map(ch => ch.charCodeAt(0));
+    const processed = this._processReadChars(read);
+    this._readBuffer.push(...processed);
+    this._maybeEchoToOutput(processed);
   }
 
   protected _processReadChars(chars: number[]): number[] {
