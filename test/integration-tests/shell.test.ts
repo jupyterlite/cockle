@@ -446,6 +446,36 @@ test.describe('Shell', () => {
         }, stdinOption);
         expect(output).toMatch(/^cat out\r\nabcZz\r\n/);
       });
+
+      const delaysMs = [10, 100, 1100];
+      delaysMs.forEach(delayMs => {
+        test(`should support ${delayMs} ms delay between keys via ${stdinOption}`, async ({
+          page
+        }) => {
+          const output = await page.evaluate(
+            async ({ stdinOption, delayMs }) => {
+              const { delay, keys, shellSetupSimple, terminalInput } = globalThis.cockle;
+              const { shell, output } = await shellSetupSimple({
+                color: true,
+                stdinOption
+              });
+              const stdinWithDelay = async () => {
+                const inputs = [keys.rightArrow, 'a', 'X', keys.escape, ':', 'w', 'q', '\r'];
+                for (const input of inputs) {
+                  await delay(delayMs);
+                  await terminalInput(shell, [input]);
+                }
+              };
+              await Promise.all([shell.inputLine('vim file1'), stdinWithDelay()]);
+              output.clear();
+              await shell.inputLine('cat file1');
+              return output.text;
+            },
+            { stdinOption, delayMs }
+          );
+          expect(output).toMatch(/^cat file1\r\nCoXntents of the file\r\n/);
+        });
+      });
     });
   });
 

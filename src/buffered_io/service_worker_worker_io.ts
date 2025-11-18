@@ -21,13 +21,13 @@ export class ServiceWorkerWorkerIO extends WorkerIO implements IWorkerIO {
       throw new Error('ServiceWorkerWorkerIO.poll when disabled');
     }
 
+    timeoutMs = timeoutMs < 0 ? Infinity : timeoutMs;
     let readable = this._readBuffer.length > 0;
     if (!readable && timeoutMs > 0) {
       const chars = this._utils.getStdin(timeoutMs);
       this._postRead(chars);
       // If chars.length > 0 then there are characters to read, so readable is true.
-      // If chars.length === 0 then the call timed out, readable is true to request next poll().
-      readable = true;
+      readable = this._readBuffer.length > 0;
     }
 
     // Constants.
@@ -71,7 +71,7 @@ export class ServiceWorkerWorkerIO extends WorkerIO implements IWorkerIO {
       return this._readFromBuffer(maxChars);
     }
 
-    const chars = await this._utils.getStdinAsync(timeoutMs);
+    const chars = await this._utils.getStdinAsync(timeoutMs < 0 ? Infinity : timeoutMs);
     this._postRead(chars);
     return this._readFromBuffer(maxChars);
   }
