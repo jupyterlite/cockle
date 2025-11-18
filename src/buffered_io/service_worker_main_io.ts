@@ -1,50 +1,11 @@
-import { PromiseDelegate } from '@lumino/coreutils';
 import { IMainIO, IStdinReply, IStdinRequest } from './defs';
-import { MainIO } from './main';
+import { MainIO } from './main_io';
 import { ServiceWorkerUtils } from './service_worker_utils';
-import { delay } from '../utils';
 
 export class ServiceWorkerMainIO extends MainIO implements IMainIO {
   constructor(baseUrl: string, browsingContextId: string, shellId: string) {
     super();
     this._utils = new ServiceWorkerUtils(baseUrl, browsingContextId, shellId);
-  }
-
-  override async disable(): Promise<void> {
-    if (!this._enabled) {
-      return;
-    }
-
-    // Send all remaining buffered characters as soon as possible via the supplied sendFunction.
-    for (const ch of this._readBuffer) {
-      this._sendStdinNow!(ch);
-    }
-    this._readBuffer = '';
-
-    await super.disable();
-  }
-
-  async push(chars: string): Promise<void> {
-    if (!this._enabled) {
-      throw new Error('ServiceWorkerMainIO.push when disabled');
-    }
-
-    if (this._stdinPromise !== undefined) {
-      // If promise pending, resolve it.
-      this._stdinPromise.resolve(chars);
-      this._stdinPromise = undefined;
-    } else {
-      // Otherwise store it for the next stdin request.
-      this._readBuffer += chars;
-    }
-  }
-
-  protected _clear(): void {
-    if (this._stdinPromise !== undefined) {
-      this._stdinPromise.reject('stdin no longer required');
-      this._stdinPromise = undefined;
-    }
-    this._readBuffer = '';
   }
 
   async handleStdin(request: IStdinRequest): Promise<IStdinReply> {
@@ -58,23 +19,7 @@ export class ServiceWorkerMainIO extends MainIO implements IMainIO {
       return { text: 'ok:' + request.shellId };
     }
 
-    if (this._readBuffer.length > 0) {
-      // Send buffered data immediately
-      const text = this._readBuffer;
-      this._readBuffer = '';
-      return { text };
-    }
-
-    const stdinPromise = new PromiseDelegate<string>();
-
-    if (timeoutMs > 0) {
-      delay(timeoutMs).then(() => stdinPromise.resolve(''));
-    }
-
-    // Store stdinPromise so that it can be resolved by next push() call.
-    this._stdinPromise = stdinPromise;
-
-    const text = await stdinPromise.promise;
+    const text = await this._handleStdinImpl(timeoutMs);
     return { text };
   }
 
@@ -83,7 +28,7 @@ export class ServiceWorkerMainIO extends MainIO implements IMainIO {
       throw new Error('ServiceWorkerMainIO.testWithTimeout when disabled');
     }
 
-    const testPromise = this._utils.getStdinAsync(0, true);
+    const testPromise = this._utils.getStdinAsync(-1, true);
     const timeoutPromise = new Promise<null>(resolve => {
       return setTimeout(() => resolve(null), timeoutMs);
     });
@@ -99,7 +44,5 @@ export class ServiceWorkerMainIO extends MainIO implements IMainIO {
     return true;
   }
 
-  private _readBuffer: string = '';
-  private _stdinPromise?: PromiseDelegate<string>;
   private _utils: ServiceWorkerUtils;
 }

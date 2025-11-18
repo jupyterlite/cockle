@@ -748,7 +748,8 @@ export class ShellImpl implements IShellImpl {
   }
 
   private async _stdinAsyncCallback(maxChars: number | null): Promise<number[]> {
-    return await this._runContext.workerIO.readAsync(maxChars, 0);
+    // timeoutMs of -1 for infinite wait.
+    return await this._runContext.workerIO.readAsync(maxChars, -1);
   }
 
   private _commandLine: ICommandLine = { text: '', cursorIndex: 0 };
