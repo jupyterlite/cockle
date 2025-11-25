@@ -20,6 +20,7 @@ class TestArguments extends CommandArguments {
         'exitCode',
         'name',
         'shellId',
+        'size',
         'stderr',
         'stdin',
         'stdout'
@@ -89,6 +90,11 @@ export async function externalRun(context: IExternalRunContext): Promise<number>
 
   if (args.includes('shellId')) {
     context.stdout.write(`shellId: ${context.shellId}\n`);
+  }
+
+  if (args.includes('size')) {
+    const size = context.size();
+    context.stdout.write(`size: rows ${size[0]} x columns ${size[1]}\n`);
   }
 
   if (args.includes('exitCode')) {

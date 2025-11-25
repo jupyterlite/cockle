@@ -19,7 +19,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
   }
 
   async run(context: IRunContext): Promise<number> {
-    const { name, args, workerIO, fileSystem, stdin, stdout, stderr, termios } = context;
+    const { name, args, workerIO, fileSystem, stdin, stdout, stderr, termios, size } = context;
     const { wasmBaseUrl } = this.module.loader;
 
     const start = Date.now();
@@ -38,11 +38,8 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       return 0;
     }
 
-    function getWindowSize(tty: any): [number, number] {
-      return [
-        context.environment.getNumber('LINES') ?? 24,
-        context.environment.getNumber('COLUMNS') ?? 80
-      ];
+    function getSize(tty: any): [number, number] {
+      return size();
     }
 
     function poll(stream: any, timeoutMs: number): number {
@@ -131,7 +128,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
             // Monkey patch get/set termios and get window size.
             module.TTY.default_tty_ops.ioctl_tcgets = getTermios;
             module.TTY.default_tty_ops.ioctl_tcsets = setTermios;
-            module.TTY.default_tty_ops.ioctl_tiocgwinsz = getWindowSize;
+            module.TTY.default_tty_ops.ioctl_tiocgwinsz = getSize;
 
             // May only need to be for some TTYs?
             module.TTY.stream_ops.poll = poll;

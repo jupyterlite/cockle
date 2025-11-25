@@ -27,7 +27,7 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
     }
 
     // Narrow context passed to JavaScript command so that we don't leak cockle internals.
-    const { args, environment, fileSystem, shellId, stdout, stderr, termios } = context;
+    const { args, environment, fileSystem, shellId, stdout, stderr, termios, size } = context;
     const stdin = new JavaScriptInput(context.stdin);
     const jsContext: IJavaScriptRunContext = {
       name,
@@ -38,6 +38,7 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
       stdin,
       stdout,
       stderr,
+      size,
       termios
     };
 

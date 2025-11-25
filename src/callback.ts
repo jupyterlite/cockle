@@ -1,5 +1,5 @@
 /**
- * Callbacks used by a shell to call functions in the frontend.
+ * Callbacks visible in the frontend by Shell clients.
  */
 
 import { IDriveFSOptions } from './drive_fs';
@@ -16,4 +16,12 @@ export interface IOutputCallback {
  */
 export interface IInitDriveFSCallback {
   (options: IDriveFSOptions): void;
+}
+
+/**
+ * Return window size as [rows, columns] where rows and columns are integers >= 0.
+ * If the size is unknown they will be zero.
+ */
+export interface ISizeCallback {
+  (): [number, number];
 }
