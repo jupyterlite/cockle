@@ -1,6 +1,6 @@
 import { expose } from 'comlink';
 import { BaseShellWorker } from './base_shell_worker';
-import { IDriveFSOptions } from './drive_fs';
+import type { IDriveFSOptions } from './drive_fs';
 
 /**
  * Default shell worker that does not use a DriveFS.

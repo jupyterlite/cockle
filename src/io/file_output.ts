@@ -1,5 +1,5 @@
 import { BufferedOutput } from './buffered_output';
-import { IFileSystem } from '../file_system';
+import type { IFileSystem } from '../file_system';
 
 export class FileOutput extends BufferedOutput {
   constructor(

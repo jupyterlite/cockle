@@ -1,4 +1,4 @@
-import { IInput } from './input';
+import type { IInput } from './input';
 
 export abstract class InputAll implements IInput {
   isTerminal(): boolean {

@@ -1,5 +1,5 @@
-import { IExternalRunContext, IExternalTabCompleteContext } from './context';
-import { ITabCompleteResult } from './tab_complete';
+import type { IExternalRunContext, IExternalTabCompleteContext } from './context';
+import type { ITabCompleteResult } from './tab_complete';
 
 /**
  * Run an external command from the Shell.

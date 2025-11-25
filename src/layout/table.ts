@@ -1,5 +1,5 @@
 import { ansi } from '../ansi';
-import { IOutput } from '../io';
+import type { IOutput } from '../io';
 import { rtrim } from '../utils';
 
 /**

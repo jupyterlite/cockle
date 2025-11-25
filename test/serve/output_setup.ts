@@ -1,4 +1,4 @@
-import { IOutputCallback } from '@jupyterlite/cockle';
+import type { IOutputCallback } from '@jupyterlite/cockle';
 
 /**
  * Provides outputCallback to mock a terminal.

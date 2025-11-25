@@ -1,5 +1,5 @@
-import { IExternalTabCompleteResult } from './external_command';
-import { Termios } from './termios';
+import type { IExternalTabCompleteResult } from './external_command';
+import type { Termios } from './termios';
 
 /**
  * Internal callbacks used by a shell impl/worker to call functions in the shell.

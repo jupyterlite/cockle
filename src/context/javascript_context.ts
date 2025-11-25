@@ -1,8 +1,8 @@
-import { ISizeCallback } from '../callback';
-import { Environment } from '../environment';
-import { IFileSystem } from '../file_system';
-import { IJavaScriptInput, IOutput } from '../io';
-import { Termios } from '../termios';
+import type { ISizeCallback } from '../callback';
+import type { Environment } from '../environment';
+import type { IFileSystem } from '../file_system';
+import type { IJavaScriptInput, IOutput } from '../io';
+import type { Termios } from '../termios';
 
 /**
  * Mininal context used to run imported JavaScript commands.

@@ -1,4 +1,4 @@
-import { IInput } from './input';
+import type { IInput } from './input';
 
 /**
  * Dummy input that returns immediately on read request.

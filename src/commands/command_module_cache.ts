@@ -1,5 +1,5 @@
-import { IJavaScriptModule } from '../types/javascript_module';
-import { IWebAssemblyModule } from '../types/wasm_module';
+import type { IJavaScriptModule } from '../types/javascript_module';
+import type { IWebAssemblyModule } from '../types/wasm_module';
 
 type CacheItem = IWebAssemblyModule | IJavaScriptModule;
 

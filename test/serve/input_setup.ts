@@ -1,4 +1,5 @@
-import { delay, Shell } from '@jupyterlite/cockle';
+import type { Shell } from '@jupyterlite/cockle';
+import { delay } from '@jupyterlite/cockle';
 
 /**
  * Helper to provide terminal input whilst a command is running.

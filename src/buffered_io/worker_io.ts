@@ -1,7 +1,7 @@
 import { PromiseDelegate } from '@lumino/coreutils';
-import { IWorkerIO } from './defs';
+import type { IWorkerIO } from './defs';
 import { ansi } from '../ansi';
-import { IOutputCallback } from '../callback';
+import type { IOutputCallback } from '../callback';
 import { Termios } from '../termios';
 import { isLetter } from '../utils';
 

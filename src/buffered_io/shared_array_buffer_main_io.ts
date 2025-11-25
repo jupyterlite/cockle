@@ -1,4 +1,4 @@
-import { IMainIO } from './defs';
+import type { IMainIO } from './defs';
 import { MainIO } from './main_io';
 import { SAB } from './sab';
 

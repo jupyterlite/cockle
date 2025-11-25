@@ -1,4 +1,5 @@
-import { ansi, ExitCode, IExternalRunContext, Termios } from '@jupyterlite/cockle';
+import type { IExternalRunContext } from '@jupyterlite/cockle';
+import { ansi, ExitCode, Termios } from '@jupyterlite/cockle';
 
 export async function externalTuiCommand(context: IExternalRunContext): Promise<number> {
   const { name, stdin, stdout, termios } = context;

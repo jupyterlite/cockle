@@ -1,9 +1,9 @@
 import { BuiltinCommand } from './builtin_command';
 import { BooleanArgument, PositionalArguments } from '../argument';
 import { CommandArguments } from '../arguments';
-import { IRunContext, ITabCompleteContext } from '../context';
+import type { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
-import { ITabCompleteResult } from '../tab_complete';
+import type { ITabCompleteResult } from '../tab_complete';
 
 class WhichArguments extends CommandArguments {
   description =

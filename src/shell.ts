@@ -1,5 +1,5 @@
 import { BaseShell } from './base_shell';
-import { IShell } from './defs';
+import type { IShell } from './defs';
 
 /**
  * Shell class that communicates with ShellWorker.

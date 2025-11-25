@@ -1,9 +1,11 @@
-import { Argument, PositionalArguments, PositionalPathArguments } from './argument';
-import { ITabCompleteContext } from './context';
+import type { PositionalArguments } from './argument';
+import { Argument, PositionalPathArguments } from './argument';
+import type { ITabCompleteContext } from './context';
 import { GeneralError } from './error_exit_code';
-import { IOutput } from './io';
+import type { IOutput } from './io';
 import { Table } from './layout';
-import { ITabCompleteResult, PathType } from './tab_complete';
+import type { ITabCompleteResult } from './tab_complete';
+import { PathType } from './tab_complete';
 
 /**
  * Arguments for a command, used by builtin, external and javascript commands.

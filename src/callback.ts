@@ -2,7 +2,7 @@
  * Callbacks visible in the frontend by Shell clients.
  */
 
-import { IDriveFSOptions } from './drive_fs';
+import type { IDriveFSOptions } from './drive_fs';
 
 /**
  * Send output string to be displayed in terminal.

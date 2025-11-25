@@ -1,5 +1,5 @@
 import { InputAll } from './input_all';
-import { IFileSystem } from '../file_system';
+import type { IFileSystem } from '../file_system';
 
 export class FileInput extends InputAll {
   constructor(

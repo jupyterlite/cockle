@@ -1,11 +1,11 @@
-import { CommandModule } from './command_module';
+import type { CommandModule } from './command_module';
 import { CommandType } from './command_type';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
-import { IRunContext } from '../context';
+import type { IRunContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
-import { IOutput } from '../io';
-import { Termios } from '../termios';
+import type { IOutput } from '../io';
+import type { Termios } from '../termios';
 import type { MainModule } from '../types/wasm_module';
 import { joinURL } from '../utils';
 

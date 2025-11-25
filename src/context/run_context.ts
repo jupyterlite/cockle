@@ -1,14 +1,14 @@
-import { IStdinContext } from './stdin_context';
-import { Aliases } from '../aliases';
-import { IWorkerIO } from '../buffered_io';
-import { ISizeCallback } from '../callback';
-import { ITerminateCallback } from '../callback_internal';
-import { CommandModuleCache, CommandRegistry } from '../commands';
-import { Environment } from '../environment';
-import { IFileSystem } from '../file_system';
-import { History } from '../history';
-import { IInput, IOutput } from '../io';
-import { Termios } from '../termios';
+import type { IStdinContext } from './stdin_context';
+import type { Aliases } from '../aliases';
+import type { IWorkerIO } from '../buffered_io';
+import type { ISizeCallback } from '../callback';
+import type { ITerminateCallback } from '../callback_internal';
+import type { CommandModuleCache, CommandRegistry } from '../commands';
+import type { Environment } from '../environment';
+import type { IFileSystem } from '../file_system';
+import type { History } from '../history';
+import type { IInput, IOutput } from '../io';
+import type { Termios } from '../termios';
 
 /**
  * Full context used to run builtin and WebAssembly commands.

@@ -1,4 +1,4 @@
-import { IOutput } from './output';
+import type { IOutput } from './output';
 
 export abstract class BufferedOutput implements IOutput {
   get allContent(): string {

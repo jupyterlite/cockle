@@ -2,9 +2,9 @@ import { BuiltinCommand } from './builtin_command';
 import { ansi } from '../ansi';
 import { BooleanArgument } from '../argument';
 import { CommandArguments } from '../arguments';
-import { IRunContext, ITabCompleteContext } from '../context';
+import type { IRunContext, ITabCompleteContext } from '../context';
 import { ExitCode } from '../exit_code';
-import { ITabCompleteResult } from '../tab_complete';
+import type { ITabCompleteResult } from '../tab_complete';
 
 class ClearArguments extends CommandArguments {
   description = 'Clear the terminal screen if ANSI escapes are supported.';

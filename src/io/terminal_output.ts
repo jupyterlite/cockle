@@ -1,5 +1,5 @@
-import { IOutput } from './output';
-import { IOutputCallback } from '../callback';
+import type { IOutput } from './output';
+import type { IOutputCallback } from '../callback';
 
 export class TerminalOutput implements IOutput {
   constructor(

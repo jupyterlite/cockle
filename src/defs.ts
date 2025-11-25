@@ -1,7 +1,7 @@
 import type { IObservableDisposable } from '@lumino/disposable';
-import { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
-import { IOutputCallback } from './callback';
-import { IExternalCommand } from './external_command';
+import type { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
+import type { IOutputCallback } from './callback';
+import type { IExternalCommand } from './external_command';
 
 export interface IShell extends IObservableDisposable {
   /**

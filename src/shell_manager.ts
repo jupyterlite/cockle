@@ -1,5 +1,5 @@
-import { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
-import { IShell, IShellManager } from './defs';
+import type { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
+import type { IShell, IShellManager } from './defs';
 import { ServiceWorkerManager } from './service_worker_manager';
 import { delay } from './utils';
 

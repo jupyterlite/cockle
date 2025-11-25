@@ -1,10 +1,10 @@
-import { CommandModule } from './command_module';
-import { CommandPackage } from './command_package';
-import { ICommandRunner } from './command_runner';
+import type { CommandModule } from './command_module';
+import type { CommandPackage } from './command_package';
+import type { ICommandRunner } from './command_runner';
 import { CommandType } from './command_type';
 import { ExternalCommandRunner } from './external_command_runner';
 import * as AllBuiltinCommands from '../builtin';
-import { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
+import type { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
 
 export class CommandRegistry {
   constructor(

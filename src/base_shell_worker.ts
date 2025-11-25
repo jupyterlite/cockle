@@ -1,7 +1,8 @@
-import { IWorkerIO, ServiceWorkerWorkerIO, SharedArrayBufferWorkerIO } from './buffered_io';
+import type { IWorkerIO } from './buffered_io';
+import { ServiceWorkerWorkerIO, SharedArrayBufferWorkerIO } from './buffered_io';
 import { StdinContext } from './context';
-import { IShellWorker } from './defs_internal';
-import { IDriveFSOptions } from './drive_fs';
+import type { IShellWorker } from './defs_internal';
+import type { IDriveFSOptions } from './drive_fs';
 import { ShellImpl } from './shell_impl';
 import { Termios } from './termios';
 

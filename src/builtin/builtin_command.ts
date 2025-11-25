@@ -1,5 +1,6 @@
-import { CommandType, ICommandRunner } from '../commands';
-import { IRunContext } from '../context';
+import type { ICommandRunner } from '../commands';
+import { CommandType } from '../commands';
+import type { IRunContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 
 export abstract class BuiltinCommand implements ICommandRunner {

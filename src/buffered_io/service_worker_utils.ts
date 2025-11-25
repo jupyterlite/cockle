@@ -1,4 +1,4 @@
-import { IStdinReply, IStdinRequest } from './defs';
+import type { IStdinReply, IStdinRequest } from './defs';
 import { joinURL } from '../utils';
 
 export enum AsyncOrSync {

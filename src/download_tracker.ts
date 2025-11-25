@@ -1,6 +1,6 @@
 import type { IDisposable } from '@lumino/disposable';
 import { ansi } from './ansi';
-import { IOutputCallback } from './callback';
+import type { IOutputCallback } from './callback';
 
 export class DownloadTracker implements IDisposable {
   constructor(

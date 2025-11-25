@@ -1,5 +1,5 @@
 import { BufferedOutput } from './buffered_output';
-import { IOutput } from './output';
+import type { IOutput } from './output';
 
 export class RedirectOutput extends BufferedOutput {
   constructor(target: IOutput) {

@@ -1,24 +1,20 @@
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
-import { ISignal, Signal } from '@lumino/signaling';
+import type { ISignal } from '@lumino/signaling';
+import { Signal } from '@lumino/signaling';
 import { proxy, wrap } from 'comlink';
 import { ansi } from './ansi';
-import {
-  IMainIO,
-  IStdinReply,
-  IStdinRequest,
-  ServiceWorkerMainIO,
-  SharedArrayBufferMainIO
-} from './buffered_io';
-import { IExternalRunContext } from './context';
-import { IShell } from './defs';
-import { IRemoteShell } from './defs_internal';
+import type { IMainIO, IStdinReply, IStdinRequest } from './buffered_io';
+import { ServiceWorkerMainIO, SharedArrayBufferMainIO } from './buffered_io';
+import type { IExternalRunContext } from './context';
+import type { IShell } from './defs';
+import type { IRemoteShell } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
 import { ExitCode } from './exit_code';
-import { IExternalCommand, IExternalTabCompleteResult } from './external_command';
+import type { IExternalCommand, IExternalTabCompleteResult } from './external_command';
 import { ExternalEnvironment } from './external_environment';
 import { ExternalTermios } from './external_termios';
 import { ExternalInput, ExternalOutput } from './io';
-import { Termios } from './termios';
+import type { Termios } from './termios';
 
 /**
  * Abstract base class for Shell that external libraries use.

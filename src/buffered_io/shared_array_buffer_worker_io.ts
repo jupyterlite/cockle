@@ -1,8 +1,8 @@
-import { IWorkerIO } from './defs';
+import type { IWorkerIO } from './defs';
 import { SAB } from './sab';
 import { WorkerIO } from './worker_io';
-import { IOutputCallback } from '../callback';
-import { Termios } from '../termios';
+import type { IOutputCallback } from '../callback';
+import type { Termios } from '../termios';
 
 export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
   constructor(
