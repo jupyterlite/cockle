@@ -17,19 +17,6 @@ export class Environment extends Map<string, string> {
   }
 
   /**
-   * Copy environment variables back from a command after it has run.
-   */
-  copyFromCommand(source: string[]) {
-    for (const str of source) {
-      const split = str.split('=');
-      const key = split.shift();
-      if (key && !this._ignore.has(key)) {
-        this.set(key, split.join('='));
-      }
-    }
-  }
-
-  /**
    * Copy environment variables into a command before it is run.
    */
   copyIntoCommand(target: { [key: string]: string }, isTerminal: boolean) {
@@ -76,7 +63,4 @@ export class Environment extends Map<string, string> {
       this.delete('LESS_COLUMNS');
     }
   }
-
-  // Keys to ignore when copying back from a command's env vars.
-  private _ignore: Set<string> = new Set(['USER', 'LOGNAME', 'HOME', 'LANG', '_']);
 }

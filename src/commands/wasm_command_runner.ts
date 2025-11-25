@@ -152,11 +152,6 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
           }
         }
       }
-
-      if (Object.prototype.hasOwnProperty.call(wasm, 'getEnvStrings')) {
-        // Copy environment variables back from command.
-        context.environment.copyFromCommand(wasm.getEnvStrings!());
-      }
     }
 
     const end = Date.now();
