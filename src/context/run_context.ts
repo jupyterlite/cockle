@@ -1,6 +1,7 @@
 import { IStdinContext } from './stdin_context';
 import { Aliases } from '../aliases';
 import { IWorkerIO } from '../buffered_io';
+import { ISizeCallback } from '../callback';
 import { ITerminateCallback } from '../callback_internal';
 import { CommandModuleCache, CommandRegistry } from '../commands';
 import { Environment } from '../environment';
@@ -25,6 +26,7 @@ export interface IRunContext {
   stdin: IInput;
   stdout: IOutput;
   stderr: IOutput;
+  size: ISizeCallback;
   termios: Termios.ITermios;
   workerIO: IWorkerIO;
   commandModuleCache: CommandModuleCache;

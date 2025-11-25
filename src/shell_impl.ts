@@ -64,6 +64,7 @@ export class ShellImpl implements IShellImpl {
       stdin: this._dummyInput,
       stdout: this._dummyOutput,
       stderr: this._dummyOutput,
+      size: () => this.size,
       termios: options.termios,
       workerIO,
       commandModuleCache: this._commandModuleLoader.cache,
@@ -201,30 +202,17 @@ export class ShellImpl implements IShellImpl {
     this._runContext.workerIO.write(text);
   }
 
-  async setSize(rows: number, columns: number): Promise<void> {
-    const { environment } = this;
-
-    if (rows >= 1) {
-      const rowsString = rows.toString();
-      environment.set('LINES', rowsString);
-      environment.set('LESS_LINES', rowsString);
-    } else {
-      environment.delete('LINES');
-      environment.delete('LESS_LINES');
-    }
-
-    if (columns >= 1) {
-      const columnsString = columns.toString();
-      environment.set('COLUMNS', columnsString);
-      environment.set('LESS_COLUMNS', columnsString);
-    } else {
-      environment.delete('COLUMNS');
-      environment.delete('LESS_COLUMNS');
-    }
+  setSize(rows: number, columns: number): void {
+    this._size = [rows, columns];
+    this.environment.setSize(rows, columns);
   }
 
   setWorkerIO(workerIO: IWorkerIO) {
     this._runContext.workerIO = workerIO;
+  }
+
+  get size(): [number, number] {
+    return this._size;
   }
 
   async start(): Promise<void> {
@@ -757,6 +745,7 @@ export class ShellImpl implements IShellImpl {
   private _exitCode: number = 0;
   private _requestedDarkMode?: boolean;
   private _isRunning = false;
+  private _size: [number, number] = [0, 0]; // [rows, columns]
   private _themeStatus = ThemeStatus.PendingChange;
 
   private _commandModuleLoader: CommandModuleLoader;

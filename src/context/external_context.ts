@@ -3,6 +3,7 @@
  * This exists in the main UI thread unlike other contexts that exist in the webworker.
  */
 
+import { ISizeCallback } from '../callback';
 import { ExternalEnvironment } from '../external_environment';
 import { IExternalInput, IExternalOutput } from '../io';
 import { Termios } from '../termios';
@@ -18,6 +19,7 @@ export interface IExternalRunContext {
   stdin: IExternalInput;
   stdout: IExternalOutput;
   stderr: IExternalOutput;
+  size: ISizeCallback;
   termios: Termios.ITermios;
 }
 

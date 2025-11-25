@@ -86,6 +86,7 @@ export abstract class BaseShell implements IShell {
       stdin,
       stdout,
       stderr,
+      size: () => this.size,
       termios
     };
     const exitCode = await command(context);
@@ -213,11 +214,23 @@ export abstract class BaseShell implements IShell {
       return;
     }
 
+    if (rows < 0) {
+      rows = 0;
+    }
+    if (columns < 0) {
+      columns = 0;
+    }
+    this._size = [rows, columns];
+
     await this._remote!.setSize(rows, columns);
   }
 
   get shellId(): string {
     return this._shellId;
+  }
+
+  get size(): [number, number] {
+    return this._size;
   }
 
   async start(): Promise<void> {
@@ -355,6 +368,7 @@ export abstract class BaseShell implements IShell {
   private _ready = new PromiseDelegate<void>();
 
   private _shellId: string; // Unique identifier within a single browser tab.
+  private _size: [number, number] = [0, 0]; // [rows, columns]
   private _worker?: Worker;
   private _remote?: IRemoteShell;
   private _externalCommands = new Map<string, IExternalCommand.IOptions>();

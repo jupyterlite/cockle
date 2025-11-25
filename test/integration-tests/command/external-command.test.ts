@@ -204,6 +204,24 @@ cmdName.forEach(cmdName => {
       }, cmdName);
       expect(output).toMatch('\r\nshellId: someShellId9876\r\n');
     });
+
+    test('should write size', async ({ page }) => {
+      const output = await page.evaluate(async cmdName => {
+        const { externalCommands, shellSetupEmpty } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ externalCommands });
+        await shell.inputLine(`${cmdName} size`);
+        const ret0 = output.textAndClear();
+        shell.setSize(10, 20);
+        await shell.inputLine(`${cmdName} size`);
+        const ret1 = output.textAndClear();
+        shell.setSize(-1, -5);
+        await shell.inputLine(`${cmdName} size`);
+        return [ret0, ret1, output.text];
+      }, cmdName);
+      expect(output[0]).toMatch('\r\nsize: rows 24 x columns 80\r\n');
+      expect(output[1]).toMatch('\r\nsize: rows 10 x columns 20\r\n');
+      expect(output[2]).toMatch('\r\nsize: rows 0 x columns 0\r\n');
+    });
   });
 });
 
@@ -216,8 +234,8 @@ test.describe('tab complete js-tab command', () => {
       return output.text;
     });
     const lines = output.split('\r\n');
-    expect(lines[1]).toEqual('color        exitCode     shellId      stdin');
-    expect(lines[2]).toEqual('environment  name         stderr       stdout');
+    expect(lines[1]).toEqual('color        exitCode     shellId      stderr       stdout');
+    expect(lines[2]).toEqual('environment  name         size         stdin');
   });
 
   test('should match the single possible starting with letter n', async ({ page }) => {

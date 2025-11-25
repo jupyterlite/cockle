@@ -57,6 +57,26 @@ export class Environment extends Map<string, string> {
     return this.has('TERM');
   }
 
+  setSize(rows: number, columns: number): void {
+    if (rows >= 1) {
+      const rowsString = rows.toString();
+      this.set('LINES', rowsString);
+      this.set('LESS_LINES', rowsString);
+    } else {
+      this.delete('LINES');
+      this.delete('LESS_LINES');
+    }
+
+    if (columns >= 1) {
+      const columnsString = columns.toString();
+      this.set('COLUMNS', columnsString);
+      this.set('LESS_COLUMNS', columnsString);
+    } else {
+      this.delete('COLUMNS');
+      this.delete('LESS_COLUMNS');
+    }
+  }
+
   // Keys to ignore when copying back from a command's env vars.
   private _ignore: Set<string> = new Set(['USER', 'LOGNAME', 'HOME', 'LANG', '_']);
 }

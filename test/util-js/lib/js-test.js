@@ -87,6 +87,10 @@ var Module = (function (exports) {
         if (args.includes('shellId')) {
             context.stdout.write(`shellId: ${context.shellId}\n`);
         }
+        if (args.includes('size')) {
+            const size = context.size();
+            context.stdout.write(`size: rows ${size[0]} x columns ${size[1]}\n`);
+        }
         if (args.includes('exitCode')) {
             return ExitCode.GENERAL_ERROR;
         }

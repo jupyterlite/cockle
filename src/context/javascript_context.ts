@@ -1,3 +1,4 @@
+import { ISizeCallback } from '../callback';
 import { Environment } from '../environment';
 import { IFileSystem } from '../file_system';
 import { IJavaScriptInput, IOutput } from '../io';
@@ -15,6 +16,7 @@ export interface IJavaScriptRunContext {
   stdin: IJavaScriptInput;
   stdout: IOutput;
   stderr: IOutput;
+  size: ISizeCallback;
   termios: Termios.ITermios;
 }
 

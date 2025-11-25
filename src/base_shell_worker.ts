@@ -125,9 +125,9 @@ export abstract class BaseShellWorker implements IShellWorker {
     }
   }
 
-  async setSize(rows: number, columns: number): Promise<void> {
+  setSize(rows: number, columns: number): void {
     if (this._shellImpl) {
-      await this._shellImpl.setSize(rows, columns);
+      this._shellImpl.setSize(rows, columns);
     }
   }
 
