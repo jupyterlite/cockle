@@ -1,5 +1,5 @@
-import { CommandModuleLoader } from './command_module_loader';
-import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
+import type { CommandModuleLoader } from './command_module_loader';
+import type { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
 import { JavascriptCommandRunner } from './javascript_command_runner';
 import { WasmCommandRunner } from './wasm_command_runner';
 

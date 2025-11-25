@@ -1,4 +1,4 @@
-import { IOutput } from '../../src/io';
+import type { IOutput } from '../../src/io';
 import { BorderTable, Table } from '../../src/layout';
 
 class MockOutput implements IOutput {

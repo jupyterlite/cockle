@@ -1,15 +1,12 @@
 /**
  * The same functionality as external_command.ts but using Options with tab completion.
  */
-import {
-  ansi,
-  CommandArguments,
-  ExitCode,
+import type {
   IExternalRunContext,
   IExternalTabCompleteContext,
-  IExternalTabCompleteResult,
-  PositionalArguments
+  IExternalTabCompleteResult
 } from '@jupyterlite/cockle';
+import { ansi, CommandArguments, ExitCode, PositionalArguments } from '@jupyterlite/cockle';
 
 class TestArguments extends CommandArguments {
   positional = new PositionalArguments({

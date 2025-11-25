@@ -1,22 +1,21 @@
 import { Aliases } from './aliases';
 import { ansi } from './ansi';
-import { IWorkerIO } from './buffered_io';
-import { ICommandLine } from './command_line';
+import type { IWorkerIO } from './buffered_io';
+import type { ICommandLine } from './command_line';
 import { CommandModule, CommandModuleLoader, CommandPackage, CommandRegistry } from './commands';
-import { IRunContext } from './context';
-import { IShellImpl } from './defs_internal';
+import type { IRunContext } from './context';
+import type { IShellImpl } from './defs_internal';
 import { Environment } from './environment';
 import { ErrorExitCode, FindCommandError, GeneralError } from './error_exit_code';
 import { ExitCode } from './exit_code';
-import { IFileSystem } from './file_system';
+import type { IFileSystem } from './file_system';
 import { History } from './history';
+import type { IInput, IOutput } from './io';
 import {
   DummyInput,
   DummyOutput,
   FileInput,
   FileOutput,
-  IInput,
-  IOutput,
   Pipe,
   TerminalInput,
   TerminalOutput

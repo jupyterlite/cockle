@@ -1,4 +1,4 @@
-import { IOutput } from './output';
+import type { IOutput } from './output';
 
 /**
  * Dummy output that silently swallows all output.

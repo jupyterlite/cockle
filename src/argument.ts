@@ -2,9 +2,9 @@
  * Individual command argument classes.
  */
 
-import { ITabCompleteContext } from './context';
+import type { ITabCompleteContext } from './context';
 import { GeneralError } from './error_exit_code';
-import { ITabCompleteResult, PathType } from './tab_complete';
+import type { ITabCompleteResult, PathType } from './tab_complete';
 
 export abstract class Argument {
   constructor(

@@ -1,4 +1,4 @@
-import { Aliases } from './aliases';
+import type { Aliases } from './aliases';
 import { GeneralError } from './error_exit_code';
 
 const delimiters = ';&|><';

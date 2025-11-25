@@ -1,9 +1,10 @@
 import { ansi } from './ansi';
-import { ICommandLine } from './command_line';
-import { IRunContext } from './context';
+import type { ICommandLine } from './command_line';
+import type { IRunContext } from './context';
 import { CommandNode, parse } from './parse';
-import { ITabCompleteResult, PathType } from './tab_complete';
-import { RuntimeExports } from './types/wasm_module';
+import type { ITabCompleteResult } from './tab_complete';
+import { PathType } from './tab_complete';
+import type { RuntimeExports } from './types/wasm_module';
 import { longestStartsWith, toColumns } from './utils';
 
 export class TabCompleter {

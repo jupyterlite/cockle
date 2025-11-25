@@ -1,5 +1,5 @@
-import { IInput } from './input';
-import { IStdinAsyncCallback, IStdinCallback } from '../callback_internal';
+import type { IInput } from './input';
+import type { IStdinAsyncCallback, IStdinCallback } from '../callback_internal';
 
 export class TerminalInput implements IInput {
   constructor(

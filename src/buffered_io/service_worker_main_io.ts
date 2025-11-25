@@ -1,4 +1,4 @@
-import { IMainIO, IStdinReply, IStdinRequest } from './defs';
+import type { IMainIO, IStdinReply, IStdinRequest } from './defs';
 import { MainIO } from './main_io';
 import { ServiceWorkerUtils } from './service_worker_utils';
 

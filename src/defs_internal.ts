@@ -1,7 +1,7 @@
-import { ProxyMarked, Remote } from 'comlink';
-import { IWorkerIO } from './buffered_io';
-import { IInitDriveFSCallback, IOutputCallback } from './callback';
-import {
+import type { ProxyMarked, Remote } from 'comlink';
+import type { IWorkerIO } from './buffered_io';
+import type { IInitDriveFSCallback, IOutputCallback } from './callback';
+import type {
   ICallExternalCommand,
   ICallExternalTabComplete,
   IDownloadModuleCallback,
@@ -9,9 +9,9 @@ import {
   ISetMainIOCallback,
   ITerminateCallback
 } from './callback_internal';
-import { IStdinContext } from './context';
-import { IShell } from './defs';
-import { Termios } from './termios';
+import type { IStdinContext } from './context';
+import type { IShell } from './defs';
+import type { Termios } from './termios';
 
 /**
  * Representation of external commmand in the web worker, real external commands exists in the

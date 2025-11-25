@@ -1,4 +1,4 @@
-import { IOutput } from './output';
+import type { IOutput } from './output';
 
 export class ConsoleOutput implements IOutput {
   flush(): void {}

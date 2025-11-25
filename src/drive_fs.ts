@@ -1,4 +1,4 @@
-import { IFileSystem } from './file_system';
+import type { IFileSystem } from './file_system';
 
 export interface IDriveFSOptions {
   browsingContextId?: string;

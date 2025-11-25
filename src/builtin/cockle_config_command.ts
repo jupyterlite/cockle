@@ -2,11 +2,11 @@ import { BuiltinCommand } from './builtin_command';
 import { BooleanArgument, PositionalArguments } from '../argument';
 import { CommandArguments, SubcommandArguments } from '../arguments';
 import { CommandType } from '../commands';
-import { IRunContext, ITabCompleteContext } from '../context';
+import type { IRunContext, ITabCompleteContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import { BorderTable } from '../layout';
-import { ITabCompleteResult } from '../tab_complete';
+import type { ITabCompleteResult } from '../tab_complete';
 import { COCKLE_VERSION } from '../version';
 
 class CommandSubcommand extends SubcommandArguments {

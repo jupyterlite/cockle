@@ -1,9 +1,9 @@
-import { ICommandRunner } from './command_runner';
+import type { ICommandRunner } from './command_runner';
 import { CommandType } from './command_type';
-import { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
-import { IRunContext, ITabCompleteContext } from '../context';
+import type { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
+import type { IRunContext, ITabCompleteContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
-import { ITabCompleteResult } from '../tab_complete';
+import type { ITabCompleteResult } from '../tab_complete';
 
 export class ExternalCommandRunner implements ICommandRunner {
   constructor(

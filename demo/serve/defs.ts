@@ -1,4 +1,4 @@
-import { IShellManager } from '@jupyterlite/cockle';
+import type { IShellManager } from '@jupyterlite/cockle';
 
 export namespace IDemo {
   export interface IOptions {

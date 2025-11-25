@@ -1,5 +1,5 @@
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
-import { ShellManager } from './shell_manager';
+import type { ShellManager } from './shell_manager';
 import { COCKLE_VERSION } from './version';
 
 const DRIVE_API_PATH = '/cockle/service-worker';

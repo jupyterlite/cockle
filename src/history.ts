@@ -1,4 +1,4 @@
-import { IOutput } from './io/output';
+import type { IOutput } from './io/output';
 
 /**
  * Command history. Also maintains a current index in the history for scrolling through it.

@@ -1,6 +1,6 @@
-import { CommandType } from './command_type';
-import { IRunContext, ITabCompleteContext } from '../context';
-import { ITabCompleteResult } from '../tab_complete';
+import type { CommandType } from './command_type';
+import type { IRunContext, ITabCompleteContext } from '../context';
+import type { ITabCompleteResult } from '../tab_complete';
 
 /**
  * Runs a single named command in a particular runtime context.

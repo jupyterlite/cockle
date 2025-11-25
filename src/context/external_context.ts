@@ -3,10 +3,10 @@
  * This exists in the main UI thread unlike other contexts that exist in the webworker.
  */
 
-import { ISizeCallback } from '../callback';
-import { ExternalEnvironment } from '../external_environment';
-import { IExternalInput, IExternalOutput } from '../io';
-import { Termios } from '../termios';
+import type { ISizeCallback } from '../callback';
+import type { ExternalEnvironment } from '../external_environment';
+import type { IExternalInput, IExternalOutput } from '../io';
+import type { Termios } from '../termios';
 
 /**
  * Context used to run an external command.

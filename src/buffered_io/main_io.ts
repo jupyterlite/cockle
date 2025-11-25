@@ -1,6 +1,6 @@
 import { PromiseDelegate } from '@lumino/coreutils';
-import { IMainIO } from './defs';
-import { IOutputCallback } from '../callback';
+import type { IMainIO } from './defs';
+import type { IOutputCallback } from '../callback';
 import { delay } from '../utils';
 
 export abstract class MainIO implements IMainIO {

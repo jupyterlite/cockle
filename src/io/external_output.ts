@@ -1,4 +1,4 @@
-import { IOutput } from './output';
+import type { IOutput } from './output';
 
 /**
  * Output used by an ExternalCommand, exists in the main UI not webworker.

@@ -1,10 +1,10 @@
-import { CommandModule } from './command_module';
+import type { CommandModule } from './command_module';
 import { CommandType } from './command_type';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
-import { IJavaScriptRunContext, IRunContext, ITabCompleteContext } from '../context';
+import type { IJavaScriptRunContext, IRunContext, ITabCompleteContext } from '../context';
 import { FindCommandError, LoadCommandError, RunCommandError } from '../error_exit_code';
 import { JavaScriptInput } from '../io';
-import { ITabCompleteResult } from '../tab_complete';
+import type { ITabCompleteResult } from '../tab_complete';
 
 export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
   constructor(readonly module: CommandModule) {

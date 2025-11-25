@@ -1,4 +1,5 @@
-import { ansi, ExitCode, IExternalRunContext } from '@jupyterlite/cockle';
+import type { IExternalRunContext } from '@jupyterlite/cockle';
+import { ansi, ExitCode } from '@jupyterlite/cockle';
 
 // External command with different bahaviour depending on supplied args, to test
 // external command functionality.

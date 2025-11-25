@@ -1,5 +1,5 @@
 import type { IDisposable } from '@lumino/disposable';
-import { IOutputCallback } from '../callback';
+import type { IOutputCallback } from '../callback';
 
 export interface IMainIO extends IDisposable {
   disable(): Promise<void>;

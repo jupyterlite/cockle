@@ -1,5 +1,5 @@
 import { InputAll } from './input_all';
-import { Pipe } from './pipe';
+import type { Pipe } from './pipe';
 
 export class PipeInput extends InputAll {
   constructor(readonly pipe: Pipe) {

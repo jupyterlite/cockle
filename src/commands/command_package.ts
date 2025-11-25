@@ -1,4 +1,4 @@
-import { CommandModule } from './command_module';
+import type { CommandModule } from './command_module';
 
 /**
  * A dynamically-loaded package that contains one or more JavaScript/WebAssembly CommandModules.

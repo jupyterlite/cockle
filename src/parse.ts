@@ -1,6 +1,7 @@
-import { Aliases } from './aliases';
+import type { Aliases } from './aliases';
 import { GeneralError } from './error_exit_code';
-import { Token, tokenize } from './tokenize';
+import type { Token } from './tokenize';
+import { tokenize } from './tokenize';
 
 const endOfCommand = ';&';
 //const ignore_trailing = ";"

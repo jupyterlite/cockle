@@ -1,4 +1,5 @@
-import { IExternalCommand, IShell, Shell, ShellManager } from '@jupyterlite/cockle';
+import type { IExternalCommand, IShell } from '@jupyterlite/cockle';
+import { Shell, ShellManager } from '@jupyterlite/cockle';
 import { MockTerminalOutput } from './output_setup';
 
 export interface IShellSetup {

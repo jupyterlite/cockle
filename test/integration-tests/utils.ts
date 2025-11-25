@@ -1,5 +1,5 @@
 import { type Page, test as base } from '@playwright/test';
-import { IOptions } from '../serve/shell_setup';
+import type { IOptions } from '../serve/shell_setup';
 
 // Override page fixture to navigate to specific page.
 export const test = base.extend({

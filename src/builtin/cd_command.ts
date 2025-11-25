@@ -1,10 +1,11 @@
 import { BuiltinCommand } from './builtin_command';
 import { BooleanArgument, PositionalPathArguments } from '../argument';
 import { CommandArguments } from '../arguments';
-import { IRunContext, ITabCompleteContext } from '../context';
+import type { IRunContext, ITabCompleteContext } from '../context';
 import { GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
-import { ITabCompleteResult, PathType } from '../tab_complete';
+import type { ITabCompleteResult } from '../tab_complete';
+import { PathType } from '../tab_complete';
 
 class CdArguments extends CommandArguments {
   description = `Change the shell working directory.

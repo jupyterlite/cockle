@@ -1,7 +1,7 @@
 import { CommandModuleCache } from './command_module_cache';
-import { IShellWorker } from '../defs_internal';
-import { IJavaScriptModule } from '../types/javascript_module';
-import { IWebAssemblyModule } from '../types/wasm_module';
+import type { IShellWorker } from '../defs_internal';
+import type { IJavaScriptModule } from '../types/javascript_module';
+import type { IWebAssemblyModule } from '../types/wasm_module';
 import { joinURL } from '../utils';
 
 /**

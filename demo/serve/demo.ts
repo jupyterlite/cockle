@@ -1,7 +1,8 @@
-import { IShell, Shell } from '@jupyterlite/cockle';
+import type { IShell } from '@jupyterlite/cockle';
+import { Shell } from '@jupyterlite/cockle';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
-import { IDemo } from './defs';
+import type { IDemo } from './defs';
 import { externalCommand } from './external_command';
 import { externalRun, externalTabComplete } from './external_command_tab';
 import { externalTuiCommand } from './external_command_tui';

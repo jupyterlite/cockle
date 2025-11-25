@@ -1,4 +1,4 @@
-import { Termios } from './termios';
+import type { Termios } from './termios';
 
 export class ExternalTermios implements Termios.ITermios {
   constructor(
