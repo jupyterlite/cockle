@@ -207,17 +207,26 @@ export abstract class WorkerIO implements IWorkerIO {
             isOpenBracket ? isLetter(ch) : ch === 7 || ch === 27
           );
 
-          if (index > 0) {
+          if (index >= 0) {
             const sequence = chars.slice(i, i + index + 3);
             ret.push(...sequence);
             i += index + 2;
 
             const asString = String.fromCharCode(...sequence);
-            if (!this._inAlternativeBuffer && asString === ansi.enableAlternativeBuffer) {
-              this._inAlternativeBuffer = true;
-            } else if (this._inAlternativeBuffer && asString === ansi.disableAlternativeBuffer) {
-              this._inAlternativeBuffer = false;
+
+            if (this._inAlternativeBuffer) {
+              if (asString === ansi.disableAlternativeBuffer) {
+                this._inAlternativeBuffer = false;
+              }
+            } else {
+              // !this._inAlternativeBuffer
+              if (asString === ansi.enableAlternativeBuffer) {
+                this._inAlternativeBuffer = true;
+              } else if (asString === ansi.cursorHome) {
+                this._writeColumn = 0;
+              }
             }
+
             continue; // No further processing of escape sequence.
           }
         } else if (nextChar !== undefined) {
