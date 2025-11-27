@@ -2,6 +2,41 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.3.0
+
+Cockle 1.3.0 adds support for getting the current terminal size from external and javascript commands, and adds `IOutput.isTerminal` to check if writing to a terminal or not. There is also a fix for a significant bug handling timeouts using the service worker for stdin when running interactive commands such as `vim`.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.2.0...5a3026d6f81d81fef113b5cd8aecd143ad4ba757))
+
+### Enhancements made
+
+- Support getting current window size from external and javascript commands [#265](https://github.com/jupyterlite/cockle/pull/265) ([@ianthomas23](https://github.com/ianthomas23))
+- Support version restrictions for wasm command packages [#260](https://github.com/jupyterlite/cockle/pull/260) ([@ianthomas23](https://github.com/ianthomas23))
+- Add `IOutput.isTerminal()` function [#258](https://github.com/jupyterlite/cockle/pull/258) ([@ianthomas23](https://github.com/ianthomas23))
+- Combine boolean argument short names [#257](https://github.com/jupyterlite/cockle/pull/257) ([@ianthomas23](https://github.com/ianthomas23))
+- Validate length of argument short and long names [#256](https://github.com/jupyterlite/cockle/pull/256) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Fix newline at top of terminal after clear command [#268](https://github.com/jupyterlite/cockle/pull/268) ([@ianthomas23](https://github.com/ianthomas23))
+- Don't update env at end of wasm command [#267](https://github.com/jupyterlite/cockle/pull/267) ([@ianthomas23](https://github.com/ianthomas23))
+- Correctly handle infinite poll timeout in service worker IO [#263](https://github.com/jupyterlite/cockle/pull/263) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Enforce type imports [#266](https://github.com/jupyterlite/cockle/pull/266) ([@ianthomas23](https://github.com/ianthomas23))
+- Refactor SharedArrayBuffer stdin [#264](https://github.com/jupyterlite/cockle/pull/264) ([@ianthomas23](https://github.com/ianthomas23))
+- Correctly setup tests for stdin via service worker [#262](https://github.com/jupyterlite/cockle/pull/262) ([@ianthomas23](https://github.com/ianthomas23))
+- Remove unneeded .nojekyll file [#259](https://github.com/jupyterlite/cockle/pull/259) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-10-15&to=2025-11-27&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-10-15..2025-11-27&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 1.2.0
 
 Cockle 1.2.0 is a minor release adding support for changing termios settings in external commands (running in main UI thread) and javascript commands (running in cockle WebWorker), some improvements to tab completion using `Argument` classes, and a new environment variables `COCKLE_DARK_MODE` so that external/javascript commands can use colours based on whether the attached terminal is in dark or light mode.
@@ -26,8 +61,6 @@ Cockle 1.2.0 is a minor release adding support for changing termios settings in 
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-09-25&to=2025-10-15&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-09-25..2025-10-15&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 1.1.0
 
