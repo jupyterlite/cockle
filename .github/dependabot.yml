@@ -5,8 +5,8 @@ updates:
     schedule:
       interval: weekly
     labels:
-      - "component: CI"
+      - 'component: CI'
     groups:
       actions:
         patterns:
-          - "*"
+          - '*'
