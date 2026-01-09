@@ -1,3 +1,4 @@
+import { ansi } from '../../src/ansi';
 import type { IOutput } from '../../src/io';
 import { BorderTable, Table } from '../../src/layout';
 
@@ -150,7 +151,7 @@ describe('Table', () => {
     ]);
   });
 
-  test('output shouuld support prefix and suffix', () => {
+  test('output should support prefix and suffix', () => {
     const table = new Table();
     table.addHeaderRow(['h1', 'h2']);
     table.addRow(['r1', 'r2']);
@@ -158,6 +159,20 @@ describe('Table', () => {
     const output = new MockOutput();
     table.write(output, 'pre_', '_suf');
     expect(output.text).toEqual(['pre_h1  h2_suf', 'pre_──────_suf', 'pre_r1  r2_suf']);
+  });
+
+  test('should layout correctly if items are colored', () => {
+    const table = new Table();
+    table.addHeaderRow([ansi.styleBlue + 'h1' + ansi.styleReset, 'h2']);
+    table.addRow(['r1', ansi.styleBoldGreen + 'r2' + ansi.styleReset]);
+
+    const output = new MockOutput();
+    table.write(output);
+    expect(output.text).toEqual([
+      ansi.styleBlue + 'h1' + ansi.styleReset + '  h2\n',
+      '──────\n',
+      'r1  ' + ansi.styleBoldGreen + 'r2' + ansi.styleReset + '\n'
+    ]);
   });
 });
 
@@ -324,6 +339,22 @@ describe('BorderTable', () => {
       'pre_├────┼────┤_suf',
       'pre_│ r1 │ r2 │_suf',
       'pre_╰────┴────╯_suf'
+    ]);
+  });
+
+  test('should layout correctly if items are colored', () => {
+    const table = new BorderTable();
+    table.addHeaderRow([ansi.styleBlue + 'h1' + ansi.styleReset, 'h2']);
+    table.addRow(['r1', ansi.styleBoldGreen + 'r2' + ansi.styleReset]);
+
+    const output = new MockOutput();
+    table.write(output);
+    expect(output.text).toEqual([
+      '╭────┬────╮\n',
+      '│ ' + ansi.styleBlue + 'h1' + ansi.styleReset + ' │ h2 │\n',
+      '├────┼────┤\n',
+      '│ r1 │ ' + ansi.styleBoldGreen + 'r2' + ansi.styleReset + ' │\n',
+      '╰────┴────╯\n'
     ]);
   });
 });

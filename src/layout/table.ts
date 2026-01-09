@@ -88,7 +88,7 @@ abstract class BaseTable {
       for (let i = 0; i < nColumns; i++) {
         line += this.verticalSpacer(i === 0 ? VerticalSpacerType.LEFT : VerticalSpacerType.INNER);
         const item = headerRow[i] ?? '';
-        line += item + ' '.repeat(this._columnWidths[i] - item.length);
+        line += item + ' '.repeat(this._columnWidths[i] - this._cleanString(item).length);
       }
       line += this.verticalSpacer(VerticalSpacerType.RIGHT);
       yield prefix + rtrim(line) + suffix;
@@ -108,7 +108,7 @@ abstract class BaseTable {
           const color = this.options.colorByColumn?.get(i);
           line += color !== undefined ? color + item + ansi.styleReset : item;
         }
-        line += ' '.repeat(this._columnWidths[i] - item.length);
+        line += ' '.repeat(this._columnWidths[i] - this._cleanString(item).length);
       }
       line += this.verticalSpacer(VerticalSpacerType.RIGHT);
       yield prefix + rtrim(line) + suffix;
@@ -150,8 +150,12 @@ abstract class BaseTable {
     }
   }
 
+  private _cleanString(str: string): string {
+    return ansi.removeStyles(str);
+  }
+
   private _updateColumnWidths(row: string[]) {
-    const widths = row.map(str => str.length);
+    const widths = row.map(str => this._cleanString(str).length);
     const n = Math.min(this._columnWidths.length, widths.length);
     for (let i = 0; i < n; i++) {
       this._columnWidths[i] = Math.max(this._columnWidths[i], widths[i]);

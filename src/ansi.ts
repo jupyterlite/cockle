@@ -4,6 +4,9 @@
 
 const ESC = '\x1B[';
 
+// eslint-disable-next-line no-control-regex
+const styleRegex = /\x1b\[[^m]*m/g;
+
 function clamp(n: number): number {
   return Math.min(Math.max(Math.round(n), 0), 255);
 }
@@ -22,6 +25,8 @@ export const ansi = {
   eraseSavedLines: ESC + '3J',
   eraseEndLine: ESC + 'K',
   eraseStartLine: ESC + '1K',
+
+  removeStyles: (str: string) => str.replace(styleRegex, ''),
 
   styleRGB: (r: number, g: number, b: number, foreground: boolean = true) => {
     const code = foreground ? '38' : '48';
