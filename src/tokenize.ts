@@ -134,8 +134,11 @@ class Tokenizer {
         charType !== this._prevCharType ||
         (charType === CharType.Delimiter && char !== this._prevChar)
       ) {
-        // Finish current token and start new one.
-        if (this._addToken()) {
+        if (this._value === '2' && char === '>') {
+          // Special case stderr redirection to file.
+          this._value += char;
+        } else if (this._addToken()) {
+          // Finish current token and start new one.
           this._offset = i;
           this._value = char;
         }

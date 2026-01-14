@@ -66,12 +66,19 @@ describe('parse', () => {
     ]);
   });
 
-  test('should support redirect of output', () => {
+  test('should support redirect of stdout', () => {
     expect(parse('ls -l > file')).toEqual([
       new CommandNode(
         { offset: 0, value: 'ls' },
         [{ offset: 3, value: '-l' }],
         [new RedirectNode({ offset: 6, value: '>' }, { offset: 8, value: 'file' })]
+      )
+    ]);
+    expect(parse('ls -l >> file')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'ls' },
+        [{ offset: 3, value: '-l' }],
+        [new RedirectNode({ offset: 6, value: '>>' }, { offset: 9, value: 'file' })]
       )
     ]);
     expect(parse('ls -l>file')).toEqual([
@@ -81,11 +88,67 @@ describe('parse', () => {
         [new RedirectNode({ offset: 5, value: '>' }, { offset: 6, value: 'file' })]
       )
     ]);
+    expect(parse('ls -l>>file')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'ls' },
+        [{ offset: 3, value: '-l' }],
+        [new RedirectNode({ offset: 5, value: '>>' }, { offset: 7, value: 'file' })]
+      )
+    ]);
   });
 
-  test('should raise on redirect of output without target file', () => {
+  test('should support redirect of stderr', () => {
+    expect(parse('pwd 2> file')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'pwd' },
+        [],
+        [new RedirectNode({ offset: 4, value: '2>' }, { offset: 7, value: 'file' })]
+      )
+    ]);
+    expect(parse('pwd 2>> file')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'pwd' },
+        [],
+        [new RedirectNode({ offset: 4, value: '2>>' }, { offset: 8, value: 'file' })]
+      )
+    ]);
+    expect(parse('pwd 2>file')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'pwd' },
+        [],
+        [new RedirectNode({ offset: 4, value: '2>' }, { offset: 6, value: 'file' })]
+      )
+    ]);
+    expect(parse('pwd 2>>file')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'pwd' },
+        [],
+        [new RedirectNode({ offset: 4, value: '2>>' }, { offset: 7, value: 'file' })]
+      )
+    ]);
+  });
+
+  test('should support redirect of both stdout and stderr', () => {
+    expect(parse('pwd > out 2> err')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'pwd' },
+        [],
+        [
+          new RedirectNode({ offset: 4, value: '>' }, { offset: 6, value: 'out' }),
+          new RedirectNode({ offset: 10, value: '2>' }, { offset: 13, value: 'err' })
+        ]
+      )
+    ]);
+  });
+
+  test('should raise on redirect of stdout without target file', () => {
     expect(() => parse('ls >')).toThrow();
     expect(() => parse('ls >>')).toThrow();
+  });
+
+  test('should raise on redirect of stderr without target file', () => {
+    expect(() => parse('ls 2>')).toThrow();
+    expect(() => parse('ls 2>>')).toThrow();
   });
 
   test('should support redirect of input', () => {

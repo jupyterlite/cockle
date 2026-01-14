@@ -20,7 +20,7 @@ test.describe('Shell', () => {
       expect(await shellLineSimple(page, '   ls')).toMatch(/^ {3}ls\r\ndirA {2}file1 {2}file2\r\n/);
     });
 
-    test('should output redirect to file', async ({ page }) => {
+    test('should stdout redirect to file', async ({ page }) => {
       const output = await shellLineSimpleN(page, [
         'echo Hello > out',
         'cat out',
@@ -35,7 +35,7 @@ test.describe('Shell', () => {
       expect(output[5]).toMatch('\r\n 2  2 14 out\r\n');
     });
 
-    test('should output redirect to file without ansi escapes', async ({ page }) => {
+    test('should stdout redirect to file without ansi escapes', async ({ page }) => {
       // grep to terminal is colored
       const output_direct = await shellLineSimple(page, 'grep of file1', { color: true });
       const start = '\x1B[01;31m\x1B[K'; // TODO: don't use magic strings here
@@ -49,7 +49,21 @@ test.describe('Shell', () => {
       expect(output_file[1]).toMatch(/^cat output\r\nContents of the file\r\n/);
     });
 
-    test('should input redirect from file', async ({ page }) => {
+    test('should stderr redirect to file', async ({ page }) => {
+      const output = await shellLineSimpleN(page, [
+        'ls unknown > out 2> err',
+        'cat err',
+        'ls xyz 2>> err',
+        'cat err'
+      ]);
+
+      expect(output[1]).toMatch("\r\nls: cannot access 'unknown': No such file or directory\r\n");
+      expect(output[3]).toMatch(
+        "\r\nls: cannot access 'unknown': No such file or directory\r\nls: cannot access 'xyz': No such file or directory\r\n"
+      );
+    });
+
+    test('should stdin redirect from file', async ({ page }) => {
       expect(await shellLineSimple(page, 'wc < file2')).toMatch('      1       5      27\r\n');
     });
 
