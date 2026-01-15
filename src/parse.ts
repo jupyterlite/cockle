@@ -108,25 +108,39 @@ export function parse(source: string, throwErrors: boolean = true, aliases?: Ali
   return ret;
 }
 
-function _createCommandNode(tokens: Token[]) {
+function _createCommandNode(tokens: Token[]): CommandNode {
   let args = tokens.slice(1);
 
-  function isRedirect(str: string): boolean {
-    return str.startsWith('>') || str.startsWith('<');
-  }
-
   // Handle redirects.
-  const index = args.findIndex(token => isRedirect(token.value));
+  let redirectNodes: RedirectNode[] | undefined;
+  const index = args.findIndex(token => _isRedirect(token.value));
   if (index >= 0) {
-    // Must support multiple redirects for a single command.
-    if (args.length !== index + 2) {
-      // Need better error handling here.
-      throw new GeneralError('Redirect should be followed by file to redirect to');
-    }
-    const redirect = new RedirectNode(args[index], args[index + 1]);
+    redirectNodes = _createRedirectNodes(args.slice(index));
     args = args.slice(0, index);
-    return new CommandNode(tokens[0], args, [redirect]);
   }
 
-  return new CommandNode(tokens[0], args);
+  return new CommandNode(tokens[0], args, redirectNodes);
+}
+
+function _createRedirectNodes(tokens: Token[]): RedirectNode[] {
+  const redirectNodes: RedirectNode[] = [];
+  while (tokens.length > 0) {
+    const token = tokens.shift()!;
+    if (!_isRedirect(token.value)) {
+      throw new GeneralError(`Expected redirect token not '${token.value}'`);
+    }
+
+    if (tokens.length < 1) {
+      throw new GeneralError(
+        `Redirect '${token.value}' should be followed by a file to redirect to`
+      );
+    }
+    const target = tokens.shift()!;
+    redirectNodes.push(new RedirectNode(token, target));
+  }
+  return redirectNodes;
+}
+
+function _isRedirect(str: string): boolean {
+  return str.startsWith('>') || str.startsWith('2>') || str.startsWith('<');
 }

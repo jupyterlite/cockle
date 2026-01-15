@@ -658,19 +658,19 @@ export class ShellImpl implements IShellImpl {
     }
 
     if (commandNode.redirects) {
-      // Support single redirect only, write or append to file.
-      if (commandNode.redirects.length > 1) {
-        throw new GeneralError('Only implemented a single redirect per command');
-      }
-      const redirect = commandNode.redirects[0];
-      const redirectChars = redirect.token.value;
-      const path = redirect.target.value;
-      if (redirectChars === '>' || redirectChars === '>>') {
-        output = new FileOutput(this._runContext.fileSystem, path, redirectChars === '>>');
-      } else if (redirectChars === '<') {
-        input = new FileInput(this._runContext.fileSystem, path);
-      } else {
-        throw new GeneralError('Unrecognised redirect ' + redirectChars);
+      for (const redirect of commandNode.redirects) {
+        // If multiple redirects of the same type, use the last one.
+        const redirectChars = redirect.token.value;
+        const path = redirect.target.value;
+        if (redirectChars === '>' || redirectChars === '>>') {
+          output = new FileOutput(this._runContext.fileSystem, path, redirectChars === '>>');
+        } else if (redirectChars === '2>' || redirectChars === '2>>') {
+          error = new FileOutput(this._runContext.fileSystem, path, redirectChars === '2>>');
+        } else if (redirectChars === '<') {
+          input = new FileInput(this._runContext.fileSystem, path);
+        } else {
+          throw new GeneralError('Unrecognised redirect ' + redirectChars);
+        }
       }
     }
 

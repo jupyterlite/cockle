@@ -132,12 +132,47 @@ describe('tokenize', () => {
     ]);
   });
 
+  test('should support redirection of stderr', () => {
+    expect(tokenize('pwd 2> somefile')).toEqual([
+      { offset: 0, value: 'pwd' },
+      { offset: 4, value: '2>' },
+      { offset: 7, value: 'somefile' }
+    ]);
+    expect(tokenize('pwd 2>somefile')).toEqual([
+      { offset: 0, value: 'pwd' },
+      { offset: 4, value: '2>' },
+      { offset: 6, value: 'somefile' }
+    ]);
+    expect(tokenize('pwd 2>> somefile')).toEqual([
+      { offset: 0, value: 'pwd' },
+      { offset: 4, value: '2>>' },
+      { offset: 8, value: 'somefile' }
+    ]);
+    expect(tokenize('pwd 2>>somefile')).toEqual([
+      { offset: 0, value: 'pwd' },
+      { offset: 4, value: '2>>' },
+      { offset: 7, value: 'somefile' }
+    ]);
+  });
+
   test('should support redirection of stdin', () => {
     expect(tokenize('wc -l < somefile')).toEqual([
       { offset: 0, value: 'wc' },
       { offset: 3, value: '-l' },
       { offset: 6, value: '<' },
       { offset: 8, value: 'somefile' }
+    ]);
+  });
+
+  test('should support multiple redirections', () => {
+    expect(tokenize('wc < input > output 2> error')).toEqual([
+      { offset: 0, value: 'wc' },
+      { offset: 3, value: '<' },
+      { offset: 5, value: 'input' },
+      { offset: 11, value: '>' },
+      { offset: 13, value: 'output' },
+      { offset: 20, value: '2>' },
+      { offset: 23, value: 'error' }
     ]);
   });
 
