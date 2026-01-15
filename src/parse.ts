@@ -126,7 +126,7 @@ function _createRedirectNodes(tokens: Token[]): RedirectNode[] {
   const redirectNodes: RedirectNode[] = [];
   while (tokens.length > 0) {
     const token = tokens.shift()!;
-  if (!_isRedirect(token.value)) {
+    if (!_isRedirect(token.value)) {
       throw new GeneralError(`Expected redirect token not '${token.value}'`);
     }
 
