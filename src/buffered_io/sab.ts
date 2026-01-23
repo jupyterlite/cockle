@@ -8,9 +8,10 @@ export namespace SAB {
   // Possible values of REQUEST_INDEX:
   export const NO_REQUEST_VALUE = 0;
   export const REQUEST_VALUE = 1;
-  export const ABORT_VALUE = 2;
+  export const MORE_TO_FOLLOW_VALUE = 2;
+  export const ABORT_VALUE = 3;
 
-  export const maxChars: number = 64; // Max number of characters that can be stored in the buffer.
+  export const maxChars: number = 1000; // Number of characters that can be stored in the buffer.
 
   const maxTimeoutMs = 100000; // Treated as Infinity.
 

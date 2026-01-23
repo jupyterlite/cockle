@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import {
+  sequenceOfLetters,
   shellInputsSimple,
   shellInputsSimpleN,
   shellLineComplex,
@@ -488,6 +489,63 @@ test.describe('Shell', () => {
             { stdinOption, delayMs }
           );
           expect(output).toMatch(/^cat file1\r\nCoXntents of the file\r\n/);
+        });
+      });
+
+      const nchars = [10, 100, 1_000, 10_000];
+      nchars.forEach(nchar => {
+        const input = sequenceOfLetters(nchar);
+
+        test(`should async read ${nchar} characters from stdin via ${stdinOption}`, async ({
+          page
+        }) => {
+          const output = await page.evaluate(
+            async ({ stdinOption, input }) => {
+              const { delay, keys, shellSetupEmpty } = globalThis.cockle;
+              const { shell, output } = await shellSetupEmpty({ stdinOption });
+
+              const runCmd = shell.inputLine('js-test stdin');
+              await delay(100);
+              await shell.input(input);
+              await shell.input(keys.EOT);
+              await runCmd;
+
+              return output.text;
+            },
+            { stdinOption, input }
+          );
+
+          const lines = output.split('\r\n');
+          expect(lines).toHaveLength(3);
+          expect(lines[1]).toEqual(input + input.toUpperCase());
+        });
+
+        test(`should sync read ${nchar} characters from stdin via ${stdinOption}`, async ({
+          page
+        }) => {
+          const output = await page.evaluate(
+            async ({ stdinOption, input }) => {
+              const { delay, keys, shellSetupEmpty } = globalThis.cockle;
+              const { shell, output } = await shellSetupEmpty({ stdinOption });
+
+              const runCmd = shell.inputLine('vim');
+              await delay(100);
+              await shell.input('i');
+              await delay(100);
+              await shell.input(input);
+              await shell.input(keys.escape + ':wq out\r');
+              await runCmd;
+
+              output.clear();
+              await shell.inputLine('cat out');
+              return output.text;
+            },
+            { stdinOption, input }
+          );
+
+          const lines = output.split('\r\n');
+          expect(lines).toHaveLength(3);
+          expect(lines[1]).toEqual(input);
         });
       });
     });
