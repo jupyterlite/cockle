@@ -9,7 +9,13 @@ export const test = base.extend({
   }
 });
 
-// Wrappers to call shell functions in browser context.
+export function sequenceOfLetters(n: number): string {
+  let ret = '';
+  for (let i = 0; i < n; i++) {
+    ret += String.fromCharCode(97 + (i % 26));
+  }
+  return ret;
+}
 
 // Input multiple characters, one at a time. Support multi-character ANSI escape sequences.
 export async function shellInputsSimpleN(

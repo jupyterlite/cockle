@@ -22,15 +22,21 @@ export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
     }
 
     // Request stdin from main worker.
-    Atomics.store(this._intArray, SAB.REQUEST_INDEX, SAB.REQUEST_VALUE);
     Atomics.store(this._intArray, SAB.TIMEOUT_INDEX, SAB.encodeTimeout(timeoutMs));
-    Atomics.notify(this._intArray, SAB.REQUEST_INDEX, 1);
 
-    Atomics.wait(this._intArray, SAB.REQUEST_INDEX, SAB.REQUEST_VALUE);
-    const len = Atomics.load(this._intArray, SAB.LENGTH_INDEX);
     let ret = '';
-    for (let i = 0; i < len; i++) {
-      ret += String.fromCharCode(Atomics.load(this._intArray, SAB.START_INDEX + i));
+    let moreToFollow = true;
+    while (moreToFollow) {
+      Atomics.store(this._intArray, SAB.REQUEST_INDEX, SAB.REQUEST_VALUE);
+      Atomics.notify(this._intArray, SAB.REQUEST_INDEX, 1);
+
+      Atomics.wait(this._intArray, SAB.REQUEST_INDEX, SAB.REQUEST_VALUE);
+      moreToFollow = Atomics.load(this._intArray, SAB.REQUEST_INDEX) === SAB.MORE_TO_FOLLOW_VALUE;
+
+      const len = Atomics.load(this._intArray, SAB.LENGTH_INDEX);
+      for (let i = 0; i < len; i++) {
+        ret += String.fromCharCode(Atomics.load(this._intArray, SAB.START_INDEX + i));
+      }
     }
     return ret;
   }
@@ -41,23 +47,28 @@ export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
     }
 
     // Request stdin from main worker.
-    Atomics.store(this._intArray, SAB.REQUEST_INDEX, SAB.REQUEST_VALUE);
     Atomics.store(this._intArray, SAB.TIMEOUT_INDEX, SAB.encodeTimeout(timeoutMs));
-    Atomics.notify(this._intArray, SAB.REQUEST_INDEX, 1);
 
-    const { async, value } = Atomics.waitAsync(
-      this._intArray,
-      SAB.REQUEST_INDEX,
-      SAB.REQUEST_VALUE
-    );
-    if (async) {
-      await value;
-    }
-
-    const len = Atomics.load(this._intArray, SAB.LENGTH_INDEX);
     let ret = '';
-    for (let i = 0; i < len; i++) {
-      ret += String.fromCharCode(Atomics.load(this._intArray, SAB.START_INDEX + i));
+    let moreToFollow = true;
+    while (moreToFollow) {
+      Atomics.store(this._intArray, SAB.REQUEST_INDEX, SAB.REQUEST_VALUE);
+      Atomics.notify(this._intArray, SAB.REQUEST_INDEX, 1);
+
+      const { async, value } = Atomics.waitAsync(
+        this._intArray,
+        SAB.REQUEST_INDEX,
+        SAB.REQUEST_VALUE
+      );
+      if (async) {
+        await value;
+      }
+      moreToFollow = Atomics.load(this._intArray, SAB.REQUEST_INDEX) === SAB.MORE_TO_FOLLOW_VALUE;
+
+      const len = Atomics.load(this._intArray, SAB.LENGTH_INDEX);
+      for (let i = 0; i < len; i++) {
+        ret += String.fromCharCode(Atomics.load(this._intArray, SAB.START_INDEX + i));
+      }
     }
     return ret;
   }

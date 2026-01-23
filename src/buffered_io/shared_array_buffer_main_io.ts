@@ -45,10 +45,30 @@ export class SharedArrayBufferMainIO extends MainIO implements IMainIO {
   }
 
   private async _sendResult(chars: string): Promise<void> {
-    const len = chars.length;
-    Atomics.store(this._intArray, SAB.LENGTH_INDEX, len);
-    for (let i = 0; i < len; i++) {
-      Atomics.store(this._intArray, SAB.START_INDEX + i, chars.charCodeAt(i));
+    let moreToFollow = true;
+    while (moreToFollow) {
+      moreToFollow = chars.length > SAB.maxChars;
+      const len = moreToFollow ? SAB.maxChars : chars.length;
+
+      Atomics.store(this._intArray, SAB.LENGTH_INDEX, len);
+      for (let i = 0; i < len; i++) {
+        Atomics.store(this._intArray, SAB.START_INDEX + i, chars.charCodeAt(i));
+      }
+
+      if (moreToFollow) {
+        chars = chars.slice(SAB.maxChars);
+        Atomics.store(this._intArray, SAB.REQUEST_INDEX, SAB.MORE_TO_FOLLOW_VALUE);
+        Atomics.notify(this._intArray, SAB.REQUEST_INDEX, 1);
+
+        const { async, value } = Atomics.waitAsync(
+          this._intArray,
+          SAB.REQUEST_INDEX,
+          SAB.MORE_TO_FOLLOW_VALUE
+        );
+        if (async) {
+          await value;
+        }
+      }
     }
 
     Atomics.store(this._intArray, SAB.REQUEST_INDEX, SAB.NO_REQUEST_VALUE);
