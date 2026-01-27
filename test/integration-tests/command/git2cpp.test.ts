@@ -9,7 +9,6 @@ test.describe('git2cpp command', () => {
     expect(lines[1]).toMatch(' (libgit2 ');
   });
 
-  test.skip(true, 'git2cpp init not working...');
   test('should create and modify repo', async ({ page }) => {
     // Simple init, add, commit, status, log workflow.
     const output = await page.evaluate(async cmdName => {
@@ -51,6 +50,7 @@ test.describe('git2cpp command', () => {
     // git status
     expect(output[6]).toBe(0);
     expect(output[7]).toMatch('\r\nOn branch master\r\n');
+    expect(output[7]).toMatch('\r\nNothing to commit, working tree clean\r\n');
 
     // git log
     expect(output[8]).toBe(0);
