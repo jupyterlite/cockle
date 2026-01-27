@@ -110,21 +110,26 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       quit: (moduleExitCode: number, toThrow: any) => setExitCode(moduleExitCode),
       preRun: [
         (module: MainModule) => {
-          if (Object.prototype.hasOwnProperty.call(module, 'FS')) {
-            // Use PROXYFS so that command sees the shared FS.
+          const { ENV, FS, TTY } = module;
+          if (FS !== undefined) {
             const FS = module.FS;
             const { mountpoint } = fileSystem;
             FS.mkdir(mountpoint, 0o777);
-            FS.mount(fileSystem.PROXYFS, { root: mountpoint, fs: fileSystem.FS }, mountpoint);
+            // Use PROXYFS so that command sees the shared FS.
+            FS.mount(
+              module.PROXYFS ?? fileSystem.PROXYFS,
+              { root: mountpoint, fs: fileSystem.FS },
+              mountpoint
+            );
             FS.chdir(fileSystem.FS.cwd());
           }
 
-          if (Object.prototype.hasOwnProperty.call(module, 'ENV')) {
+          if (ENV !== undefined) {
             // Copy environment variables into command.
             context.environment.copyIntoCommand(module.ENV!, stdout.isTerminal());
           }
 
-          if (Object.prototype.hasOwnProperty.call(module, 'TTY')) {
+          if (TTY !== undefined) {
             // Monkey patch get/set termios and get window size.
             module.TTY.default_tty_ops.ioctl_tcgets = getTermios;
             module.TTY.default_tty_ops.ioctl_tcsets = setTermios;

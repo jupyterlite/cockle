@@ -3,7 +3,7 @@
  * matches the version of emscripten (4.0.9) that is used for WebAssembly command packages.
  *
  * Modified to add extra optional functions and properties to WasmModule such as ENV and
- * getEnvStrings, and to add IWebAssemblyModule.
+ * to add IWebAssemblyModule.
  */
 
 // TypeScript bindings for emscripten-generated code.  Automatically generated at compile time.
@@ -429,8 +429,11 @@ declare class FSNode {
 }
 interface WasmModule {
   ENV?: { [key: string]: string };
+  ERRNO_CODES: any;
+  FS?: any;
+  PATH?: any;
+  PROXYFS?: any;
   TTY?: any;
-  getEnvStrings?(): string[];
 }
 
 export type MainModule = WasmModule & typeof RuntimeExports;
