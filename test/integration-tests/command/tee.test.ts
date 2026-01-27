@@ -43,7 +43,7 @@ test.describe('tee command', () => {
       await shell.inputLine('tee -x');
       return [output.text, await shell.exitCode()];
     });
-    expect(output[0]).toMatch("tee -x\r\ntee: invalid option -- 'x'\r\n");
+    expect(output[0]).toMatch('tee -x\r\ntee: unrecognized option: x\r\n');
     expect(output[1]).toEqual(1);
   });
 });

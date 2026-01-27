@@ -26,6 +26,18 @@ name as the package unless otherwise specified:
 - `tree`
 - `vim`
 
+## Version compatibility
+
+The filesystem used in `cockle` is built using a specific version of Emscripten, and for maximum
+compatibility the WebAssembly commands used in `cockle` should be built using the same version of
+Emscripten. WebAssembly commands built on Emscripten-forge are hosted on different
+[prefix.dev](https://prefix.dev/channels) channels depending on the Emscripten version.
+
+| `cockle` version    | `emscripten` version | `prefix.dev` channel   |
+| ------------------- | -------------------- | ---------------------- |
+| >= 1.3.0            | 4.0.9                | `emscripten-forge-4x`  |
+| >= 0.1.14, <= 1.2.0 | 3.1.73               | `emscripten-forge-dev` |
+
 ## Build
 
 ```bash

@@ -143,4 +143,13 @@ test.describe('wasm-test', () => {
     const lines = output.split('\r\n');
     expect(lines[1]).toMatch(/^ABCDEFGHIJKLMNOPQRSTUVWXYZ/);
   });
+
+  test('should write emscripten version', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+      await shell.inputLine('wasm-test emscripten');
+      return output.text;
+    });
+    expect(output).toMatch('\r\nEmscripten version: 4.0.9\r\n');
+  });
 });
