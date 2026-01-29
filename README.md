@@ -88,6 +88,9 @@ npm run test
 ```
 
 You can interactively run individual playwright tests using `npm run test:integration:ui`.
+The testing framework serves its own CORS proxy using
+[cors-anywhere](https://github.com/Rob--W/cors-anywhere) so that `git clone` of github repositories
+can be tested without using an external CORS proxy that may be rate limited or otherwise restricted.
 
 In addition, the `demo` directory contains separate visual tests that can be run in the same way.
 Only Linux screenshots are stored within the repository.
