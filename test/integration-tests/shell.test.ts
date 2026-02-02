@@ -551,7 +551,7 @@ test.describe('Shell', () => {
     });
   });
 
-  test.describe('constructor options', () => {
+  test.describe('constructor', () => {
     test('should support setting aliases', async ({ page }) => {
       const output = await page.evaluate(async () => {
         const aliases = { my_alias: 'target --something' };
@@ -580,6 +580,19 @@ test.describe('Shell', () => {
         return await shell.exitCode();
       });
       expect(exitCode).toEqual(1);
+    });
+
+    test('should set env vars for shellId and browsingContextId', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { shellManager, shellSetupEmpty } = globalThis.cockle;
+        // Use ShellManager so that browsingContextId is set.
+        const { output, shell } = await shellSetupEmpty({ shellManager });
+        await shell.inputLine('env | sort | grep COCKLE');
+        return output.text;
+      });
+      const lines = output.split('\r\n');
+      expect(lines[1]).toMatch(/^COCKLE_BROWSING_CONTEXT_ID=/);
+      expect(lines[2]).toMatch(/^COCKLE_SHELL_ID=/);
     });
   });
 
