@@ -56,7 +56,7 @@ export class ShellImpl implements IShellImpl {
         options.callExternalCommand,
         options.callExternalTabComplete
       ),
-      environment: new Environment(options.color),
+      environment: new Environment(options.color, options.shellId, options.browsingContextId),
       history: new History(),
       shellId: options.shellId,
       terminate: this.terminate.bind(this),

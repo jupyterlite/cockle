@@ -5,8 +5,14 @@ import { ansi } from './ansi';
  * commands.
  */
 export class Environment extends Map<string, string> {
-  constructor(color: boolean) {
+  constructor(color: boolean, shellId: string, browsingContextId: string | undefined) {
     super();
+    if (shellId) {
+      this.set('COCKLE_SHELL_ID', shellId);
+    }
+    if (browsingContextId) {
+      this.set('COCKLE_BROWSING_CONTEXT_ID', browsingContextId);
+    }
     if (color) {
       this.set('PS1', ansi.styleGreen + 'js-shell:' + ansi.styleReset + ' ');
       this.set('TERM', 'xterm-256color');
