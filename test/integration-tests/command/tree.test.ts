@@ -5,7 +5,7 @@ test.describe('tree command', () => {
   test('should write version', async ({ page }) => {
     const output = await shellLineSimple(page, 'tree --version');
     expect(output).toMatch(
-      '\r\ntree v2.2.1 © 1996 - 2024 by Steve Baker, Thomas Moore, Francesc Rocher, Florian Sesser, Kyosuke Tokoro\r\n'
+      '\r\ntree v2.3.1 © 1996 - 2026 by Steve Baker, Thomas Moore, Francesc Rocher, Florian Sesser, Kyosuke Tokoro\r\n'
     );
   });
 
