@@ -40,7 +40,7 @@ jobs:
 
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.repository_owner == 'jupyterlite'
     permissions:
       pages: write
       id-token: write
