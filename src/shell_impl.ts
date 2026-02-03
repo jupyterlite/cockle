@@ -70,20 +70,6 @@ export class ShellImpl implements IShellImpl {
       stdinContext: options.stdinContext
     };
 
-    // Aliases.
-    Object.entries(options.aliases).forEach(([name, value]) =>
-      this._runContext.aliases.set(name, value)
-    );
-
-    // Environment variables.
-    Object.entries(options.environment).forEach(([name, value]) => {
-      if (value === undefined) {
-        this._runContext.environment.delete(name);
-      } else {
-        this._runContext.environment.set(name, value);
-      }
-    });
-
     // External commands.
     options.externalCommandConfigs.forEach(config =>
       this._runContext.commandRegistry.registerExternalCommand(config.name, config.hasTabComplete)
@@ -127,6 +113,20 @@ export class ShellImpl implements IShellImpl {
 
   async initialize() {
     await this._initWasmPackages();
+
+    // Aliases and env vars from constructor options override those from cockle-config.json
+    Object.entries(this._options.aliases).forEach(([name, value]) =>
+      this._runContext.aliases.set(name, value)
+    );
+
+    Object.entries(this._options.environment).forEach(([name, value]) => {
+      if (value === undefined) {
+        this._runContext.environment.delete(name);
+      } else {
+        this._runContext.environment.set(name, value);
+      }
+    });
+
     await this._initFileSystem();
   }
 

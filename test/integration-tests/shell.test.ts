@@ -631,4 +631,53 @@ test.describe('Shell', () => {
       });
     });
   });
+
+  test.describe('constructor options override cockle-config.json', () => {
+    test('aliases', async ({ page }) => {
+      const cmd = 'alias git';
+
+      // Control.
+      const outputA = (await shellLineSimple(page, cmd)).split('\r\n');
+      expect(outputA).toHaveLength(3);
+      expect(outputA[1]).toBe("git='git2cpp'");
+
+      // Set in constructor options.
+      const optionsB = { aliases: { git: 'other' } };
+      const outputB = (await shellLineSimple(page, cmd, optionsB)).split('\r\n');
+      expect(outputB).toHaveLength(3);
+      expect(outputB[1]).toBe("git='other'");
+
+      // Set to empty string in constructor options.
+      const optionsC = { aliases: { git: '' } };
+      const outputC = (await shellLineSimple(page, cmd, optionsC)).split('\r\n');
+      expect(outputC).toHaveLength(3);
+      expect(outputC[1]).toBe("git=''");
+    });
+
+    test('environment variables', async ({ page }) => {
+      const cmd = 'env | grep GIT_AUTHOR_EMAIL';
+
+      // Control.
+      const outputA = (await shellLineSimple(page, cmd)).split('\r\n');
+      expect(outputA).toHaveLength(3);
+      expect(outputA[1]).toBe('GIT_AUTHOR_EMAIL=jane.doe@blabla.com');
+
+      // Set in constructor options.
+      const optionsB = { environment: { GIT_AUTHOR_EMAIL: 'other@somewhere.eu' } };
+      const outputB = (await shellLineSimple(page, cmd, optionsB)).split('\r\n');
+      expect(outputB).toHaveLength(3);
+      expect(outputB[1]).toBe('GIT_AUTHOR_EMAIL=other@somewhere.eu');
+
+      // Set to empty string in constructor options.
+      const optionsC = { environment: { GIT_AUTHOR_EMAIL: '' } };
+      const outputC = (await shellLineSimple(page, cmd, optionsC)).split('\r\n');
+      expect(outputC).toHaveLength(3);
+      expect(outputC[1]).toBe('GIT_AUTHOR_EMAIL=');
+
+      // Delete in constructor options.
+      const optionsD = { environment: { GIT_AUTHOR_EMAIL: undefined } };
+      const outputD = (await shellLineSimple(page, cmd, optionsD)).split('\r\n');
+      expect(outputD).toHaveLength(2);
+    });
+  });
 });
