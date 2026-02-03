@@ -1,8 +1,10 @@
 const path = require('path');
 
+const entry = process.env.COCKLE_LOCAL_CORS ? './serve/index_local_cors.ts' : './serve/index_remote_cors.ts'
+
 module.exports = {
   mode: 'development',
-  entry: './serve/index.ts',
+  entry,
   module: {
     rules: [
       {

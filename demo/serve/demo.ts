@@ -1,11 +1,28 @@
 import type { IShell } from '@jupyterlite/cockle';
-import { Shell } from '@jupyterlite/cockle';
+import { Shell, ShellManager } from '@jupyterlite/cockle';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import type { IDemo } from './defs';
 import { externalCommand } from './external_command';
 import { externalRun, externalTabComplete } from './external_command_tab';
 import { externalTuiCommand } from './external_command_tui';
+
+export async function runDemo(useLocalCors: boolean) {
+  const baseUrl = window.location.href;
+  const shellManager = new ShellManager();
+  const browsingContextId = await shellManager.installServiceWorker(baseUrl);
+
+  const targetDiv: HTMLElement = document.getElementById('targetdiv')!;
+  const demo = new Demo({ baseUrl, browsingContextId, shellManager, targetDiv, useLocalCors });
+
+  const themeSelect = document.getElementById('theme-select') as HTMLSelectElement;
+  themeSelect?.addEventListener('change', (event: any) => {
+    const [foreground, background, mode] = themeSelect.value.split('-');
+    demo.setTheme(foreground, background, mode);
+  });
+
+  await demo.start();
+}
 
 export class Demo {
   constructor(options: IDemo.IOptions) {
@@ -26,7 +43,7 @@ export class Demo {
 
     const { baseUrl, browsingContextId, shellManager } = options;
 
-    this._shell = new Shell({
+    const shellOptions: IShell.IOptions = {
       browsingContextId,
       baseUrl,
       wasmBaseUrl: baseUrl,
@@ -53,7 +70,13 @@ export class Demo {
           'end\n' +
           'print(factorial(tonumber(arg[1])))\n'
       }
-    });
+    };
+
+    if (options.useLocalCors) {
+      shellOptions.environment = { GIT_CORS_PROXY: 'http://localhost:8881/' };
+    }
+
+    this._shell = new Shell(shellOptions);
   }
 
   async start(): Promise<void> {
