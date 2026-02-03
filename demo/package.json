@@ -10,7 +10,10 @@
     "scripts": {
         "build": "rspack build",
         "postbuild": "node node_modules/@jupyterlite/cockle/lib/tools/prepare_wasm.js --copy assets",
-        "serve": "rspack serve",
+        "serve": "npm run serve:demo",
+        "serve-with-cors": "COCKLE_LOCAL_CORS=1 concurrently 'npm run serve:demo' 'npm run serve:cors'",
+        "serve:demo": "rspack serve",
+        "serve:cors": "HOST=localhost PORT=8881 node node_modules/cors-anywhere/server.js ",
         "test": "playwright test",
         "test:ui": "playwright test --ui",
         "test:report": "playwright show-report"
@@ -22,6 +25,8 @@
         "@rspack/core": "^0.7.5",
         "@xterm/addon-fit": "^0.10.0",
         "@xterm/xterm": "^5.5.0",
+        "concurrently": "^9.2.1",
+        "cors-anywhere": "^0.4.4",
         "css-loader": "^7.1.2",
         "style-loader": "^4.0.0",
         "ts-loader": "^9.5.1",

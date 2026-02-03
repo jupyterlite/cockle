@@ -55,22 +55,34 @@ You can use `conda`, `mamba` or `pixi` instead of `micromamba` here. A copy of
 ## Demo
 
 The `cockle` repository includes a demo so that you can easily try it out interactively in a web
-browser. Once you have built `cockle`, build and run the demo using:
+browser. Once you have built `cockle`, build the demo using:
 
 ```bash
 cd demo
 npm install
 npm run build
+```
+
+and then serve he demo using:
+
+```bash
 npm run serve
 ```
 
-then open a browser at the specified URL:
+and open a browser at the specified URL:
 
 <img alt="Demo" src="demo.png" width="800px">
 
 The demo is served with cross-origin headers so that is supports synchronous `stdin` via both
 SharedArrayBuffer and ServiceWorker. Use `cockle-config stdin` to check the current settings, and
 `cockle-config stdin sw` to switch to using the ServiceWorker.
+
+The demo can also be served with a local CORS proxy which is useful for trying out `git clone` of
+remote repositories. For this use:
+
+```bash
+npm run serve-with-cors
+```
 
 ---
 
