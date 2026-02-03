@@ -11,6 +11,7 @@ concurrency:
 
 jobs:
   check_release:
+    if: github.event_name == 'pull_request' || github.repository_owner == 'jupyterlite'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
