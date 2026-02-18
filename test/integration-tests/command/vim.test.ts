@@ -4,7 +4,7 @@ import { shellLineSimple, test } from '../utils';
 test.describe('vim command', () => {
   test('should output version', async ({ page }) => {
     const output = await shellLineSimple(page, 'vim --version');
-    expect(output).toMatch(/^vim --version\r\nVIM - Vi IMproved 9.1/);
+    expect(output).toMatch(/^vim --version\r\nVIM - Vi IMproved 9.2/);
   });
 
   const stdinOptions = ['sab', 'sw'];
