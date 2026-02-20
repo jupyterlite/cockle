@@ -594,6 +594,23 @@ test.describe('Shell', () => {
       expect(lines[1]).toMatch(/^COCKLE_BROWSING_CONTEXT_ID=/);
       expect(lines[2]).toMatch(/^COCKLE_SHELL_ID=/);
     });
+
+    const cwd_and_expected: { cwd: string | undefined, expected: string }[] = [
+      { cwd: '/drive', expected: '/drive' },
+      { cwd: '/drive/dir', expected: '/drive/dir' },
+      { cwd: '/drive/dir/subdir', expected: '/drive/dir/subdir' },
+      { cwd: undefined, expected: '/drive' },
+      { cwd: '', expected: '/drive' },
+      { cwd: '/', expected: '/' },
+      { cwd: '/does-not-exist', expected: '/drive' }
+    ];
+    cwd_and_expected.forEach(obj => {
+      test(`should support setting cwd to ${obj.cwd}`, async ({ page }) => {
+        const { cwd, expected } = obj;
+        const output = await shellLineComplex(page, 'pwd', { cwd });
+        expect(output).toMatch(expected);
+      });
+    });
   });
 
   test.describe('themeChange', () => {

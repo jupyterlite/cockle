@@ -27,6 +27,7 @@ export namespace IShell {
     shellId?: string; // Unique ID/name
     color?: boolean;
     mountpoint?: string;
+    cwd?: string;
     baseUrl: string;
     wasmBaseUrl: string;
     browsingContextId?: string;
