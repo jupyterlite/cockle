@@ -595,7 +595,7 @@ test.describe('Shell', () => {
       expect(lines[2]).toMatch(/^COCKLE_SHELL_ID=/);
     });
 
-    const cwd_and_expected: { cwd: string | undefined, expected: string }[] = [
+    const cwd_and_expected: { cwd: string | undefined; expected: string }[] = [
       { cwd: '/drive', expected: '/drive' },
       { cwd: '/drive/dir', expected: '/drive/dir' },
       { cwd: '/drive/dir/subdir', expected: '/drive/dir/subdir' },
