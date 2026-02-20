@@ -306,6 +306,7 @@ export abstract class BaseShell implements IShell {
         shellId: this.shellId,
         color: options.color ?? true,
         mountpoint: options.mountpoint,
+        cwd: options.cwd,
         wasmBaseUrl: options.wasmBaseUrl,
         baseUrl: options.baseUrl,
         browsingContextId: options.browsingContextId,

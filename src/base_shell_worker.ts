@@ -61,6 +61,7 @@ export abstract class BaseShellWorker implements IShellWorker {
       shellId: options.shellId,
       color: options.color,
       mountpoint: options.mountpoint,
+      cwd: options.cwd,
       baseUrl: options.baseUrl,
       wasmBaseUrl: options.wasmBaseUrl,
       browsingContextId: options.browsingContextId,

@@ -492,7 +492,6 @@ export class ShellImpl implements IShellImpl {
     });
 
     FS.chdir(mountpoint);
-    this.environment.set('PWD', FS.cwd());
 
     if (initialDirectories) {
       initialDirectories.forEach((directory: string) => FS.mkdir(directory, 0o775));
@@ -503,6 +502,17 @@ export class ShellImpl implements IShellImpl {
         FS.writeFile(filename, contents, { mode: 0o664 })
       );
     }
+
+    if (this._options.cwd !== undefined) {
+      try {
+        FS.chdir(this._options.cwd);
+      } catch (err: any) {
+        // Remains in mountpoint.
+        console.error('Failed to cd to ' + this._options.cwd);
+      }
+    }
+
+    this.environment.set('PWD', FS.cwd());
   }
 
   private async _initWasmPackages(): Promise<void> {
