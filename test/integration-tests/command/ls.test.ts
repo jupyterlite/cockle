@@ -55,4 +55,35 @@ test.describe('ls command', () => {
         'dirA  ggggg\r\n'
     );
   });
+
+  test('should match wildcard', async ({ page }) => {
+    const output = await shellLineSimpleN(page, ['ls *', 'ls f*', 'ls file?']);
+    expect(output[0]).toMatch('ls *\r\nfile1  file2\r\n\r\ndirA:\r\n');
+    expect(output[1]).toMatch('ls f*\r\nfile1  file2\r\n');
+    expect(output[2]).toMatch('ls file?\r\nfile1  file2\r\n');
+  });
+
+  test('should keep wildcard if no matches', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { shell, output } = await globalThis.cockle.shellSetupSimple();
+      await shell.inputLine('ls z*');
+      const ret = [output.textAndClear(), await shell.exitCode()];
+      await shell.inputLine('ls f* z*');
+      ret.push(output.textAndClear(), await shell.exitCode());
+      await shell.inputLine('ls file2 q*');
+      ret.push(output.textAndClear(), await shell.exitCode());
+      return ret;
+    });
+
+    expect(output[0]).toMatch("\r\nls: cannot access 'z*': No such file or directory\r\n");
+    expect(output[1]).toBe(2);
+
+    expect(output[2]).toMatch("\r\nls: cannot access 'z*': No such file or directory\r\n");
+    expect(output[2]).toMatch(/\r\n\s*file1\s+file2\r\n/);
+    expect(output[3]).toBe(2);
+
+    expect(output[4]).toMatch("\r\nls: cannot access 'q*': No such file or directory\r\n");
+    expect(output[4]).toMatch(/\r\n\s*file2\r\n/);
+    expect(output[5]).toBe(2);
+  });
 });

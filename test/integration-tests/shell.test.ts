@@ -319,6 +319,26 @@ test.describe('Shell', () => {
       const output0 = await shellLineComplex(page, 'ls dir/subf*');
       expect(output0).toMatch(/\r\ndir\/subfile\.md\s+dir\/subfile\.txt\r\n/);
     });
+
+    test('should keep wildcard if no matches', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+        await shell.inputLine('ls z* y?');
+        const ret = [output.textAndClear(), await shell.exitCode()];
+        await shell.inputLine('touch afile.txt');
+        output.clear();
+        await shell.inputLine('ls afile.txt y?');
+        ret.push(output.textAndClear(), await shell.exitCode());
+        return ret;
+      });
+      expect(output[0]).toMatch("\r\nls: cannot access 'z*': No such file or directory\r\n");
+      expect(output[0]).toMatch("\r\nls: cannot access 'y?': No such file or directory\r\n");
+      expect(output[1]).toBe(2);
+
+      expect(output[2]).toMatch("\r\nls: cannot access 'y?': No such file or directory\r\n");
+      expect(output[2]).toMatch(/\r\n\s*afile.txt\r\n/);
+      expect(output[3]).toBe(2);
+    });
   });
 
   test.describe('synchronous stdin settings', () => {
