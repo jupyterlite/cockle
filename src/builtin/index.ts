@@ -10,4 +10,5 @@ export * from './exit_command';
 export * from './export_command';
 export * from './help_command';
 export * from './history_command';
+export * from './unset_command';
 export * from './which_command';

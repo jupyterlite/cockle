@@ -50,6 +50,11 @@ export class Environment extends Map<string, string> {
     return this.has('TERM');
   }
 
+  names(): string[] {
+    const re = /^[A-Za-z_]/;
+    return Array.from(this.keys()).filter(name => re.test(name));
+  }
+
   setSize(rows: number, columns: number): void {
     if (rows >= 1) {
       const rowsString = rows.toString();

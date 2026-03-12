@@ -10,7 +10,7 @@ test.describe('built-in commands help coverage', () => {
       .slice(4, -2) // Remove table header and footer.
       .map(x => x.split('│').at(1)?.trim()); // Take first column.
 
-    expect(builtins.length).toEqual(11);
+    expect(builtins.length).toEqual(12);
 
     // Run each built-in command sequentially to check `--help` output
     for (const cmd of builtins) {
