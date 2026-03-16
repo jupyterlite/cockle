@@ -26,7 +26,7 @@ name as the package unless otherwise specified:
 - `tree`
 - `vim`
 
-## Version compatibility
+## Version compatibility
 
 The filesystem used in `cockle` is built using a specific version of Emscripten, and for maximum
 compatibility the WebAssembly commands used in `cockle` should be built using the same version of
