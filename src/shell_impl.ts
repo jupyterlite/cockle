@@ -347,8 +347,7 @@ export class ShellImpl implements IShellImpl {
 
   private _filenameExpansion(args: string[]): string[] {
     const { PATH } = this._runContext.fileSystem;
-    let ret: string[] = [];
-    let nFlags = 0;
+    const ret: string[] = [];
 
     // ToDo:
     // - Handling of absolute paths
@@ -357,8 +356,9 @@ export class ShellImpl implements IShellImpl {
     // - [ab] syntax
     // - Multiple wildcards in different directory levels in the same arg
     for (const arg of args) {
+      // May not always be appropriate to do filename wildcard expansion, it depends if we have
+      // information the possible command arguments.
       if (arg.startsWith('-')) {
-        nFlags++;
         ret.push(arg);
         continue;
       } else if (!(arg.includes('*') || arg.includes('?'))) {
@@ -400,12 +400,12 @@ export class ShellImpl implements IShellImpl {
       if (relativePath.length > 0) {
         possibles = possibles.map((path: string) => PATH.join(relativePath, path));
       }
-      ret = ret.concat(possibles);
-    }
 
-    if (ret.length === nFlags) {
-      // If no matches return initial arguments.
-      ret = args;
+      if (possibles.length > 0) {
+        ret.push(...possibles);
+      } else {
+        ret.push(arg);
+      }
     }
 
     return ret;
