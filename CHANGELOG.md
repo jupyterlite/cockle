@@ -8,13 +8,13 @@ This is a bug fix release to fix handling of extra WebAssembly channels when dep
 
 ### Bugs fixed
 
-- Use comma to separate multiple channels in COCKLE_WASM_EXTRA_CHANNEL env var [#293](https://github.com/jupyterlite/cockle/pull/294) ([@ianthomas23](https://github.com/ianthomas23))
-- Keep arguments with wildcards if filename expansion has no matches [#291](https://github.com/jupyterlite/cockle/pull/294) ([@ianthomas23](https://github.com/ianthomas23))
+- Use comma to separate multiple channels in COCKLE_WASM_EXTRA_CHANNEL env var [#293](https://github.com/jupyterlite/cockle/pull/293) ([@ianthomas23](https://github.com/ianthomas23))
+- Keep arguments with wildcards if filename expansion has no matches [#291](https://github.com/jupyterlite/cockle/pull/291) ([@ianthomas23](https://github.com/ianthomas23))
 
 ### Maintenance and upkeep improvements
 
-- Update screenshot in README [#287](https://github.com/jupyterlite/cockle/pull/294) ([@ianthomas23](https://github.com/ianthomas23))
-- Bump actions/upload-artifact from 6 to 7 in the actions group [#288](https://github.com/jupyterlite/cockle/pull/294) ([@ianthomas23](https://github.com/ianthomas23))
+- Update screenshot in README [#287](https://github.com/jupyterlite/cockle/pull/287) ([@ianthomas23](https://github.com/ianthomas23))
+- Bump actions/upload-artifact from 6 to 7 in the actions group [#288](https://github.com/jupyterlite/cockle/pull/288) ([@ianthomas23](https://github.com/ianthomas23))
 
 ### Contributors to this release
 
