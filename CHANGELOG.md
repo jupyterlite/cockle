@@ -2,6 +2,31 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.4.1
+
+This is a bug fix release to fix handling of extra WebAssembly channels when deploying, and to keep arguments with wildcards if filename expansion has no matches.
+
+### Bugs fixed
+
+- Use comma to separate multiple channels in COCKLE_WASM_EXTRA_CHANNEL env var [#293](https://github.com/jupyterlite/cockle/pull/294) ([@ianthomas23](https://github.com/ianthomas23))
+- Keep arguments with wildcards if filename expansion has no matches [#291](https://github.com/jupyterlite/cockle/pull/294) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Update screenshot in README [#287](https://github.com/jupyterlite/cockle/pull/294) ([@ianthomas23](https://github.com/ianthomas23))
+- Bump actions/upload-artifact from 6 to 7 in the actions group [#288](https://github.com/jupyterlite/cockle/pull/294) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-02-27&to=2026-03-16&type=c))
+
+@ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-02-27..2026-03-16&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 1.4.0
 
 Cockle 1.4.0 switches from using WebAssembly command packages built using Emscripten 3.1.73 to Emscripten 4.0.9 that are available on the `emscripten-forge-4x` channel. New functionality includes a new optional `cwd` argument to `IShell.IOptions` to start the shell in a specific directory, and new environment variables for `COCKLE_SHELL_ID` and `COCKLE_BROWSING_CONTEXT_ID`.
@@ -47,8 +72,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2025-11-27&to=2026-02-27&type=c))
 
 @ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2025-11-27..2026-02-27&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 1.3.0
 
