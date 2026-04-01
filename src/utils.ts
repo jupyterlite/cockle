@@ -41,6 +41,21 @@ export function rtrim(text: string): string {
 }
 
 /**
+ * Convert array of char codes to string without exceeding maximum call stack size.
+ */
+export function stringFromCharCodes(codes: number[] | Int8Array): string {
+  // Using the spread operator with a very long array (e.g. 100000) can lead to a RangeError as
+  // maximum call size is exceeded. So here chunking into smaller arrays.
+  const chunkSize = 10000;
+  const strings: string[] = [];
+  const n = codes.length;
+  for (let i = 0; i < n; i += chunkSize) {
+    strings.push(String.fromCharCode(...codes.slice(i, i + chunkSize)));
+  }
+  return strings.join('');
+}
+
+/**
  * Arrange an array of strings into columns that fit within a columnWidth.
  * Each column is the same width.
  * Return an array of lines.

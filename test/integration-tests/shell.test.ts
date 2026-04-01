@@ -74,6 +74,11 @@ test.describe('Shell', () => {
       expect(output[1]).toMatch('\r\n      1 file2\r\n      1 file1\r\n      1 dirA\r\n');
     });
 
+    test('should support large file', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['seq 20000 > a.txt', 'cat a.txt | wc']);
+      expect(output[1]).toMatch('\r\n  20000   20000  108894\r\n');
+    });
+
     test('should support quotes', async ({ page }) => {
       const output = await shellLineSimple(page, 'echo "Hello    x;   yz"');
       expect(output).toMatch('\r\nHello    x;   yz\r\n');

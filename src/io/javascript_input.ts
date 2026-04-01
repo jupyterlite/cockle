@@ -1,4 +1,5 @@
 import type { IInput } from './input';
+import { stringFromCharCodes } from '../utils';
 
 export interface IJavaScriptInput {
   isTerminal(): boolean;
@@ -14,6 +15,6 @@ export class JavaScriptInput implements IJavaScriptInput {
 
   async readAsync(maxChars: number | null): Promise<string> {
     const chars = await this.input.readAsync(maxChars);
-    return String.fromCharCode(...chars);
+    return stringFromCharCodes(chars);
   }
 }

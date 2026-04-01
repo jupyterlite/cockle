@@ -3,7 +3,7 @@ import type { IWorkerIO } from './defs';
 import { ansi } from '../ansi';
 import type { IOutputCallback } from '../callback';
 import { Termios } from '../termios';
-import { isLetter } from '../utils';
+import { isLetter, stringFromCharCodes } from '../utils';
 
 export abstract class WorkerIO implements IWorkerIO {
   constructor(
@@ -108,8 +108,7 @@ export abstract class WorkerIO implements IWorkerIO {
     } else {
       chars = this._processWriteChars(text);
     }
-
-    this.outputCallback(String.fromCharCode(...chars));
+    this.outputCallback(stringFromCharCodes(chars));
   }
 
   protected abstract _getStdin(timeoutMs: number): string;
@@ -212,7 +211,7 @@ export abstract class WorkerIO implements IWorkerIO {
             ret.push(...sequence);
             i += index + 2;
 
-            const asString = String.fromCharCode(...sequence);
+            const asString = stringFromCharCodes(sequence);
 
             if (this._inAlternativeBuffer) {
               if (asString === ansi.disableAlternativeBuffer) {
