@@ -22,7 +22,7 @@ import {
 } from './io';
 import { CommandNode, parse, PipeNode } from './parse';
 import { TabCompleter } from './tab_completer';
-import { joinURL } from './utils';
+import { joinURL, stringFromCharCodes } from './utils';
 
 /**
  * Shell implementation.
@@ -98,7 +98,7 @@ export class ShellImpl implements IShellImpl {
 
   async externalInput(maxChars: number | null): Promise<string> {
     const chars = await this._runContext.stdin.readAsync(maxChars);
-    return String.fromCharCode(...chars);
+    return stringFromCharCodes(chars);
   }
 
   externalOutput(text: string, isStderr: boolean): void {
@@ -444,7 +444,7 @@ export class ShellImpl implements IShellImpl {
 
     this._themeStatus = ThemeStatus.Ok;
 
-    const charStr = String.fromCharCode(...chars);
+    const charStr = stringFromCharCodes(chars);
     // Expecting something like this: ]11;rgb:8080/0000/ffff\
     // eslint-disable-next-line no-control-regex
     const re = /^\x1b]11;rgb:([0-9A-Fa-f]{2,})\/([0-9A-Fa-f]{2,})\/([0-9A-Fa-f]{2,})\x1b\\$/;
