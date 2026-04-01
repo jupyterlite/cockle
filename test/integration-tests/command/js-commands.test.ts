@@ -177,6 +177,22 @@ cmdName.forEach(cmdName => {
         );
         expect(output).toMatch(`${cmdName} stdin\r\naABB  cC\r\n`);
       });
+
+      test(`should read unicode from stdin via ${stdinOption}`, async ({ page }) => {
+        const output = await page.evaluate(
+          async ([stdinOption, cmdName]) => {
+            const { keys, shellSetupEmpty } = globalThis.cockle;
+            const { shell, output } = await shellSetupEmpty({ stdinOption });
+            await Promise.all([
+              shell.inputLine(`${cmdName} stdin`),
+              globalThis.cockle.terminalInput(shell, ['a', 'B', '🎉', 'c', keys.EOT])
+            ]);
+            return output.text;
+          },
+          [stdinOption, cmdName]
+        );
+        expect(output).toMatch(`${cmdName} stdin\r\naABB🎉🎉cC\r\n`);
+      });
     });
 
     test('should write color to stdout', async ({ page }) => {
