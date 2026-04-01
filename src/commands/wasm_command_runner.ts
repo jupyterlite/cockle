@@ -81,14 +81,6 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       const text = workerIO.utf8ArrayToString(chars);
       const isStderr = stream.path === '/dev/tty1';
 
-      if (isStderr && name === 'touch' && args.length > 1) {
-        // Crude hiding of many errors in touch command, really only want to hide
-        // `touch: failed to close '${args[1]}': Bad file descriptor`
-        // but that is sent as multiple write() calls.
-        // The correct fix can be reintroduced when WorkerIO correctly line buffers output.
-        return length;
-      }
-
       const output = isStderr ? stderr : stdout;
       output.write(text);
       return length;
