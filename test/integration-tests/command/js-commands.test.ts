@@ -193,7 +193,6 @@ cmdName.forEach(cmdName => {
         );
         expect(output).toMatch(`${cmdName} stdin\r\naABB🎉🎉cC\r\n`);
       });
-
     });
 
     test('should write color to stdout', async ({ page }) => {
