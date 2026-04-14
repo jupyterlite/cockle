@@ -96,6 +96,20 @@ test.describe('Shell', () => {
       expect(exitCodes).toEqual([0, 2]);
     });
 
+    test('pipe should set IShell.exitCode', async ({ page }) => {
+      const output = await page.evaluate(async cmdName => {
+        const { output, shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('cat file2 | wc');
+        const ret = [output.textAndClear(), await shell.exitCode()];
+        await shell.inputLine('cat unknown | wc');
+        return ret.concat([output.textAndClear(), await shell.exitCode()]);
+      });
+      expect(output[0]).toMatch('\r\n      1       5      27\r\n');
+      expect(output[1]).toBe(0);
+      expect(output[2]).toMatch('\r\ncat: unknown: No such file or directory\r\n');
+      expect(output[3]).toBe(0);
+    });
+
     test('should set $? (exit code)', async ({ page }) => {
       const output = await shellLineSimpleN(page, [
         // WASM command success.
@@ -604,7 +618,7 @@ test.describe('Shell', () => {
         await shell.inputLine('env | grep PS1');
         return await shell.exitCode();
       });
-      expect(exitCode).toEqual(1);
+      expect(exitCode).toEqual(0);
     });
 
     test('should set env vars for shellId and browsingContextId', async ({ page }) => {

@@ -632,7 +632,7 @@ export class ShellImpl implements IShellImpl {
           for (let i = 0; i < n; i++) {
             const input = i === 0 ? stdin : prevPipe!.input;
             const output = i < n - 1 ? (prevPipe = new Pipe()) : stdout;
-            await this._runCommand(commands[i], input, output, stderr);
+            exitCode = await this._runCommand(commands[i], input, output, stderr);
           }
         } else {
           // This should not occur.
