@@ -9,7 +9,7 @@ test.describe('uniq command', () => {
       return [await shell.exitCode(), output.textAndClear()];
     });
     expect(output[0]).toBe(0);
-    expect(output[1]).toMatch(/\r\nuniq \(GNU coreutils\) \d+\.\d+\r\n/)
+    expect(output[1]).toMatch(/\r\nuniq \(GNU coreutils\) \d+\.\d+\r\n/);
   });
 
   test('should redirect from stdin', async ({ page }) => {
