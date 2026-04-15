@@ -43,7 +43,13 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     }
 
     function poll(stream: any, timeoutMs: number): number {
-      return workerIO.poll(timeoutMs);
+      // Constants.
+      const POLLIN = 1;
+      const POLLOUT = 4;
+
+      const readable = stdin.poll(timeoutMs);
+      const writable = true;
+      return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
     }
 
     function read(

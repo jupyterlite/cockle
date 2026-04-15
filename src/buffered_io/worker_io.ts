@@ -33,9 +33,9 @@ export abstract class WorkerIO implements IWorkerIO {
     return this._enabled;
   }
 
-  poll(timeoutMs: number): number {
+  pollInput(timeoutMs: number): boolean {
     if (!this._enabled) {
-      throw new Error('WorkerIO.poll when disabled');
+      throw new Error('WorkerIO.pollInput when disabled');
     }
 
     let readable = this._readBuffer.length > 0;
@@ -47,12 +47,7 @@ export abstract class WorkerIO implements IWorkerIO {
       readable = this._readBuffer.length > 0;
     }
 
-    // Constants.
-    const POLLIN = 1;
-    const POLLOUT = 4;
-
-    const writable = true;
-    return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
+    return readable;
   }
 
   read(maxChars: number | null): number[] {

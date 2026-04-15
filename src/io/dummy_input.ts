@@ -9,6 +9,10 @@ export class DummyInput implements IInput {
     return false;
   }
 
+  poll(timeoutMs: number): boolean {
+    return false;
+  }
+
   async readAsync(maxChars: number | null): Promise<number[]> {
     return [];
   }

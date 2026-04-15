@@ -15,7 +15,7 @@ export interface IWorkerIO {
   enable(): Promise<void>;
   get enabled(): boolean;
   // Negative timeoutMs means wait forever (no/infinite timeout).
-  poll(timeoutMs: number): number;
+  pollInput(timeoutMs: number): boolean;
   read(maxChars: number | null): number[];
   // Negative timeoutMs means wait forever (infinite timeout).
   readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]>;

@@ -1,14 +1,19 @@
 import type { IInput } from './input';
-import type { IStdinAsyncCallback, IStdinCallback } from '../callback_internal';
+import type { IPollCallback, IStdinAsyncCallback, IStdinCallback } from '../callback_internal';
 
 export class TerminalInput implements IInput {
   constructor(
+    readonly pollCallback: IPollCallback,
     readonly stdinCallback: IStdinCallback,
     readonly stdinAsyncCallback: IStdinAsyncCallback
   ) {}
 
   isTerminal(): boolean {
     return true;
+  }
+
+  poll(timeoutMs: number): boolean {
+    return this.pollCallback(timeoutMs);
   }
 
   async readAsync(maxChars: number | null): Promise<number[]> {

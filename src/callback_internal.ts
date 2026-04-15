@@ -39,6 +39,10 @@ export interface IEnableBufferedStdinCallback {
   (enable: boolean): Promise<void>;
 }
 
+export interface IPollCallback {
+  (timeoutMs: number): boolean;
+}
+
 /**
  * Callback for worker to set IMainIO, to switch between SharedArrayBuffer and ServiceWorker.
  */

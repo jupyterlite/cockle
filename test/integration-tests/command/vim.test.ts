@@ -104,4 +104,14 @@ test.describe('vim command', () => {
       expect(output).toMatch(/^cat out\r\naXYbc\r\ndef\r\n/);
     });
   });
+
+  test('should error on redirect stdin from file', async ({ page }) => {
+    const output = await shellLineSimple(page, 'vim < file2');
+    expect(output).toMatch('\r\nVim: Warning: Input is not from a terminal\r\n');
+  });
+
+  test('should error on stdin pipe', async ({ page }) => {
+    const output = await shellLineSimple(page, 'cat file2 | vim');
+    expect(output).toMatch('\r\nVim: Warning: Input is not from a terminal\r\n');
+  });
 });
