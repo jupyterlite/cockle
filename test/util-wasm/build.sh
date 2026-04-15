@@ -9,9 +9,10 @@ for name in ${names[@]}; do
         -Os \
         -sALLOW_MEMORY_GROWTH=1 \
         -sEXIT_RUNTIME=1 \
-        -sEXPORTED_RUNTIME_METHODS=FS,ENV,TTY \
+        -sEXPORTED_RUNTIME_METHODS=FS,ENV,PROXYFS,TTY \
         -sFORCE_FILESYSTEM=1 \
         -sMODULARIZE=1 \
+        -lproxyfs.js \
         $name.c \
         -o wasm/$name.js
 done

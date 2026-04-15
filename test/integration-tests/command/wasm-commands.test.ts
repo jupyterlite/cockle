@@ -1,7 +1,8 @@
 import { expect } from '@playwright/test';
-import { test } from '../utils';
+import { shellLineSimple, shellLineSimpleN, test } from '../utils';
 
 test.describe('wasm-test', () => {
+  /*
   test('should register', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { shell, output } = await globalThis.cockle.shellSetupEmpty();
@@ -151,5 +152,38 @@ test.describe('wasm-test', () => {
       return output.text;
     });
     expect(output).toMatch('\r\nEmscripten version: 4.0.9\r\n');
+  });
+  */
+
+  test('should correctly identify isatty', async ({ page }) => {
+    const output0 = await shellLineSimple(page, 'wasm-test isatty');
+    expect(output0).toMatch('\r\nisatty stdin 1\r\n');
+    expect(output0).toMatch('\r\nisatty stdout 1\r\n');
+    expect(output0).toMatch('\r\nisatty stderr 1\r\n');
+
+    const output1 = await shellLineSimple(page, 'wasm-test isatty < file1');
+    expect(output1).toMatch('\r\nisatty stdin 0\r\n');
+    expect(output1).toMatch('\r\nisatty stdout 1\r\n');
+    expect(output1).toMatch('\r\nisatty stderr 1\r\n');
+
+    const output2 = await shellLineSimple(page, 'cat file1 | wasm-test isatty');
+    expect(output2).toMatch('\r\nisatty stdin 0\r\n');
+    expect(output2).toMatch('\r\nisatty stdout 1\r\n');
+    expect(output2).toMatch('\r\nisatty stderr 1\r\n');
+
+    const output3 = await shellLineSimpleN(page, ['wasm-test isatty > out', 'cat out']);
+    expect(output3[1]).toMatch('\r\nisatty stdin 1\r\n');
+    expect(output3[1]).toMatch('\r\nisatty stdout 0\r\n');
+    expect(output3[1]).toMatch('\r\nisatty stderr 1\r\n');
+
+    const output4 = await shellLineSimple(page, 'wasm-test isatty | cat');
+    expect(output4).toMatch('\r\nisatty stdin 1\r\n');
+    expect(output4).toMatch('\r\nisatty stdout 0\r\n');
+    expect(output4).toMatch('\r\nisatty stderr 1\r\n');
+
+    const output5 = await shellLineSimple(page, 'wasm-test isatty 2> err');
+    expect(output5).toMatch('\r\nisatty stdin 1\r\n');
+    expect(output5).toMatch('\r\nisatty stdout 1\r\n');
+    expect(output5).toMatch('\r\nisatty stderr 0\r\n');
   });
 });

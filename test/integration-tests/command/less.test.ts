@@ -4,7 +4,7 @@ import { shellLineSimple, test } from '../utils';
 test.describe('less command', () => {
   test('should output version', async ({ page }) => {
     const output = await shellLineSimple(page, 'less --version');
-    expect(output).toMatch(/^less --version\r\nless 668 \(POSIX regular expressions\)\r\n/);
+    expect(output).toMatch(/^less --version\r\nless \d{3} \(PCRE2 regular expressions\)\r\n/);
   });
 
   const stdinOptions = ['sab', 'sw'];

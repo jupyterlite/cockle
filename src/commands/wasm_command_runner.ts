@@ -4,7 +4,7 @@ import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_run
 import type { IRunContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
-import type { IOutput } from '../io';
+import type { IInput, IOutput } from '../io';
 import type { Termios } from '../termios';
 import type { MainModule } from '../types/wasm_module';
 import { joinURL } from '../utils';
@@ -134,6 +134,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
           }
         }
       ],
+      stdin: this._inputHandler(stdin),
       stderr: this._outputHandler(stderr),
       stdout: this._outputHandler(stdout)
     });
@@ -157,10 +158,20 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
   }
 
   /**
-   * By default a WebAssembly command assumes stdout and stderr are terminals (TTYs).
-   * If this is not the case, need to provide an output writing wrapper.
+   * By default a WebAssembly command assumes stdin, stdout and stderr are terminals (TTYs).
+   * If this is not the case, provide an input reading or output writing wrapper.
    * With this, WebAssembly commands can use `isatty` correctly.
    */
+  private _inputHandler(input: IInput): (() => number | null | undefined) | undefined {
+    if (!input.isTerminal()) {
+      return () => {
+        const read = input.read(1);
+        return read.length > 0 ? read[0] : null;
+      };
+    }
+    return undefined;
+  }
+
   private _outputHandler(output: IOutput): ((x: number) => void) | undefined {
     if (!output.isTerminal()) {
       return (x: number) => output.write(String.fromCharCode(x));

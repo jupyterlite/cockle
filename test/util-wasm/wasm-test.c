@@ -94,6 +94,12 @@ int main(int argc, char** argv) {
     printf("Emscripten version: %d.%d.%d\n", __EMSCRIPTEN_major__, __EMSCRIPTEN_minor__, __EMSCRIPTEN_tiny__);
   }
 
+  if (argsInclude(argc, argv, "isatty")) {
+    printf("isatty stdin %d\n", isatty(0));
+    printf("isatty stdout %d\n", isatty(1));
+    printf("isatty stderr %d\n", isatty(2));
+  }
+
   if (argsInclude(argc, argv, "exitCode")) {
     return 1;
   }
