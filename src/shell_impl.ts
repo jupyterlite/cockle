@@ -614,8 +614,9 @@ export class ShellImpl implements IShellImpl {
 
     let exitCode!: number;
     const stdin = new TerminalInput(
-      this._stdinCallback.bind(this),
-      this._stdinAsyncCallback.bind(this)
+      timeoutMs => this._runContext.workerIO.pollInput(timeoutMs),
+      maxChars => this._runContext.workerIO.read(maxChars),
+      maxChars => this._runContext.workerIO.readAsync(maxChars, -1) // -1 means infinite wait
     );
     const stdout = new TerminalOutput(this.output.bind(this));
     const stderr = this._stderr;
@@ -738,15 +739,6 @@ export class ShellImpl implements IShellImpl {
   private _setExitCode(exitCode: number) {
     this._exitCode = exitCode;
     this.environment.set('?', `${exitCode}`);
-  }
-
-  private _stdinCallback(maxChars: number | null): number[] {
-    return this._runContext.workerIO.read(maxChars);
-  }
-
-  private async _stdinAsyncCallback(maxChars: number | null): Promise<number[]> {
-    // timeoutMs of -1 for infinite wait.
-    return await this._runContext.workerIO.readAsync(maxChars, -1);
   }
 
   private _commandLine: ICommandLine = { text: '', cursorIndex: 0 };

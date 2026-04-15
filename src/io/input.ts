@@ -1,6 +1,8 @@
 export interface IInput {
   isTerminal(): boolean;
 
+  poll(timeoutMs: number): boolean;
+
   /**
    * Async read of up to maxChars.
    * This is used by TypeScript/JavaScript commands, both builtin and external.

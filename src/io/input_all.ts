@@ -5,6 +5,11 @@ export abstract class InputAll implements IInput {
     return false;
   }
 
+  poll(timeoutMs: number): boolean {
+    // Ignore timeout as all content is already available.
+    return this._index < this.buffer.length;
+  }
+
   /**
    * Read and return the entire contents of this input. No special character is required to indicate
    * the end of the input, it is just the end of the string. Should only be called once per object.
@@ -16,13 +21,10 @@ export abstract class InputAll implements IInput {
   }
 
   read(maxChars: number | null): number[] {
-    if (this._buffer === undefined) {
-      this._buffer = this.readAll();
-      this._index = 0;
-    }
+    const { buffer } = this;
 
-    if (this._index < this._buffer.length) {
-      const char = this._buffer[this._index++];
+    if (this._index < buffer.length) {
+      const char = buffer[this._index++];
       const ret: number[] = [];
       for (let i = 0; i < char.length; i++) {
         ret.push(char.charCodeAt(i));
@@ -31,6 +33,14 @@ export abstract class InputAll implements IInput {
     } else {
       return [];
     }
+  }
+
+  private get buffer(): string {
+    if (this._buffer === undefined) {
+      this._buffer = this.readAll();
+      this._index = 0;
+    }
+    return this._buffer;
   }
 
   private _buffer?: string;
