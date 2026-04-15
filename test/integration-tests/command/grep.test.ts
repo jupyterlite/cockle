@@ -7,6 +7,16 @@ test.describe('grep command', () => {
     expect(output).toMatch(/^grep cond file2\r\nSecond line\r\n/);
   });
 
+  test('should accept redirected input', async ({ page }) => {
+    const output = await shellLineSimple(page, 'grep cond < file2');
+    expect(output).toMatch(/^grep cond < file2\r\nSecond line\r\n/);
+  });
+
+  test('should accept input from pipe', async ({ page }) => {
+    const output = await shellLineSimple(page, 'cat file2 | grep cond');
+    expect(output).toMatch(/^cat file2 | grep cond\r\nSecond line\r\n/);
+  });
+
   test('should support ^ and $', async ({ page }) => {
     const options = { initialFiles: { file3: ' hello\nhello ' } };
     const output = await shellLineSimpleN(
