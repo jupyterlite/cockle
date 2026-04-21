@@ -1,12 +1,12 @@
 import { ansi } from './ansi';
-import { IEnableBufferedStdinCallback } from './callback_internal';
+import type { IEnableBufferedStdinCallback } from './callback_internal';
 import type { ICommandLine } from './command_line';
 import type { IRunContext } from './context';
 import { CommandNode, parse } from './parse';
 import type { ITabCompleteResult } from './tab_complete';
 import { PathType } from './tab_complete';
+import type { Termios } from './termios';
 import type { RuntimeExports } from './types/wasm_module';
-import { Termios } from './termios';
 import { longestStartsWith, toColumns } from './utils';
 
 export class TabCompleter {
