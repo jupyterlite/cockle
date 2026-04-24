@@ -18,12 +18,14 @@ int main(int argc, char** argv) {
   char buffer[BUFFER_SIZE];
   int optionIndex = 0;
   int iflag = -1;
+  int lflag = -1;
   int oflag = -1;
   int option;
 
   static struct option longOptions[] =
   {
     {"iflag", required_argument, NULL, 'i'},
+    {"lflag", required_argument, NULL, 'l'},
     {"oflag", required_argument, NULL, 'o'},
     {0, 0, 0, 0}
   };
@@ -32,6 +34,9 @@ int main(int argc, char** argv) {
     switch (option) {
       case 'i':
         iflag = atoi(optarg);
+        break;
+      case 'l':
+        lflag = atoi(optarg);
         break;
       case 'o':
         oflag = atoi(optarg);
@@ -45,12 +50,15 @@ int main(int argc, char** argv) {
   if (iflag >= 0) {
     termiosModified.c_iflag = iflag;
   }
+  if (lflag >= 0) {
+    termiosModified.c_lflag = lflag;
+  }
   if (oflag >= 0) {
     termiosModified.c_oflag = oflag;
   }
   tcsetattr(0, TCSANOW, &termiosModified);
 
-  // Read and write a line at a time.
+  // Read and write a character at a time, unless line buffered of course.
   while (1) {
     char* ret = fgets(buffer, BUFFER_SIZE, stdin);
     if (ret == NULL) {

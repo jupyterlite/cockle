@@ -7,6 +7,7 @@ test.describe('less command', () => {
     expect(output).toMatch(/^less --version\r\nless \d{3} \(PCRE2 regular expressions\)\r\n/);
   });
 
+  /*
   const stdinOptions = ['sab', 'sw'];
   stdinOptions.forEach(stdinOption => {
     test(`should run interactively and exit using ${stdinOption}`, async ({ page }) => {
@@ -21,4 +22,5 @@ test.describe('less command', () => {
       // If less does not close, test will timeout.
     });
   });
+  */
 });

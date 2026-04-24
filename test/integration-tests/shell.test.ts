@@ -421,11 +421,11 @@ test.describe('Shell', () => {
           const { enter, EOT } = keys;
           await Promise.all([
             shell.inputLine('wc'),
-            globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', EOT])
+            globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', enter, EOT])
           ]);
           return output.text;
         }, stdinOption);
-        expect(output).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
+        expect(output).toMatch(/^wc\r\na b\r\nc\r\n {6}2 {7}3 {7}6\r\n/);
       });
 
       test(`should support terminal stdin via ${stdinOption} of an ansi escape sequence`, async ({
@@ -434,14 +434,14 @@ test.describe('Shell', () => {
         const output = await page.evaluate(async stdinOption => {
           const { shell, output } = await globalThis.cockle.shellSetupEmpty({ stdinOption });
           const { keys } = globalThis.cockle;
-          const { downArrow, EOT } = keys;
+          const { downArrow, enter, EOT } = keys;
           await Promise.all([
             shell.inputLine('wc'),
-            globalThis.cockle.terminalInput(shell, ['a', downArrow, 'b', EOT])
+            globalThis.cockle.terminalInput(shell, ['a', downArrow, 'b', enter, EOT])
           ]);
           return output.text;
         }, stdinOption);
-        expect(output).toMatch('wc\r\na\x1B[Bb      0       1       5\r\n');
+        expect(output).toMatch('wc\r\na\x1B[Bb\r\n      1       1       6\r\n');
       });
 
       test(`should support terminal stdin via ${stdinOption} more than once`, async ({ page }) => {
@@ -451,19 +451,19 @@ test.describe('Shell', () => {
           const { enter, EOT } = keys;
           await Promise.all([
             shell.inputLine('wc'),
-            globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', EOT])
+            globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', enter, EOT])
           ]);
           const ret0 = output.textAndClear();
 
           await Promise.all([
             shell.inputLine('wc'),
-            globalThis.cockle.terminalInput(shell, ['d', 'e', ' ', 'f', EOT])
+            globalThis.cockle.terminalInput(shell, ['d', 'e', ' ', 'f', enter, EOT])
           ]);
           const ret1 = output.text;
           return [ret0, ret1];
         }, stdinOption);
-        expect(output[0]).toMatch(/^wc\r\na b\r\nc {6}1 {7}3 {7}5\r\n/);
-        expect(output[1]).toMatch(/^wc\r\nde f {6}0 {7}2 {7}4\r\n/);
+        expect(output[0]).toMatch(/^wc\r\na b\r\nc\r\n {6}2 {7}3 {7}6\r\n/);
+        expect(output[1]).toMatch(/^wc\r\nde f\r\n {6}1 {7}2 {7}5\r\n/);
       });
 
       test(`should support terminal stdin with poll timeout via ${stdinOption}`, async ({
@@ -545,7 +545,7 @@ test.describe('Shell', () => {
 
               const runCmd = shell.inputLine('js-test stdin');
               await delay(100);
-              await shell.input(input);
+              await shell.input(input + keys.enter);
               await shell.input(keys.EOT);
               await runCmd;
 
@@ -555,8 +555,9 @@ test.describe('Shell', () => {
           );
 
           const lines = output.split('\r\n');
-          expect(lines).toHaveLength(3);
-          expect(lines[1]).toEqual(input + input.toUpperCase());
+          expect(lines).toHaveLength(4);
+          expect(lines[1]).toEqual(input);
+          expect(lines[2]).toEqual(input.toUpperCase());
         });
 
         test(`should sync read ${nchar} characters from stdin via ${stdinOption}`, async ({

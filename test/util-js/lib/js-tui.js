@@ -5,6 +5,8 @@ var Module = (function (exports) {
      * ANSI escape sequences.
      */
     const ESC = '\x1B[';
+    // eslint-disable-next-line no-control-regex
+    const styleRegex = /\x1b\[[^m]*m/g;
     function clamp(n) {
         return Math.min(Math.max(Math.round(n), 0), 255);
     }
@@ -20,6 +22,7 @@ var Module = (function (exports) {
         eraseSavedLines: ESC + '3J',
         eraseEndLine: ESC + 'K',
         eraseStartLine: ESC + '1K',
+        removeStyles: (str) => str.replace(styleRegex, ''),
         styleRGB: (r, g, b, foreground = true) => {
             const code = foreground ? '38' : '48';
             return `${ESC}${code};2;${clamp(r)};${clamp(g)};${clamp(b)}m`;

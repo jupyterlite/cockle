@@ -110,4 +110,45 @@ test.describe('git2cpp command', () => {
     expect(output[7]).toMatch(/Author:\s/);
     expect(output[7]).toMatch(/Date:\s+/);
   });
+
+  const stdinOptions = ['sab', 'sw'];
+  stdinOptions.forEach(stdinOption => {
+    test(`should accept commit message from stdin via ${stdinOption}`, async ({ page }) => {
+      const output = await page.evaluate(async stdinOption => {
+        const { keys, shellSetupSimple, terminalInput } = globalThis.cockle;
+        const { shell, output } = await shellSetupSimple({ stdinOption });
+        await shell.inputLine('git init .');
+        await shell.inputLine('git add file1');
+        await Promise.all([
+          shell.inputLine('git commit'),
+          terminalInput(shell, ['M', 's', 'd', keys.backspace, 'g', keys.enter])
+        ]);
+        output.clear();
+        await shell.inputLine('git log');
+        return output.text;
+      }, stdinOption);
+      const lines = output.split('\r\n');
+      expect(lines[1]).toMatch(/commit\s+/);
+      expect(lines[2]).toMatch(/^Author:\s+/);
+      expect(lines[3]).toMatch(/^Date:\s+/);
+      expect(lines[5]).toMatch(/^\s+Msg$/);
+    });
+
+    test(`should abort commit message from stdin via ${stdinOption}`, async ({ page }) => {
+      const output = await page.evaluate(async stdinOption => {
+        const { keys, shellSetupSimple, terminalInput } = globalThis.cockle;
+        const { shell, output } = await shellSetupSimple({ stdinOption });
+        await shell.inputLine('git init .');
+        await shell.inputLine('git add file1');
+        output.clear();
+        await Promise.all([
+          shell.inputLine('git commit'),
+          terminalInput(shell, ['M', keys.backspace, keys.backspace, keys.enter])
+        ]);
+        return [await shell.exitCode(), output.text];
+      }, stdinOption);
+      expect(output[0]).toBe(1);
+      expect(output[1]).toMatch('Aborting, no commit message specified.')
+    });
+  });
 });
