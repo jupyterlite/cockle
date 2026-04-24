@@ -1,5 +1,5 @@
 import type { IJavaScriptRunContext } from '@jupyterlite/cockle';
-import { ExitCode } from '@jupyterlite/cockle';
+import { ExitCode, Termios } from '@jupyterlite/cockle';
 
 export async function run(context: IJavaScriptRunContext): Promise<number> {
   const { args } = context;
@@ -56,6 +56,27 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
         stdout.write(chars.toUpperCase());
       }
     }
+  }
+
+  if (args.includes('stdinchar')) {
+    // Read until EOT, echoing back as upper case. Char buffering.
+    const { stdin, stdout, termios } = context;
+    const oldTermios = termios.get();
+    const newTermios = Termios.cloneFlags(oldTermios);
+    newTermios.c_lflag &= ~Termios.LocalFlag.ICANON;
+    termios.set(newTermios);
+
+    let stop = false;
+    while (!stop) {
+      const chars = await stdin.readAsync(null);
+      if (chars.length === 0 || chars.endsWith('\x04')) {
+        stop = true;
+      } else {
+        stdout.write(chars.toUpperCase());
+      }
+    }
+
+    termios.set(oldTermios);
   }
 
   if (args.includes('readfile')) {

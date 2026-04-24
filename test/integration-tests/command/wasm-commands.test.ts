@@ -2,7 +2,6 @@ import { expect } from '@playwright/test';
 import { shellLineSimple, shellLineSimpleN, test } from '../utils';
 
 test.describe('wasm-test', () => {
-  /*
   test('should register', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { shell, output } = await globalThis.cockle.shellSetupEmpty();
@@ -108,17 +107,73 @@ test.describe('wasm-test', () => {
 
   const stdinOptions = ['sab', 'sw'];
   stdinOptions.forEach(stdinOption => {
-    test(`should read from stdin via ${stdinOption}`, async ({ page }) => {
+    test(`should read from stdin via ${stdinOption} line buffered`, async ({ page }) => {
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupEmpty } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ stdinOption });
         await Promise.all([
           shell.inputLine('wasm-test stdin'),
+          globalThis.cockle.terminalInput(shell, ['a', 'B', ' ', 'c', '\n', keys.EOT])
+        ]);
+        return output.text;
+      }, stdinOption);
+      expect(output).toMatch(/^wasm-test stdin\r\naB c\r\nAB C\r\n/);
+    });
+
+    test(`should read from stdin via ${stdinOption} line buffered with backspace`, async ({
+      page
+    }) => {
+      const output = await page.evaluate(async stdinOption => {
+        const { keys, shellSetupEmpty } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ stdinOption });
+        await Promise.all([
+          shell.inputLine('wasm-test stdin'),
+          globalThis.cockle.terminalInput(shell, ['a', 'B', keys.backspace, 'c', '\n', keys.EOT])
+        ]);
+        return output.text;
+      }, stdinOption);
+      // Only check the output line.
+      const lines = output.split('\r\n');
+      expect(lines).toHaveLength(4);
+      expect(lines[2]).toBe('AC');
+    });
+
+    test(`should read from stdin via ${stdinOption} line buffered with backspaces`, async ({
+      page
+    }) => {
+      const output = await page.evaluate(async stdinOption => {
+        const { keys, shellSetupEmpty } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ stdinOption });
+        await Promise.all([
+          shell.inputLine('wasm-test stdin'),
+          globalThis.cockle.terminalInput(shell, [
+            'a',
+            keys.backspace,
+            keys.backspace,
+            'c',
+            '\n',
+            keys.EOT
+          ])
+        ]);
+        return output.text;
+      }, stdinOption);
+      // Only check the output line.
+      const lines = output.split('\r\n');
+      expect(lines).toHaveLength(4);
+      expect(lines[2]).toBe('C');
+    });
+
+    test(`should read from stdin via ${stdinOption} char buffered`, async ({ page }) => {
+      const output = await page.evaluate(async stdinOption => {
+        const { keys, shellSetupEmpty } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ stdinOption });
+        await Promise.all([
+          shell.inputLine('wasm-test stdinchar'),
           globalThis.cockle.terminalInput(shell, ['a', 'B', ' ', 'c', keys.EOT])
         ]);
         return output.text;
       }, stdinOption);
-      expect(output).toMatch(/^wasm-test stdin\r\naABB {2}cC\r\n/);
+      expect(output).toMatch(/^wasm-test stdinchar\r\naABB {2}cC\r\n/);
     });
   });
 
@@ -153,7 +208,6 @@ test.describe('wasm-test', () => {
     });
     expect(output).toMatch('\r\nEmscripten version: 4.0.9\r\n');
   });
-  */
 
   test('should correctly identify isatty', async ({ page }) => {
     const output0 = await shellLineSimple(page, 'wasm-test isatty');

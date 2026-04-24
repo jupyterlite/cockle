@@ -7,7 +7,7 @@ import type {
   IJavaScriptTabCompleteContext,
   ITabCompleteResult
 } from '@jupyterlite/cockle';
-import { CommandArguments, ExitCode, PositionalArguments } from '@jupyterlite/cockle';
+import { CommandArguments, ExitCode, PositionalArguments, Termios } from '@jupyterlite/cockle';
 
 class TestArguments extends CommandArguments {
   positional = new PositionalArguments({
@@ -22,6 +22,7 @@ class TestArguments extends CommandArguments {
         'size',
         'stderr',
         'stdin',
+        'stdinchar',
         'stdout',
         'writefile'
       ]
@@ -73,7 +74,7 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
   }
 
   if (args.includes('stdin')) {
-    // Read until EOT, echoing back as upper case.
+    // Read until EOT, echoing back as upper case. Line buffering.
     const { stdin, stdout } = context;
     let stop = false;
     while (!stop) {
@@ -84,6 +85,27 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
         stdout.write(chars.toUpperCase());
       }
     }
+  }
+
+  if (args.includes('stdinchar')) {
+    // Read until EOT, echoing back as upper case. Char buffering.
+    const { stdin, stdout, termios } = context;
+    const oldTermios = termios.get();
+    const newTermios = Termios.cloneFlags(oldTermios);
+    newTermios.c_lflag &= ~Termios.LocalFlag.ICANON;
+    termios.set(newTermios);
+
+    let stop = false;
+    while (!stop) {
+      const chars = await stdin.readAsync(null);
+      if (chars.length === 0 || chars.endsWith('\x04')) {
+        stop = true;
+      } else {
+        stdout.write(chars.toUpperCase());
+      }
+    }
+
+    termios.set(oldTermios);
   }
 
   if (args.includes('readfile')) {

@@ -150,20 +150,64 @@ cmdName.forEach(cmdName => {
 
     const stdinOptions = ['sab', 'sw'];
     stdinOptions.forEach(stdinOption => {
-      test(`should read from stdin via ${stdinOption}`, async ({ page }) => {
+      test(`should read from stdin via ${stdinOption} line buffered`, async ({ page }) => {
         const output = await page.evaluate(
           async ([stdinOption, cmdName]) => {
             const { externalCommands, keys, shellSetupEmpty } = globalThis.cockle;
             const { shell, output } = await shellSetupEmpty({ externalCommands, stdinOption });
             await Promise.all([
               shell.inputLine(`${cmdName} stdin`),
+              globalThis.cockle.terminalInput(shell, ['a', 'B', ' ', 'c', '\n', keys.EOT])
+            ]);
+            return output.text;
+          },
+          [stdinOption, cmdName]
+        );
+        expect(output).toMatch(`${cmdName} stdin\r\naB c\r\nAB C\r\n`);
+      });
+
+      test(`should read from stdin via ${stdinOption} line buffered with backspace`, async ({
+        page
+      }) => {
+        const output = await page.evaluate(
+          async ([stdinOption, cmdName]) => {
+            const { externalCommands, keys, shellSetupEmpty } = globalThis.cockle;
+            const { shell, output } = await shellSetupEmpty({ externalCommands, stdinOption });
+            await Promise.all([
+              shell.inputLine(`${cmdName} stdin`),
+              globalThis.cockle.terminalInput(shell, [
+                'a',
+                'b',
+                keys.backspace,
+                'c',
+                '\n',
+                keys.EOT
+              ])
+            ]);
+            return output.text;
+          },
+          [stdinOption, cmdName]
+        );
+        // Only check the output line.
+        const lines = output.split('\r\n');
+        expect(lines).toHaveLength(4);
+        expect(lines[2]).toBe('AC');
+      });
+
+      test(`should read from stdin via ${stdinOption} char buffered`, async ({ page }) => {
+        const output = await page.evaluate(
+          async ([stdinOption, cmdName]) => {
+            const { externalCommands, keys, shellSetupEmpty } = globalThis.cockle;
+            const { shell, output } = await shellSetupEmpty({ externalCommands, stdinOption });
+            await Promise.all([
+              shell.inputLine(`${cmdName} stdinchar`),
               globalThis.cockle.terminalInput(shell, ['a', 'B', ' ', 'c', keys.EOT])
             ]);
             return output.text;
           },
           [stdinOption, cmdName]
         );
-        expect(output).toMatch(`${cmdName} stdin\r\naABB  cC\r\n`);
+        expect(output).toMatch(`${cmdName} stdinchar\r\naABB  cC\r\n`);
       });
 
       test(`should read unicode from stdin via ${stdinOption}`, async ({ page }) => {
@@ -172,14 +216,14 @@ cmdName.forEach(cmdName => {
             const { externalCommands, keys, shellSetupEmpty } = globalThis.cockle;
             const { shell, output } = await shellSetupEmpty({ externalCommands, stdinOption });
             await Promise.all([
-              shell.inputLine(`${cmdName} stdin`),
+              shell.inputLine(`${cmdName} stdinchar`),
               globalThis.cockle.terminalInput(shell, ['a', 'B', '⚽', 'c', keys.EOT])
             ]);
             return output.text;
           },
           [stdinOption, cmdName]
         );
-        expect(output).toMatch(`${cmdName} stdin\r\naABB⚽⚽cC\r\n`);
+        expect(output).toMatch(`${cmdName} stdinchar\r\naABB⚽⚽cC\r\n`);
       });
     });
 

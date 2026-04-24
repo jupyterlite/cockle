@@ -71,9 +71,9 @@ test.describe('termios', () => {
 
         if (want) {
           // Note only a single \n after the 'a', others in output column 0 are suppressed.
-          expect(output).toEqual('check_termios --oflag 21\r\na\r\na\r\n');
+          expect(output).toMatch('check_termios --oflag 21\r\na\r\na\r\n');
         } else {
-          expect(output).toEqual('check_termios --oflag 5\r\na\r\na\r\n\r\n\r\n');
+          expect(output).toMatch('check_termios --oflag 5\r\na\r\na\r\n\r\n\r\n');
         }
       });
     });

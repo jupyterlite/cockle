@@ -12,7 +12,7 @@
         "postbuild": "node node_modules/@jupyterlite/cockle/lib/tools/prepare_wasm.js --copy assets",
         "serve": "concurrently 'npm run serve:cockle' 'npm run serve:cors'",
         "serve:cockle": "rspack serve",
-        "serve:cors": "HOST=localhost PORT=8881 node node_modules/cors-anywhere/server.js ",
+        "serve:cors": "HOST=localhost PORT=8881 node node_modules/cors-anywhere/server.js",
         "test": "npm run test:unit && npm run test:integration",
         "test:integration": "cd integration-tests && playwright test",
         "test:integration:ui": "cd integration-tests && playwright test --ui",

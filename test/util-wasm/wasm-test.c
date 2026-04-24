@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 #include <emscripten/version.h>
 
@@ -49,7 +50,7 @@ int main(int argc, char** argv) {
   }
 
   if (argsInclude(argc, argv, "stdin")) {
-    // Read until EOF, echoing back as upper case.
+    // Read until EOF, echoing back as upper case. Line buffered.
     while (1) {
       int ch = getchar();
       if (ch == EOF) {
@@ -59,6 +60,27 @@ int main(int argc, char** argv) {
         fflush(stdout);
       }
     }
+  }
+
+  if (argsInclude(argc, argv, "stdinchar")) {
+    // Read until EOF, echoing back as upper case. Character buffered.
+    struct termios termiosOld, termiosNew;
+    tcgetattr(0, &termiosOld);
+    termiosNew = termiosOld;
+    termiosNew.c_lflag &= ~ICANON;
+    tcsetattr(0, TCSANOW, &termiosNew);
+
+    while (1) {
+      int ch = getchar();
+      if (ch == EOF) {
+        break;
+      } else {
+        putchar(toupper(ch));
+        fflush(stdout);
+      }
+    }
+
+    tcsetattr(0, TCSANOW, &termiosOld);  // Restore original termios settings.
   }
 
   if (argsInclude(argc, argv, "readfile")) {
