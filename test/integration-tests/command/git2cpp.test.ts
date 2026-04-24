@@ -148,7 +148,7 @@ test.describe('git2cpp command', () => {
         return [await shell.exitCode(), output.text];
       }, stdinOption);
       expect(output[0]).toBe(1);
-      expect(output[1]).toMatch('Aborting, no commit message specified.')
+      expect(output[1]).toMatch('Aborting, no commit message specified.');
     });
   });
 });

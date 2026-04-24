@@ -166,14 +166,23 @@ cmdName.forEach(cmdName => {
         expect(output).toMatch(`${cmdName} stdin\r\naB c\r\nAB C\r\n`);
       });
 
-      test(`should read from stdin via ${stdinOption} line buffered with backspace`, async ({ page }) => {
+      test(`should read from stdin via ${stdinOption} line buffered with backspace`, async ({
+        page
+      }) => {
         const output = await page.evaluate(
           async ([stdinOption, cmdName]) => {
             const { externalCommands, keys, shellSetupEmpty } = globalThis.cockle;
             const { shell, output } = await shellSetupEmpty({ externalCommands, stdinOption });
             await Promise.all([
               shell.inputLine(`${cmdName} stdin`),
-              globalThis.cockle.terminalInput(shell, ['a', 'b', keys.backspace, 'c', '\n', keys.EOT])
+              globalThis.cockle.terminalInput(shell, [
+                'a',
+                'b',
+                keys.backspace,
+                'c',
+                '\n',
+                keys.EOT
+              ])
             ]);
             return output.text;
           },

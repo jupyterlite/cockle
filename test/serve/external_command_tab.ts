@@ -6,7 +6,13 @@ import type {
   IExternalTabCompleteContext,
   IExternalTabCompleteResult
 } from '@jupyterlite/cockle';
-import { ansi, CommandArguments, ExitCode, PositionalArguments, Termios } from '@jupyterlite/cockle';
+import {
+  ansi,
+  CommandArguments,
+  ExitCode,
+  PositionalArguments,
+  Termios
+} from '@jupyterlite/cockle';
 
 class TestArguments extends CommandArguments {
   positional = new PositionalArguments({

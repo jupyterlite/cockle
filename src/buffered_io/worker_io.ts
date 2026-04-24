@@ -155,7 +155,7 @@ export abstract class WorkerIO implements IWorkerIO {
           break;
         case 127:
           // This should only be converted if output is a terminal?
-          ret.push(8, 32, 8);  // Backspace, space, backspace
+          ret.push(8, 32, 8); // Backspace, space, backspace
           break;
         default:
           if (echo) {

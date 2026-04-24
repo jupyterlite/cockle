@@ -116,11 +116,13 @@ test.describe('wasm-test', () => {
           globalThis.cockle.terminalInput(shell, ['a', 'B', ' ', 'c', '\n', keys.EOT])
         ]);
         return output.text;
-    }, stdinOption);
+      }, stdinOption);
       expect(output).toMatch(/^wasm-test stdin\r\naB c\r\nAB C\r\n/);
     });
 
-    test(`should read from stdin via ${stdinOption} line buffered with backspace`, async ({ page }) => {
+    test(`should read from stdin via ${stdinOption} line buffered with backspace`, async ({
+      page
+    }) => {
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupEmpty } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ stdinOption });
@@ -136,13 +138,22 @@ test.describe('wasm-test', () => {
       expect(lines[2]).toBe('AC');
     });
 
-    test(`should read from stdin via ${stdinOption} line buffered with backspaces`, async ({ page }) => {
+    test(`should read from stdin via ${stdinOption} line buffered with backspaces`, async ({
+      page
+    }) => {
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupEmpty } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ stdinOption });
         await Promise.all([
           shell.inputLine('wasm-test stdin'),
-          globalThis.cockle.terminalInput(shell, ['a', keys.backspace, keys.backspace, 'c', '\n', keys.EOT])
+          globalThis.cockle.terminalInput(shell, [
+            'a',
+            keys.backspace,
+            keys.backspace,
+            'c',
+            '\n',
+            keys.EOT
+          ])
         ]);
         return output.text;
       }, stdinOption);
