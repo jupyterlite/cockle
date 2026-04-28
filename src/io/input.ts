@@ -1,4 +1,6 @@
 export interface IInput {
+  finished: boolean;
+
   isTerminal(): boolean;
 
   poll(timeoutMs: number): boolean;

@@ -21,6 +21,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
   async run(context: IRunContext): Promise<number> {
     const { name, args, workerIO, fileSystem, stdin, stdout, stderr, termios, size } = context;
     const { wasmBaseUrl } = this.module.loader;
+    const avoidInfinitePollTimeout = name === 'less';
 
     const start = Date.now();
     const wasmModule = this.module.loader.getWasmModule(this.packageName, this.moduleName);
@@ -47,7 +48,13 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       const POLLIN = 1;
       const POLLOUT = 4;
 
-      const readable = stdin.poll(timeoutMs);
+      if (avoidInfinitePollTimeout && timeoutMs < 0) {
+        // `less` polls multiple file descriptors at the same time with infinite timeout which end
+        // up running sequentially here, workaround is for them to return immediately.
+        timeoutMs = 0;
+      }
+
+      const readable = stdin.finished ? workerIO.pollInput(timeoutMs) : stdin.poll(timeoutMs);
       const writable = true;
       return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
     }
@@ -63,7 +70,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
         // No buffer to store in.
         return 0;
       }
-      let chars = stdin.read(length);
+      let chars = stdin.finished ? workerIO.read(length) : stdin.read(length);
       if (chars.length === 1 && chars[0] === 4) {
         chars = [];
       }
@@ -128,15 +135,21 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
           }
 
           if (TTY !== undefined) {
+            const { default_tty_ops, default_tty1_ops, stream_ops } = module.TTY;
+
             // Monkey patch get/set termios and get window size.
-            module.TTY.default_tty_ops.ioctl_tcgets = getTermios;
-            module.TTY.default_tty_ops.ioctl_tcsets = setTermios;
-            module.TTY.default_tty_ops.ioctl_tiocgwinsz = getSize;
+            default_tty_ops.ioctl_tcgets = getTermios;
+            default_tty_ops.ioctl_tcsets = setTermios;
+            default_tty_ops.ioctl_tiocgwinsz = getSize;
+
+            default_tty1_ops.ioctl_tcgets = getTermios;
+            default_tty1_ops.ioctl_tcsets = setTermios;
+            default_tty1_ops.ioctl_tiocgwinsz = getSize;
 
             // May only need to be for some TTYs?
-            module.TTY.stream_ops.poll = poll;
-            module.TTY.stream_ops.read = read;
-            module.TTY.stream_ops.write = write;
+            stream_ops.poll = poll;
+            stream_ops.read = read;
+            stream_ops.write = write;
           }
         }
       ],

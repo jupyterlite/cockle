@@ -8,6 +8,10 @@ export class TerminalInput implements IInput {
     readonly stdinAsyncCallback: IStdinAsyncCallback
   ) {}
 
+  get finished(): boolean {
+    return false;
+  }
+
   isTerminal(): boolean {
     return true;
   }
