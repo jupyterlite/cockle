@@ -46,20 +46,39 @@ test.describe('less command', () => {
     expect(output[1]).toMatch('cat out\r\nSome other file\r\nSecond line\r\n');
   });
 
-  /*
   const stdinOptions = ['sab', 'sw'];
   stdinOptions.forEach(stdinOption => {
-    test(`should run interactively and exit using ${stdinOption}`, async ({ page }) => {
+    test(`should read from named file and quit using ${stdinOption}`, async ({ page }) => {
       await page.evaluate(async stdinOption => {
         const { shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell } = await shellSetupSimple({ color: true, stdinOption });
-        await Promise.all([
-          shell.inputLine('less file2'),
-          terminalInput(shell, ['q']) // q key to exit.
-        ]);
+        const cmd = shell.inputLine('less file2');
+        terminalInput(shell, ['q']) // q key to exit.
+        await cmd;
+      }, stdinOption);
+      // If less does not close, test will timeout.
+    });
+
+    test(`should read redirected file from stdin and quit using ${stdinOption}`, async ({ page }) => {
+      await page.evaluate(async stdinOption => {
+        const { shellSetupSimple, terminalInput } = globalThis.cockle;
+        const { shell } = await shellSetupSimple({ color: true, stdinOption });
+        const cmd = shell.inputLine('less < file2');
+        terminalInput(shell, ['q']) // q key to exit.
+        await cmd;
+      }, stdinOption);
+      // If less does not close, test will timeout.
+    });
+
+    test(`should read from pipe and quit using ${stdinOption}`, async ({ page }) => {
+      await page.evaluate(async stdinOption => {
+        const { shellSetupSimple, terminalInput } = globalThis.cockle;
+        const { shell } = await shellSetupSimple({ color: true, stdinOption });
+        const cmd = shell.inputLine('cat file2 | less');
+        terminalInput(shell, ['q']) // q key to exit.
+        await cmd;
       }, stdinOption);
       // If less does not close, test will timeout.
     });
   });
-  */
 });

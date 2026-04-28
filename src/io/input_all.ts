@@ -1,13 +1,17 @@
 import type { IInput } from './input';
 
 export abstract class InputAll implements IInput {
+  get finished(): boolean {
+    return this._index >= this.buffer.length;
+  }
+
   isTerminal(): boolean {
     return false;
   }
 
   poll(timeoutMs: number): boolean {
     // Ignore timeout as all content is already available.
-    return this._index < this.buffer.length;
+    return !this.finished;
   }
 
   /**

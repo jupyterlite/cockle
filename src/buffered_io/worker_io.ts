@@ -40,6 +40,7 @@ export abstract class WorkerIO implements IWorkerIO {
 
     let readable = this._readBuffer.length > 0;
     // Negative timeoutMs means wait forever (infinite timeout).
+    // Zero timeout means return immediately.
     if (!readable && timeoutMs !== 0) {
       const chars = this._getStdin(timeoutMs);
       this._postRead(chars);
@@ -87,8 +88,8 @@ export abstract class WorkerIO implements IWorkerIO {
     }
 
     // Negative timeoutMs means wait forever (infinite timeout).
+    // Zero timeout means return immediately.
     while (!this._canReturnNow()) {
-      //const chars = this._getStdin(-1);
       const chars = await this._getStdinAsync(timeoutMs);
       this._postRead(chars);
       if (chars === '' && timeoutMs >= 0) {

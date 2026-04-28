@@ -5,6 +5,10 @@ import type { IInput } from './input';
  * Used by IContext when no command is running, should never be read from.
  */
 export class DummyInput implements IInput {
+  get finished(): boolean {
+    return false;
+  }
+
   isTerminal(): boolean {
     return false;
   }
