@@ -57,19 +57,15 @@ export class Environment extends Map<string, string> {
     if (rows >= 1) {
       const rowsString = rows.toString();
       this.set('LINES', rowsString);
-      this.set('LESS_LINES', rowsString);
     } else {
       this.delete('LINES');
-      this.delete('LESS_LINES');
     }
 
     if (columns >= 1) {
       const columnsString = columns.toString();
       this.set('COLUMNS', columnsString);
-      this.set('LESS_COLUMNS', columnsString);
     } else {
       this.delete('COLUMNS');
-      this.delete('LESS_COLUMNS');
     }
   }
 }

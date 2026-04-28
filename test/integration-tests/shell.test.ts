@@ -193,10 +193,10 @@ test.describe('Shell', () => {
         return ret;
       });
       expect(output[0]).toMatch(
-        '\r\nLINES=10\r\nLESS_LINES=10\r\nCOLUMNS=44\r\nLESS_COLUMNS=44\r\n'
+        '\r\nLINES=10\r\nCOLUMNS=44\r\n'
       );
-      expect(output[1]).toMatch('\r\nCOLUMNS=45\r\nLESS_COLUMNS=45\r\n');
-      expect(output[2]).toMatch('\r\nLINES=14\r\nLESS_LINES=14\r\n');
+      expect(output[1]).toMatch('\r\nCOLUMNS=45\r\n');
+      expect(output[2]).toMatch('\r\nLINES=14\r\n');
     });
   });
 
