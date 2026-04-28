@@ -21,7 +21,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
   async run(context: IRunContext): Promise<number> {
     const { name, args, workerIO, fileSystem, stdin, stdout, stderr, termios, size } = context;
     const { wasmBaseUrl } = this.module.loader;
-    const avoidInfinitePollTimeout = (name === "less");
+    const avoidInfinitePollTimeout = name === 'less';
 
     const start = Date.now();
     const wasmModule = this.module.loader.getWasmModule(this.packageName, this.moduleName);

@@ -53,18 +53,20 @@ test.describe('less command', () => {
         const { shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell } = await shellSetupSimple({ color: true, stdinOption });
         const cmd = shell.inputLine('less file2');
-        terminalInput(shell, ['q']) // q key to exit.
+        terminalInput(shell, ['q']); // q key to exit.
         await cmd;
       }, stdinOption);
       // If less does not close, test will timeout.
     });
 
-    test(`should read redirected file from stdin and quit using ${stdinOption}`, async ({ page }) => {
+    test(`should read redirected file from stdin and quit using ${stdinOption}`, async ({
+      page
+    }) => {
       await page.evaluate(async stdinOption => {
         const { shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell } = await shellSetupSimple({ color: true, stdinOption });
         const cmd = shell.inputLine('less < file2');
-        terminalInput(shell, ['q']) // q key to exit.
+        terminalInput(shell, ['q']); // q key to exit.
         await cmd;
       }, stdinOption);
       // If less does not close, test will timeout.
@@ -75,7 +77,7 @@ test.describe('less command', () => {
         const { shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell } = await shellSetupSimple({ color: true, stdinOption });
         const cmd = shell.inputLine('cat file2 | less');
-        terminalInput(shell, ['q']) // q key to exit.
+        terminalInput(shell, ['q']); // q key to exit.
         await cmd;
       }, stdinOption);
       // If less does not close, test will timeout.

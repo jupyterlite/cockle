@@ -192,9 +192,7 @@ test.describe('Shell', () => {
         ret.push(output.textAndClear());
         return ret;
       });
-      expect(output[0]).toMatch(
-        '\r\nLINES=10\r\nCOLUMNS=44\r\n'
-      );
+      expect(output[0]).toMatch('\r\nLINES=10\r\nCOLUMNS=44\r\n');
       expect(output[1]).toMatch('\r\nCOLUMNS=45\r\n');
       expect(output[2]).toMatch('\r\nLINES=14\r\n');
     });
