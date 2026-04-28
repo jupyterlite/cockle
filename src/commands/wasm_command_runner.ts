@@ -124,7 +124,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
 
           if (ENV !== undefined) {
             // Copy environment variables into command.
-            context.environment.copyIntoCommand(module.ENV!, stdout.isTerminal());
+            context.environment.copyIntoCommand(module.ENV!);
           }
 
           if (TTY !== undefined) {

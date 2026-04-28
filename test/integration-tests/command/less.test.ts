@@ -1,10 +1,49 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { shellLineSimple, shellLineSimpleN, test } from '../utils';
 
 test.describe('less command', () => {
   test('should output version', async ({ page }) => {
     const output = await shellLineSimple(page, 'less --version');
     expect(output).toMatch(/^less --version\r\nless \d{3} \(PCRE2 regular expressions\)\r\n/);
+  });
+
+  test('should write to file from named file', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { output, shell } = await globalThis.cockle.shellSetupSimple({ color: true });
+      await shell.inputLine('less file2 > out');
+      const exitCode = await shell.exitCode();
+      output.clear();
+      await shell.inputLine('cat out');
+      return [exitCode, output.text];
+    });
+    expect(output[0]).toBe(0);
+    expect(output[1]).toMatch('cat out\r\nSome other file\r\nSecond line\r\n');
+  });
+
+  test('should write to file from redirected stdin', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { output, shell } = await globalThis.cockle.shellSetupSimple({ color: true });
+      await shell.inputLine('less < file2 > out');
+      const exitCode = await shell.exitCode();
+      output.clear();
+      await shell.inputLine('cat out');
+      return [exitCode, output.text];
+    });
+    expect(output[0]).toBe(0);
+    expect(output[1]).toMatch('cat out\r\nSome other file\r\nSecond line\r\n');
+  });
+
+  test('should write to file from pipe', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { output, shell } = await globalThis.cockle.shellSetupSimple({ color: true });
+      await shell.inputLine('cat file2 | less > out');
+      const exitCode = await shell.exitCode();
+      output.clear();
+      await shell.inputLine('cat out');
+      return [exitCode, output.text];
+    });
+    expect(output[0]).toBe(0);
+    expect(output[1]).toMatch('cat out\r\nSome other file\r\nSecond line\r\n');
   });
 
   /*
