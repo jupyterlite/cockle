@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, shellLineSimpleN, test } from '../utils';
+import { shellLineSimple, test } from '../utils';
 
 test.describe('less command', () => {
   test('should output version', async ({ page }) => {
