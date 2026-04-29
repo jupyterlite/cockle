@@ -119,10 +119,9 @@ test.describe('git2cpp command', () => {
         const { shell, output } = await shellSetupSimple({ stdinOption });
         await shell.inputLine('git init .');
         await shell.inputLine('git add file1');
-        await Promise.all([
-          shell.inputLine('git commit'),
-          terminalInput(shell, ['M', 's', 'd', keys.backspace, 'g', keys.enter])
-        ]);
+        const cmd = shell.inputLine('git commit');
+        await terminalInput(shell, ['M', 's', 'd', keys.backspace, 'g', keys.enter]);
+        await cmd;
         output.clear();
         await shell.inputLine('git log');
         return output.text;
@@ -141,10 +140,9 @@ test.describe('git2cpp command', () => {
         await shell.inputLine('git init .');
         await shell.inputLine('git add file1');
         output.clear();
-        await Promise.all([
-          shell.inputLine('git commit'),
-          terminalInput(shell, ['M', keys.backspace, keys.backspace, keys.enter])
-        ]);
+        const cmd = shell.inputLine('git commit');
+        await terminalInput(shell, ['M', keys.backspace, keys.backspace, keys.enter]);
+        await cmd;
         return [await shell.exitCode(), output.text];
       }, stdinOption);
       expect(output[0]).toBe(1);

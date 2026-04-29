@@ -165,12 +165,11 @@ cmdName.forEach(cmdName => {
       test(`should read from stdin via ${stdinOption} line buffered`, async ({ page }) => {
         const output = await page.evaluate(
           async ([stdinOption, cmdName]) => {
-            const { keys, shellSetupEmpty } = globalThis.cockle;
+            const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
             const { shell, output } = await shellSetupEmpty({ stdinOption });
-            await Promise.all([
-              shell.inputLine(`${cmdName} stdin`),
-              globalThis.cockle.terminalInput(shell, ['a', 'B', ' ', 'c', '\n', keys.EOT])
-            ]);
+            const cmd = shell.inputLine(`${cmdName} stdin`);
+            await terminalInput(shell, ['a', 'B', ' ', 'c', '\n', keys.EOT]);
+            await cmd;
             return output.text;
           },
           [stdinOption, cmdName]
@@ -183,19 +182,12 @@ cmdName.forEach(cmdName => {
       }) => {
         const output = await page.evaluate(
           async ([stdinOption, cmdName]) => {
-            const { keys, shellSetupEmpty } = globalThis.cockle;
+            const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+            const { backspace, EOT } = keys;
             const { shell, output } = await shellSetupEmpty({ stdinOption });
-            await Promise.all([
-              shell.inputLine(`${cmdName} stdin`),
-              globalThis.cockle.terminalInput(shell, [
-                'a',
-                'B',
-                keys.backspace,
-                'c',
-                '\n',
-                keys.EOT
-              ])
-            ]);
+            const cmd = shell.inputLine(`${cmdName} stdin`);
+            await terminalInput(shell, ['a', 'B', backspace, 'c', '\n', EOT]);
+            await cmd;
             return output.text;
           },
           [stdinOption, cmdName]
@@ -209,12 +201,11 @@ cmdName.forEach(cmdName => {
       test(`should read from stdin via ${stdinOption} char buffered`, async ({ page }) => {
         const output = await page.evaluate(
           async ([stdinOption, cmdName]) => {
-            const { keys, shellSetupEmpty } = globalThis.cockle;
+            const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
             const { shell, output } = await shellSetupEmpty({ stdinOption });
-            await Promise.all([
-              shell.inputLine(`${cmdName} stdinchar`),
-              globalThis.cockle.terminalInput(shell, ['a', 'B', ' ', 'c', keys.EOT])
-            ]);
+            const cmd = shell.inputLine(`${cmdName} stdinchar`);
+            await terminalInput(shell, ['a', 'B', ' ', 'c', keys.EOT]);
+            await cmd;
             return output.text;
           },
           [stdinOption, cmdName]
@@ -225,12 +216,11 @@ cmdName.forEach(cmdName => {
       test(`should read unicode from stdin via ${stdinOption}`, async ({ page }) => {
         const output = await page.evaluate(
           async ([stdinOption, cmdName]) => {
-            const { keys, shellSetupEmpty } = globalThis.cockle;
+            const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
             const { shell, output } = await shellSetupEmpty({ stdinOption });
-            await Promise.all([
-              shell.inputLine(`${cmdName} stdinchar`),
-              globalThis.cockle.terminalInput(shell, ['a', 'B', '🎉', 'c', keys.EOT])
-            ]);
+            const cmd = shell.inputLine(`${cmdName} stdinchar`);
+            await terminalInput(shell, ['a', 'B', '🎉', 'c', keys.EOT]);
+            await cmd;
             return output.text;
           },
           [stdinOption, cmdName]
