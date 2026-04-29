@@ -735,4 +735,95 @@ test.describe('Shell', () => {
       expect(outputD).toHaveLength(2);
     });
   });
+
+  test.describe('tab complete with synchronous stdin prompt', () => {
+    // Initial files includes filename long enough to be over half terminal width so that tab
+    // complete possiblities are displayed in a single column, one file per line.
+    const initialFiles = {
+      a0_very_very_very_very_very_very_very_very_very_very_very_long_file_name: '',
+      a1: '',
+      a2: '',
+      a3: '',
+      a4: '',
+      a5: '',
+      a6: '',
+      a7: '',
+      a8: '',
+      a9: ''
+    };
+
+    test('check no prompt if enough terminal lines to display them all', async ({ page }) => {
+      const output = await page.evaluate(
+        async ({ initialFiles }) => {
+          const { shellSetupEmpty, terminalInput } = globalThis.cockle;
+          const { shell, output } = await shellSetupEmpty({ initialFiles });
+          await shell.inputLine('export LINES=12'); // 2 more than number of files
+          output.clear();
+          await terminalInput(shell, ['l', 's', ' ', 'a', '\t']);
+          return output.text;
+        },
+        { initialFiles }
+      );
+      const lines = output.split('\r\n');
+      expect(lines).toHaveLength(12);
+      expect(lines[0]).toEqual('ls a');
+      expect(lines[1]).toMatch(/^a0_very_very/);
+      expect(lines[10]).toEqual('a9');
+      expect(lines.at(-1)).toMatch(/ls a$/);
+    });
+
+    const stdinOptions = ['sab', 'sw'];
+    stdinOptions.forEach(stdinOption => {
+      test(`check prompt accepted using y via ${stdinOption}`, async ({ page }) => {
+        const output = await page.evaluate(
+          async ({ stdinOption, initialFiles }) => {
+            const { shellSetupEmpty, terminalInput } = globalThis.cockle;
+            const { shell, output } = await shellSetupEmpty({ initialFiles, stdinOption });
+            await shell.inputLine('export LINES=11'); // 1 more than number of files
+            output.clear();
+
+            terminalInput(shell, ['l', 's', ' ', 'a', '\t']);
+            await output.contains('possibilities (y or n)?');
+            await terminalInput(shell, ['y']);
+            return output.text;
+          },
+          { stdinOption, initialFiles }
+        );
+        const lines = output.split('\r\n');
+        expect(lines).toHaveLength(13);
+        expect(lines[0]).toEqual('ls a');
+        expect(lines[1]).toEqual('Display all 10 possibilities (y or n)?');
+        expect(lines[2]).toMatch(/^a0_very_very/);
+        expect(lines[11]).toEqual('a9');
+        expect(lines.at(-1)).toMatch(/ls a$/);
+      });
+
+      const rejectChars = ['n', '\x03', '\x04'];
+      rejectChars.forEach(rejectChar => {
+        test(`check prompt rejected using ascii ${rejectChar.charCodeAt(0)} via ${stdinOption}`, async ({
+          page
+        }) => {
+          const output = await page.evaluate(
+            async ({ stdinOption, initialFiles, rejectChar }) => {
+              const { shellSetupEmpty, terminalInput } = globalThis.cockle;
+              const { shell, output } = await shellSetupEmpty({ initialFiles, stdinOption });
+              await shell.inputLine('export LINES=11'); // 1 more than number of files
+              output.clear();
+
+              terminalInput(shell, ['l', 's', ' ', 'a', '\t']);
+              await output.contains('possibilities (y or n)?');
+              await terminalInput(shell, [rejectChar]);
+              return output.text;
+            },
+            { stdinOption, initialFiles, rejectChar }
+          );
+          const lines = output.split('\r\n');
+          expect(lines).toHaveLength(3);
+          expect(lines[0]).toEqual('ls a');
+          expect(lines[1]).toEqual('Display all 10 possibilities (y or n)?');
+          expect(lines.at(-1)).toMatch(/ls a$/);
+        });
+      });
+    });
+  });
 });
