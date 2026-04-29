@@ -109,12 +109,11 @@ test.describe('wasm-test', () => {
   stdinOptions.forEach(stdinOption => {
     test(`should read from stdin via ${stdinOption} line buffered`, async ({ page }) => {
       const output = await page.evaluate(async stdinOption => {
-        const { keys, shellSetupEmpty } = globalThis.cockle;
+        const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ stdinOption });
-        await Promise.all([
-          shell.inputLine('wasm-test stdin'),
-          globalThis.cockle.terminalInput(shell, ['a', 'B', ' ', 'c', '\n', keys.EOT])
-        ]);
+        const cmd = shell.inputLine('wasm-test stdin');
+        await terminalInput(shell, ['a', 'B', ' ', 'c', '\n', keys.EOT]);
+        await cmd;
         return output.text;
       }, stdinOption);
       expect(output).toMatch(/^wasm-test stdin\r\naB c\r\nAB C\r\n/);
@@ -124,12 +123,11 @@ test.describe('wasm-test', () => {
       page
     }) => {
       const output = await page.evaluate(async stdinOption => {
-        const { keys, shellSetupEmpty } = globalThis.cockle;
+        const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ stdinOption });
-        await Promise.all([
-          shell.inputLine('wasm-test stdin'),
-          globalThis.cockle.terminalInput(shell, ['a', 'B', keys.backspace, 'c', '\n', keys.EOT])
-        ]);
+        const cmd = shell.inputLine('wasm-test stdin');
+        await terminalInput(shell, ['a', 'B', keys.backspace, 'c', '\n', keys.EOT]);
+        await cmd;
         return output.text;
       }, stdinOption);
       // Only check the output line.
@@ -142,19 +140,12 @@ test.describe('wasm-test', () => {
       page
     }) => {
       const output = await page.evaluate(async stdinOption => {
-        const { keys, shellSetupEmpty } = globalThis.cockle;
+        const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+        const { backspace, EOT } = keys;
         const { shell, output } = await shellSetupEmpty({ stdinOption });
-        await Promise.all([
-          shell.inputLine('wasm-test stdin'),
-          globalThis.cockle.terminalInput(shell, [
-            'a',
-            keys.backspace,
-            keys.backspace,
-            'c',
-            '\n',
-            keys.EOT
-          ])
-        ]);
+        const cmd = shell.inputLine('wasm-test stdin');
+        await terminalInput(shell, ['a', backspace, backspace, 'c', '\n', EOT]);
+        await cmd;
         return output.text;
       }, stdinOption);
       // Only check the output line.
@@ -165,12 +156,11 @@ test.describe('wasm-test', () => {
 
     test(`should read from stdin via ${stdinOption} char buffered`, async ({ page }) => {
       const output = await page.evaluate(async stdinOption => {
-        const { keys, shellSetupEmpty } = globalThis.cockle;
+        const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ stdinOption });
-        await Promise.all([
-          shell.inputLine('wasm-test stdinchar'),
-          globalThis.cockle.terminalInput(shell, ['a', 'B', ' ', 'c', keys.EOT])
-        ]);
+        const cmd = shell.inputLine('wasm-test stdinchar');
+        await terminalInput(shell, ['a', 'B', ' ', 'c', keys.EOT]);
+        await cmd;
         return output.text;
       }, stdinOption);
       expect(output).toMatch(/^wasm-test stdinchar\r\naABB {2}cC\r\n/);

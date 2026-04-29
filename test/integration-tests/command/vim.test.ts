@@ -14,7 +14,9 @@ test.describe('vim command', () => {
         // Use color: true to ensure TERM env var is set.
         const { shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell } = await shellSetupEmpty({ color: true, stdinOption });
-        await Promise.all([shell.inputLine('vim'), terminalInput(shell, ['\x1b', ':', 'q', '\r'])]);
+        const cmd = shell.inputLine('vim');
+        await terminalInput(shell, ['\x1b', ':', 'q', '\r']);
+        await cmd;
       }, stdinOption);
     });
 
@@ -22,26 +24,25 @@ test.describe('vim command', () => {
       const output = await page.evaluate(async stdinOption => {
         const { shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ color: true, stdinOption });
-        await Promise.all([
-          shell.inputLine('vim'),
-          terminalInput(shell, [
-            'i',
-            'h',
-            'i',
-            ' ',
-            'Q',
-            'W',
-            '\x1b',
-            ':',
-            'w',
-            'q',
-            ' ',
-            'o',
-            'u',
-            't',
-            '\r'
-          ])
+        const cmd = shell.inputLine('vim');
+        await terminalInput(shell, [
+          'i',
+          'h',
+          'i',
+          ' ',
+          'Q',
+          'W',
+          '\x1b',
+          ':',
+          'w',
+          'q',
+          ' ',
+          'o',
+          'u',
+          't',
+          '\r'
         ]);
+        await cmd;
         // New file should exist.
         output.clear();
         await shell.inputLine('cat out');
@@ -54,10 +55,21 @@ test.describe('vim command', () => {
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupSimple({ color: true, stdinOption });
-        await Promise.all([
-          shell.inputLine('vim file2'),
-          terminalInput(shell, [keys.down, 'i', 'N', 'e', 'w', '\r', '\x1b', ':', 'w', 'q', '\r'])
+        const cmd = shell.inputLine('vim file2');
+        await terminalInput(shell, [
+          keys.down,
+          'i',
+          'N',
+          'e',
+          'w',
+          '\r',
+          '\x1b',
+          ':',
+          'w',
+          'q',
+          '\r'
         ]);
+        await cmd;
         output.clear();
         await shell.inputLine('cat file2');
         return output.text;
@@ -69,10 +81,9 @@ test.describe('vim command', () => {
       const output = await page.evaluate(async stdinOption => {
         const { shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupSimple({ color: true, stdinOption });
-        await Promise.all([
-          shell.inputLine('vim file2'),
-          terminalInput(shell, ['d', 'd', '\r', '\x1b', ':', 'w', 'q', '\r'])
-        ]);
+        const cmd = shell.inputLine('vim file2');
+        await terminalInput(shell, ['d', 'd', '\r', '\x1b', ':', 'w', 'q', '\r']);
+        await cmd;
         output.clear();
         await shell.inputLine('cat file2');
         return output.text;
@@ -90,12 +101,11 @@ test.describe('vim command', () => {
         });
         const { keys, terminalInput } = globalThis.cockle;
         const { escape, leftArrow, upArrow } = keys;
-        await Promise.all([
-          shell.inputLine('vim'),
-          terminalInput(shell, [
-            ...('iabc\rdef' + upArrow + leftArrow + leftArrow + 'XY' + escape + ':wq out\r')
-          ])
+        const cmd = shell.inputLine('vim');
+        await terminalInput(shell, [
+          ...('iabc\rdef' + upArrow + leftArrow + leftArrow + 'XY' + escape + ':wq out\r')
         ]);
+        await cmd;
         // New file should exist.
         output.clear();
         await shell.inputLine('cat out');

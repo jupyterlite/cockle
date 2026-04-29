@@ -414,13 +414,12 @@ test.describe('Shell', () => {
 
       test(`should support terminal stdin via ${stdinOption}`, async ({ page }) => {
         const output = await page.evaluate(async stdinOption => {
-          const { shell, output } = await globalThis.cockle.shellSetupEmpty({ stdinOption });
-          const { keys } = globalThis.cockle;
+          const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+          const { shell, output } = await shellSetupEmpty({ stdinOption });
           const { enter, EOT } = keys;
-          await Promise.all([
-            shell.inputLine('wc'),
-            globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', enter, EOT])
-          ]);
+          const cmd = shell.inputLine('wc');
+          await terminalInput(shell, ['a', ' ', 'b', enter, 'c', enter, EOT]);
+          await cmd;
           return output.text;
         }, stdinOption);
         expect(output).toMatch(/^wc\r\na b\r\nc\r\n {6}2 {7}3 {7}6\r\n/);
@@ -430,13 +429,12 @@ test.describe('Shell', () => {
         page
       }) => {
         const output = await page.evaluate(async stdinOption => {
-          const { shell, output } = await globalThis.cockle.shellSetupEmpty({ stdinOption });
-          const { keys } = globalThis.cockle;
+          const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+          const { shell, output } = await shellSetupEmpty({ stdinOption });
           const { downArrow, enter, EOT } = keys;
-          await Promise.all([
-            shell.inputLine('wc'),
-            globalThis.cockle.terminalInput(shell, ['a', downArrow, 'b', enter, EOT])
-          ]);
+          const cmd = shell.inputLine('wc');
+          await terminalInput(shell, ['a', downArrow, 'b', enter, EOT]);
+          await cmd;
           return output.text;
         }, stdinOption);
         expect(output).toMatch('wc\r\na\x1B[Bb\r\n      1       1       6\r\n');
@@ -444,19 +442,17 @@ test.describe('Shell', () => {
 
       test(`should support terminal stdin via ${stdinOption} more than once`, async ({ page }) => {
         const output = await page.evaluate(async stdinOption => {
-          const { shell, output } = await globalThis.cockle.shellSetupEmpty({ stdinOption });
-          const { keys } = globalThis.cockle;
+          const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+          const { shell, output } = await shellSetupEmpty({ stdinOption });
           const { enter, EOT } = keys;
-          await Promise.all([
-            shell.inputLine('wc'),
-            globalThis.cockle.terminalInput(shell, ['a', ' ', 'b', enter, 'c', enter, EOT])
-          ]);
+          const cmd = shell.inputLine('wc');
+          await terminalInput(shell, ['a', ' ', 'b', enter, 'c', enter, EOT]);
+          await cmd;
           const ret0 = output.textAndClear();
 
-          await Promise.all([
-            shell.inputLine('wc'),
-            globalThis.cockle.terminalInput(shell, ['d', 'e', ' ', 'f', enter, EOT])
-          ]);
+          const cmd2 = shell.inputLine('wc');
+          await terminalInput(shell, ['d', 'e', ' ', 'f', enter, EOT]);
+          await cmd2;
           const ret1 = output.text;
           return [ret0, ret1];
         }, stdinOption);
@@ -470,28 +466,16 @@ test.describe('Shell', () => {
         // Test WorkerIO.poll(timeoutMs) using vim which uses a 4 second timeout.
         const output = await page.evaluate(async stdinOption => {
           const { delay, keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+          const { escape } = keys;
           const { shell, output } = await shellSetupEmpty({
             color: true,
             stdinOption
           });
-          const stdinWithDelay = async () => {
-            await terminalInput(shell, ['i', 'a', 'b', 'c']);
-            await delay(4500); // Delay > 4 seconds to force timeout on poll() call.
-            await terminalInput(shell, [
-              'Z',
-              'z',
-              keys.escape,
-              ':',
-              'w',
-              'q',
-              ' ',
-              'o',
-              'u',
-              't',
-              '\r'
-            ]);
-          };
-          await Promise.all([shell.inputLine('vim'), stdinWithDelay()]);
+          const cmd = shell.inputLine('vim');
+          await terminalInput(shell, ['i', 'a', 'b', 'c']);
+          await delay(4500); // Delay > 4 seconds to force timeout on poll() call.
+          await terminalInput(shell, ['Z', 'z', escape, ':', 'w', 'q', ' ', 'o', 'u', 't', '\r']);
+          await cmd;
           output.clear();
           await shell.inputLine('cat out');
           return output.text;
@@ -511,14 +495,13 @@ test.describe('Shell', () => {
                 color: true,
                 stdinOption
               });
-              const stdinWithDelay = async () => {
-                const inputs = [keys.rightArrow, 'a', 'X', keys.escape, ':', 'w', 'q', '\r'];
-                for (const input of inputs) {
-                  await delay(delayMs);
-                  await terminalInput(shell, [input]);
-                }
-              };
-              await Promise.all([shell.inputLine('vim file1'), stdinWithDelay()]);
+              const cmd = shell.inputLine('vim file1');
+              const inputs = [keys.rightArrow, 'a', 'X', keys.escape, ':', 'w', 'q', '\r'];
+              for (const input of inputs) {
+                await delay(delayMs);
+                await terminalInput(shell, [input]);
+              }
+              await cmd;
               output.clear();
               await shell.inputLine('cat file1');
               return output.text;

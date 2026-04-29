@@ -14,7 +14,9 @@ test.describe('nano command', () => {
         const { shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell } = await shellSetupEmpty({ color: true, stdinOption });
         const exit = '\x18'; // Ctrl-X
-        await Promise.all([shell.inputLine('nano'), terminalInput(shell, [exit])]);
+        const cmd = shell.inputLine('nano');
+        await terminalInput(shell, [exit]);
+        await cmd;
       }, stdinOption);
       // If nano does not close, test will timeout.
     });
@@ -26,24 +28,23 @@ test.describe('nano command', () => {
         const { enter } = keys;
         const exit = '\x18'; // Ctrl-X
         const writeFile = '\x0f'; // Ctrl-O
-        await Promise.all([
-          shell.inputLine('nano'),
-          terminalInput(shell, [
-            'a',
-            'b',
-            'c',
-            enter,
-            'd',
-            'e',
-            'f',
-            writeFile,
-            'o',
-            'u',
-            't',
-            enter,
-            exit
-          ])
+        const cmd = shell.inputLine('nano');
+        await terminalInput(shell, [
+          'a',
+          'b',
+          'c',
+          enter,
+          'd',
+          'e',
+          'f',
+          writeFile,
+          'o',
+          'u',
+          't',
+          enter,
+          exit
         ]);
+        await cmd;
         // New file should exist.
         output.clear();
         await shell.inputLine('cat out');
@@ -59,10 +60,9 @@ test.describe('nano command', () => {
         const { downArrow, enter } = keys;
         const exit = '\x18'; // Ctrl-X
         const writeFile = '\x0f'; // Ctrl-O
-        await Promise.all([
-          shell.inputLine('nano file2'),
-          terminalInput(shell, [downArrow, 'N', 'e', 'w', enter, writeFile, enter, exit])
-        ]);
+        const cmd = shell.inputLine('nano file2');
+        await terminalInput(shell, [downArrow, 'N', 'e', 'w', enter, writeFile, enter, exit]);
+        await cmd;
         output.clear();
         await shell.inputLine('cat file2');
         return output.text;
@@ -78,11 +78,10 @@ test.describe('nano command', () => {
         const deleteLine = '\x0b'; // Ctrl-K
         const exit = '\x18'; // Ctrl-X
         const writeFile = '\x0f'; // Ctrl-O
-        await Promise.all([
-          shell.inputLine('nano file2'),
-          // Delete first line of file, leaving just the second line.
-          terminalInput(shell, [deleteLine, writeFile, enter, exit])
-        ]);
+        const cmd = shell.inputLine('nano file2');
+        // Delete first line of file, leaving just the second line.
+        await terminalInput(shell, [deleteLine, writeFile, enter, exit]);
+        await cmd;
         output.clear();
         await shell.inputLine('cat file2');
         return output.text;
