@@ -214,7 +214,7 @@ export class TabCompleter {
     let ret = false;
     let haveResponse = false;
     while (!haveResponse) {
-      const read = await workerIO.readAsync(1, 0);
+      const read = await workerIO.readAsync(1, -1);
       if (read.length > 0) {
         const char = read[0];
         if (char === 121) {

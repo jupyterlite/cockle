@@ -777,15 +777,14 @@ test.describe('Shell', () => {
       test(`check prompt displayed and accepted using y via ${stdinOption}`, async ({ page }) => {
         const output = await page.evaluate(
           async ({ stdinOption, initialFiles }) => {
-            const { delay, shellSetupEmpty, terminalInput } = globalThis.cockle;
+            const { shellSetupEmpty, terminalInput } = globalThis.cockle;
             const { shell, output } = await shellSetupEmpty({ initialFiles, stdinOption });
             await shell.inputLine('export LINES=11'); // 1 more than number of files
             output.clear();
-            await Promise.all([
-              terminalInput(shell, ['l', 's', ' ', 'a', '\t']),
-              // Short delay for prompt to be displayed before responding to it.
-              delay(100).then(() => terminalInput(shell, ['y']))
-            ]);
+
+            terminalInput(shell, ['l', 's', ' ', 'a', '\t']);
+            await output.contains('possibilities (y or n)?');
+            await terminalInput(shell, ['y']);
             return output.text;
           },
           { stdinOption, initialFiles }
@@ -806,15 +805,14 @@ test.describe('Shell', () => {
         }) => {
           const output = await page.evaluate(
             async ({ stdinOption, initialFiles, rejectChar }) => {
-              const { delay, shellSetupEmpty, terminalInput } = globalThis.cockle;
+              const { shellSetupEmpty, terminalInput } = globalThis.cockle;
               const { shell, output } = await shellSetupEmpty({ initialFiles, stdinOption });
               await shell.inputLine('export LINES=11'); // 1 more than number of files
               output.clear();
-              await Promise.all([
-                terminalInput(shell, ['l', 's', ' ', 'a', '\t']),
-                // Short delay for prompt to be displayed before responding to it.
-                delay(100).then(() => terminalInput(shell, [rejectChar]))
-              ]);
+
+              terminalInput(shell, ['l', 's', ' ', 'a', '\t']);
+              await output.contains('possibilities (y or n)?');
+              await terminalInput(shell, [rejectChar]);
               return output.text;
             },
             { stdinOption, initialFiles, rejectChar }
