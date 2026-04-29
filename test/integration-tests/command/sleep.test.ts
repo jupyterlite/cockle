@@ -20,9 +20,9 @@ test.describe('sleep command', () => {
     test(`should sleep for ${sleep_s} s`, async ({ page }) => {
       const output = await page.evaluate(async sleep_s => {
         const { shell } = await globalThis.cockle.shellSetupSimple();
-        const start = Date.now();
+        const start = performance.now();
         await shell.inputLine(`sleep ${sleep_s}`);
-        const duration_ms = Date.now() - start;
+        const duration_ms = performance.now() - start;
         return [await shell.exitCode(), duration_ms];
       }, sleep_s);
       expect(output[0]).toBe(0);

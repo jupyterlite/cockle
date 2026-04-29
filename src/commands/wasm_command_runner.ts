@@ -23,7 +23,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     const { wasmBaseUrl } = this.module.loader;
     const avoidInfinitePollTimeout = name === 'less';
 
-    const start = Date.now();
+    const start = performance.now();
     const wasmModule = this.module.loader.getWasmModule(this.packageName, this.moduleName);
     if (wasmModule === undefined) {
       throw new FindCommandError(name);
@@ -171,8 +171,8 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       }
     }
 
-    const end = Date.now();
-    console.debug(`Cockle ${name} load and run time ${end - start} ms`);
+    const end = performance.now();
+    console.debug(`Cockle ${name} load and run time ${(end - start).toFixed(1)} ms`);
     return exitCode;
   }
 
