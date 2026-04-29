@@ -439,9 +439,9 @@ export class ShellImpl implements IShellImpl {
     this.output('\x1b]11;?\x07');
 
     const timeoutMs = 100;
-    const start = Date.now();
+    const start = performance.now();
     const chars = await workerIO.readAsync(null, timeoutMs);
-    console.debug('Cockle theme change', Date.now() - start, 'ms');
+    console.debug('Cockle theme change', (performance.now() - start).toFixed(1), 'ms');
 
     termios.setDefaultShell();
     await this._options.enableBufferedStdinCallback(false);
