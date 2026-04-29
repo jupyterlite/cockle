@@ -774,7 +774,7 @@ test.describe('Shell', () => {
 
     const stdinOptions = ['sab', 'sw'];
     stdinOptions.forEach(stdinOption => {
-      test(`check prompt displayed and accepted using y via ${stdinOption}`, async ({ page }) => {
+      test(`check prompt accepted using y via ${stdinOption}`, async ({ page }) => {
         const output = await page.evaluate(
           async ({ stdinOption, initialFiles }) => {
             const { shellSetupEmpty, terminalInput } = globalThis.cockle;
@@ -800,7 +800,7 @@ test.describe('Shell', () => {
 
       const rejectChars = ['n', '\x03', '\x04'];
       rejectChars.forEach(rejectChar => {
-        test(`check prompt displayed and rejected using ${rejectChar} via ${stdinOption}`, async ({
+        test(`check prompt rejected using ascii ${rejectChar.charCodeAt(0)} via ${stdinOption}`, async ({
           page
         }) => {
           const output = await page.evaluate(
