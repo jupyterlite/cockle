@@ -82,14 +82,16 @@ export class CommandRegistry {
 
   registerExternalCommand(name: string, hasTabComplete: boolean): void {
     // Overwrite if name already registered.
-    this._map.set(
-      name,
-      new ExternalCommandRunner(
+    if (this._validName(name)) {
+      this._map.set(
         name,
-        this.callExternalCommand,
-        hasTabComplete ? this.callExternalTabComplete : undefined
-      )
-    );
+        new ExternalCommandRunner(
+          name,
+          this.callExternalCommand,
+          hasTabComplete ? this.callExternalTabComplete : undefined
+        )
+      );
+    }
   }
 
   /**
@@ -98,8 +100,24 @@ export class CommandRegistry {
   private _register(commandRunner: ICommandRunner) {
     // Should probably check not overwriting any command names
     for (const name of commandRunner.names()) {
-      this._map.set(name, commandRunner);
+      if (this._validName(name)) {
+        this._map.set(name, commandRunner);
+      }
     }
+  }
+
+  /**
+   * Return true if name is a valid command name.
+   * CommandRegistry will not register a command with an invalid name and will report it via
+   * console.warn. It will not raise an error as usually command registration occurs before a shell
+   * is up and running.
+   */
+  private _validName(name: string): boolean {
+    const valid = name.match(/^[\w-]+$/) !== null;
+    if (!valid) {
+      console.warn(`${name} is not a valid command name`);
+    }
+    return valid;
   }
 
   // Map of command name to runner.

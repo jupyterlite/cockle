@@ -632,6 +632,27 @@ test.describe('Shell', () => {
         expect(output).toMatch(expected);
       });
     });
+
+    ['spa ce', '£', 'br(', 's*', '"', '+', '🚀'].forEach(name => {
+      test(`should not register invalid command name '${name}'`, async ({ page }) => {
+        const output = await page.evaluate(async name => {
+          const { externalCommands, shellSetupEmpty } = globalThis.cockle;
+          // Add another entry to externalCommands with the invalid name.
+          externalCommands[name] = externalCommands['external-tab'];
+          const { output, shell } = await shellSetupEmpty({ externalCommands });
+          await shell.inputLine('which external-tab');
+          const ret = [await shell.exitCode(), output.textAndClear()];
+
+          await shell.inputLine(`which '${name}'`);
+          ret.push(await shell.exitCode(), output.text);
+          return ret;
+        }, name);
+        expect(output[0]).toBe(0);
+        expect(output[1]).toMatch('\r\nexternal-tab\r\n');
+        expect(output[2]).toBe(1);
+        expect(output[3]).toMatch(`\r\nwhich: no ${name} command\r\n`);
+      });
+    });
   });
 
   test.describe('themeChange', () => {
