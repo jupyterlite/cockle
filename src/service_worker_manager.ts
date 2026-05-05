@@ -9,6 +9,8 @@ const DRIVE_API_PATH = '/cockle/service-worker';
  */
 const SW_PING_ENDPOINT = '/api/service-worker-heartbeat';
 
+const HEARTBEAT_MS = 20000;
+
 /**
  * A class that manages the Service Worker registration and communication, used to
  * access stdin whilst WebAssembly commands are running.
@@ -80,7 +82,7 @@ export class ServiceWorkerManager {
       this._ready.reject(void 0);
     } else {
       this._ready.resolve(void 0);
-      setTimeout(this._pingServiceWorker, 20000);
+      setTimeout(this._pingServiceWorker.bind(this), HEARTBEAT_MS);
     }
   }
 
@@ -113,7 +115,7 @@ export class ServiceWorkerManager {
     const response = await fetch(SW_PING_ENDPOINT);
     const text = await response.text();
     if (text === 'ok') {
-      setTimeout(this._pingServiceWorker, 20000);
+      setTimeout(this._pingServiceWorker.bind(this), HEARTBEAT_MS);
     }
   }
 
