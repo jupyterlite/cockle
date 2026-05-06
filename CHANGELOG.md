@@ -2,6 +2,57 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.5.0
+
+Cockle 1.5.0 adds new commands `du` and `unset`, implements line vs character buffering on stdin, and introduces a yes/no prompt before displaying a large number of tab completion options. There are also a number of bug fixes in particular in the handling of stdin, and for the `less` and `touch` commands.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.4.0...183e5816d5fac50dcc5241e41e97471d9f11c6aa))
+
+### Enhancements made
+
+- Add `du` command from `coreutils` [#315](https://github.com/jupyterlite/cockle/pull/315) ([@ianthomas23](https://github.com/ianthomas23))
+- Validate command names on registering [#314](https://github.com/jupyterlite/cockle/pull/314) ([@ianthomas23](https://github.com/ianthomas23))
+- Use performance timer [#312](https://github.com/jupyterlite/cockle/pull/312) ([@ianthomas23](https://github.com/ianthomas23))
+- Implement line vs character buffering on stdin [#309](https://github.com/jupyterlite/cockle/pull/309) ([@ianthomas23](https://github.com/ianthomas23))
+- Add `unset` built-in command [#292](https://github.com/jupyterlite/cockle/pull/292) ([@ianthomas23](https://github.com/ianthomas23))
+- If too many tab complete options, use yes/no prompt to display them all [#213](https://github.com/jupyterlite/cockle/pull/213) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Fix bug resending service worker heartbeat requests [#316](https://github.com/jupyterlite/cockle/pull/316) ([@ianthomas23](https://github.com/ianthomas23))
+- Fix `less` reading from pipe and redirected input file [#311](https://github.com/jupyterlite/cockle/pull/311) ([@ianthomas23](https://github.com/ianthomas23))
+- Always pass `TERM` env var to wasm commands [#310](https://github.com/jupyterlite/cockle/pull/310) ([@ianthomas23](https://github.com/ianthomas23))
+- Correctly identify `isatty` for stdin [#307](https://github.com/jupyterlite/cockle/pull/307) ([@ianthomas23](https://github.com/ianthomas23))
+- Fix `exitCode` after pipe [#304](https://github.com/jupyterlite/cockle/pull/304) ([@ianthomas23](https://github.com/ianthomas23))
+- Fix `touch` exit codes and bad file descriptor [#303](https://github.com/jupyterlite/cockle/pull/303) ([@ianthomas23](https://github.com/ianthomas23))
+- Avoid maximum call stack size exceeded when writing to terminal [#302](https://github.com/jupyterlite/cockle/pull/302) ([@ianthomas23](https://github.com/ianthomas23))
+- Add tests for `sleep` command [#297](https://github.com/jupyterlite/cockle/pull/297) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Improve some of the playwright tests [#313](https://github.com/jupyterlite/cockle/pull/313) ([@ianthomas23](https://github.com/ianthomas23))
+- Implement `poll` on `IInput` [#308](https://github.com/jupyterlite/cockle/pull/308) ([@ianthomas23](https://github.com/ianthomas23))
+- Bump actions/upload-pages-artifact from 4 to 5 in the actions group [#306](https://github.com/jupyterlite/cockle/pull/306) ([@ianthomas23](https://github.com/ianthomas23))
+- Add tests for `uniq` command [#305](https://github.com/jupyterlite/cockle/pull/305) ([@ianthomas23](https://github.com/ianthomas23))
+- Add unicode tests for js and external commands [#301](https://github.com/jupyterlite/cockle/pull/301) ([@ianthomas23](https://github.com/ianthomas23))
+- Bump the actions group across 1 directory with 3 updates [#300](https://github.com/jupyterlite/cockle/pull/300) ([@ianthomas23](https://github.com/ianthomas23))
+- Forward port version from v1.4.x branch [#298](https://github.com/jupyterlite/cockle/pull/298) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Documentation improvements
+
+- Forward port changelog from v1.4.x branch to main [#296](https://github.com/jupyterlite/cockle/pull/296) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-02-27&to=2026-05-06&type=c))
+
+@ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-02-27..2026-05-06&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 1.4.1
 
 This is a bug fix release to fix handling of extra WebAssembly channels when deploying, and to keep arguments with wildcards if filename expansion has no matches.
@@ -24,8 +75,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-02-27&to=2026-03-16&type=c))
 
 @ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-02-27..2026-03-16&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 1.4.0
 
