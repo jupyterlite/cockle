@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.5.1
+
+This is a bug fix release to fix the use of backspace in WebAssembly commands, in particular `nano` and `vim`.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.5.0...f6b4db15cfbbc7fb5bcc9295a9b3f9d0aaabec13))
+
+### Bugs fixed
+
+- Fix backspace in wasm commands such as nano and vim [#318](https://github.com/jupyterlite/cockle/pull/318) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-05-06&to=2026-05-14&type=c))
+
+@ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-05-06..2026-05-14&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 1.5.0
 
 Cockle 1.5.0 adds new commands `du` and `unset`, implements line vs character buffering on stdin, and introduces a yes/no prompt before displaying a large number of tab completion options. There are also a number of bug fixes in particular in the handling of stdin, and for the `less` and `touch` commands.
@@ -50,8 +71,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-02-27&to=2026-05-06&type=c))
 
 @ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-02-27..2026-05-06&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 1.4.1
 
