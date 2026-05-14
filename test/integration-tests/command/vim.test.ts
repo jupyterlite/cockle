@@ -113,6 +113,44 @@ test.describe('vim command', () => {
       }, stdinOption);
       expect(output).toMatch(/^cat out\r\naXYbc\r\ndef\r\n/);
     });
+
+    test(`should support backspace when editing using ${stdinOption}`, async ({ page }) => {
+      const output = await page.evaluate(async stdinOption => {
+        const { shell, output } = await globalThis.cockle.shellSetupSimple({
+          color: true,
+          stdinOption
+        });
+        const { keys, terminalInput } = globalThis.cockle;
+        const { backspace, delete_, escape } = keys;
+        const cmd = shell.inputLine('vim file1');
+        await terminalInput(shell, [
+          ...('$' + backspace + 'iz' + escape + backspace + backspace + delete_ + escape + ':wq\r')
+        ]);
+        await cmd;
+        output.clear();
+        await shell.inputLine('cat file1');
+        return output.text;
+      }, stdinOption);
+      expect(output).toMatch(/^cat file1\r\nContents of the izle\r\n/);
+    });
+
+    test(`should support backspace when saving using ${stdinOption}`, async ({ page }) => {
+      const output = await page.evaluate(async stdinOption => {
+        const { shell, output } = await globalThis.cockle.shellSetupSimple({
+          color: true,
+          stdinOption
+        });
+        const { keys, terminalInput } = globalThis.cockle;
+        const { backspace, escape } = keys;
+        const cmd = shell.inputLine('vim file1');
+        await terminalInput(shell, [...('iz' + escape + ':x' + backspace + 'wq\r')]);
+        await cmd;
+        output.clear();
+        await shell.inputLine('cat file1');
+        return output.text;
+      }, stdinOption);
+      expect(output).toMatch(/^cat file1\r\nzContents of the file\r\n/);
+    });
   });
 
   test('should error on redirect stdin from file', async ({ page }) => {

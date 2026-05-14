@@ -69,8 +69,7 @@ export abstract class WorkerIO implements IWorkerIO {
       const chars = this._getStdin(-1);
       this._postRead(chars);
     }
-    const ret = this._readFromBuffer(maxChars);
-    return ret;
+    return this._readFromBuffer(maxChars);
   }
 
   async readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]> {
@@ -207,7 +206,10 @@ export abstract class WorkerIO implements IWorkerIO {
           break;
         //case 8:
         case 127:
-          if (this._readBuffer.length > 0) {
+          if ((termiosFlags.c_lflag & Termios.LocalFlag.ICANON) === 0) {
+            temp.push(127);
+            this._readBuffer.push(127);
+          } else if (this._readBuffer.length > 0) {
             temp.push(127);
             this._readBuffer.pop();
           }
