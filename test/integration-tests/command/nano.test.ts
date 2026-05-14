@@ -88,6 +88,54 @@ test.describe('nano command', () => {
       }, stdinOption);
       expect(output).toMatch(/^cat file2\r\nSecond line\r\n/);
     });
+
+    test(`should support backspace using ${stdinOption}`, async ({ page }) => {
+      const output = await page.evaluate(async stdinOption => {
+        const { keys, shellSetupSimple, terminalInput } = globalThis.cockle;
+        const { shell, output } = await shellSetupSimple({ color: true, stdinOption });
+        const { backspace, enter, leftArrow } = keys;
+        const endOfLine = '\x05'; // Ctrl-E
+        const exit = '\x18'; // Ctrl-X
+        const writeFile = '\x0f'; // Ctrl-O
+        const cmd = shell.inputLine('nano file1');
+        await terminalInput(shell, [
+          endOfLine,
+          'Z',
+          leftArrow,
+          leftArrow,
+          backspace,
+          'L',
+          writeFile,
+          enter,
+          exit
+        ]);
+        await cmd;
+        output.clear();
+        await shell.inputLine('cat file1');
+        return output.text;
+      }, stdinOption);
+      expect(output).toMatch(/^cat file1\r\nContents of the fiLeZ\r\n/);
+    });
+
+    test(`should support backspace when saving filename using ${stdinOption}`, async ({ page }) => {
+      const output = await page.evaluate(async stdinOption => {
+        const { keys, shellSetupSimple, terminalInput } = globalThis.cockle;
+        const { shell, output } = await shellSetupSimple({ color: true, stdinOption });
+        const { backspace, enter } = keys;
+        const exit = '\x18'; // Ctrl-X
+        const writeFile = '\x0f'; // Ctrl-O
+        const cmd = shell.inputLine('nano');
+        await terminalInput(shell, [
+          ...('AZ' + writeFile + 'a.tZ' + backspace + 'xt' + enter + exit)
+        ]);
+        await cmd;
+        output.clear();
+        await shell.inputLine('cat a.txt');
+        return output.text;
+      }, stdinOption);
+      // If backspace fails, filename will be incorrect.
+      expect(output).toMatch(/^cat a.txt\r\nAZ\r\n/);
+    });
   });
 
   test('should error on redirect stdin from file', async ({ page }) => {
