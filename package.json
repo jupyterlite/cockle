@@ -1,6 +1,6 @@
 {
     "name": "@jupyterlite/cockle",
-    "version": "1.5.1",
+    "version": "1.5.2-a0",
     "description": "In browser bash-like shell",
     "homepage": "https://github.com/jupyterlite/cockle",
     "license": "BSD-3-Clause",

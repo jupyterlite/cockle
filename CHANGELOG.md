@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.5.2-a0
+
+Dev release to try out changes downstream.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.5.1...e0e605634282003ec5ebe9cc9dfc18d0556f0052))
+
+### Enhancements made
+
+- Add optional callback to add query params to fetches of files at runtime [#319](https://github.com/jupyterlite/cockle/pull/319) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-05-14&to=2026-05-29&type=c))
+
+@ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-05-14..2026-05-29&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 1.5.1
 
 This is a bug fix release to fix the use of backspace in WebAssembly commands, in particular `nano` and `vim`.
@@ -20,8 +41,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-05-06&to=2026-05-14&type=c))
 
 @ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-05-06..2026-05-14&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 1.5.0
 
