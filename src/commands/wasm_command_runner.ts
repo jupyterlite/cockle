@@ -24,7 +24,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     const avoidInfinitePollTimeout = name === 'less';
 
     const start = performance.now();
-    const wasmModule = this.module.loader.getWasmModule(this.packageName, this.moduleName);
+    const wasmModule = await this.module.loader.getWasmModule(this.packageName, this.moduleName);
     if (wasmModule === undefined) {
       throw new FindCommandError(name);
     }

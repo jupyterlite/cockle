@@ -12,6 +12,7 @@ import { joinURL } from '../utils';
 export class CommandModuleLoader {
   constructor(
     readonly wasmBaseUrl: string,
+    readonly wasmUrlQueryParamsCallback: (filename: string) => Promise<string>,
     readonly downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback
   ) {}
 
@@ -20,11 +21,11 @@ export class CommandModuleLoader {
    * If loading fails return undefined, and caller is responsible for reporting this to the user if
    * appropriate.
    */
-  public getJavaScriptModule(
+  public async getJavaScriptModule(
     packageName: string,
     moduleName: string
-  ): IJavaScriptModule | undefined {
-    const module = this._getModule(packageName, moduleName, false);
+  ): Promise<IJavaScriptModule | undefined> {
+    const module = await this._getModule(packageName, moduleName, false);
     return module !== undefined ? (module as IJavaScriptModule) : undefined;
   }
 
@@ -33,17 +34,22 @@ export class CommandModuleLoader {
    * If loading fails return undefined, and caller is responsible for reporting this to the user if
    * appropriate.
    */
-  public getWasmModule(packageName: string, moduleName: string): IWebAssemblyModule | undefined {
-    const module = this._getModule(packageName, moduleName, true);
+  public async getWasmModule(
+    packageName: string,
+    moduleName: string
+  ): Promise<IWebAssemblyModule | undefined> {
+    const module = await this._getModule(packageName, moduleName, true);
     return module !== undefined ? (module as IWebAssemblyModule) : undefined;
   }
 
-  private _getModule(packageName: string, moduleName: string, wasm: boolean): any {
+  private async _getModule(packageName: string, moduleName: string, wasm: boolean): Promise<any> {
     let module = this.cache.get(packageName, moduleName);
     if (module === undefined) {
       // Maybe should use @jupyterlab/coreutils.URLExt to combine URL components.
       const filename = this.cache.key(packageName, moduleName) + '.js';
-      const url = joinURL(this.wasmBaseUrl, filename);
+      const queryParams = await this.wasmUrlQueryParamsCallback(filename);
+      const url = joinURL(this.wasmBaseUrl, filename + queryParams);
+
       console.log(`Cockle loading ${wasm ? 'WebAssembly' : 'JavaScript'} module from ${url}`);
 
       this.downloadModuleCallback(packageName, moduleName, true);

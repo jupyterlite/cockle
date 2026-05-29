@@ -1,6 +1,6 @@
 import type { IObservableDisposable } from '@lumino/disposable';
 import type { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
-import type { IOutputCallback } from './callback';
+import type { IOutputCallback, IQueryParamsCallback } from './callback';
 import type { IExternalCommand } from './external_command';
 
 export interface IShell extends IObservableDisposable {
@@ -28,8 +28,27 @@ export namespace IShell {
     color?: boolean;
     mountpoint?: string;
     cwd?: string;
+
+    /**
+     * Base URL used for stdin and DriveFS requests via ServiceWorker.
+     */
     baseUrl: string;
+
+    /**
+     * Base URL used for fetching WebAssembly and JavaScript command files, and
+     * `cockle-config.json`.
+     */
     wasmBaseUrl: string;
+
+    /**
+     * Optional callback to return the query parameters to append to the URL when cockle fetches a
+     * file at runtime such as a WebAssembly or JavaScript command package, or `cockle-config.json`.
+     * The callback is only called for `.js` and `.json` files. Separate fetches for `.wasm` and
+     * `.data` files that are autoloaded for WebAssembly command packages do not use query
+     * parameters.
+     */
+    wasmUrlQueryParams?: IQueryParamsCallback;
+
     browsingContextId?: string;
     shellManager?: IShellManager; // If specified, register this shell with shellManager
     aliases?: { [key: string]: string };

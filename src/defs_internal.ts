@@ -1,6 +1,6 @@
 import type { ProxyMarked, Remote } from 'comlink';
 import type { IWorkerIO } from './buffered_io';
-import type { IInitDriveFSCallback, IOutputCallback } from './callback';
+import type { IInitDriveFSCallback, IOutputCallback, IQueryParamsCallback } from './callback';
 import type {
   ICallExternalCommand,
   ICallExternalTabComplete,
@@ -50,7 +50,8 @@ interface IShellCommon {
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
     outputCallback: IShellWorker.IProxyOutputCallback,
     setMainIOCallback: IShellWorker.IProxySetMainIOCallback,
-    terminateCallback: IShellWorker.IProxyTerminateCallback
+    terminateCallback: IShellWorker.IProxyTerminateCallback,
+    wasmUrlQueryParamsCallback?: IShellWorker.IProxyQueryParamsCallback
   ): void;
 
   exitCode: number;
@@ -76,6 +77,7 @@ export namespace IShellWorker {
     extends IEnableBufferedStdinCallback,
       ProxyMarked {}
   export interface IProxyOutputCallback extends IOutputCallback, ProxyMarked {}
+  export interface IProxyQueryParamsCallback extends IQueryParamsCallback, ProxyMarked {}
   export interface IProxySetMainIOCallback extends ISetMainIOCallback, ProxyMarked {}
   export interface IProxyTerminateCallback extends ITerminateCallback, ProxyMarked {}
 
@@ -98,5 +100,6 @@ export namespace IShellImpl {
     workerIO: IWorkerIO;
     stdinContext: IStdinContext;
     termios: Termios.Termios;
+    wasmUrlQueryParamsCallback?: IShellWorker.IProxyQueryParamsCallback;
   }
 }
