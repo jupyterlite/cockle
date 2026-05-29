@@ -19,6 +19,13 @@ export interface IInitDriveFSCallback {
 }
 
 /**
+ * Return dictionary of query params to be used when fetching the specified filename.
+ */
+export interface IQueryParamsCallback {
+  (filename: string): { [key: string]: string };
+}
+
+/**
  * Return window size as [rows, columns] where rows and columns are integers >= 0.
  * If the size is unknown they will be zero.
  */

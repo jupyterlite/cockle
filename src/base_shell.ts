@@ -324,7 +324,8 @@ export abstract class BaseShell implements IShell {
       proxy(this.enableBufferedStdinCallback.bind(this)),
       proxy(options.outputCallback),
       proxy(this._setMainIO.bind(this)),
-      proxy(this.dispose.bind(this)) // terminateCallback
+      proxy(this.dispose.bind(this)), // terminateCallback
+      options.wasmUrlQueryParams !== undefined ? proxy(options.wasmUrlQueryParams) : undefined
     );
 
     // Register sendStdinNow callback only after this._remote has been initialized.

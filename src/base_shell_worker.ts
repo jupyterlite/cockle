@@ -19,7 +19,8 @@ export abstract class BaseShellWorker implements IShellWorker {
     enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
     outputCallback: IShellWorker.IProxyOutputCallback,
     setMainIOCallback: IShellWorker.IProxySetMainIOCallback,
-    terminateCallback: IShellWorker.IProxyTerminateCallback
+    terminateCallback: IShellWorker.IProxyTerminateCallback,
+    wasmUrlQueryParamsCallback?: IShellWorker.IProxyQueryParamsCallback
   ) {
     // Create IWorkerIO equivalents of the IMainIO used in the main UI thread (BaseShell class).
     this._stdinContext = new StdinContext(setMainIOCallback, this._setWorkerIO.bind(this));
@@ -78,7 +79,8 @@ export abstract class BaseShellWorker implements IShellWorker {
       terminateCallback: this._terminateCallback.bind(this),
       workerIO: this._workerIO,
       stdinContext: this._stdinContext,
-      termios: this._termios
+      termios: this._termios,
+      wasmUrlQueryParamsCallback
     });
     await this._shellImpl.initialize();
   }

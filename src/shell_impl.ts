@@ -32,6 +32,7 @@ export class ShellImpl implements IShellImpl {
     this._options = options;
     this._commandModuleLoader = new CommandModuleLoader(
       options.wasmBaseUrl,
+      this._wasmUrlQueryParams.bind(this),
       options.downloadModuleCallback
     );
 
@@ -467,7 +468,7 @@ export class ShellImpl implements IShellImpl {
 
   private async _initFileSystem(): Promise<void> {
     const { wasmBaseUrl } = this._options;
-    const fsModule = this._commandModuleLoader.getWasmModule('cockle_fs', 'fs');
+    const fsModule = await this._commandModuleLoader.getWasmModule('cockle_fs', 'fs');
     if (fsModule === undefined) {
       // Cannot report this in the terminal as it has not been started yet.
       // TODO: Store this information and report it when the terminal is up and running?
@@ -520,7 +521,9 @@ export class ShellImpl implements IShellImpl {
   }
 
   private async _initWasmPackages(): Promise<void> {
-    const url = joinURL(this._options.wasmBaseUrl, 'cockle-config.json');
+    const filename = 'cockle-config.json';
+    const queryParams = await this._wasmUrlQueryParams(filename);
+    const url = joinURL(this._options.wasmBaseUrl, filename + queryParams);
     const response = await fetch(url);
     if (!response.ok) {
       // Would be nice to report this via the terminal.
@@ -743,6 +746,18 @@ export class ShellImpl implements IShellImpl {
   private _setExitCode(exitCode: number) {
     this._exitCode = exitCode;
     this.environment.set('?', `${exitCode}`);
+  }
+
+  private async _wasmUrlQueryParams(filename: string): Promise<string> {
+    const { wasmUrlQueryParamsCallback } = this._options;
+    if (wasmUrlQueryParamsCallback !== undefined) {
+      const params = await wasmUrlQueryParamsCallback(filename);
+      const asStrings = Object.entries(params).map(([key, value]) => `${key}=${value}`);
+      if (asStrings.length > 0) {
+        return '?' + asStrings.join('&');
+      }
+    }
+    return '';
   }
 
   private _commandLine: ICommandLine = { text: '', cursorIndex: 0 };

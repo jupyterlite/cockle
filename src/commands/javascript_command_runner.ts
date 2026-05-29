@@ -17,7 +17,10 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
 
   async run(context: IRunContext): Promise<number> {
     const { name } = context;
-    const jsModule = this.module.loader.getJavaScriptModule(this.packageName, this.moduleName);
+    const jsModule = await this.module.loader.getJavaScriptModule(
+      this.packageName,
+      this.moduleName
+    );
     if (jsModule === undefined) {
       throw new FindCommandError(name);
     }
@@ -51,7 +54,10 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
   }
 
   async tabComplete(context: ITabCompleteContext): Promise<ITabCompleteResult> {
-    const jsModule = this.module.loader.getJavaScriptModule(this.packageName, this.moduleName);
+    const jsModule = await this.module.loader.getJavaScriptModule(
+      this.packageName,
+      this.moduleName
+    );
     if (jsModule !== undefined && Object.prototype.hasOwnProperty.call(jsModule, 'tabComplete')) {
       if (jsModule.tabComplete !== undefined) {
         const { name, args, shellId } = context;

@@ -5,7 +5,7 @@ export * from './arguments';
 export { BaseShell } from './base_shell';
 export { BaseShellWorker } from './base_shell_worker';
 export { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
-export { IOutputCallback } from './callback';
+export * from './callback';
 export {
   IExternalRunContext,
   IExternalTabCompleteContext,
