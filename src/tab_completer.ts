@@ -189,15 +189,14 @@ export class TabCompleter {
       );
     }
 
+    let output = '\n';
     if (showPossibles) {
-      this.context.workerIO.write('\n' + lines.join('\n') + '\n');
-    } else {
-      this.context.workerIO.write('\n');
+      output += lines.join('\n') + '\n';
     }
 
     // Rewrite prompt and command line.
     this.context.workerIO.write(
-      environment.getPrompt() + commandLine.text + ansi.cursorLeft(suffix.length)
+      output + environment.getPrompt() + commandLine.text + ansi.cursorLeft(suffix.length)
     );
   }
 
