@@ -74,8 +74,7 @@ export namespace IShellWorker {
   export interface IProxyCallExternalTabComplete extends ICallExternalTabComplete, ProxyMarked {}
   export interface IProxyDownloadModuleCallback extends IDownloadModuleCallback, ProxyMarked {}
   export interface IProxyEnableBufferedStdinCallback
-    extends IEnableBufferedStdinCallback,
-      ProxyMarked {}
+    extends IEnableBufferedStdinCallback, ProxyMarked {}
   export interface IProxyOutputCallback extends IOutputCallback, ProxyMarked {}
   export interface IProxyQueryParamsCallback extends IQueryParamsCallback, ProxyMarked {}
   export interface IProxySetMainIOCallback extends ISetMainIOCallback, ProxyMarked {}

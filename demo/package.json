@@ -20,16 +20,17 @@
     },
     "devDependencies": {
         "@jupyterlite/cockle": "file:../",
-        "@playwright/test": "^1.45.3",
-        "@rspack/cli": "^0.7.5",
-        "@rspack/core": "^0.7.5",
+        "@playwright/test": "^1.60.0",
+        "@rspack/cli": "^2.0.6",
+        "@rspack/core": "^2.0.6",
+        "@rspack/dev-server": "^2.0.3",
         "@xterm/addon-fit": "^0.10.0",
         "@xterm/xterm": "^5.5.0",
-        "concurrently": "^9.2.1",
+        "concurrently": "^10.0.3",
         "cors-anywhere": "^0.4.4",
-        "css-loader": "^7.1.2",
+        "css-loader": "^7.1.4",
         "style-loader": "^4.0.0",
-        "ts-loader": "^9.5.1",
+        "ts-loader": "^9.6.0",
         "typescript": "^5.5.4"
     }
 }
