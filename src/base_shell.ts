@@ -5,6 +5,7 @@ import { proxy, wrap } from 'comlink';
 import { ansi } from './ansi';
 import type { IMainIO, IStdinReply, IStdinRequest } from './buffered_io';
 import { ServiceWorkerMainIO, SharedArrayBufferMainIO } from './buffered_io';
+import type { IOutputCallback } from './callback';
 import type { IExternalRunContext } from './context';
 import type { IShell } from './defs';
 import type { IRemoteShell } from './defs_internal';
@@ -21,18 +22,20 @@ import type { Termios } from './termios';
  * It communicates with the real shell that runs in a web worker.
  */
 export abstract class BaseShell implements IShell {
-  constructor(readonly options: IShell.IOptions) {
+  constructor(options: IShell.IOptions) {
     this._shellId = options.shellId ?? UUID.uuid4();
 
-    if (this.options.shellManager !== undefined) {
-      this.options.shellManager.registerShell(
+    if (options.shellManager !== undefined) {
+      options.shellManager.registerShell(
         this._shellId,
         this,
         this._serviceWorkerHandleStdin.bind(this)
       );
     }
 
-    this._initialize();
+    this._outputCallback = options.outputCallback;
+
+    this._initialize(options);
   }
 
   /**
@@ -149,11 +152,7 @@ export abstract class BaseShell implements IShell {
         this._downloadTracker.dispose();
       }
 
-      this._downloadTracker = new DownloadTracker(
-        packageName,
-        moduleName,
-        this.options.outputCallback
-      );
+      this._downloadTracker = new DownloadTracker(packageName, moduleName, this._outputCallback);
       this._downloadTracker.start();
     } else {
       if (
@@ -242,17 +241,17 @@ export abstract class BaseShell implements IShell {
     await this._remote?.themeChange(isDark);
   }
 
-  private async _initialize(): Promise<void> {
+  private async _initialize(options: IShell.IOptions): Promise<void> {
     const supportsSharedArrayBuffer = window.crossOriginIsolated;
     if (supportsSharedArrayBuffer) {
       this._sharedArrayBufferMainIO = new SharedArrayBufferMainIO();
     }
 
     let supportsServiceWorker = false;
-    if (this.options.browsingContextId !== undefined) {
+    if (options.browsingContextId !== undefined) {
       this._serviceWorkerMainIO = new ServiceWorkerMainIO(
-        this.options.baseUrl,
-        this.options.browsingContextId,
+        options.baseUrl,
+        options.browsingContextId,
         this.shellId
       );
 
@@ -273,10 +272,10 @@ export abstract class BaseShell implements IShell {
     if (!supportsSharedArrayBuffer && !supportsServiceWorker) {
       let msg = 'ERROR: Terminal needs either SharedArrayBuffer or ServiceWorker available.';
       console.error(msg);
-      if (this.options.color ?? true) {
+      if (options.color ?? true) {
         msg = ansi.styleBoldRed + msg + ansi.styleReset;
       }
-      this.options.outputCallback(msg);
+      options.outputCallback(msg);
       this.dispose();
       return;
     }
@@ -284,10 +283,10 @@ export abstract class BaseShell implements IShell {
     this._mainIO = this._sharedArrayBufferMainIO ?? this._serviceWorkerMainIO;
 
     // Register external commands here, the names are passed through to the WebWorker.
-    this.options.externalCommands?.forEach(cmd => this._externalCommands.set(cmd.name, cmd));
+    options.externalCommands?.forEach(cmd => this._externalCommands.set(cmd.name, cmd));
 
-    this._worker = this.initWorker(this.options);
-    this._initRemote(this.options).then(this._ready.resolve.bind(this._ready));
+    this._worker = this.initWorker(options);
+    this._initRemote(options).then(this._ready.resolve.bind(this._ready));
   }
 
   private async _initRemote(options: IShell.IOptions) {
@@ -376,4 +375,5 @@ export abstract class BaseShell implements IShell {
   private _mainIO?: IMainIO;
 
   private _downloadTracker?: DownloadTracker;
+  private _outputCallback: IOutputCallback; // Only used by _downloadTracker.
 }
