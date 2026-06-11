@@ -2,6 +2,32 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.5.2-a1
+
+Dev release to try out changes downstream.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.5.2-a0...d398ca844cab9726ab705cd88ec7d2799279a2e4))
+
+### Enhancements made
+
+- Add `ready` and `size` properties to `IShell` [#322](https://github.com/jupyterlite/cockle/pull/322) ([@ianthomas23](https://github.com/ianthomas23))
+- Do not store `options` in `BaseShell` [#321](https://github.com/jupyterlite/cockle/pull/321) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Update dev, demo and test npm dependencies [#320](https://github.com/jupyterlite/cockle/pull/320) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-05-29&to=2026-06-11&type=c))
+
+@ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-05-29..2026-06-11&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 1.5.2-a0
 
 Dev release to try out changes downstream.
@@ -20,8 +46,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-05-14&to=2026-05-29&type=c))
 
 @ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-05-14..2026-05-29&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 1.5.1
 
