@@ -4,20 +4,30 @@ In-browser bash-like shell implemented in a combination of TypeScript and WebAss
 
 Used in the [JupyterLite terminal extension](https://github.com/jupyterlite/terminal).
 
-Try it out outside of JupyterLite on github pages at https://jupyterlite.github.io/cockle.
+Try it out outside of JupyterLite on GitHub Pages at https://jupyterlite.github.io/cockle.
 
-⚠️ This is an early-stage work in progress and should be considered experimental code. Anything and
-everything could change at any time.
+Commands of the following types are supported:
 
-The commands used here are either built-in commands implemented in TypeScript, or WebAssembly
-commands compiled into `.js` and `.wasm` files. The latter are built by
-[Emscripten-forge](https://emscripten-forge.org/) and are added to a deployment during the build process.
+1. Built-in TypeScript commands such as `history`. The source code for these is within this repo.
+2. WebAssembly commands, from C/C++ source code, compiled into `.js` and `.wasm` files.
+   These are usually built by [Emscripten-forge](https://emscripten-forge.org/) although they can be
+   manually built, and are added to a deployment during the deployment build process.
+3. JavaScript commands that are loaded and run in the same as WebAssembly commands except they have
+   a `.js` file and no `.wasm` file. There is an example of creating a JavaScript command from
+   TypeScript source code for use in the Jupyterlite terminal in the
+   [terminal-javascript-command](https://github.com/ianthomas23/terminal-javascript-command) repo.
+4. External commands which are TypeScript commands that run in the main browser UI thread rather
+   than the WebWorker that the `cockle` shell runs in. These are registered when a `cockle` `Shell`
+   is constructed. There is an example of an external command which is packaged as a JupyterLite
+   extension in the
+   [terminal-external-command](https://github.com/ianthomas23/terminal-external-command) repo.
 
 [Emscripten-forge](https://emscripten-forge.org/) packages containing WebAssembly commands that are
 currently supported and tested are as follows. Each package contains a single commmand with the same
 name as the package unless otherwise specified:
 
 - `coreutils`: multiple core commands including `cat`, `cp`, `echo`, `ls`, `mkdir`, `mv`, `rm`, `touch`, `uname`, and `wc`
+- [`git2cpp`](https://git2cpp.readthedocs.io/): a `git` implementation
 - `grep`
 - `less`
 - `lua`
