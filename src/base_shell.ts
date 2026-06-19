@@ -6,6 +6,7 @@ import { ansi } from './ansi';
 import type { IMainIO, IStdinReply, IStdinRequest } from './buffered_io';
 import { ServiceWorkerMainIO, SharedArrayBufferMainIO } from './buffered_io';
 import type { IOutputCallback } from './callback';
+import type { ISize } from './callback';
 import type { IExternalRunContext } from './context';
 import type { IShell } from './defs';
 import type { IRemoteShell } from './defs_internal';
@@ -209,22 +210,17 @@ export abstract class BaseShell implements IShell {
       return;
     }
 
-    if (rows < 0) {
-      rows = 0;
-    }
-    if (columns < 0) {
-      columns = 0;
-    }
-    this._size = [rows, columns];
+    this._size.rows = Math.max(0, rows);
+    this._size.columns = Math.max(0, columns);
 
-    await this._remote!.setSize(rows, columns);
+    await this._remote!.setSize(this._size);
   }
 
   get shellId(): string {
     return this._shellId;
   }
 
-  get size(): [number, number] {
+  get size(): ISize {
     return this._size;
   }
 
@@ -365,7 +361,7 @@ export abstract class BaseShell implements IShell {
   private _ready = new PromiseDelegate<void>();
 
   private _shellId: string; // Unique identifier within a single browser tab.
-  private _size: [number, number] = [0, 0]; // [rows, columns]
+  private _size: ISize = { rows: 0, columns: 0 };
   private _worker?: Worker;
   private _remote?: IRemoteShell;
   private _externalCommands = new Map<string, IExternalCommand.IOptions>();

@@ -25,10 +25,15 @@ export interface IQueryParamsCallback {
   (filename: string): { [key: string]: string };
 }
 
+export interface ISize {
+  rows: number;
+  columns: number;
+}
+
 /**
  * Return window size as [rows, columns] where rows and columns are integers >= 0.
  * If the size is unknown they will be zero.
  */
 export interface ISizeCallback {
-  (): [number, number];
+  (): ISize;
 }

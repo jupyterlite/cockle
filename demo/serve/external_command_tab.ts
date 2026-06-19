@@ -118,8 +118,8 @@ export async function externalRun(context: IExternalRunContext): Promise<number>
   }
 
   if (args.includes('size')) {
-    const size = context.size();
-    context.stdout.write(`size: rows ${size[0]} x columns ${size[1]}\n`);
+    const { rows, columns } = context.size();
+    context.stdout.write(`size: rows ${rows} x columns ${columns}\n`);
   }
 
   if (args.includes('exitCode')) {

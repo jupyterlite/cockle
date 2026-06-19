@@ -1,6 +1,6 @@
 import type { IObservableDisposable } from '@lumino/disposable';
 import type { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
-import type { IOutputCallback, IQueryParamsCallback } from './callback';
+import type { IOutputCallback, IQueryParamsCallback, ISize } from './callback';
 import type { IExternalCommand } from './external_command';
 
 export interface IShell extends IObservableDisposable {
@@ -32,7 +32,7 @@ export interface IShell extends IObservableDisposable {
   /**
    * Return the size (rows, columns) of the shell, as set by previous `setSize` call.
    */
-  size: [number, number];
+  size: ISize;
 
   /**
    * Start the shell, so that it is ready to accept input.
