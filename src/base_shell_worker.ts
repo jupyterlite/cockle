@@ -1,6 +1,6 @@
 import type { IWorkerIO } from './buffered_io';
 import { ServiceWorkerWorkerIO, SharedArrayBufferWorkerIO } from './buffered_io';
-import { ISize } from './callback';
+import type { ISize } from './callback';
 import { StdinContext } from './context';
 import type { IShellWorker } from './defs_internal';
 import type { IDriveFSOptions } from './drive_fs';

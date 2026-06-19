@@ -1,5 +1,5 @@
 import { ansi } from './ansi';
-import { ISize } from './callback';
+import type { ISize } from './callback';
 
 /**
  * Collection of environment variables that are known to a shell and are passed in and out of

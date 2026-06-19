@@ -1,6 +1,11 @@
 import type { ProxyMarked, Remote } from 'comlink';
 import type { IWorkerIO } from './buffered_io';
-import type { IInitDriveFSCallback, IOutputCallback, IQueryParamsCallback, ISize } from './callback';
+import type {
+  IInitDriveFSCallback,
+  IOutputCallback,
+  IQueryParamsCallback,
+  ISize
+} from './callback';
 import type {
   ICallExternalCommand,
   ICallExternalTabComplete,

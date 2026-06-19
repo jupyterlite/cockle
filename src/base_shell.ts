@@ -1,12 +1,12 @@
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import type { ISignal } from '@lumino/signaling';
 import { Signal } from '@lumino/signaling';
-import { ISize } from './callback';
 import { proxy, wrap } from 'comlink';
 import { ansi } from './ansi';
 import type { IMainIO, IStdinReply, IStdinRequest } from './buffered_io';
 import { ServiceWorkerMainIO, SharedArrayBufferMainIO } from './buffered_io';
 import type { IOutputCallback } from './callback';
+import type { ISize } from './callback';
 import type { IExternalRunContext } from './context';
 import type { IShell } from './defs';
 import type { IRemoteShell } from './defs_internal';

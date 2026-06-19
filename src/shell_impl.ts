@@ -1,7 +1,7 @@
 import { Aliases } from './aliases';
 import { ansi } from './ansi';
 import type { IWorkerIO } from './buffered_io';
-import { ISize } from './callback';
+import type { ISize } from './callback';
 import type { ICommandLine } from './command_line';
 import { CommandModule, CommandModuleLoader, CommandPackage, CommandRegistry } from './commands';
 import type { IRunContext } from './context';
