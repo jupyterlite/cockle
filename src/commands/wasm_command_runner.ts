@@ -40,7 +40,8 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     }
 
     function getSize(tty: any): [number, number] {
-      return size();
+      const { rows, columns } = size();
+      return [rows, columns];
     }
 
     function poll(stream: any, timeoutMs: number): number {

@@ -1,6 +1,6 @@
 import type { ProxyMarked, Remote } from 'comlink';
 import type { IWorkerIO } from './buffered_io';
-import type { IInitDriveFSCallback, IOutputCallback, IQueryParamsCallback } from './callback';
+import type { IInitDriveFSCallback, IOutputCallback, IQueryParamsCallback, ISize } from './callback';
 import type {
   ICallExternalCommand,
   ICallExternalTabComplete,
@@ -58,7 +58,7 @@ interface IShellCommon {
   externalInput(maxChars: number | null): Promise<string>;
   externalOutput(text: string, isStderr: boolean): void;
   input(char: string): Promise<void>;
-  setSize(rows: number, columns: number): void;
+  setSize(size: ISize): void;
   start(): Promise<void>;
   themeChange(isDark?: boolean): Promise<void>;
 }

@@ -1,6 +1,7 @@
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import type { ISignal } from '@lumino/signaling';
 import { Signal } from '@lumino/signaling';
+import { ISize } from './callback';
 import { proxy, wrap } from 'comlink';
 import { ansi } from './ansi';
 import type { IMainIO, IStdinReply, IStdinRequest } from './buffered_io';
@@ -209,22 +210,17 @@ export abstract class BaseShell implements IShell {
       return;
     }
 
-    if (rows < 0) {
-      rows = 0;
-    }
-    if (columns < 0) {
-      columns = 0;
-    }
-    this._size = [rows, columns];
+    this._size.rows = Math.max(0, rows);
+    this._size.columns = Math.max(0, columns);
 
-    await this._remote!.setSize(rows, columns);
+    await this._remote!.setSize(this._size);
   }
 
   get shellId(): string {
     return this._shellId;
   }
 
-  get size(): [number, number] {
+  get size(): ISize {
     return this._size;
   }
 
@@ -365,7 +361,7 @@ export abstract class BaseShell implements IShell {
   private _ready = new PromiseDelegate<void>();
 
   private _shellId: string; // Unique identifier within a single browser tab.
-  private _size: [number, number] = [0, 0]; // [rows, columns]
+  private _size: ISize = { rows: 0, columns: 0 };
   private _worker?: Worker;
   private _remote?: IRemoteShell;
   private _externalCommands = new Map<string, IExternalCommand.IOptions>();

@@ -1,6 +1,7 @@
 import { Aliases } from './aliases';
 import { ansi } from './ansi';
 import type { IWorkerIO } from './buffered_io';
+import { ISize } from './callback';
 import type { ICommandLine } from './command_line';
 import { CommandModule, CommandModuleLoader, CommandPackage, CommandRegistry } from './commands';
 import type { IRunContext } from './context';
@@ -206,16 +207,16 @@ export class ShellImpl implements IShellImpl {
     this._runContext.workerIO.write(text);
   }
 
-  setSize(rows: number, columns: number): void {
-    this._size = [rows, columns];
-    this.environment.setSize(rows, columns);
+  setSize(size: ISize): void {
+    this._size = size;
+    this.environment.setSize(size);
   }
 
   setWorkerIO(workerIO: IWorkerIO) {
     this._runContext.workerIO = workerIO;
   }
 
-  get size(): [number, number] {
+  get size(): ISize {
     return this._size;
   }
 
@@ -765,7 +766,7 @@ export class ShellImpl implements IShellImpl {
   private _exitCode: number = 0;
   private _requestedDarkMode?: boolean;
   private _isRunning = false;
-  private _size: [number, number] = [0, 0]; // [rows, columns]
+  private _size: ISize = { rows: 0, columns: 0 };
   private _themeStatus = ThemeStatus.PendingChange;
 
   private _commandModuleLoader: CommandModuleLoader;

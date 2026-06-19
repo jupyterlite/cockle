@@ -1,4 +1,5 @@
 import { ansi } from './ansi';
+import { ISize } from './callback';
 
 /**
  * Collection of environment variables that are known to a shell and are passed in and out of
@@ -53,7 +54,8 @@ export class Environment extends Map<string, string> {
     return Array.from(this.keys()).filter(name => re.test(name));
   }
 
-  setSize(rows: number, columns: number): void {
+  setSize(size: ISize): void {
+    const { rows, columns } = size;
     if (rows >= 1) {
       const rowsString = rows.toString();
       this.set('LINES', rowsString);
