@@ -268,10 +268,10 @@ cmdName.forEach(cmdName => {
         const { shell, output } = await shellSetupEmpty();
         await shell.inputLine(`${cmdName} size`);
         const ret0 = output.textAndClear();
-        shell.setSize(12, 43);
+        shell.setSize({ rows: 12, columns: 43 });
         await shell.inputLine(`${cmdName} size`);
         const ret1 = output.textAndClear();
-        shell.setSize(-2, -7);
+        shell.setSize({ rows: -2, columns: -7 });
         await shell.inputLine(`${cmdName} size`);
         return [ret0, ret1, output.text];
       }, cmdName);

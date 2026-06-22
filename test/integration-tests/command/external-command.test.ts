@@ -261,10 +261,10 @@ cmdName.forEach(cmdName => {
         const { shell, output } = await shellSetupEmpty({ externalCommands });
         await shell.inputLine(`${cmdName} size`);
         const ret0 = output.textAndClear();
-        shell.setSize(10, 20);
+        shell.setSize({ rows: 10, columns: 20 });
         await shell.inputLine(`${cmdName} size`);
         const ret1 = output.textAndClear();
-        shell.setSize(-1, -5);
+        shell.setSize({ rows: -1, columns: -5 });
         await shell.inputLine(`${cmdName} size`);
         return [ret0, ret1, output.text];
       }, cmdName);

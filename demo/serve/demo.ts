@@ -97,7 +97,7 @@ export class Demo {
   }
 
   async onResize(arg: any): Promise<void> {
-    await this._shell.setSize(arg.rows, arg.cols);
+    await this._shell.setSize({ rows: arg.rows, columns: arg.cols });
   }
 
   private outputCallback(text: string): void {

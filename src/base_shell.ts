@@ -205,15 +205,23 @@ export abstract class BaseShell implements IShell {
     return this._ready.promise;
   }
 
-  async setSize(rows: number, columns: number): Promise<void> {
-    if (this.isDisposed) {
-      return;
+  /**
+   * Set shell size.  Overloaded to take an `ISize` object or `rows` and `columns`.
+   * The former is the recommended approach, the latter was the original implementation and should
+   * be considered deprecated for eventual removal.
+   */
+  async setSize(size: ISize): Promise<void>;
+  async setSize(rows: number, columns: number): Promise<void>;
+  async setSize(sizeOrRows: ISize | number, columns?: number): Promise<void> {
+    if (typeof sizeOrRows === 'object') {
+      await this._setSizeImpl(sizeOrRows.rows, sizeOrRows.columns);
+    } else if (columns === undefined) {
+      const errMsg = 'Incorrect arguments passed to IShell.setSize';
+      console.error(errMsg);
+      throw new Error(errMsg);
+    } else {
+      await this._setSizeImpl(sizeOrRows, columns);
     }
-
-    this._size.rows = Math.max(0, rows);
-    this._size.columns = Math.max(0, columns);
-
-    await this._remote!.setSize(this._size);
   }
 
   get shellId(): string {
@@ -354,6 +362,17 @@ export abstract class BaseShell implements IShell {
 
     // Disable old worker IO before switching it. This is a no-op if already disabled.
     oldMainIO?.disable();
+  }
+
+  private async _setSizeImpl(rows: number, columns: number): Promise<void> {
+    if (this.isDisposed) {
+      return;
+    }
+
+    this._size.rows = Math.max(0, rows);
+    this._size.columns = Math.max(0, columns);
+
+    await this._remote!.setSize(this._size);
   }
 
   private _disposed = new Signal<this, void>(this);
