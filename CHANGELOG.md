@@ -2,6 +2,39 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.6.0
+
+Cockle `1.6.0` add a new `wasmUrlQueryParams` callback to `IShell.IOptions` to allow query params to be appended to fetches of JS/wasm commands at runtime, and adds support for passing an `ISize` object to `IShell.setSize` which is now the preferred approach.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.5.1...4e409327c492726c7731ddda0e8963a439b03e35))
+
+### Enhancements made
+
+- Support passing `ISize` object to `IShell.setSize` [#325](https://github.com/jupyterlite/cockle/pull/325) ([@ianthomas23](https://github.com/ianthomas23))
+- Use `ISize` object internally and in JS/external commands [#324](https://github.com/jupyterlite/cockle/pull/324) ([@ianthomas23](https://github.com/ianthomas23))
+- Add `ready` and `size` properties to `IShell` [#322](https://github.com/jupyterlite/cockle/pull/322) ([@ianthomas23](https://github.com/ianthomas23))
+- Do not store `options` in `BaseShell` [#321](https://github.com/jupyterlite/cockle/pull/321) ([@ianthomas23](https://github.com/ianthomas23))
+- Add optional callback to add query params to fetches of files at runtime [#319](https://github.com/jupyterlite/cockle/pull/319) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Update dev, demo and test `npm` dependencies [#320](https://github.com/jupyterlite/cockle/pull/320) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Documentation improvements
+
+- Update readme in preparation for 1.6.0 release [#323](https://github.com/jupyterlite/cockle/pull/323) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-05-14&to=2026-06-22&type=c))
+
+@ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-05-14..2026-06-22&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 1.5.2-a1
 
 Dev release to try out changes downstream.
@@ -25,8 +58,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-05-29&to=2026-06-11&type=c))
 
 @ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-05-29..2026-06-11&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 1.5.2-a0
 
