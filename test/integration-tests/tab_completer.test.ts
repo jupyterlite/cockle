@@ -29,12 +29,12 @@ test.describe('TabCompleter', () => {
     test('should arrange in columns', async ({ page }) => {
       const output = await page.evaluate(async () => {
         const { shell, output } = await globalThis.cockle.shellSetupEmpty();
-        await shell.setSize(40, 10);
+        await shell.setSize({ rows: 40, columns: 10 });
         await shell.input('t');
         await shell.input('\t');
         const ret0 = output.textAndClear();
 
-        await shell.setSize(40, 20);
+        await shell.setSize({ rows: 40, columns: 20 });
         await shell.input('\t');
         const ret1 = output.textAndClear();
         return [ret0, ret1];

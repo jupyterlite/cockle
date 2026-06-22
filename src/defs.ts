@@ -21,7 +21,10 @@ export interface IShell extends IObservableDisposable {
 
   /**
    * Set the size of the shell.
+   * The `ISize` overload is the recommended approach; the separate `rows` and `columns` overload is
+   * for backward compatibility and should be considered deprecated.
    */
+  setSize(size: ISize): Promise<void>;
   setSize(rows: number, columns: number): Promise<void>;
 
   /**

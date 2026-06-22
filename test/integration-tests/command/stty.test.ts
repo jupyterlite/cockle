@@ -8,7 +8,7 @@ test.describe('stty command', () => {
       await shell.inputLine('stty size');
       const output0 = output.textAndClear();
 
-      await shell.setSize(10, 43);
+      await shell.setSize({ rows: 10, columns: 43 });
       await shell.inputLine('stty size');
       return [output0, output.text];
     });

@@ -179,6 +179,30 @@ test.describe('Shell', () => {
       const output = await page.evaluate(async () => {
         const { output, shell } = await globalThis.cockle.shellSetupEmpty();
         const ret: string[] = [];
+        await shell.setSize({ rows: 10, columns: 44 });
+        await shell.inputLine('env|grep LINES;env|grep COLUMNS');
+        ret.push(output.textAndClear());
+
+        await shell.setSize({ rows: 0, columns: 45 });
+        await shell.inputLine('env|grep LINES;env|grep COLUMNS');
+        ret.push(output.textAndClear());
+
+        await shell.setSize({ rows: 14, columns: -1 });
+        await shell.inputLine('env|grep LINES;env|grep COLUMNS');
+        ret.push(output.textAndClear());
+        return ret;
+      });
+      expect(output[0]).toMatch('\r\nLINES=10\r\nCOLUMNS=44\r\n');
+      expect(output[1]).toMatch('\r\nCOLUMNS=45\r\n');
+      expect(output[2]).toMatch('\r\nLINES=14\r\n');
+    });
+
+    test('should support separate rows and columns for backward compatibility', async ({
+      page
+    }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupEmpty();
+        const ret: string[] = [];
         await shell.setSize(10, 44);
         await shell.inputLine('env|grep LINES;env|grep COLUMNS');
         ret.push(output.textAndClear());

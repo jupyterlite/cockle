@@ -102,7 +102,7 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
   (shell as any).inputLine = inputLine;
 
   await shell.start();
-  await shell.setSize(24, 80);
+  await shell.setSize({ rows: 24, columns: 80 });
 
   if (stdinOption) {
     // Set initial synchronous stdin option before enabling recording of output.
