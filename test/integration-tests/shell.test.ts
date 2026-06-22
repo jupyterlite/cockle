@@ -197,7 +197,9 @@ test.describe('Shell', () => {
       expect(output[2]).toMatch('\r\nLINES=14\r\n');
     });
 
-    test('should support separate rows and columns for backward compatibility', async ({ page }) => {
+    test('should support separate rows and columns for backward compatibility', async ({
+      page
+    }) => {
       const output = await page.evaluate(async () => {
         const { output, shell } = await globalThis.cockle.shellSetupEmpty();
         const ret: string[] = [];
