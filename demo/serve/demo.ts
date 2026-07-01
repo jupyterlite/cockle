@@ -29,6 +29,7 @@ export class Demo {
     this._targetDiv = options.targetDiv;
 
     const termOptions = {
+      fontSize: 14,
       rows: 50,
       theme: {
         foreground: 'white',
