@@ -109,6 +109,27 @@ export abstract class BaseShell implements IShell {
     return await tabComplete({ name, args, shellId: this._shellId });
   }
 
+  protected createRemote(options: IShell.IOptions): IRemoteShell {
+    if (this._worker === undefined) {
+      throw new Error('Worker not created');
+    }
+
+    const remote = wrap(this._worker) as IRemoteShell;
+
+    remote.registerCallbacks(
+      proxy(this.callExternalCommand.bind(this)),
+      proxy(this.callExternalTabComplete.bind(this)),
+      proxy(this.downloadWasmModuleCallback.bind(this)),
+      proxy(this.enableBufferedStdinCallback.bind(this)),
+      proxy(options.outputCallback),
+      proxy(this._setMainIO.bind(this)),
+      proxy(this.dispose.bind(this)), // terminateCallback
+      options.wasmUrlQueryParams !== undefined ? proxy(options.wasmUrlQueryParams) : undefined
+    );
+
+    return remote;
+  }
+
   dispose(): void {
     if (this._isDisposed) {
       return;
@@ -324,18 +345,7 @@ export abstract class BaseShell implements IShell {
   }
 
   private async _initRemote(options: IShell.IOptions) {
-    this._remote = wrap(this._worker!);
-
-    this._remote.registerCallbacks(
-      proxy(this.callExternalCommand.bind(this)),
-      proxy(this.callExternalTabComplete.bind(this)),
-      proxy(this.downloadWasmModuleCallback.bind(this)),
-      proxy(this.enableBufferedStdinCallback.bind(this)),
-      proxy(options.outputCallback),
-      proxy(this._setMainIO.bind(this)),
-      proxy(this.dispose.bind(this)), // terminateCallback
-      options.wasmUrlQueryParams !== undefined ? proxy(options.wasmUrlQueryParams) : undefined
-    );
+    this._remote = this.createRemote(options);
 
     const remoteOptions = this.initRemoteOptions(options);
     await this._remote.initialize(remoteOptions);
