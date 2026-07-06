@@ -1,6 +1,14 @@
 import type { IWorkerIO } from './buffered_io';
 import { ServiceWorkerWorkerIO, SharedArrayBufferWorkerIO } from './buffered_io';
-import type { ISize } from './callback';
+import type { IOutputCallback, IQueryParamsCallback, ISize } from './callback';
+import type {
+  ICallExternalCommand,
+  ICallExternalTabComplete,
+  IDownloadModuleCallback,
+  IEnableBufferedStdinCallback,
+  ISetMainIOCallback,
+  ITerminateCallback
+} from './callback_internal';
 import { StdinContext } from './context';
 import type { IShellWorker } from './defs_internal';
 import type { IDriveFSOptions } from './drive_fs';
@@ -14,14 +22,14 @@ import { Termios } from './termios';
 export abstract class BaseShellWorker implements IShellWorker {
   async initialize(
     options: IShellWorker.IOptions,
-    callExternalCommand: IShellWorker.IProxyCallExternalCommand,
-    callExternalTabComplete: IShellWorker.IProxyCallExternalTabComplete,
-    downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback,
-    enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
-    outputCallback: IShellWorker.IProxyOutputCallback,
-    setMainIOCallback: IShellWorker.IProxySetMainIOCallback,
-    terminateCallback: IShellWorker.IProxyTerminateCallback,
-    wasmUrlQueryParamsCallback?: IShellWorker.IProxyQueryParamsCallback
+    callExternalCommand: ICallExternalCommand,
+    callExternalTabComplete: ICallExternalTabComplete,
+    downloadModuleCallback: IDownloadModuleCallback,
+    enableBufferedStdinCallback: IEnableBufferedStdinCallback,
+    outputCallback: IOutputCallback,
+    setMainIOCallback: ISetMainIOCallback,
+    terminateCallback: ITerminateCallback,
+    wasmUrlQueryParamsCallback?: IQueryParamsCallback
   ) {
     // Create IWorkerIO equivalents of the IMainIO used in the main UI thread (BaseShell class).
     this._stdinContext = new StdinContext(setMainIOCallback, this._setWorkerIO.bind(this));
@@ -164,9 +172,10 @@ export abstract class BaseShellWorker implements IShellWorker {
   }
 
   private _shellImpl?: ShellImpl;
-  private _downloadModuleCallback?: IShellWorker.IProxyDownloadModuleCallback;
-  private _enableBufferedStdinCallback?: IShellWorker.IProxyEnableBufferedStdinCallback;
-  private _terminateCallback?: IShellWorker.IProxyTerminateCallback;
+
+  private _downloadModuleCallback?: IDownloadModuleCallback;
+  private _enableBufferedStdinCallback?: IEnableBufferedStdinCallback;
+  private _terminateCallback?: ITerminateCallback;
 
   private _stdinContext?: StdinContext;
   private _serviceWorkerWorkerIO?: ServiceWorkerWorkerIO;

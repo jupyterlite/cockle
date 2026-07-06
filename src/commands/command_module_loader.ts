@@ -1,5 +1,5 @@
 import { CommandModuleCache } from './command_module_cache';
-import type { IShellWorker } from '../defs_internal';
+import type { IDownloadModuleCallback } from '../callback_internal';
 import type { IJavaScriptModule } from '../types/javascript_module';
 import type { IWebAssemblyModule } from '../types/wasm_module';
 import { joinURL } from '../utils';
@@ -13,7 +13,7 @@ export class CommandModuleLoader {
   constructor(
     readonly wasmBaseUrl: string,
     readonly wasmUrlQueryParamsCallback: (filename: string) => Promise<string>,
-    readonly downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback
+    readonly downloadModuleCallback: IDownloadModuleCallback
   ) {}
 
   /**
