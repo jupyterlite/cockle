@@ -9,7 +9,7 @@ import type { IOutputCallback } from './callback';
 import type { ISize } from './callback';
 import type { IExternalRunContext } from './context';
 import type { IShell } from './defs';
-import type { IRemoteShell } from './defs_internal';
+import type { IRemoteShell, IShellWorker } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
 import { ExitCode } from './exit_code';
 import type { IExternalCommand, IExternalTabCompleteResult } from './external_command';
@@ -161,14 +161,6 @@ export abstract class BaseShell implements IShell {
     }
   }
 
-  async exitCode(): Promise<number> {
-    return (await this._remote?.exitCode) ?? 1;
-  }
-
-  get isDisposed(): boolean {
-    return this._isDisposed;
-  }
-
   private async enableBufferedStdinCallback(enable: boolean): Promise<void> {
     if (this.isDisposed) {
       return;
@@ -179,6 +171,40 @@ export abstract class BaseShell implements IShell {
     } else {
       await this._mainIO?.disable();
     }
+  }
+
+  async exitCode(): Promise<number> {
+    return (await this._remote?.exitCode) ?? 1;
+  }
+
+  protected initRemoteOptions(options: IShell.IOptions): IShellWorker.IOptions {
+    // Types of buffered IO supported.
+    const sharedArrayBuffer = this._sharedArrayBufferMainIO?.sharedArrayBuffer ?? undefined;
+    const supportsServiceWorker = this._serviceWorkerMainIO !== undefined;
+
+    const externalCommandConfigs = options.externalCommands?.map(x => {
+      return { name: x.name, hasTabComplete: x.tabComplete !== undefined };
+    });
+
+    const { baseUrl, browsingContextId, color, cwd, mountpoint, wasmBaseUrl } = options;
+    const { aliases, environment, initialDirectories, initialFiles } = options;
+
+    return {
+      shellId: this.shellId,
+      color: color ?? true,
+      mountpoint,
+      cwd,
+      wasmBaseUrl,
+      baseUrl,
+      browsingContextId,
+      aliases: aliases ?? {},
+      environment: environment ?? {},
+      externalCommandConfigs: externalCommandConfigs ?? [],
+      sharedArrayBuffer,
+      supportsServiceWorker,
+      initialDirectories,
+      initialFiles
+    };
   }
 
   /**
@@ -196,6 +222,10 @@ export abstract class BaseShell implements IShell {
     } else {
       await this._remote!.input(char);
     }
+  }
+
+  get isDisposed(): boolean {
+    return this._isDisposed;
   }
 
   /**
@@ -296,14 +326,6 @@ export abstract class BaseShell implements IShell {
   private async _initRemote(options: IShell.IOptions) {
     this._remote = wrap(this._worker!);
 
-    // Types of buffered IO supported.
-    const sharedArrayBuffer = this._sharedArrayBufferMainIO?.sharedArrayBuffer ?? undefined;
-    const supportsServiceWorker = this._serviceWorkerMainIO !== undefined;
-
-    const externalCommandConfigs = options.externalCommands?.map(x => {
-      return { name: x.name, hasTabComplete: x.tabComplete !== undefined };
-    });
-
     this._remote.registerCallbacks(
       proxy(this.callExternalCommand.bind(this)),
       proxy(this.callExternalTabComplete.bind(this)),
@@ -315,22 +337,8 @@ export abstract class BaseShell implements IShell {
       options.wasmUrlQueryParams !== undefined ? proxy(options.wasmUrlQueryParams) : undefined
     );
 
-    await this._remote.initialize({
-      shellId: this.shellId,
-      color: options.color ?? true,
-      mountpoint: options.mountpoint,
-      cwd: options.cwd,
-      wasmBaseUrl: options.wasmBaseUrl,
-      baseUrl: options.baseUrl,
-      browsingContextId: options.browsingContextId,
-      aliases: options.aliases ?? {},
-      environment: options.environment ?? {},
-      externalCommandConfigs: externalCommandConfigs ?? [],
-      sharedArrayBuffer,
-      supportsServiceWorker,
-      initialDirectories: options.initialDirectories,
-      initialFiles: options.initialFiles
-    });
+    const remoteOptions = this.initRemoteOptions(options);
+    await this._remote.initialize(remoteOptions);
 
     // Register sendStdinNow callback only after this._remote has been initialized.
     if (this._sharedArrayBufferMainIO !== undefined) {
