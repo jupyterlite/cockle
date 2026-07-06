@@ -1,3 +1,4 @@
+import type { IOutputCallback, IQueryParamsCallback } from './callback';
 import type { IExternalTabCompleteResult } from './external_command';
 import type { Termios } from './termios';
 
@@ -67,4 +68,18 @@ export interface IStdinAsyncCallback {
  */
 export interface ITerminateCallback {
   (): void;
+}
+
+/**
+ * Callbacks in the shell worker, to call functions in the shall.
+ */
+export interface IWorkerCallbacks {
+  callExternalCommand: ICallExternalCommand;
+  callExternalTabComplete: ICallExternalTabComplete;
+  downloadModuleCallback: IDownloadModuleCallback;
+  enableBufferedStdinCallback: IEnableBufferedStdinCallback;
+  outputCallback: IOutputCallback;
+  setMainIOCallback: ISetMainIOCallback;
+  terminateCallback: ITerminateCallback;
+  wasmUrlQueryParamsCallback?: IQueryParamsCallback;
 }

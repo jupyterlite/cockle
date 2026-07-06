@@ -59,9 +59,9 @@ export interface IShellWorker extends IShellCommon {
   externalSetTermios(flags: Termios.IFlags): void;
 
   // Handle any lazy initialization activities.
-  // Callback proxies need to be separate arguments, they cannot be in IOptions.
-  initialize(
-    options: IShellWorker.IOptions,
+  initialize(options: IShellWorker.IOptions): void;
+
+  registerCallbacks(
     callExternalCommand: ICallExternalCommand,
     callExternalTabComplete: ICallExternalTabComplete,
     downloadModuleCallback: IDownloadModuleCallback,

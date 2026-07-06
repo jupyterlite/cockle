@@ -40,11 +40,6 @@ export abstract class BaseShell implements IShell {
   }
 
   /**
-   * Load the web worker.
-   */
-  protected abstract initWorker(options: IShell.IOptions): Worker;
-
-  /**
    * Call an external command, i.e. one that runs in the browser UI thread.
    */
   async callExternalCommand(
@@ -186,6 +181,11 @@ export abstract class BaseShell implements IShell {
     }
   }
 
+  /**
+   * Load the web worker.
+   */
+  protected abstract initWorker(options: IShell.IOptions): Worker;
+
   async input(char: string): Promise<void> {
     if (this.isDisposed) {
       return;
@@ -304,23 +304,7 @@ export abstract class BaseShell implements IShell {
       return { name: x.name, hasTabComplete: x.tabComplete !== undefined };
     });
 
-    await this._remote.initialize(
-      {
-        shellId: this.shellId,
-        color: options.color ?? true,
-        mountpoint: options.mountpoint,
-        cwd: options.cwd,
-        wasmBaseUrl: options.wasmBaseUrl,
-        baseUrl: options.baseUrl,
-        browsingContextId: options.browsingContextId,
-        aliases: options.aliases ?? {},
-        environment: options.environment ?? {},
-        externalCommandConfigs: externalCommandConfigs ?? [],
-        sharedArrayBuffer,
-        supportsServiceWorker,
-        initialDirectories: options.initialDirectories,
-        initialFiles: options.initialFiles
-      },
+    this._remote.registerCallbacks(
       proxy(this.callExternalCommand.bind(this)),
       proxy(this.callExternalTabComplete.bind(this)),
       proxy(this.downloadWasmModuleCallback.bind(this)),
@@ -330,6 +314,23 @@ export abstract class BaseShell implements IShell {
       proxy(this.dispose.bind(this)), // terminateCallback
       options.wasmUrlQueryParams !== undefined ? proxy(options.wasmUrlQueryParams) : undefined
     );
+
+    await this._remote.initialize({
+      shellId: this.shellId,
+      color: options.color ?? true,
+      mountpoint: options.mountpoint,
+      cwd: options.cwd,
+      wasmBaseUrl: options.wasmBaseUrl,
+      baseUrl: options.baseUrl,
+      browsingContextId: options.browsingContextId,
+      aliases: options.aliases ?? {},
+      environment: options.environment ?? {},
+      externalCommandConfigs: externalCommandConfigs ?? [],
+      sharedArrayBuffer,
+      supportsServiceWorker,
+      initialDirectories: options.initialDirectories,
+      initialFiles: options.initialFiles
+    });
 
     // Register sendStdinNow callback only after this._remote has been initialized.
     if (this._sharedArrayBufferMainIO !== undefined) {
