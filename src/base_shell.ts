@@ -9,13 +9,14 @@ import type { IOutputCallback } from './callback';
 import type { ISize } from './callback';
 import type { IExternalRunContext } from './context';
 import type { IShell } from './defs';
-import type { IRemoteShell, IShellWorker } from './defs_internal';
+import type { IShellWorker } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
 import { ExitCode } from './exit_code';
 import type { IExternalCommand, IExternalTabCompleteResult } from './external_command';
 import { ExternalEnvironment } from './external_environment';
 import { ExternalTermios } from './external_termios';
 import { ExternalInput, ExternalOutput } from './io';
+import type { IComlinkShellWorker } from './shell_worker';
 import type { Termios } from './termios';
 
 /**
@@ -109,12 +110,12 @@ export abstract class BaseShell implements IShell {
     return await tabComplete({ name, args, shellId: this._shellId });
   }
 
-  protected createRemote(options: IShell.IOptions): IRemoteShell {
+  protected createRemote(options: IShell.IOptions): IComlinkShellWorker {
     if (this._worker === undefined) {
       throw new Error('Worker not created');
     }
 
-    const remote = wrap(this._worker) as IRemoteShell;
+    const remote = wrap(this._worker) as IComlinkShellWorker;
 
     remote.registerCallbacks(
       proxy(this.callExternalCommand.bind(this)),
@@ -401,7 +402,7 @@ export abstract class BaseShell implements IShell {
   private _shellId: string; // Unique identifier within a single browser tab.
   private _size: ISize = { rows: 0, columns: 0 };
   private _worker?: Worker;
-  private _remote?: IRemoteShell;
+  private _remote?: IComlinkShellWorker;
   private _externalCommands = new Map<string, IExternalCommand.IOptions>();
 
   private _serviceWorkerMainIO?: ServiceWorkerMainIO;
