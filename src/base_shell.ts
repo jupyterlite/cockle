@@ -112,7 +112,7 @@ export abstract class BaseShell implements IShell {
 
   protected createRemote(options: IShell.IOptions): IComlinkShellWorker {
     if (this._worker === undefined) {
-      throw new Error('Worker not created');
+      throw new Error('Worker does not exist');
     }
 
     const remote = wrap(this._worker) as IComlinkShellWorker;
@@ -216,8 +216,8 @@ export abstract class BaseShell implements IShell {
       color: color ?? true,
       mountpoint,
       cwd,
-      wasmBaseUrl,
       baseUrl,
+      wasmBaseUrl,
       browsingContextId,
       aliases: aliases ?? {},
       environment: environment ?? {},
