@@ -9,13 +9,14 @@ import type { IOutputCallback } from './callback';
 import type { ISize } from './callback';
 import type { IExternalRunContext } from './context';
 import type { IShell } from './defs';
-import type { IRemoteShell } from './defs_internal';
+import type { IShellWorker } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
 import { ExitCode } from './exit_code';
 import type { IExternalCommand, IExternalTabCompleteResult } from './external_command';
 import { ExternalEnvironment } from './external_environment';
 import { ExternalTermios } from './external_termios';
 import { ExternalInput, ExternalOutput } from './io';
+import type { IComlinkShellWorker } from './shell_worker';
 import type { Termios } from './termios';
 
 /**
@@ -38,11 +39,6 @@ export abstract class BaseShell implements IShell {
 
     this._initialize(options);
   }
-
-  /**
-   * Load the web worker.
-   */
-  protected abstract initWorker(options: IShell.IOptions): Worker;
 
   /**
    * Call an external command, i.e. one that runs in the browser UI thread.
@@ -114,6 +110,27 @@ export abstract class BaseShell implements IShell {
     return await tabComplete({ name, args, shellId: this._shellId });
   }
 
+  protected createRemote(options: IShell.IOptions): IComlinkShellWorker {
+    if (this._worker === undefined) {
+      throw new Error('Worker does not exist');
+    }
+
+    const remote = wrap(this._worker) as IComlinkShellWorker;
+
+    remote.registerCallbacks(
+      proxy(this.callExternalCommand.bind(this)),
+      proxy(this.callExternalTabComplete.bind(this)),
+      proxy(this.downloadWasmModuleCallback.bind(this)),
+      proxy(this.enableBufferedStdinCallback.bind(this)),
+      proxy(options.outputCallback),
+      proxy(this._setMainIO.bind(this)),
+      proxy(this.dispose.bind(this)), // terminateCallback
+      options.wasmUrlQueryParams !== undefined ? proxy(options.wasmUrlQueryParams) : undefined
+    );
+
+    return remote;
+  }
+
   dispose(): void {
     if (this._isDisposed) {
       return;
@@ -166,14 +183,6 @@ export abstract class BaseShell implements IShell {
     }
   }
 
-  async exitCode(): Promise<number> {
-    return (await this._remote?.exitCode) ?? 1;
-  }
-
-  get isDisposed(): boolean {
-    return this._isDisposed;
-  }
-
   private async enableBufferedStdinCallback(enable: boolean): Promise<void> {
     if (this.isDisposed) {
       return;
@@ -186,6 +195,45 @@ export abstract class BaseShell implements IShell {
     }
   }
 
+  async exitCode(): Promise<number> {
+    return (await this._remote?.exitCode) ?? 1;
+  }
+
+  protected initRemoteOptions(options: IShell.IOptions): IShellWorker.IOptions {
+    // Types of buffered IO supported.
+    const sharedArrayBuffer = this._sharedArrayBufferMainIO?.sharedArrayBuffer ?? undefined;
+    const supportsServiceWorker = this._serviceWorkerMainIO !== undefined;
+
+    const externalCommandConfigs = options.externalCommands?.map(x => {
+      return { name: x.name, hasTabComplete: x.tabComplete !== undefined };
+    });
+
+    const { baseUrl, browsingContextId, color, cwd, mountpoint, wasmBaseUrl } = options;
+    const { aliases, environment, initialDirectories, initialFiles } = options;
+
+    return {
+      shellId: this.shellId,
+      color: color ?? true,
+      mountpoint,
+      cwd,
+      baseUrl,
+      wasmBaseUrl,
+      browsingContextId,
+      aliases: aliases ?? {},
+      environment: environment ?? {},
+      externalCommandConfigs: externalCommandConfigs ?? [],
+      sharedArrayBuffer,
+      supportsServiceWorker,
+      initialDirectories,
+      initialFiles
+    };
+  }
+
+  /**
+   * Load the web worker.
+   */
+  protected abstract initWorker(options: IShell.IOptions): Worker;
+
   async input(char: string): Promise<void> {
     if (this.isDisposed) {
       return;
@@ -196,6 +244,10 @@ export abstract class BaseShell implements IShell {
     } else {
       await this._remote!.input(char);
     }
+  }
+
+  get isDisposed(): boolean {
+    return this._isDisposed;
   }
 
   /**
@@ -294,42 +346,10 @@ export abstract class BaseShell implements IShell {
   }
 
   private async _initRemote(options: IShell.IOptions) {
-    this._remote = wrap(this._worker!);
+    this._remote = this.createRemote(options);
 
-    // Types of buffered IO supported.
-    const sharedArrayBuffer = this._sharedArrayBufferMainIO?.sharedArrayBuffer ?? undefined;
-    const supportsServiceWorker = this._serviceWorkerMainIO !== undefined;
-
-    const externalCommandConfigs = options.externalCommands?.map(x => {
-      return { name: x.name, hasTabComplete: x.tabComplete !== undefined };
-    });
-
-    await this._remote.initialize(
-      {
-        shellId: this.shellId,
-        color: options.color ?? true,
-        mountpoint: options.mountpoint,
-        cwd: options.cwd,
-        wasmBaseUrl: options.wasmBaseUrl,
-        baseUrl: options.baseUrl,
-        browsingContextId: options.browsingContextId,
-        aliases: options.aliases ?? {},
-        environment: options.environment ?? {},
-        externalCommandConfigs: externalCommandConfigs ?? [],
-        sharedArrayBuffer,
-        supportsServiceWorker,
-        initialDirectories: options.initialDirectories,
-        initialFiles: options.initialFiles
-      },
-      proxy(this.callExternalCommand.bind(this)),
-      proxy(this.callExternalTabComplete.bind(this)),
-      proxy(this.downloadWasmModuleCallback.bind(this)),
-      proxy(this.enableBufferedStdinCallback.bind(this)),
-      proxy(options.outputCallback),
-      proxy(this._setMainIO.bind(this)),
-      proxy(this.dispose.bind(this)), // terminateCallback
-      options.wasmUrlQueryParams !== undefined ? proxy(options.wasmUrlQueryParams) : undefined
-    );
+    const remoteOptions = this.initRemoteOptions(options);
+    await this._remote.initialize(remoteOptions);
 
     // Register sendStdinNow callback only after this._remote has been initialized.
     if (this._sharedArrayBufferMainIO !== undefined) {
@@ -382,7 +402,7 @@ export abstract class BaseShell implements IShell {
   private _shellId: string; // Unique identifier within a single browser tab.
   private _size: ISize = { rows: 0, columns: 0 };
   private _worker?: Worker;
-  private _remote?: IRemoteShell;
+  private _remote?: IComlinkShellWorker;
   private _externalCommands = new Map<string, IExternalCommand.IOptions>();
 
   private _serviceWorkerMainIO?: ServiceWorkerMainIO;

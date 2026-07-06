@@ -1,4 +1,4 @@
-import type { ProxyMarked, Remote } from 'comlink';
+import type { Remote } from 'comlink';
 import type { IWorkerIO } from './buffered_io';
 import type {
   IInitDriveFSCallback,
@@ -44,21 +44,8 @@ interface IOptionsCommon {
   initialFiles?: IShell.IFiles;
 }
 
+// Common means common to both ShellWorker and ShellImpl.
 interface IShellCommon {
-  // Handle any lazy initialization activities.
-  // Callback proxies need to be separate arguments, they cannot be in IOptions.
-  initialize(
-    options: IShellWorker.IOptions,
-    callExternalCommand: IShellWorker.IProxyCallExternalCommand,
-    callExternalTabComplete: IShellWorker.IProxyCallExternalTabComplete,
-    downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback,
-    enableBufferedStdinCallback: IShellWorker.IProxyEnableBufferedStdinCallback,
-    outputCallback: IShellWorker.IProxyOutputCallback,
-    setMainIOCallback: IShellWorker.IProxySetMainIOCallback,
-    terminateCallback: IShellWorker.IProxyTerminateCallback,
-    wasmUrlQueryParamsCallback?: IShellWorker.IProxyQueryParamsCallback
-  ): void;
-
   exitCode: number;
   externalInput(maxChars: number | null): Promise<string>;
   externalOutput(text: string, isStderr: boolean): void;
@@ -70,21 +57,27 @@ interface IShellCommon {
 
 export interface IShellWorker extends IShellCommon {
   externalSetTermios(flags: Termios.IFlags): void;
+
+  // Handle any lazy initialization activities.
+  initialize(options: IShellWorker.IOptions): void;
+
+  registerCallbacks(
+    callExternalCommand: ICallExternalCommand,
+    callExternalTabComplete: ICallExternalTabComplete,
+    downloadModuleCallback: IDownloadModuleCallback,
+    enableBufferedStdinCallback: IEnableBufferedStdinCallback,
+    outputCallback: IOutputCallback,
+    setMainIOCallback: ISetMainIOCallback,
+    terminateCallback: ITerminateCallback,
+    wasmUrlQueryParamsCallback?: IQueryParamsCallback
+  ): void;
 }
 
-export interface IShellImpl extends IShellCommon {}
+export interface IShellImpl extends IShellCommon {
+  initialize(): Promise<void>;
+}
 
 export namespace IShellWorker {
-  export interface IProxyCallExternalCommand extends ICallExternalCommand, ProxyMarked {}
-  export interface IProxyCallExternalTabComplete extends ICallExternalTabComplete, ProxyMarked {}
-  export interface IProxyDownloadModuleCallback extends IDownloadModuleCallback, ProxyMarked {}
-  export interface IProxyEnableBufferedStdinCallback
-    extends IEnableBufferedStdinCallback, ProxyMarked {}
-  export interface IProxyOutputCallback extends IOutputCallback, ProxyMarked {}
-  export interface IProxyQueryParamsCallback extends IQueryParamsCallback, ProxyMarked {}
-  export interface IProxySetMainIOCallback extends ISetMainIOCallback, ProxyMarked {}
-  export interface IProxyTerminateCallback extends ITerminateCallback, ProxyMarked {}
-
   export interface IOptions extends IOptionsCommon {
     sharedArrayBuffer?: SharedArrayBuffer; // If set, supports bufferedIO via SharedArrayBuffer
     supportsServiceWorker: boolean;
@@ -95,15 +88,15 @@ export type IRemoteShell = Remote<IShellWorker>;
 
 export namespace IShellImpl {
   export interface IOptions extends IOptionsCommon {
-    callExternalCommand: IShellWorker.IProxyCallExternalCommand;
-    callExternalTabComplete: IShellWorker.IProxyCallExternalTabComplete;
-    downloadModuleCallback: IShellWorker.IProxyDownloadModuleCallback;
+    callExternalCommand: ICallExternalCommand;
+    callExternalTabComplete: ICallExternalTabComplete;
+    downloadModuleCallback: IDownloadModuleCallback;
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;
     initDriveFSCallback: IInitDriveFSCallback;
-    terminateCallback: IShellWorker.IProxyTerminateCallback;
+    terminateCallback: ITerminateCallback;
     workerIO: IWorkerIO;
     stdinContext: IStdinContext;
     termios: Termios.Termios;
-    wasmUrlQueryParamsCallback?: IShellWorker.IProxyQueryParamsCallback;
+    wasmUrlQueryParamsCallback?: IQueryParamsCallback;
   }
 }
