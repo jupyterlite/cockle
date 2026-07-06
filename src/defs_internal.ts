@@ -44,7 +44,20 @@ interface IOptionsCommon {
   initialFiles?: IShell.IFiles;
 }
 
+// Common means common to both ShellWorker and ShellImpl.
 interface IShellCommon {
+  exitCode: number;
+  externalInput(maxChars: number | null): Promise<string>;
+  externalOutput(text: string, isStderr: boolean): void;
+  input(char: string): Promise<void>;
+  setSize(size: ISize): void;
+  start(): Promise<void>;
+  themeChange(isDark?: boolean): Promise<void>;
+}
+
+export interface IShellWorker extends IShellCommon {
+  externalSetTermios(flags: Termios.IFlags): void;
+
   // Handle any lazy initialization activities.
   // Callback proxies need to be separate arguments, they cannot be in IOptions.
   initialize(
@@ -58,21 +71,11 @@ interface IShellCommon {
     terminateCallback: ITerminateCallback,
     wasmUrlQueryParamsCallback?: IQueryParamsCallback
   ): void;
-
-  exitCode: number;
-  externalInput(maxChars: number | null): Promise<string>;
-  externalOutput(text: string, isStderr: boolean): void;
-  input(char: string): Promise<void>;
-  setSize(size: ISize): void;
-  start(): Promise<void>;
-  themeChange(isDark?: boolean): Promise<void>;
 }
 
-export interface IShellWorker extends IShellCommon {
-  externalSetTermios(flags: Termios.IFlags): void;
+export interface IShellImpl extends IShellCommon {
+  initialize(): Promise<void>;
 }
-
-export interface IShellImpl extends IShellCommon {}
 
 export namespace IShellWorker {
   export interface IOptions extends IOptionsCommon {
