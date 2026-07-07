@@ -115,6 +115,9 @@ export class Demo {
 
     const isDark = mode === 'light' ? false : mode === 'dark' ? true : undefined;
     this._shell.themeChange(isDark);
+
+    // Fix colour of targetDiv so that the terminal border is the correct colour.
+    this._targetDiv.style.setProperty('--target-background', background);
   }
 
   private _targetDiv: HTMLElement;
