@@ -2,11 +2,14 @@
 
 body {
   background-color: lightgrey;
+  margin: 0;
 }
 
 #targetdiv {
-  border: 2px solid black;
-  height: 100%;
+  --target-background: #000000;
+  padding: 0.3em;
+  box-sizing: content-box;
+  background-color: var(--target-background);
 }
 
 #theme {
