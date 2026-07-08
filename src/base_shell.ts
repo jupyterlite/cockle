@@ -46,12 +46,12 @@ export abstract class BaseShell implements IShell {
   async callExternalCommand(
     name: string,
     args: string[],
-    environment: { [key: string]: string },
+    environment: Record<string, string>,
     stdinIsTerminal: boolean,
     stdoutIsTerminal: boolean,
     stderrIsTerminal: boolean,
     termiosFlags: Termios.IFlags
-  ): Promise<{ exitCode: number; environmentChanges?: { [key: string]: string | undefined } }> {
+  ): Promise<{ exitCode: number; environmentChanges?: Record<string, string | undefined> }> {
     const commandOptions = this._externalCommands.get(name);
     if (commandOptions === undefined) {
       // This should not happen unless the command has not been registered properly.

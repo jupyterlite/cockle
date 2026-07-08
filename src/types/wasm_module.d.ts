@@ -428,7 +428,7 @@ declare class FSNode {
   get isDevice(): any;
 }
 interface WasmModule {
-  ENV?: { [key: string]: string };
+  ENV?: Record<string, string>;
   ERRNO_CODES: any;
   FS?: any;
   PATH?: any;

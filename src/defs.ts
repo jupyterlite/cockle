@@ -107,12 +107,12 @@ export namespace IShell {
     /**
      * Aliases to set in shell at startup.
      */
-    aliases?: { [key: string]: string };
+    aliases?: Record<string, string>;
 
     /**
      * Environment variables to set in shell at startup.
      */
-    environment?: { [key: string]: string | undefined };
+    environment?: Record<string, string | undefined>;
 
     /**
      * External commands to register in shell at startup.
@@ -135,7 +135,7 @@ export namespace IShell {
     outputCallback: IOutputCallback;
   }
 
-  export type IFiles = { [key: string]: string };
+  export type IFiles = Record<string, string>;
 }
 
 export interface IShellManager {

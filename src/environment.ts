@@ -26,7 +26,7 @@ export class Environment extends Map<string, string> {
   /**
    * Copy environment variables into a command before it is run.
    */
-  copyIntoCommand(target: { [key: string]: string }) {
+  copyIntoCommand(target: Record<string, string>) {
     for (const [key, value] of this.entries()) {
       target[key] = value;
     }
