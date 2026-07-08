@@ -2,10 +2,11 @@ import type { IWorkerIO } from './buffered_io';
 import { ServiceWorkerWorkerIO, SharedArrayBufferWorkerIO } from './buffered_io';
 import type { IOutputCallback, IQueryParamsCallback, ISize } from './callback';
 import type {
-  ICallExternalCommand,
+  ICallExternalCommandNoReturn,
   ICallExternalTabComplete,
   IDownloadModuleCallback,
   IEnableBufferedStdinCallback,
+  IExitExternalCommand,
   ISetMainIOCallback,
   ITerminateCallback,
   IWorkerCallbacks
@@ -118,6 +119,10 @@ export abstract class BaseShellWorker implements IShellWorker {
     return this._shellImpl?.exitCode ?? 1;
   }
 
+  exitExternalCommand(exitInfo: IExitExternalCommand): void {
+    this._shellImpl?.exitExternalCommand(exitInfo);
+  }
+
   async externalInput(maxChars: number | null): Promise<string> {
     return this._shellImpl!.externalInput(maxChars);
   }
@@ -142,7 +147,7 @@ export abstract class BaseShellWorker implements IShellWorker {
   }
 
   registerCallbacks(
-    callExternalCommand: ICallExternalCommand,
+    callExternalCommand: ICallExternalCommandNoReturn,
     callExternalTabComplete: ICallExternalTabComplete,
     downloadModuleCallback: IDownloadModuleCallback,
     enableBufferedStdinCallback: IEnableBufferedStdinCallback,

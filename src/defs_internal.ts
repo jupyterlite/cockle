@@ -7,10 +7,11 @@ import type {
   ISize
 } from './callback';
 import type {
-  ICallExternalCommand,
+  ICallExternalCommandNoReturn,
   ICallExternalTabComplete,
   IDownloadModuleCallback,
   IEnableBufferedStdinCallback,
+  IExitExternalCommand,
   ISetMainIOCallback,
   ITerminateCallback
 } from './callback_internal';
@@ -47,6 +48,7 @@ interface IOptionsCommon {
 // Common means common to both ShellWorker and ShellImpl.
 interface IShellCommon {
   exitCode: number;
+  exitExternalCommand(exitInfo: IExitExternalCommand): void;
   externalInput(maxChars: number | null): Promise<string>;
   externalOutput(text: string, isStderr: boolean): void;
   input(char: string): Promise<void>;
@@ -62,7 +64,7 @@ export interface IShellWorker extends IShellCommon {
   initialize(options: IShellWorker.IOptions): void;
 
   registerCallbacks(
-    callExternalCommand: ICallExternalCommand,
+    callExternalCommand: ICallExternalCommandNoReturn,
     callExternalTabComplete: ICallExternalTabComplete,
     downloadModuleCallback: IDownloadModuleCallback,
     enableBufferedStdinCallback: IEnableBufferedStdinCallback,
@@ -88,7 +90,7 @@ export type IRemoteShell = Remote<IShellWorker>;
 
 export namespace IShellImpl {
   export interface IOptions extends IOptionsCommon {
-    callExternalCommand: ICallExternalCommand;
+    callExternalCommand: ICallExternalCommandNoReturn;
     callExternalTabComplete: ICallExternalTabComplete;
     downloadModuleCallback: IDownloadModuleCallback;
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;

@@ -8,7 +8,17 @@ import type { Termios } from './termios';
 
 /**
  * Internal caller (from ShellImpl/ShellWorker to Shell) to run external command.
+ * An external command is called via ICallExternalCommand and the exit code is awaited. But witin
+ * cockle this is implemented as a call to start the command sent from the web worker to the main UI
+ * thread, and a call when the command exits in the other direction. This is to avoid awaiting the
+ * end of the command whilst potentially passing other information between the two threads such as
+ * for stdin, which can be problematic for coincident (SharedArrayBuffer) web worker comms.
  */
+export interface IExitExternalCommand {
+  exitCode: number;
+  environmentChanges?: Record<string, string | undefined>;
+}
+
 export interface ICallExternalCommand {
   (
     name: string,
@@ -18,7 +28,19 @@ export interface ICallExternalCommand {
     stdoutIsTerminal: boolean,
     stderrIsTerminal: boolean,
     termiosFlags: Termios.IFlags
-  ): Promise<{ exitCode: number; environmentChanges?: Record<string, string | undefined> }>;
+  ): Promise<IExitExternalCommand>;
+}
+
+export interface ICallExternalCommandNoReturn {
+  (
+    name: string,
+    args: string[],
+    environment: Record<string, string>,
+    stdinIsTerminal: boolean,
+    stdoutIsTerminal: boolean,
+    stderrIsTerminal: boolean,
+    termiosFlags: Termios.IFlags
+  ): void;
 }
 
 export interface ICallExternalTabComplete {
@@ -74,7 +96,7 @@ export interface ITerminateCallback {
  * Callbacks in the shell worker, to call functions in the shall.
  */
 export interface IWorkerCallbacks {
-  callExternalCommand: ICallExternalCommand;
+  callExternalCommand: ICallExternalCommandNoReturn;
   callExternalTabComplete: ICallExternalTabComplete;
   downloadModuleCallback: IDownloadModuleCallback;
   enableBufferedStdinCallback: IEnableBufferedStdinCallback;

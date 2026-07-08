@@ -51,11 +51,13 @@ export abstract class BaseShell implements IShell {
     stdoutIsTerminal: boolean,
     stderrIsTerminal: boolean,
     termiosFlags: Termios.IFlags
-  ): Promise<{ exitCode: number; environmentChanges?: Record<string, string | undefined> }> {
+  ): Promise<void> {
     const commandOptions = this._externalCommands.get(name);
+
     if (commandOptions === undefined) {
       // This should not happen unless the command has not been registered properly.
-      return { exitCode: ExitCode.CANNOT_FIND_COMMAND };
+      this._remote!.exitExternalCommand({ exitCode: ExitCode.CANNOT_FIND_COMMAND });
+      return;
     }
 
     const { command } = commandOptions;
@@ -86,7 +88,11 @@ export abstract class BaseShell implements IShell {
       termios
     };
     const exitCode = await command(context);
-    return { exitCode, environmentChanges: externalEnvironment.changed };
+
+    // Exit code is returned via a separate message to the web worker rather than a return from this
+    // function.
+    const environmentChanges = externalEnvironment.changed;
+    this._remote!.exitExternalCommand({ exitCode, environmentChanges });
   }
 
   /**

@@ -1,7 +1,9 @@
+import { PromiseDelegate } from '@lumino/coreutils';
 import { Aliases } from './aliases';
 import { ansi } from './ansi';
 import type { IWorkerIO } from './buffered_io';
 import type { ISize } from './callback';
+import type { IExitExternalCommand } from './callback_internal';
 import type { ICommandLine } from './command_line';
 import { CommandModule, CommandModuleLoader, CommandPackage, CommandRegistry } from './commands';
 import type { IRunContext } from './context';
@@ -23,6 +25,7 @@ import {
 } from './io';
 import { CommandNode, parse, PipeNode } from './parse';
 import { TabCompleter } from './tab_completer';
+import type { Termios } from './termios';
 import { joinURL, stringFromCharCodes } from './utils';
 
 /**
@@ -55,7 +58,7 @@ export class ShellImpl implements IShellImpl {
       fileSystem: this._fileSystem,
       aliases: new Aliases(),
       commandRegistry: new CommandRegistry(
-        options.callExternalCommand,
+        this.callExternalCommand.bind(this),
         options.callExternalTabComplete
       ),
       environment: new Environment(options.color, options.shellId, options.browsingContextId),
@@ -94,12 +97,51 @@ export class ShellImpl implements IShellImpl {
     return this._runContext.aliases;
   }
 
+  async callExternalCommand(
+    name: string,
+    args: string[],
+    environment: { [key: string]: string },
+    stdinIsTerminal: boolean,
+    stdoutIsTerminal: boolean,
+    stderrIsTerminal: boolean,
+    termiosFlags: Termios.IFlags
+  ): Promise<{ exitCode: number; environmentChanges?: { [key: string]: string | undefined } }> {
+    // Separates the start of the external command and its end which is handled by a promise
+    // delegate. This is so that we are not awaiting the end of the command across the web worker to
+    // main UI thread interface whilst we are potentially also awaiting stdin across that interface.
+    this._options.callExternalCommand(
+      name,
+      args,
+      environment,
+      stdinIsTerminal,
+      stdoutIsTerminal,
+      stderrIsTerminal,
+      termiosFlags
+    );
+
+    const promise = new PromiseDelegate<IExitExternalCommand>();
+    if (this._externalCommandPromise !== undefined) {
+      this._externalCommandPromise.reject('Previous external command did not exit properly');
+    }
+    this._externalCommandPromise = promise;
+
+    return await promise.promise;
+  }
+
   get environment(): Environment {
     return this._runContext.environment;
   }
 
   get exitCode(): number {
     return this._exitCode;
+  }
+
+  exitExternalCommand(exitInfo: IExitExternalCommand): void {
+    // Called when an external command finishes.
+    if (this._externalCommandPromise !== undefined) {
+      this._externalCommandPromise.resolve(exitInfo);
+      this._externalCommandPromise = undefined;
+    }
   }
 
   async externalInput(maxChars: number | null): Promise<string> {
@@ -773,6 +815,7 @@ export class ShellImpl implements IShellImpl {
   private _runContext: IRunContext;
   private _dummyInput = new DummyInput();
   private _dummyOutput = new DummyOutput();
+  private _externalCommandPromise?: PromiseDelegate<IExitExternalCommand>;
   private _fileSystem: IFileSystem;
   private _options: IShellImpl.IOptions;
   private _stderr: TerminalOutput;
