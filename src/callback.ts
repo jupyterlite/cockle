@@ -22,7 +22,7 @@ export interface IInitDriveFSCallback {
  * Return dictionary of query params to be used when fetching the specified filename.
  */
 export interface IQueryParamsCallback {
-  (filename: string): { [key: string]: string };
+  (filename: string): Record<string, string>;
 }
 
 export interface ISize {

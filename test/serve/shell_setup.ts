@@ -10,8 +10,8 @@ export interface IShellSetup {
 export interface IOptions {
   color?: boolean;
   cwd?: string;
-  aliases?: { [key: string]: string };
-  environment?: { [key: string]: string | undefined };
+  aliases?: Record<string, string>;
+  environment?: Record<string, string | undefined>;
   externalCommands?: IExternalCommand.IOptions[];
   initialDirectories?: string[];
   initialFiles?: IShell.IFiles;

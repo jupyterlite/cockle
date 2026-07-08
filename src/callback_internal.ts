@@ -13,12 +13,12 @@ export interface ICallExternalCommand {
   (
     name: string,
     args: string[],
-    environment: { [key: string]: string },
+    environment: Record<string, string>,
     stdinIsTerminal: boolean,
     stdoutIsTerminal: boolean,
     stderrIsTerminal: boolean,
     termiosFlags: Termios.IFlags
-  ): Promise<{ exitCode: number; environmentChanges?: { [key: string]: string | undefined } }>;
+  ): Promise<{ exitCode: number; environmentChanges?: Record<string, string | undefined> }>;
 }
 
 export interface ICallExternalTabComplete {

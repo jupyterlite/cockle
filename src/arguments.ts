@@ -236,7 +236,7 @@ export abstract class CommandArguments {
   }
 
   positional?: PositionalArguments;
-  subcommands?: { [key: string]: SubcommandArguments };
+  subcommands?: Record<string, SubcommandArguments>;
   description?: string;
 }
 

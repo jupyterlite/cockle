@@ -18,12 +18,12 @@ export class ExternalEnvironment extends Map<string, string> {
    * An entry with a string value has changed to that string.
    * An entry with an undefined value has been deleted.
    */
-  get changed(): { [key: string]: string | undefined } | undefined {
+  get changed(): Record<string, string | undefined> | undefined {
     if (this._changed === undefined) {
       return undefined;
     }
 
-    const ret: { [key: string]: string | undefined } = {};
+    const ret: Record<string, string | undefined> = {};
     this._changed.forEach(name => (ret[name] = this.get(name)));
     return ret;
   }
