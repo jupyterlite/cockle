@@ -43,7 +43,7 @@ export abstract class BaseShell implements IShell {
   /**
    * Call an external command, i.e. one that runs in the browser UI thread.
    */
-  async callExternalCommand(
+  callExternalCommand(
     name: string,
     args: string[],
     environment: Record<string, string>,
@@ -51,30 +51,21 @@ export abstract class BaseShell implements IShell {
     stdoutIsTerminal: boolean,
     stderrIsTerminal: boolean,
     termiosFlags: Termios.IFlags
-  ): Promise<void> {
+  ): void {
+    const remote = this._remote!;
     const commandOptions = this._externalCommands.get(name);
-
     if (commandOptions === undefined) {
       // This should not happen unless the command has not been registered properly.
-      this._remote!.exitExternalCommand({ exitCode: ExitCode.CANNOT_FIND_COMMAND });
+      remote.exitExternalCommand({ exitCode: ExitCode.CANNOT_FIND_COMMAND });
       return;
     }
 
     const { command } = commandOptions;
     const externalEnvironment = new ExternalEnvironment(Object.entries(environment));
-    const stdin = new ExternalInput(
-      maxChars => this._remote!.externalInput(maxChars),
-      stdinIsTerminal
-    );
-    const stdout = new ExternalOutput(
-      text => this._remote!.externalOutput(text, false),
-      stdoutIsTerminal
-    );
-    const stderr = new ExternalOutput(
-      text => this._remote!.externalOutput(text, true),
-      stderrIsTerminal
-    );
-    const termios = new ExternalTermios(termiosFlags, this._remote!.externalSetTermios);
+    const stdin = new ExternalInput(this.externalInput.bind(this), stdinIsTerminal);
+    const stdout = new ExternalOutput(text => remote.externalOutput(text, false), stdoutIsTerminal);
+    const stderr = new ExternalOutput(text => remote.externalOutput(text, true), stderrIsTerminal);
+    const termios = new ExternalTermios(termiosFlags, remote.externalSetTermios);
 
     const context: IExternalRunContext = {
       name,
@@ -87,12 +78,12 @@ export abstract class BaseShell implements IShell {
       size: () => this.size,
       termios
     };
-    const exitCode = await command(context);
-
-    // Exit code is returned via a separate message to the web worker rather than a return from this
-    // function.
-    const environmentChanges = externalEnvironment.changed;
-    this._remote!.exitExternalCommand({ exitCode, environmentChanges });
+    command(context).then(exitCode => {
+      // Exit code is returned via a separate message to the web worker rather than a return from this
+      // function.
+      const environmentChanges = externalEnvironment.changed;
+      remote.exitExternalCommand({ exitCode, environmentChanges });
+    });
   }
 
   /**
@@ -128,6 +119,7 @@ export abstract class BaseShell implements IShell {
       proxy(this.callExternalTabComplete.bind(this)),
       proxy(this.downloadWasmModuleCallback.bind(this)),
       proxy(this.enableBufferedStdinCallback.bind(this)),
+      proxy(this.externalInputReturn.bind(this)),
       proxy(options.outputCallback),
       proxy(this._setMainIO.bind(this)),
       proxy(this.dispose.bind(this)), // terminateCallback
@@ -203,6 +195,25 @@ export abstract class BaseShell implements IShell {
 
   async exitCode(): Promise<number> {
     return (await this._remote?.exitCode) ?? 1;
+  }
+
+  async externalInput(maxChars: number | null): Promise<string> {
+    if (this._externalStdinPromise !== undefined) {
+      this._externalStdinPromise.reject('Previous external stdin request did not complete');
+    }
+    const promise = new PromiseDelegate<string>();
+    this._externalStdinPromise = promise;
+
+    this._remote!.externalInput(maxChars);
+    return await promise.promise;
+  }
+
+  // Handler for externalInputReturn callback from worker.
+  externalInputReturn(text: string): void {
+    if (this._externalStdinPromise !== undefined) {
+      this._externalStdinPromise.resolve(text);
+      this._externalStdinPromise = undefined;
+    }
   }
 
   protected initRemoteOptions(options: IShell.IOptions): IShellWorker.IOptions {
@@ -410,6 +421,7 @@ export abstract class BaseShell implements IShell {
   private _worker?: Worker;
   private _remote?: IComlinkShellWorker;
   private _externalCommands = new Map<string, IExternalCommand.IOptions>();
+  private _externalStdinPromise?: PromiseDelegate<string>;
 
   private _serviceWorkerMainIO?: ServiceWorkerMainIO;
   private _sharedArrayBufferMainIO?: SharedArrayBufferMainIO;

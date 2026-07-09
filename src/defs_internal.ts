@@ -12,6 +12,7 @@ import type {
   IDownloadModuleCallback,
   IEnableBufferedStdinCallback,
   IExternalCommandResult,
+  IExternalInputReturnCallback,
   ISetMainIOCallback,
   ITerminateCallback
 } from './callback_internal';
@@ -49,7 +50,6 @@ interface IOptionsCommon {
 interface IShellCommon {
   exitCode: number;
   exitExternalCommand(result: IExternalCommandResult): void;
-  externalInput(maxChars: number | null): Promise<string>;
   externalOutput(text: string, isStderr: boolean): void;
   input(char: string): Promise<void>;
   setSize(size: ISize): void;
@@ -58,6 +58,7 @@ interface IShellCommon {
 }
 
 export interface IShellWorker extends IShellCommon {
+  externalInput(maxChars: number | null): void;
   externalSetTermios(flags: Termios.IFlags): void;
 
   // Handle any lazy initialization activities.
@@ -68,6 +69,7 @@ export interface IShellWorker extends IShellCommon {
     callExternalTabComplete: ICallExternalTabComplete,
     downloadModuleCallback: IDownloadModuleCallback,
     enableBufferedStdinCallback: IEnableBufferedStdinCallback,
+    externalInputReturn: IExternalInputReturnCallback,
     outputCallback: IOutputCallback,
     setMainIOCallback: ISetMainIOCallback,
     terminateCallback: ITerminateCallback,
@@ -76,6 +78,7 @@ export interface IShellWorker extends IShellCommon {
 }
 
 export interface IShellImpl extends IShellCommon {
+  externalInput(maxChars: number | null): Promise<string>;
   initialize(): Promise<void>;
 }
 
