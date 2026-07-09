@@ -6,7 +6,7 @@ import type {
   ICallExternalTabComplete,
   IDownloadModuleCallback,
   IEnableBufferedStdinCallback,
-  IExitExternalCommand,
+  IExternalCommandResult,
   ISetMainIOCallback,
   ITerminateCallback,
   IWorkerCallbacks
@@ -119,8 +119,8 @@ export abstract class BaseShellWorker implements IShellWorker {
     return this._shellImpl?.exitCode ?? 1;
   }
 
-  exitExternalCommand(exitInfo: IExitExternalCommand): void {
-    this._shellImpl?.exitExternalCommand(exitInfo);
+  exitExternalCommand(result: IExternalCommandResult): void {
+    this._shellImpl?.exitExternalCommand(result);
   }
 
   async externalInput(maxChars: number | null): Promise<string> {

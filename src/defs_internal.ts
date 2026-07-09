@@ -11,7 +11,7 @@ import type {
   ICallExternalTabComplete,
   IDownloadModuleCallback,
   IEnableBufferedStdinCallback,
-  IExitExternalCommand,
+  IExternalCommandResult,
   ISetMainIOCallback,
   ITerminateCallback
 } from './callback_internal';
@@ -48,7 +48,7 @@ interface IOptionsCommon {
 // Common means common to both ShellWorker and ShellImpl.
 interface IShellCommon {
   exitCode: number;
-  exitExternalCommand(exitInfo: IExitExternalCommand): void;
+  exitExternalCommand(result: IExternalCommandResult): void;
   externalInput(maxChars: number | null): Promise<string>;
   externalOutput(text: string, isStderr: boolean): void;
   input(char: string): Promise<void>;

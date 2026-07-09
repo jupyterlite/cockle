@@ -8,13 +8,14 @@ import type { Termios } from './termios';
 
 /**
  * Internal caller (from ShellImpl/ShellWorker to Shell) to run external command.
- * An external command is called via ICallExternalCommand and the exit code is awaited. But witin
- * cockle this is implemented as a call to start the command sent from the web worker to the main UI
- * thread, and a call when the command exits in the other direction. This is to avoid awaiting the
- * end of the command whilst potentially passing other information between the two threads such as
- * for stdin, which can be problematic for coincident (SharedArrayBuffer) web worker comms.
+ * An external command is called via ICallExternalCommand and the exit code is awaited. But within
+ * cockle this is implemented as a call from the web worker to the main UI thread to start the
+ * command, and a separate call in the other direction when the command exits. This is to avoid
+ * awaiting the end of the command whilst potentially passing other information between the two
+ * threads such as for stdin, which can be problematic for coincident (SharedArrayBuffer) web worker
+ * comms.
  */
-export interface IExitExternalCommand {
+export interface IExternalCommandResult {
   exitCode: number;
   environmentChanges?: Record<string, string | undefined>;
 }
@@ -28,7 +29,7 @@ export interface ICallExternalCommand {
     stdoutIsTerminal: boolean,
     stderrIsTerminal: boolean,
     termiosFlags: Termios.IFlags
-  ): Promise<IExitExternalCommand>;
+  ): Promise<IExternalCommandResult>;
 }
 
 export interface ICallExternalCommandNoReturn {

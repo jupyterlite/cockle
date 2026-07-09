@@ -3,7 +3,7 @@ import { Aliases } from './aliases';
 import { ansi } from './ansi';
 import type { IWorkerIO } from './buffered_io';
 import type { ISize } from './callback';
-import type { IExitExternalCommand } from './callback_internal';
+import type { IExternalCommandResult } from './callback_internal';
 import type { ICommandLine } from './command_line';
 import { CommandModule, CommandModuleLoader, CommandPackage, CommandRegistry } from './commands';
 import type { IRunContext } from './context';
@@ -119,7 +119,7 @@ export class ShellImpl implements IShellImpl {
       termiosFlags
     );
 
-    const promise = new PromiseDelegate<IExitExternalCommand>();
+    const promise = new PromiseDelegate<IExternalCommandResult>();
     if (this._externalCommandPromise !== undefined) {
       this._externalCommandPromise.reject('Previous external command did not exit properly');
     }
@@ -136,10 +136,10 @@ export class ShellImpl implements IShellImpl {
     return this._exitCode;
   }
 
-  exitExternalCommand(exitInfo: IExitExternalCommand): void {
+  exitExternalCommand(result: IExternalCommandResult): void {
     // Called when an external command finishes.
     if (this._externalCommandPromise !== undefined) {
-      this._externalCommandPromise.resolve(exitInfo);
+      this._externalCommandPromise.resolve(result);
       this._externalCommandPromise = undefined;
     }
   }
@@ -815,7 +815,7 @@ export class ShellImpl implements IShellImpl {
   private _runContext: IRunContext;
   private _dummyInput = new DummyInput();
   private _dummyOutput = new DummyOutput();
-  private _externalCommandPromise?: PromiseDelegate<IExitExternalCommand>;
+  private _externalCommandPromise?: PromiseDelegate<IExternalCommandResult>;
   private _fileSystem: IFileSystem;
   private _options: IShellImpl.IOptions;
   private _stderr: TerminalOutput;
