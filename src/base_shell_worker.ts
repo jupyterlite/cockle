@@ -7,6 +7,7 @@ import type {
   IDownloadModuleCallback,
   IEnableBufferedStdinCallback,
   IExternalCommandResult,
+  IExternalInputReturnCallback,
   ISetMainIOCallback,
   ITerminateCallback,
   IWorkerCallbacks
@@ -123,8 +124,10 @@ export abstract class BaseShellWorker implements IShellWorker {
     this._shellImpl?.exitExternalCommand(result);
   }
 
-  async externalInput(maxChars: number | null): Promise<string> {
-    return this._shellImpl!.externalInput(maxChars);
+  externalInput(maxChars: number | null): void {
+    this._shellImpl!.externalInput(maxChars).then(input =>
+      this._callbacks!.externalInputReturn(input)
+    );
   }
 
   externalOutput(text: string, isStderr: boolean): void {
@@ -151,6 +154,7 @@ export abstract class BaseShellWorker implements IShellWorker {
     callExternalTabComplete: ICallExternalTabComplete,
     downloadModuleCallback: IDownloadModuleCallback,
     enableBufferedStdinCallback: IEnableBufferedStdinCallback,
+    externalInputReturn: IExternalInputReturnCallback,
     outputCallback: IOutputCallback,
     setMainIOCallback: ISetMainIOCallback,
     terminateCallback: ITerminateCallback,
@@ -161,6 +165,7 @@ export abstract class BaseShellWorker implements IShellWorker {
       callExternalTabComplete,
       downloadModuleCallback,
       enableBufferedStdinCallback,
+      externalInputReturn,
       outputCallback,
       setMainIOCallback,
       terminateCallback,

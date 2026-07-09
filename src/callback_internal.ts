@@ -93,6 +93,10 @@ export interface ITerminateCallback {
   (): void;
 }
 
+export interface IExternalInputReturnCallback {
+  (text: string): void;
+}
+
 /**
  * Callbacks in the shell worker, to call functions in the shall.
  */
@@ -101,6 +105,7 @@ export interface IWorkerCallbacks {
   callExternalTabComplete: ICallExternalTabComplete;
   downloadModuleCallback: IDownloadModuleCallback;
   enableBufferedStdinCallback: IEnableBufferedStdinCallback;
+  externalInputReturn: IExternalInputReturnCallback;
   outputCallback: IOutputCallback;
   setMainIOCallback: ISetMainIOCallback;
   terminateCallback: ITerminateCallback;
