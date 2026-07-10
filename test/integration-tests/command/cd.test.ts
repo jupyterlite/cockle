@@ -38,4 +38,25 @@ test.describe('cd command', () => {
   test('should error if use cd - and OLDPWD not set', async ({ page }) => {
     expect(await shellLineSimple(page, 'cd -')).toMatch(/cd: OLDPWD not set/);
   });
+
+  test('should error if cd to non-existent directory', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { shell, output } = await globalThis.cockle.shellSetupSimple();
+      await shell.inputLine('cd /x');
+      return [await shell.exitCode(), output.textAndClear()];
+    });
+    expect(output[0]).toBe(1);
+    expect(output[1]).toMatch('\r\ncd: /x: No such file or directory\r\n');
+  });
+
+  test('should error if cd to file', async ({ page }) => {
+    const output = await page.evaluate(async () => {
+      const { shell, output } = await globalThis.cockle.shellSetupSimple();
+      await shell.inputLine('cd file1');
+      return [await shell.exitCode(), output.textAndClear()];
+    });
+    console.log('XXX', output);
+    expect(output[0]).toBe(1);
+    expect(output[1]).toMatch('\r\ncd: file1: Not a directory\r\n');
+  });
 });

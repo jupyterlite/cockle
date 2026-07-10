@@ -9,7 +9,7 @@ import { PathType } from '../tab_complete';
 
 class CdArguments extends CommandArguments {
   description = `Change the shell working directory.
-  
+
   Change the current directory to DIR. If DIR is "-", it is converted to $OLDPWD.`;
   positional = new PositionalPathArguments({ pathType: PathType.Directory });
   help = new BooleanArgument('h', 'help', 'display this help and exit');
@@ -53,7 +53,21 @@ export class CdCommand extends BuiltinCommand {
 
     const { FS } = context.fileSystem;
     const oldPwd = FS.cwd();
-    FS.chdir(path);
+    try {
+      FS.chdir(path);
+    } catch (err: any) {
+      const { errno } = err;
+      const { ERRNO_CODES } = context.fileSystem;
+      if (errno === ERRNO_CODES.ENOENT) {
+        context.stderr.write(`cd: ${path}: No such file or directory\n`);
+      } else if (errno === ERRNO_CODES.ENOTDIR) {
+        context.stderr.write(`cd: ${path}: Not a directory\n`);
+      } else {
+        context.stderr.write(`cd: ${path}: Unable to cd\n`);
+      }
+      return ExitCode.GENERAL_ERROR;
+    }
+
     context.environment.set('OLDPWD', oldPwd);
     context.environment.set('PWD', FS.cwd());
     return ExitCode.SUCCESS;
