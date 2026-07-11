@@ -91,7 +91,7 @@ The demo can also be served with a local CORS proxy which is useful for trying o
 remote repositories. For this use:
 
 ```bash
-npm run serve-with-cors
+npm run serve-with-cors-proxy
 ```
 
 ---

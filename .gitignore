@@ -13,9 +13,9 @@ cockle_wasm_env/
 cockle-config.json
 demo/package-lock.json
 demo/assets/*.json
-demo/lib/
+demo/dist/
 lib/
 src/version.ts
 test/assets/*.json
-test/lib/
+test/dist/
 test/package-lock.json
