@@ -1,16 +1,18 @@
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import type { ISignal } from '@lumino/signaling';
 import { Signal } from '@lumino/signaling';
+import coincident from 'coincident';
 import { proxy, wrap } from 'comlink';
 import { ansi } from './ansi';
 import type { IMainIO, IStdinReply, IStdinRequest } from './buffered_io';
 import { ServiceWorkerMainIO, SharedArrayBufferMainIO } from './buffered_io';
 import type { IOutputCallback } from './callback';
 import type { ISize } from './callback';
+import type { ICoincidentShellWorker } from './coincident_shell_worker';
 import type { IComlinkShellWorker } from './comlink_shell_worker';
 import type { IExternalRunContext } from './context';
 import type { IShell } from './defs';
-import type { IShellWorker } from './defs_internal';
+import type { IShellWorker, WorkerType } from './defs_internal';
 import { DownloadTracker } from './download_tracker';
 import { ExitCode } from './exit_code';
 import type { IExternalCommand, IExternalTabCompleteResult } from './external_command';
@@ -107,26 +109,48 @@ export abstract class BaseShell implements IShell {
     return await tabComplete({ name, args, shellId: this._shellId });
   }
 
-  protected createRemote(options: IShell.IOptions): IComlinkShellWorker {
-    if (this._worker === undefined) {
-      throw new Error('Worker does not exist');
+  protected createRemote(
+    options: IShell.IOptions & { worker: Worker }
+  ): ICoincidentShellWorker | IComlinkShellWorker {
+    const { worker } = options;
+    if (this.workerType === 'coincident') {
+      const remote = coincident(worker) as ICoincidentShellWorker;
+
+      remote.callExternalCommand = this.callExternalCommand.bind(this);
+      remote.callExternalTabComplete = this.callExternalTabComplete.bind(this);
+      remote.downloadModuleCallback = this.downloadWasmModuleCallback.bind(this);
+      remote.enableBufferedStdinCallback = this.enableBufferedStdinCallback.bind(this);
+      remote.externalInputReturn = this.externalInputReturn.bind(this);
+      remote.outputCallback = options.outputCallback.bind(this);
+      remote.setMainIOCallback = this._setMainIO.bind(this);
+      remote.terminateCallback = this.dispose.bind(this);
+      if (options.wasmUrlQueryParams !== undefined) {
+        remote.wasmUrlQueryParamsCallback = options.wasmUrlQueryParams.bind(this);
+      } else {
+        // Cannot set undefined, coincident needs it to be a function.
+        remote.wasmUrlQueryParamsCallback = filename => {
+          return {};
+        };
+      }
+
+      return remote;
+    } else {
+      const remote = wrap(worker) as IComlinkShellWorker;
+
+      remote.registerCallbacks(
+        proxy(this.callExternalCommand.bind(this)),
+        proxy(this.callExternalTabComplete.bind(this)),
+        proxy(this.downloadWasmModuleCallback.bind(this)),
+        proxy(this.enableBufferedStdinCallback.bind(this)),
+        proxy(this.externalInputReturn.bind(this)),
+        proxy(options.outputCallback),
+        proxy(this._setMainIO.bind(this)),
+        proxy(this.dispose.bind(this)), // terminateCallback
+        options.wasmUrlQueryParams !== undefined ? proxy(options.wasmUrlQueryParams) : undefined
+      );
+
+      return remote;
     }
-
-    const remote = wrap(this._worker) as IComlinkShellWorker;
-
-    remote.registerCallbacks(
-      proxy(this.callExternalCommand.bind(this)),
-      proxy(this.callExternalTabComplete.bind(this)),
-      proxy(this.downloadWasmModuleCallback.bind(this)),
-      proxy(this.enableBufferedStdinCallback.bind(this)),
-      proxy(this.externalInputReturn.bind(this)),
-      proxy(options.outputCallback),
-      proxy(this._setMainIO.bind(this)),
-      proxy(this.dispose.bind(this)), // terminateCallback
-      options.wasmUrlQueryParams !== undefined ? proxy(options.wasmUrlQueryParams) : undefined
-    );
-
-    return remote;
   }
 
   dispose(): void {
@@ -314,6 +338,19 @@ export abstract class BaseShell implements IShell {
     await this._remote?.themeChange(isDark);
   }
 
+  // This will be called just once per Shell as the result is stored.
+  // Can be overridden in derived classes to support different conditions.
+  protected useCoincidentWorker(): boolean {
+    return crossOriginIsolated;
+  }
+
+  get workerType(): WorkerType {
+    if (this._workerType === undefined) {
+      this._workerType = this.useCoincidentWorker() ? 'coincident' : 'comlink';
+    }
+    return this._workerType;
+  }
+
   private async _initialize(options: IShell.IOptions): Promise<void> {
     const supportsSharedArrayBuffer = window.crossOriginIsolated;
     if (supportsSharedArrayBuffer) {
@@ -363,7 +400,13 @@ export abstract class BaseShell implements IShell {
   }
 
   private async _initRemote(options: IShell.IOptions) {
-    this._remote = this.createRemote(options);
+    if (this._worker === undefined) {
+      throw new Error('Worker does not exist');
+    }
+
+    const rrr = this.createRemote({ ...options, worker: this._worker });
+
+    this._remote = rrr;
 
     const remoteOptions = this.initRemoteOptions(options);
     await this._remote.initialize(remoteOptions);
@@ -418,8 +461,9 @@ export abstract class BaseShell implements IShell {
 
   private _shellId: string; // Unique identifier within a single browser tab.
   private _size: ISize = { rows: 0, columns: 0 };
+  private _workerType?: WorkerType;
   private _worker?: Worker;
-  private _remote?: IComlinkShellWorker;
+  private _remote?: ICoincidentShellWorker | IComlinkShellWorker;
   private _externalCommands = new Map<string, IExternalCommand.IOptions>();
   private _externalStdinPromise?: PromiseDelegate<string>;
 

@@ -105,3 +105,5 @@ export namespace IShellImpl {
     wasmUrlQueryParamsCallback?: IQueryParamsCallback;
   }
 }
+
+export type WorkerType = 'coincident' | 'comlink';
