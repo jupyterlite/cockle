@@ -1,10 +1,8 @@
 const path = require('path');
 
-const entry = process.env.COCKLE_LOCAL_CORS ? './serve/index_local_cors.ts' : './serve/index_remote_cors.ts'
-
 module.exports = {
   mode: 'development',
-  entry,
+  entry: './serve/index.ts',
   module: {
     rules: [
       {
@@ -24,16 +22,6 @@ module.exports = {
   },
   output: {
     filename: 'bundle.js',
-    path: path.resolve(__dirname, 'lib')
-  },
-  devServer: {
-    static: {
-      directory: path.join(__dirname, 'assets')
-    },
-    headers: {
-      "Cross-Origin-Embedder-Policy": "require-corp",
-      "Cross-Origin-Opener-Policy": "same-origin",
-    },
-    port: 4501
+    path: path.resolve(__dirname, 'dist')
   }
 };

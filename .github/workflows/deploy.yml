@@ -31,12 +31,11 @@ jobs:
         run: |
           npm install
           npm run build
-          cp lib/* assets/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: ./demo/assets
+          path: ./demo/dist
 
   deploy:
     needs: build

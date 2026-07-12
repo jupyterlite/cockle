@@ -6,6 +6,6 @@ export namespace IDemo {
     browsingContextId: string;
     shellManager: IShellManager;
     targetDiv: HTMLElement;
-    useLocalCors: boolean;
+    useLocalCorsProxy: boolean;
   }
 }
