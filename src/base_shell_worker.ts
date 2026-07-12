@@ -116,8 +116,8 @@ export abstract class BaseShellWorker implements IShellWorker {
     }
   }
 
-  get exitCode(): number {
-    return this._shellImpl?.exitCode ?? 1;
+  exitCode(): number {
+    return this._shellImpl?.exitCode() ?? 1;
   }
 
   exitExternalCommand(result: IExternalCommandResult): void {

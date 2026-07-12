@@ -132,7 +132,7 @@ export class ShellImpl implements IShellImpl {
     return this._runContext.environment;
   }
 
-  get exitCode(): number {
+  exitCode(): number {
     return this._exitCode;
   }
 
