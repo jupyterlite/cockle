@@ -251,6 +251,7 @@ export abstract class BaseShell implements IShell {
 
     const { baseUrl, browsingContextId, color, cwd, mountpoint, wasmBaseUrl } = options;
     const { aliases, environment, initialDirectories, initialFiles } = options;
+    const { workerType } = this;
 
     return {
       shellId: this.shellId,
@@ -263,6 +264,7 @@ export abstract class BaseShell implements IShell {
       aliases: aliases ?? {},
       environment: environment ?? {},
       externalCommandConfigs: externalCommandConfigs ?? [],
+      workerType,
       sharedArrayBuffer,
       supportsServiceWorker,
       initialDirectories,

@@ -29,6 +29,7 @@ export interface IRunContext {
   size: ISizeCallback;
   termios: Termios.ITermios;
   workerIO: IWorkerIO;
+  workerType: string;
   commandModuleCache: CommandModuleCache;
   stdinContext: IStdinContext;
 }

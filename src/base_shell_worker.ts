@@ -13,7 +13,7 @@ import type {
   IWorkerCallbacks
 } from './callback_internal';
 import { StdinContext } from './context';
-import type { IShellWorker } from './defs_internal';
+import type { IShellImpl, IShellWorker } from './defs_internal';
 import type { IDriveFSOptions } from './drive_fs';
 import { ShellImpl } from './shell_impl';
 import { Termios } from './termios';
@@ -72,30 +72,21 @@ export abstract class BaseShellWorker implements IShellWorker {
       wasmUrlQueryParamsCallback
     } = callbacks;
 
-    this._shellImpl = new ShellImpl({
-      shellId: options.shellId,
-      color: options.color,
-      mountpoint: options.mountpoint,
-      cwd: options.cwd,
-      baseUrl: options.baseUrl,
-      wasmBaseUrl: options.wasmBaseUrl,
-      browsingContextId: options.browsingContextId,
-      aliases: options.aliases,
-      environment: options.environment,
-      externalCommandConfigs: options.externalCommandConfigs,
-      initialDirectories: options.initialDirectories,
-      initialFiles: options.initialFiles,
+    const implOptions: IShellImpl.IOptions = {
+      ...options,
       callExternalCommand,
       callExternalTabComplete,
       downloadModuleCallback,
       enableBufferedStdinCallback: this.enableBufferedStdin.bind(this),
       initDriveFSCallback: this.initDriveFS.bind(this),
-      terminateCallback,
-      workerIO: this._workerIO,
       stdinContext: this._stdinContext,
+      terminateCallback,
       termios: this._termios,
-      wasmUrlQueryParamsCallback
-    });
+      wasmUrlQueryParamsCallback,
+      workerIO: this._workerIO
+    };
+
+    this._shellImpl = new ShellImpl(implOptions);
     await this._shellImpl.initialize();
   }
 

@@ -330,7 +330,7 @@ test.describe('TabCompleter', () => {
 
     test('should show -- arguments', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t', '-', '-', '\t'])).toMatch(
-        /^cockle-config --\r\n--help {5}--version\r\n/
+        /^cockle-config --\r\n--help {5}--version {2}--worker\r\n/
       );
     });
 
@@ -342,7 +342,7 @@ test.describe('TabCompleter', () => {
 
     test('should show - arguments', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t', '-', '\t'])).toMatch(
-        /^cockle-config -\r\n--help {5}--version {2}-h {9}-v\r\n/
+        /^cockle-config -\r\n--help {5}--version {2}--worker {3}-h {9}-v {9}-w\r\n/
       );
     });
 

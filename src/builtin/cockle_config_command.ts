@@ -54,6 +54,7 @@ class CockleConfigArguments extends CommandArguments {
   description =
     'Inspect and optionally modify Cockle configuration. Without arguments prints all sections. Use subcommands to target specific areas.';
   version = new BooleanArgument('v', 'version', 'show cockle version');
+  worker = new BooleanArgument('w', 'worker', 'show web worker type');
   help = new BooleanArgument('h', 'help', 'display this help and exit');
   subcommands = {
     command: new CommandSubcommand('command', 'Show information about one or more commands.'),
@@ -109,6 +110,9 @@ export class CockleConfigCommand extends BuiltinCommand {
         return ExitCode.SUCCESS;
       }
       this._writeCommandConfig(context, colorByColumn, command);
+    }
+    if (args.worker.isSet) {
+      this._writeWorker(context);
     }
 
     return ExitCode.SUCCESS;
@@ -232,6 +236,11 @@ export class CockleConfigCommand extends BuiltinCommand {
   private _writeVersion(context: IRunContext) {
     const { stdout } = context;
     stdout.write(`cockle ${COCKLE_VERSION}\n`);
+  }
+
+  private _writeWorker(context: IRunContext) {
+    const { stdout, workerType } = context;
+    stdout.write(`${workerType} worker\n`);
   }
 }
 

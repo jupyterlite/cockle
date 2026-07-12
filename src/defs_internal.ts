@@ -40,6 +40,7 @@ interface IOptionsCommon {
   aliases: Record<string, string>;
   environment: Record<string, string | undefined>;
   externalCommandConfigs: IExternalCommandConfig[];
+  workerType: WorkerType;
 
   // Initial directories and files to create, for testing purposes.
   initialDirectories?: string[];
@@ -98,11 +99,11 @@ export namespace IShellImpl {
     downloadModuleCallback: IDownloadModuleCallback;
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;
     initDriveFSCallback: IInitDriveFSCallback;
-    terminateCallback: ITerminateCallback;
-    workerIO: IWorkerIO;
     stdinContext: IStdinContext;
+    terminateCallback: ITerminateCallback;
     termios: Termios.Termios;
     wasmUrlQueryParamsCallback?: IQueryParamsCallback;
+    workerIO: IWorkerIO;
   }
 }
 
