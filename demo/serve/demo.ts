@@ -7,13 +7,13 @@ import { externalCommand } from './external_command';
 import { externalRun, externalTabComplete } from './external_command_tab';
 import { externalTuiCommand } from './external_command_tui';
 
-export async function runDemo(useLocalCors: boolean) {
+export async function runDemo(useLocalCorsProxy: boolean) {
   const baseUrl = window.location.href;
   const shellManager = new ShellManager();
   const browsingContextId = await shellManager.installServiceWorker(baseUrl);
 
   const targetDiv: HTMLElement = document.getElementById('targetdiv')!;
-  const demo = new Demo({ baseUrl, browsingContextId, shellManager, targetDiv, useLocalCors });
+  const demo = new Demo({ baseUrl, browsingContextId, shellManager, targetDiv, useLocalCorsProxy });
 
   const themeSelect = document.getElementById('theme-select') as HTMLSelectElement;
   themeSelect?.addEventListener('change', (event: any) => {
@@ -73,7 +73,7 @@ export class Demo {
       }
     };
 
-    if (options.useLocalCors) {
+    if (options.useLocalCorsProxy) {
       shellOptions.environment = { GIT_CORS_PROXY: 'http://localhost:8881/' };
     }
 
