@@ -6,6 +6,7 @@ export { BaseShell } from './base_shell';
 export { BaseShellWorker } from './base_shell_worker';
 export { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
 export * from './callback';
+export { ComlinkShellWorker, IComlinkShellWorker } from './comlink_shell_worker';
 export {
   IExternalRunContext,
   IExternalTabCompleteContext,

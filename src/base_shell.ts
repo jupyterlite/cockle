@@ -7,6 +7,7 @@ import type { IMainIO, IStdinReply, IStdinRequest } from './buffered_io';
 import { ServiceWorkerMainIO, SharedArrayBufferMainIO } from './buffered_io';
 import type { IOutputCallback } from './callback';
 import type { ISize } from './callback';
+import type { IComlinkShellWorker } from './comlink_shell_worker';
 import type { IExternalRunContext } from './context';
 import type { IShell } from './defs';
 import type { IShellWorker } from './defs_internal';
@@ -16,7 +17,6 @@ import type { IExternalCommand, IExternalTabCompleteResult } from './external_co
 import { ExternalEnvironment } from './external_environment';
 import { ExternalTermios } from './external_termios';
 import { ExternalInput, ExternalOutput } from './io';
-import type { IComlinkShellWorker } from './shell_worker';
 import type { Termios } from './termios';
 
 /**
