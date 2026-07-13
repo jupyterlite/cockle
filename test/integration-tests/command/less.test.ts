@@ -48,7 +48,11 @@ test.describe('less command', () => {
 
   const stdinOptions = ['sab', 'sw'];
   stdinOptions.forEach(stdinOption => {
-    test(`should read from named file and quit using ${stdinOption}`, async ({ page }) => {
+    test(`should read from named file and quit using ${stdinOption}`, async ({
+      page,
+      supportsSAB
+    }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       await page.evaluate(async stdinOption => {
         const { shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell } = await shellSetupSimple({ color: true, stdinOption });
@@ -60,8 +64,10 @@ test.describe('less command', () => {
     });
 
     test(`should read redirected file from stdin and quit using ${stdinOption}`, async ({
-      page
+      page,
+      supportsSAB
     }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       await page.evaluate(async stdinOption => {
         const { shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell } = await shellSetupSimple({ color: true, stdinOption });
@@ -72,7 +78,8 @@ test.describe('less command', () => {
       // If less does not close, test will timeout.
     });
 
-    test(`should read from pipe and quit using ${stdinOption}`, async ({ page }) => {
+    test(`should read from pipe and quit using ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       await page.evaluate(async stdinOption => {
         const { shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell } = await shellSetupSimple({ color: true, stdinOption });

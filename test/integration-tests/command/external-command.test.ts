@@ -150,7 +150,11 @@ cmdName.forEach(cmdName => {
 
     const stdinOptions = ['sab', 'sw'];
     stdinOptions.forEach(stdinOption => {
-      test(`should read from stdin via ${stdinOption} line buffered`, async ({ page }) => {
+      test(`should read from stdin via ${stdinOption} line buffered`, async ({
+        page,
+        supportsSAB
+      }) => {
+        test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
         const output = await page.evaluate(
           async ([stdinOption, cmdName]) => {
             const { externalCommands, keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
@@ -166,8 +170,10 @@ cmdName.forEach(cmdName => {
       });
 
       test(`should read from stdin via ${stdinOption} line buffered with backspace`, async ({
-        page
+        page,
+        supportsSAB
       }) => {
+        test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
         const output = await page.evaluate(
           async ([stdinOption, cmdName]) => {
             const { externalCommands, keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
@@ -186,7 +192,11 @@ cmdName.forEach(cmdName => {
         expect(lines[2]).toBe('AC');
       });
 
-      test(`should read from stdin via ${stdinOption} char buffered`, async ({ page }) => {
+      test(`should read from stdin via ${stdinOption} char buffered`, async ({
+        page,
+        supportsSAB
+      }) => {
+        test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
         const output = await page.evaluate(
           async ([stdinOption, cmdName]) => {
             const { externalCommands, keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
@@ -201,7 +211,8 @@ cmdName.forEach(cmdName => {
         expect(output).toMatch(`${cmdName} stdinchar\r\naABB  cC\r\n`);
       });
 
-      test(`should read unicode from stdin via ${stdinOption}`, async ({ page }) => {
+      test(`should read unicode from stdin via ${stdinOption}`, async ({ page, supportsSAB }) => {
+        test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
         const output = await page.evaluate(
           async ([stdinOption, cmdName]) => {
             const { externalCommands, keys, shellSetupEmpty, terminalInput } = globalThis.cockle;

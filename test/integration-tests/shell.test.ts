@@ -383,60 +383,60 @@ test.describe('Shell', () => {
   });
 
   test.describe('synchronous stdin settings', () => {
-    test('should only report SAB if not using shell manager', async ({ page }) => {
+    test('should report available stdin options', async ({ page, supportsSAB }) => {
       const output = await shellLineSimple(page, 'cockle-config stdin');
-      expect(output).toMatch(
-        '│ shared array buffer │ sab        │ yes       │ yes     │\r\n' +
-          '│ service worker      │ sw         │           │         │'
-      );
-    });
-
-    test('should report SAB and SW if using shell manager', async ({ page }) => {
-      const output = await page.evaluate(async () => {
-        const { shellManager, shellSetupEmpty } = globalThis.cockle;
-        const { output, shell } = await shellSetupEmpty({ shellManager });
-        await shell.inputLine('cockle-config stdin');
-        return output.text;
-      });
-      expect(output).toMatch(
-        '│ shared array buffer │ sab        │ yes       │ yes     │\r\n' +
-          '│ service worker      │ sw         │ yes       │         │'
-      );
+      const lines = output.split('\r\n');
+      expect(lines.length).toBe(8);
+      expect(lines[2]).toEqual('│ synchronous stdin   │ short name │ available │ enabled │');
+      if (supportsSAB) {
+        expect(lines[4]).toEqual('│ shared array buffer │ sab        │ yes       │ yes     │');
+        expect(lines[5]).toEqual('│ service worker      │ sw         │ yes       │         │');
+      } else {
+        expect(lines[4]).toEqual('│ shared array buffer │ sab        │           │         │');
+        expect(lines[5]).toEqual('│ service worker      │ sw         │ yes       │ yes     │');
+      }
     });
 
     test('should support setting use of SW via cockle-config', async ({ page }) => {
       const output = await page.evaluate(async () => {
-        const { shellManager, shellSetupEmpty } = globalThis.cockle;
-        const { output, shell } = await shellSetupEmpty({ shellManager });
+        const { shellSetupEmpty } = globalThis.cockle;
+        const { output, shell } = await shellSetupEmpty();
         await shell.inputLine('cockle-config stdin sw');
-        return output.text;
+        return [await shell.exitCode(), output.text];
       });
-      expect(output).toMatch(
-        '│ shared array buffer │ sab        │ yes       │         │\r\n' +
-          '│ service worker      │ sw         │ yes       │ yes     │'
-      );
+      expect(output[0]).toBe(0);
+      const lines = output[1].split('\r\n');
+      expect(lines.length).toBe(8);
+      expect(lines[5]).toEqual('│ service worker      │ sw         │ yes       │ yes     │');
     });
   });
 
   test.describe('synchronous stdin', () => {
     const stdinOptions = ['sab', 'sw'];
     stdinOptions.forEach(stdinOption => {
-      test(`check parameterised stdinOption works for ${stdinOption}`, async ({ page }) => {
+      test(`check parameterised stdinOption works for ${stdinOption}`, async ({
+        page,
+        supportsSAB
+      }) => {
+        test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
         const output = await shellLineSimple(page, 'cockle-config stdin', { stdinOption });
+        const lines = output.split('\r\n');
+        expect(lines.length).toBe(8);
         if (stdinOption === 'sab') {
-          expect(output).toMatch(
-            '│ shared array buffer │ sab        │ yes       │ yes     │\r\n' +
-              '│ service worker      │ sw         │ yes       │         │'
-          );
+          expect(lines[4]).toBe('│ shared array buffer │ sab        │ yes       │ yes     │');
+          expect(lines[5]).toBe('│ service worker      │ sw         │ yes       │         │');
         } else {
-          expect(output).toMatch(
-            '│ shared array buffer │ sab        │ yes       │         │\r\n' +
-              '│ service worker      │ sw         │ yes       │ yes     │'
-          );
+          if (supportsSAB) {
+            expect(lines[4]).toBe('│ shared array buffer │ sab        │ yes       │         │');
+          } else {
+            expect(lines[4]).toBe('│ shared array buffer │ sab        │           │         │');
+          }
+          expect(lines[5]).toBe('│ service worker      │ sw         │ yes       │ yes     │');
         }
       });
 
-      test(`should support terminal stdin via ${stdinOption}`, async ({ page }) => {
+      test(`should support terminal stdin via ${stdinOption}`, async ({ page, supportsSAB }) => {
+        test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
         const output = await page.evaluate(async stdinOption => {
           const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
           const { shell, output } = await shellSetupEmpty({ stdinOption });
@@ -450,8 +450,10 @@ test.describe('Shell', () => {
       });
 
       test(`should support terminal stdin via ${stdinOption} of an ansi escape sequence`, async ({
-        page
+        page,
+        supportsSAB
       }) => {
+        test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
         const output = await page.evaluate(async stdinOption => {
           const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
           const { shell, output } = await shellSetupEmpty({ stdinOption });
@@ -464,7 +466,11 @@ test.describe('Shell', () => {
         expect(output).toMatch('wc\r\na\x1B[Bb\r\n      1       1       6\r\n');
       });
 
-      test(`should support terminal stdin via ${stdinOption} more than once`, async ({ page }) => {
+      test(`should support terminal stdin via ${stdinOption} more than once`, async ({
+        page,
+        supportsSAB
+      }) => {
+        test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
         const output = await page.evaluate(async stdinOption => {
           const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
           const { shell, output } = await shellSetupEmpty({ stdinOption });
@@ -485,8 +491,10 @@ test.describe('Shell', () => {
       });
 
       test(`should support terminal stdin with poll timeout via ${stdinOption}`, async ({
-        page
+        page,
+        supportsSAB
       }) => {
+        test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
         // Test WorkerIO.poll(timeoutMs) using vim which uses a 4 second timeout.
         const output = await page.evaluate(async stdinOption => {
           const { delay, keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
@@ -510,8 +518,10 @@ test.describe('Shell', () => {
       const delaysMs = [10, 100, 1100];
       delaysMs.forEach(delayMs => {
         test(`should support ${delayMs} ms delay between keys via ${stdinOption}`, async ({
-          page
+          page,
+          supportsSAB
         }) => {
+          test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
           const output = await page.evaluate(
             async ({ stdinOption, delayMs }) => {
               const { delay, keys, shellSetupSimple, terminalInput } = globalThis.cockle;
@@ -541,8 +551,10 @@ test.describe('Shell', () => {
         const input = sequenceOfLetters(nchar);
 
         test(`should async read ${nchar} characters from stdin via ${stdinOption}`, async ({
-          page
+          page,
+          supportsSAB
         }) => {
+          test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
           const output = await page.evaluate(
             async ({ stdinOption, input }) => {
               const { delay, keys, shellSetupEmpty } = globalThis.cockle;
@@ -566,8 +578,10 @@ test.describe('Shell', () => {
         });
 
         test(`should sync read ${nchar} characters from stdin via ${stdinOption}`, async ({
-          page
+          page,
+          supportsSAB
         }) => {
+          test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
           const output = await page.evaluate(
             async ({ stdinOption, input }) => {
               const { delay, keys, shellSetupEmpty } = globalThis.cockle;
@@ -802,7 +816,8 @@ test.describe('Shell', () => {
 
     const stdinOptions = ['sab', 'sw'];
     stdinOptions.forEach(stdinOption => {
-      test(`check prompt accepted using y via ${stdinOption}`, async ({ page }) => {
+      test(`check prompt accepted using y via ${stdinOption}`, async ({ page, supportsSAB }) => {
+        test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
         const output = await page.evaluate(
           async ({ stdinOption, initialFiles }) => {
             const { shellSetupEmpty, terminalInput } = globalThis.cockle;
@@ -829,8 +844,10 @@ test.describe('Shell', () => {
       const rejectChars = ['n', '\x03', '\x04'];
       rejectChars.forEach(rejectChar => {
         test(`check prompt rejected using ascii ${rejectChar.charCodeAt(0)} via ${stdinOption}`, async ({
-          page
+          page,
+          supportsSAB
         }) => {
+          test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
           const output = await page.evaluate(
             async ({ stdinOption, initialFiles, rejectChar }) => {
               const { shellSetupEmpty, terminalInput } = globalThis.cockle;

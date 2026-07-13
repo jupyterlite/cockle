@@ -84,7 +84,7 @@ This serves the demo locally on two separate ports:
 Use `cockle-config --worker` to check which web worker is being used.
 
 The Coincident web worker supports synchronous `stdin` via both SharedArrayBuffer and Service Worker,
-the Comlink web worker only via Service Worker.  Use `cockle-config stdin` to check the current
+the Comlink web worker only via Service Worker. Use `cockle-config stdin` to check the current
 settings, and `cockle-config stdin sab` or `cockle-config stdin sw` to switch to using
 SharedArrayBuffer or ServiceWorker respectively, if supported.
 

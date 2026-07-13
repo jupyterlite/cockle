@@ -21,8 +21,31 @@ test.describe('cockle-config command', () => {
     });
   });
 
-  test('should run stdin subcommand', async ({ page }) => {
+  ['-w', '--worker'].forEach(option => {
+    test(`should show worker using ${option}`, async ({ page, supportsSAB }) => {
+      const output = await shellLineSimple(page, `cockle-config ${option}`);
+      const worker = supportsSAB ? 'coincident' : 'comlink';
+      expect(output).toMatch('\r\n' + worker + ' worker\r\n');
+    });
+  });
+
+  test('should run stdin subcommand', async ({ page, supportsSAB }) => {
     const output = await shellLineSimple(page, 'cockle-config stdin');
+    const lines = output.split('\r\n');
+    expect(lines.length).toBe(8);
+    expect(lines[2]).toEqual('│ synchronous stdin   │ short name │ available │ enabled │');
+    if (supportsSAB) {
+      expect(lines[4]).toEqual('│ shared array buffer │ sab        │ yes       │ yes     │');
+      expect(lines[5]).toEqual('│ service worker      │ sw         │ yes       │         │');
+    } else {
+      expect(lines[4]).toEqual('│ shared array buffer │ sab        │           │         │');
+      expect(lines[5]).toEqual('│ service worker      │ sw         │ yes       │ yes     │');
+    }
+  });
+
+  test('should run stdin subcommand without service worker', async ({ page, supportsSAB }) => {
+    test.skip(!supportsSAB, 'Neither SAB nor SW');
+    const output = await shellLineSimple(page, 'cockle-config stdin', { noShellManager: true });
     const lines = output.split('\r\n');
     expect(lines.length).toBe(8);
     expect(lines[2]).toEqual('│ synchronous stdin   │ short name │ available │ enabled │');
