@@ -9,7 +9,8 @@ test.describe('nano command', () => {
 
   const stdinOptions = ['sab', 'sw'];
   stdinOptions.forEach(stdinOption => {
-    test(`should open and close using ${stdinOption}`, async ({ page }) => {
+    test(`should open and close using ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       await page.evaluate(async stdinOption => {
         const { shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell } = await shellSetupEmpty({ color: true, stdinOption });
@@ -21,7 +22,8 @@ test.describe('nano command', () => {
       // If nano does not close, test will timeout.
     });
 
-    test(`should create new file using ${stdinOption}`, async ({ page }) => {
+    test(`should create new file using ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ color: true, stdinOption });
@@ -53,7 +55,8 @@ test.describe('nano command', () => {
       expect(output).toMatch(/^cat out\r\nabc\r\ndef\r\n/);
     });
 
-    test(`should add to existing file using ${stdinOption}`, async ({ page }) => {
+    test(`should add to existing file using ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupSimple({ color: true, stdinOption });
@@ -70,7 +73,8 @@ test.describe('nano command', () => {
       expect(output).toMatch(/^cat file2\r\nSome other file\r\nNew\r\nSecond line\r\n/);
     });
 
-    test(`should delete from existing file using ${stdinOption}`, async ({ page }) => {
+    test(`should delete from existing file using ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupSimple({ color: true, stdinOption });
@@ -89,7 +93,8 @@ test.describe('nano command', () => {
       expect(output).toMatch(/^cat file2\r\nSecond line\r\n/);
     });
 
-    test(`should support backspace using ${stdinOption}`, async ({ page }) => {
+    test(`should support backspace using ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupSimple({ color: true, stdinOption });
@@ -117,7 +122,11 @@ test.describe('nano command', () => {
       expect(output).toMatch(/^cat file1\r\nContents of the fiLeZ\r\n/);
     });
 
-    test(`should support backspace when saving filename using ${stdinOption}`, async ({ page }) => {
+    test(`should support backspace when saving filename using ${stdinOption}`, async ({
+      page,
+      supportsSAB
+    }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupSimple({ color: true, stdinOption });

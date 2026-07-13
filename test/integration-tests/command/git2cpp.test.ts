@@ -113,7 +113,11 @@ test.describe('git2cpp command', () => {
 
   const stdinOptions = ['sab', 'sw'];
   stdinOptions.forEach(stdinOption => {
-    test(`should accept commit message from stdin via ${stdinOption}`, async ({ page }) => {
+    test(`should accept commit message from stdin via ${stdinOption}`, async ({
+      page,
+      supportsSAB
+    }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupSimple({ stdinOption });
@@ -133,7 +137,11 @@ test.describe('git2cpp command', () => {
       expect(lines[5]).toMatch(/^\s+Msg$/);
     });
 
-    test(`should abort commit message from stdin via ${stdinOption}`, async ({ page }) => {
+    test(`should abort commit message from stdin via ${stdinOption}`, async ({
+      page,
+      supportsSAB
+    }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupSimple({ stdinOption });

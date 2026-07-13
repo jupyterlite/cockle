@@ -29,9 +29,10 @@ test.describe('grep command', () => {
     expect(output[2]).toMatch(/^grep hello\$ file3\r\n hello\r\n/);
   });
 
-  const stdinOptions = ['sab', 'sw'];
+  const stdinOptions: string[] = ['sab', 'sw'];
   stdinOptions.forEach(stdinOption => {
-    test(`should accept stdin via ${stdinOption}`, async ({ page }) => {
+    test(`should accept stdin via ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ stdinOption });
@@ -44,7 +45,8 @@ test.describe('grep command', () => {
       expect(output).toMatch(/^grep o\r\nxyz\r\naobc\r\naobc\r\n/);
     });
 
-    test(`should accept stdin backspace via ${stdinOption}`, async ({ page }) => {
+    test(`should accept stdin backspace via ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ stdinOption });

@@ -40,6 +40,7 @@ interface IOptionsCommon {
   aliases: Record<string, string>;
   environment: Record<string, string | undefined>;
   externalCommandConfigs: IExternalCommandConfig[];
+  workerType: WorkerType;
 
   // Initial directories and files to create, for testing purposes.
   initialDirectories?: string[];
@@ -48,7 +49,7 @@ interface IOptionsCommon {
 
 // Common means common to both ShellWorker and ShellImpl.
 interface IShellCommon {
-  exitCode: number;
+  exitCode(): number;
   exitExternalCommand(result: IExternalCommandResult): void;
   externalOutput(text: string, isStderr: boolean): void;
   input(char: string): Promise<void>;
@@ -98,10 +99,12 @@ export namespace IShellImpl {
     downloadModuleCallback: IDownloadModuleCallback;
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;
     initDriveFSCallback: IInitDriveFSCallback;
-    terminateCallback: ITerminateCallback;
-    workerIO: IWorkerIO;
     stdinContext: IStdinContext;
+    terminateCallback: ITerminateCallback;
     termios: Termios.Termios;
     wasmUrlQueryParamsCallback?: IQueryParamsCallback;
+    workerIO: IWorkerIO;
   }
 }
+
+export type WorkerType = 'coincident' | 'comlink';

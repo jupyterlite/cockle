@@ -9,7 +9,11 @@ test.describe('vim command', () => {
 
   const stdinOptions = ['sab', 'sw'];
   stdinOptions.forEach(stdinOption => {
-    test(`should run interactively and exit using ${stdinOption}`, async ({ page }) => {
+    test(`should run interactively and exit using ${stdinOption}`, async ({
+      page,
+      supportsSAB
+    }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       await page.evaluate(async stdinOption => {
         // Use color: true to ensure TERM env var is set.
         const { shellSetupEmpty, terminalInput } = globalThis.cockle;
@@ -20,7 +24,8 @@ test.describe('vim command', () => {
       }, stdinOption);
     });
 
-    test(`should create new file using ${stdinOption}`, async ({ page }) => {
+    test(`should create new file using ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ color: true, stdinOption });
@@ -51,7 +56,8 @@ test.describe('vim command', () => {
       expect(output).toMatch(/^cat out\r\nhi QW\r\n/);
     });
 
-    test(`should add to existing file using ${stdinOption}`, async ({ page }) => {
+    test(`should add to existing file using ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupSimple({ color: true, stdinOption });
@@ -77,7 +83,8 @@ test.describe('vim command', () => {
       expect(output).toMatch(/^cat file2\r\nSome other file\r\nNew\r\nSecond line\r\n/);
     });
 
-    test(`should delete from existing file using ${stdinOption}`, async ({ page }) => {
+    test(`should delete from existing file using ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { shellSetupSimple, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupSimple({ color: true, stdinOption });
@@ -92,8 +99,10 @@ test.describe('vim command', () => {
     });
 
     test(`should support multi-character escape sequences using ${stdinOption}`, async ({
-      page
+      page,
+      supportsSAB
     }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { shell, output } = await globalThis.cockle.shellSetupEmpty({
           color: true,
@@ -114,7 +123,11 @@ test.describe('vim command', () => {
       expect(output).toMatch(/^cat out\r\naXYbc\r\ndef\r\n/);
     });
 
-    test(`should support backspace when editing using ${stdinOption}`, async ({ page }) => {
+    test(`should support backspace when editing using ${stdinOption}`, async ({
+      page,
+      supportsSAB
+    }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { shell, output } = await globalThis.cockle.shellSetupSimple({
           color: true,
@@ -134,7 +147,11 @@ test.describe('vim command', () => {
       expect(output).toMatch(/^cat file1\r\nContents of the izle\r\n/);
     });
 
-    test(`should support backspace when saving using ${stdinOption}`, async ({ page }) => {
+    test(`should support backspace when saving using ${stdinOption}`, async ({
+      page,
+      supportsSAB
+    }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { shell, output } = await globalThis.cockle.shellSetupSimple({
           color: true,

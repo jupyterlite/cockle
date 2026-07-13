@@ -15,6 +15,7 @@ export interface IOptions {
   externalCommands?: IExternalCommand.IOptions[];
   initialDirectories?: string[];
   initialFiles?: IShell.IFiles;
+  noShellManager?: boolean;
   shellId?: string;
   shellManager?: ShellManager;
   stdinOption?: string; // Set initial synchronous stdin option,
@@ -63,12 +64,13 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
     initialFiles['dir/subdir/nestedfile'] = '';
   }
 
-  const baseUrl = 'http://localhost:8000/';
-  const { aliases, cwd, environment, externalCommands, shellId, stdinOption } = options;
-  let { shellManager } = options;
-  if (stdinOption !== undefined && shellManager === undefined) {
-    shellManager = new ShellManager();
-  }
+  const baseUrl = location.href;
+  const { aliases, cwd, environment, externalCommands, noShellManager, shellId, stdinOption } =
+    options;
+
+  // All tests have a ShellManager unless explicitly not required, so that they can use the service
+  // worker.
+  const shellManager = options.shellManager ?? (noShellManager ? undefined : new ShellManager());
 
   let browsingContextId: string | undefined;
   if (shellManager !== undefined) {
@@ -107,6 +109,9 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
   if (stdinOption) {
     // Set initial synchronous stdin option before enabling recording of output.
     await inputLine(`cockle-config stdin ${stdinOption}`);
+    if ((await shell.exitCode()) !== 0) {
+      throw new Error(`Setting stdinOption '${stdinOption}' failed`);
+    }
   }
 
   output.start();

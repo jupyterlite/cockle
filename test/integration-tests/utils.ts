@@ -1,8 +1,14 @@
 import { type Page, test as base } from '@playwright/test';
 import type { IOptions } from '../serve/shell_setup';
 
+export type TestOptions = {
+  supportsSAB: boolean;
+};
+
 // Override page fixture to navigate to specific page.
-export const test = base.extend({
+export const test = base.extend<TestOptions>({
+  supportsSAB: [false, { option: true }],
+
   page: async ({ page }, use) => {
     await page.goto('/');
     await use(page);

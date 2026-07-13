@@ -49,7 +49,7 @@ export class ShellImpl implements IShellImpl {
       mountpoint: options.mountpoint ?? '/drive'
     };
 
-    const workerIO = options.workerIO;
+    const { shellId, stdinContext, termios, workerIO, workerType } = options;
 
     // Content within which commands are run.
     this._runContext = {
@@ -63,16 +63,17 @@ export class ShellImpl implements IShellImpl {
       ),
       environment: new Environment(options.color, options.shellId, options.browsingContextId),
       history: new History(),
-      shellId: options.shellId,
+      shellId,
       terminate: this.terminate.bind(this),
       stdin: this._dummyInput,
       stdout: this._dummyOutput,
       stderr: this._dummyOutput,
       size: () => this.size,
-      termios: options.termios,
+      termios,
       workerIO,
+      workerType,
       commandModuleCache: this._commandModuleLoader.cache,
-      stdinContext: options.stdinContext
+      stdinContext
     };
 
     // External commands.
@@ -132,7 +133,7 @@ export class ShellImpl implements IShellImpl {
     return this._runContext.environment;
   }
 
-  get exitCode(): number {
+  exitCode(): number {
     return this._exitCode;
   }
 

@@ -107,7 +107,11 @@ test.describe('wasm-test', () => {
 
   const stdinOptions = ['sab', 'sw'];
   stdinOptions.forEach(stdinOption => {
-    test(`should read from stdin via ${stdinOption} line buffered`, async ({ page }) => {
+    test(`should read from stdin via ${stdinOption} line buffered`, async ({
+      page,
+      supportsSAB
+    }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ stdinOption });
@@ -120,8 +124,10 @@ test.describe('wasm-test', () => {
     });
 
     test(`should read from stdin via ${stdinOption} line buffered with backspace`, async ({
-      page
+      page,
+      supportsSAB
     }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ stdinOption });
@@ -137,8 +143,10 @@ test.describe('wasm-test', () => {
     });
 
     test(`should read from stdin via ${stdinOption} line buffered with backspaces`, async ({
-      page
+      page,
+      supportsSAB
     }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { backspace, EOT } = keys;
@@ -154,7 +162,11 @@ test.describe('wasm-test', () => {
       expect(lines[2]).toBe('C');
     });
 
-    test(`should read from stdin via ${stdinOption} char buffered`, async ({ page }) => {
+    test(`should read from stdin via ${stdinOption} char buffered`, async ({
+      page,
+      supportsSAB
+    }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
         const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ stdinOption });

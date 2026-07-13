@@ -6,6 +6,8 @@ Used in the [JupyterLite terminal extension](https://github.com/jupyterlite/term
 
 Try it out outside of JupyterLite on GitHub Pages at https://jupyterlite.github.io/cockle.
 
+<img alt="Demo" src="demo.png" width="800px">
+
 Commands of the following types are supported:
 
 1. Built-in TypeScript commands such as `history`. The source code for these is within this repo.
@@ -65,27 +67,26 @@ You can use `conda`, `mamba` or `pixi` instead of `micromamba` here. A copy of
 ## Demo
 
 The `cockle` repository includes a demo so that you can easily try it out interactively in a web
-browser. Once you have built `cockle`, build the demo using:
+browser. Once you have built `cockle`, build and serve the demo using:
 
 ```bash
 cd demo
 npm install
 npm run build
-```
-
-and then serve he demo using:
-
-```bash
 npm run serve
 ```
 
-and open a browser at the specified URL:
+This serves the demo locally on two separate ports:
 
-<img alt="Demo" src="demo.png" width="800px">
+- http://localhost:4500/ without cross-origin headers using a [Comlink](https://github.com/googlechromelabs/comlink) web worker.
+- http://localhost:4501/ with cross-origin headers using a [Coincident](https://github.com/WebReflection/coincident) web worker.
 
-The demo is served with cross-origin headers so that is supports synchronous `stdin` via both
-SharedArrayBuffer and ServiceWorker. Use `cockle-config stdin` to check the current settings, and
-`cockle-config stdin sw` to switch to using the ServiceWorker.
+Use `cockle-config --worker` to check which web worker is being used.
+
+The Coincident web worker supports synchronous `stdin` via both SharedArrayBuffer and Service Worker,
+the Comlink web worker only via Service Worker. Use `cockle-config stdin` to check the current
+settings, and `cockle-config stdin sab` or `cockle-config stdin sw` to switch to using
+SharedArrayBuffer or ServiceWorker respectively, if supported.
 
 The demo can also be served with a local CORS proxy which is useful for trying out `git clone` of
 remote repositories. For this use:
@@ -93,6 +94,9 @@ remote repositories. For this use:
 ```bash
 npm run serve-with-cors-proxy
 ```
+
+The demo deployment at https://jupyterlite.github.io/cockle is served without cross-origin headers
+as that is not supported by GitHub Pages.
 
 ---
 
