@@ -2,6 +2,43 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.7.0
+
+Cockle `1.7.0` adds a new [coincident](https://github.com/WebReflection/coincident) web worker which is used in deployments that are served cross-origin isolated, otherwise the default [comlink](https://github.com/googlechromelabs/comlink) web worker is used. There is no functional change for users of Cockle or the JupyterLite terminal, but downstream developers who are inheriting from and modifying these libraries may have to make changes to support the choice of web worker.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.6.0...aa81af72de9f45a5e75415b425483ca73d92c866))
+
+### Enhancements made
+
+- Update `coincident` from `1.2.3` to `4.1.1` [#336](https://github.com/jupyterlite/cockle/pull/336) ([@ianthomas23](https://github.com/ianthomas23))
+- Implement a `coincident` web worker [#335](https://github.com/jupyterlite/cockle/pull/335) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Fix handling of errors during `cd` [#333](https://github.com/jupyterlite/cockle/pull/333) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Serve demo and tests using `static-handler` instead of `rspack-dev-server` [#334](https://github.com/jupyterlite/cockle/pull/334) ([@ianthomas23](https://github.com/ianthomas23))
+- Split external `stdin` request into separate request and return calls [#332](https://github.com/jupyterlite/cockle/pull/332) ([@ianthomas23](https://github.com/ianthomas23))
+- Separate calls to start and end external commands passed to/from webworker [#331](https://github.com/jupyterlite/cockle/pull/331) ([@ianthomas23](https://github.com/ianthomas23))
+- Use typescript `Record` type [#330](https://github.com/jupyterlite/cockle/pull/330) ([@ianthomas23](https://github.com/ianthomas23))
+- Colour demo border the same as terminal background [#329](https://github.com/jupyterlite/cockle/pull/329) ([@ianthomas23](https://github.com/ianthomas23))
+- Refactor comlink worker [#328](https://github.com/jupyterlite/cockle/pull/328) ([@ianthomas23](https://github.com/ianthomas23))
+- Update demo to use `xtermjs` 6 [#327](https://github.com/jupyterlite/cockle/pull/327) ([@ianthomas23](https://github.com/ianthomas23))
+- Bump actions/checkout from 6 to 7 in the actions group [#326](https://github.com/jupyterlite/cockle/pull/326) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-06-22&to=2026-07-16&type=c))
+
+@ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-06-22..2026-07-16&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 1.7.0-a1
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.7.0-a0...aa81af72de9f45a5e75415b425483ca73d92c866))
@@ -18,8 +55,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-07-13&to=2026-07-16&type=c))
 
 @ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-07-13..2026-07-16&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 1.7.0-a0
 
