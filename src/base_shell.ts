@@ -1,7 +1,7 @@
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import type { ISignal } from '@lumino/signaling';
 import { Signal } from '@lumino/signaling';
-import coincident from 'coincident';
+import coincident from 'coincident/main';
 import { proxy, wrap } from 'comlink';
 import { ansi } from './ansi';
 import type { IMainIO, IStdinReply, IStdinRequest } from './buffered_io';
@@ -114,7 +114,7 @@ export abstract class BaseShell implements IShell {
   ): ICoincidentShellWorker | IComlinkShellWorker {
     const { worker } = options;
     if (this.workerType === 'coincident') {
-      const remote = coincident(worker) as ICoincidentShellWorker;
+      const remote = (worker as any).proxy as ICoincidentShellWorker;
 
       remote.callExternalCommand = this.callExternalCommand.bind(this);
       remote.callExternalTabComplete = this.callExternalTabComplete.bind(this);
@@ -397,7 +397,16 @@ export abstract class BaseShell implements IShell {
     // Register external commands here, the names are passed through to the WebWorker.
     options.externalCommands?.forEach(cmd => this._externalCommands.set(cmd.name, cmd));
 
-    this._worker = this.initWorker(options);
+    if (this.workerType === 'coincident') {
+      const { Worker: patchedWorker } = coincident();
+      const originalWorker = globalThis.Worker;
+      globalThis.Worker = patchedWorker;
+      this._worker = this.initWorker(options);
+      globalThis.Worker = originalWorker;
+    } else {
+      this._worker = this.initWorker(options);
+    }
+
     this._initRemote(options).then(this._ready.resolve.bind(this._ready));
   }
 

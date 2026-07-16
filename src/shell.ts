@@ -18,11 +18,11 @@ export class Shell extends BaseShell {
    * Load the web worker.
    */
   protected override initWorker(options: IShell.IOptions): Worker {
-    if (this.workerType === 'coincident') {
-      console.log('Cockle Shell.initWorker coincident');
+    const { workerType } = this;
+    console.log(`Cockle Shell.initWorker ${workerType}`);
+    if (workerType === 'coincident') {
       return new Worker(new URL('./coincident.worker.js', import.meta.url), { type: 'module' });
     } else {
-      console.log('Cockle Shell.initWorker comlink');
       return new Worker(new URL('./comlink.worker.js', import.meta.url), { type: 'module' });
     }
   }
