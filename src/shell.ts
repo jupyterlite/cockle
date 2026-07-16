@@ -1,4 +1,3 @@
-import coincident from 'coincident/main';
 import { BaseShell } from './base_shell';
 import type { IShell } from './defs';
 
@@ -19,18 +18,11 @@ export class Shell extends BaseShell {
    * Load the web worker.
    */
   protected override initWorker(options: IShell.IOptions): Worker {
-    if (this.workerType === 'coincident') {
-      console.log('Cockle Shell.initWorker coincident');
-      const { Worker: patchedWorker } = coincident();
-      const originalWorker = globalThis.Worker;
-      globalThis.Worker = patchedWorker;
-      const worker = new Worker(new URL('./coincident.worker.js', import.meta.url), {
-        type: 'module'
-      });
-      globalThis.Worker = originalWorker;
-      return worker;
+    const { workerType } = this;
+    console.log(`Cockle Shell.initWorker ${workerType}`);
+    if (workerType === 'coincident') {
+      return new Worker(new URL('./coincident.worker.js', import.meta.url), { type: 'module' });
     } else {
-      console.log('Cockle Shell.initWorker comlink');
       return new Worker(new URL('./comlink.worker.js', import.meta.url), { type: 'module' });
     }
   }
