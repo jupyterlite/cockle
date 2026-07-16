@@ -1,7 +1,6 @@
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import type { ISignal } from '@lumino/signaling';
 import { Signal } from '@lumino/signaling';
-import coincident from 'coincident';
 import { proxy, wrap } from 'comlink';
 import { ansi } from './ansi';
 import type { IMainIO, IStdinReply, IStdinRequest } from './buffered_io';
@@ -114,7 +113,7 @@ export abstract class BaseShell implements IShell {
   ): ICoincidentShellWorker | IComlinkShellWorker {
     const { worker } = options;
     if (this.workerType === 'coincident') {
-      const remote = coincident(worker) as ICoincidentShellWorker;
+      const remote = (worker as any).proxy as ICoincidentShellWorker;
 
       remote.callExternalCommand = this.callExternalCommand.bind(this);
       remote.callExternalTabComplete = this.callExternalTabComplete.bind(this);
