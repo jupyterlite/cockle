@@ -20,55 +20,138 @@ test.describe('git2cpp command', () => {
     expect(lines[1]).toBe('The following argument was not expected: --unknown');
   });
 
-  test('should create and modify repo', async ({ page }) => {
+  test('should support git init and commit workflow', async ({ page }) => {
     // Simple init, add, commit, status, log workflow.
     const output = await page.evaluate(async cmdName => {
       const { shell, output } = await globalThis.cockle.shellSetupEmpty();
 
       await shell.inputLine('git init .');
-      const text0 = output.textAndClear();
-      const exit0 = await shell.exitCode();
+      const ret = [await shell.exitCode(), output.textAndClear()];
+
+      await shell.inputLine('tree -aC .');
+      ret.push(await shell.exitCode(), output.textAndClear());
 
       await shell.inputLine('echo Hello > file.txt');
       await shell.inputLine('git add file.txt');
-      const text1 = output.textAndClear();
-      const exit1 = await shell.exitCode();
+      ret.push(await shell.exitCode(), output.textAndClear());
 
       await shell.inputLine('git commit -m "My commit message"');
-      const text2 = output.textAndClear();
-      const exit2 = await shell.exitCode();
+      ret.push(await shell.exitCode(), output.textAndClear());
 
       await shell.inputLine('git status');
-      const text3 = output.textAndClear();
-      const exit3 = await shell.exitCode();
+      ret.push(await shell.exitCode(), output.textAndClear());
 
       await shell.inputLine('git log');
-      const text4 = output.textAndClear();
-      const exit4 = await shell.exitCode();
+      ret.push(await shell.exitCode(), output.textAndClear());
 
-      return [exit0, text0, exit1, text1, exit2, text2, exit3, text3, exit4, text4];
+      await shell.inputLine('rm -rf .git file.txt');
+      ret.push(await shell.exitCode());
+      output.clear();
+      await shell.inputLine('ls -a');
+      ret.push(await shell.exitCode(), output.textAndClear());
+
+      return ret;
     });
 
     // git init
     expect(output[0]).toBe(0);
 
-    // git add
+    // tree
     expect(output[2]).toBe(0);
+    expect(output[3]).toMatch(
+      'tree -aC .\r\n' +
+      '.\r\n' +
+      '└── .git\r\n' +
+      '    ├── HEAD\r\n' +
+      '    ├── config\r\n' +
+      '    ├── description\r\n' +
+      '    ├── hooks\r\n' +
+      '    │   └── README.sample\r\n' +
+      '    ├── info\r\n' +
+      '    │   └── exclude\r\n' +
+      '    ├── objects\r\n' +
+      '    │   ├── info\r\n' +
+      '    │   └── pack\r\n' +
+      '    └── refs\r\n' +
+      '        ├── heads\r\n' +
+      '        └── tags\r\n' +
+      '\r\n' +
+      '10 directories, 5 files\r\n'
+    );
 
-    // git commit
+    // git add
     expect(output[4]).toBe(0);
 
-    // git status
+    // git commit
     expect(output[6]).toBe(0);
-    expect(output[7]).toMatch('\r\nOn branch master\r\n');
-    expect(output[7]).toMatch('\r\nNothing to commit, working tree clean\r\n');
+
+    // git status
+    expect(output[8]).toBe(0);
+    expect(output[9]).toMatch('\r\nOn branch master\r\n');
+    expect(output[9]).toMatch('\r\nNothing to commit, working tree clean\r\n');
 
     // git log
-    expect(output[8]).toBe(0);
-    expect(output[9]).toMatch(/commit [0-9A-Fa-f]{40}/);
-    expect(output[9]).toMatch(/Author:\s+Jane Doe\s+jane.doe@blabla.com/);
-    expect(output[9]).toMatch(/Date:\s+/);
-    expect(output[9]).toMatch('My commit message');
+    expect(output[10]).toBe(0);
+    expect(output[11]).toMatch(/commit [0-9A-Fa-f]{40}/);
+    expect(output[11]).toMatch(/Author:\s+Jane Doe\s+jane.doe@blabla.com/);
+    expect(output[11]).toMatch(/Date:\s+/);
+    expect(output[11]).toMatch('My commit message');
+
+    // rm -rf
+    expect(output[12]).toBe(0);
+    expect(output[13]).toBe(0);
+    expect(output[14]).toMatch('ls -a\r\n.  ..\r\n');
+  });
+
+  test('should support git init --bare', async ({ page }) => {
+    const output = await page.evaluate(async cmdName => {
+      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+
+      await shell.inputLine('git init --bare');
+      const ret = [await shell.exitCode(), output.textAndClear()];
+
+      await shell.inputLine('tree -aC .');
+      ret.push(await shell.exitCode(), output.textAndClear());
+
+      await shell.inputLine('rm -rf *');
+      ret.push(await shell.exitCode());
+      output.clear();
+      await shell.inputLine('ls -a');
+      ret.push(await shell.exitCode(), output.textAndClear());
+
+      return ret;
+    });
+
+    // git init --bare
+    expect(output[0]).toBe(0);
+    expect(output[1]).toMatch('\r\nInitialized empty Git repository in /drive/\r\n');
+
+    // tree
+    expect(output[2]).toBe(0);
+    expect(output[3]).toMatch(
+      'tree -aC .\r\n' +
+      '.\r\n' +
+      '├── HEAD\r\n' +
+      '├── config\r\n' +
+      '├── description\r\n' +
+      '├── hooks\r\n' +
+      '│   └── README.sample\r\n' +
+      '├── info\r\n' +
+      '│   └── exclude\r\n' +
+      '├── objects\r\n' +
+      '│   ├── info\r\n' +
+      '│   └── pack\r\n' +
+      '└── refs\r\n' +
+      '    ├── heads\r\n' +
+      '    └── tags\r\n' +
+      '\r\n' +
+      '9 directories, 5 files\r\n'
+    );
+
+    // rm -rf
+    expect(output[4]).toBe(0);
+    expect(output[5]).toBe(0);
+    expect(output[6]).toMatch('ls -a\r\n.  ..\r\n');
   });
 
   test('should clone repo', async ({ page }) => {
@@ -85,6 +168,12 @@ test.describe('git2cpp command', () => {
       ret.push(await shell.exitCode(), output.textAndClear());
 
       await shell.inputLine('git log -n 1');
+      ret.push(await shell.exitCode(), output.textAndClear());
+
+      await shell.inputLine('cd ..; rm -rf cockle-playground');
+      ret.push(await shell.exitCode());
+      output.clear();
+      await shell.inputLine('ls -a');
       ret.push(await shell.exitCode(), output.textAndClear());
 
       return ret;
@@ -109,6 +198,11 @@ test.describe('git2cpp command', () => {
     expect(output[7]).toMatch(/commit [0-9A-Fa-f]{40}/);
     expect(output[7]).toMatch(/Author:\s/);
     expect(output[7]).toMatch(/Date:\s+/);
+
+    // rm -rf
+    expect(output[8]).toBe(0);
+    expect(output[9]).toBe(0);
+    expect(output[10]).toMatch('ls -a\r\n.  ..\r\n');
   });
 
   const stdinOptions = ['sab', 'sw'];
