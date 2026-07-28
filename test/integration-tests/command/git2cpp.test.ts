@@ -60,23 +60,23 @@ test.describe('git2cpp command', () => {
     expect(output[2]).toBe(0);
     expect(output[3]).toMatch(
       'tree -aC .\r\n' +
-      '.\r\n' +
-      '└── .git\r\n' +
-      '    ├── HEAD\r\n' +
-      '    ├── config\r\n' +
-      '    ├── description\r\n' +
-      '    ├── hooks\r\n' +
-      '    │   └── README.sample\r\n' +
-      '    ├── info\r\n' +
-      '    │   └── exclude\r\n' +
-      '    ├── objects\r\n' +
-      '    │   ├── info\r\n' +
-      '    │   └── pack\r\n' +
-      '    └── refs\r\n' +
-      '        ├── heads\r\n' +
-      '        └── tags\r\n' +
-      '\r\n' +
-      '10 directories, 5 files\r\n'
+        '.\r\n' +
+        '└── .git\r\n' +
+        '    ├── HEAD\r\n' +
+        '    ├── config\r\n' +
+        '    ├── description\r\n' +
+        '    ├── hooks\r\n' +
+        '    │   └── README.sample\r\n' +
+        '    ├── info\r\n' +
+        '    │   └── exclude\r\n' +
+        '    ├── objects\r\n' +
+        '    │   ├── info\r\n' +
+        '    │   └── pack\r\n' +
+        '    └── refs\r\n' +
+        '        ├── heads\r\n' +
+        '        └── tags\r\n' +
+        '\r\n' +
+        '10 directories, 5 files\r\n'
     );
 
     // git add
@@ -130,22 +130,22 @@ test.describe('git2cpp command', () => {
     expect(output[2]).toBe(0);
     expect(output[3]).toMatch(
       'tree -aC .\r\n' +
-      '.\r\n' +
-      '├── HEAD\r\n' +
-      '├── config\r\n' +
-      '├── description\r\n' +
-      '├── hooks\r\n' +
-      '│   └── README.sample\r\n' +
-      '├── info\r\n' +
-      '│   └── exclude\r\n' +
-      '├── objects\r\n' +
-      '│   ├── info\r\n' +
-      '│   └── pack\r\n' +
-      '└── refs\r\n' +
-      '    ├── heads\r\n' +
-      '    └── tags\r\n' +
-      '\r\n' +
-      '9 directories, 5 files\r\n'
+        '.\r\n' +
+        '├── HEAD\r\n' +
+        '├── config\r\n' +
+        '├── description\r\n' +
+        '├── hooks\r\n' +
+        '│   └── README.sample\r\n' +
+        '├── info\r\n' +
+        '│   └── exclude\r\n' +
+        '├── objects\r\n' +
+        '│   ├── info\r\n' +
+        '│   └── pack\r\n' +
+        '└── refs\r\n' +
+        '    ├── heads\r\n' +
+        '    └── tags\r\n' +
+        '\r\n' +
+        '9 directories, 5 files\r\n'
     );
 
     // rm -rf
