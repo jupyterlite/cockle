@@ -45,7 +45,35 @@ function getChannelsString(): string {
 
 function getWasmPackageInfo(micromambaCmd: string, envPath: string): any {
   const cmd = `${micromambaCmd} -p ${envPath} list --json`;
-  return JSON.parse(execSync(cmd).toString());
+  console.log(`Running command: ${cmd}`);
+  const micromambaList = JSON.parse(execSync(cmd).toString());
+
+  // Schema for `micromamba list --json` output for micromamba < 2.9.0
+  const packagesSchema = zod.array(zod.object({
+    name: zod.string(),
+    build_string: zod.string(),
+    platform: zod.string(),
+    version: zod.string(),
+    channel: zod.string()
+  }));
+  // Schema for `micromamba list --json` output for micromamba >= 2.9.0
+  const listSchema = zod.object({
+    log_history: zod.optional(zod.any()),
+    packages: packagesSchema
+  });
+
+  let parsed = listSchema.safeParse(micromambaList);
+  if (parsed.success) {
+    return parsed.data.packages;
+  }
+
+  // For backward compatibility, try micromamba < 2.9.0 schema.
+  parsed = packagesSchema.safeParse(micromambaList);
+  if (parsed.success) {
+    return parsed.data;
+  }
+
+  throw parsed.error;  // ZodError.
 }
 
 // Handle environment variables.
