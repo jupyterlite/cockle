@@ -49,13 +49,15 @@ function getWasmPackageInfo(micromambaCmd: string, envPath: string): any {
   const micromambaList = JSON.parse(execSync(cmd).toString());
 
   // Schema for `micromamba list --json` output for micromamba < 2.9.0
-  const packagesSchema = zod.array(zod.object({
-    name: zod.string(),
-    build_string: zod.string(),
-    platform: zod.string(),
-    version: zod.string(),
-    channel: zod.string()
-  }));
+  const packagesSchema = zod.array(
+    zod.object({
+      name: zod.string(),
+      build_string: zod.string(),
+      platform: zod.string(),
+      version: zod.string(),
+      channel: zod.string()
+    })
+  );
   // Schema for `micromamba list --json` output for micromamba >= 2.9.0
   const listSchema = zod.object({
     log_history: zod.optional(zod.any()),
@@ -73,7 +75,7 @@ function getWasmPackageInfo(micromambaCmd: string, envPath: string): any {
     return parsed.data;
   }
 
-  throw parsed.error;  // ZodError.
+  throw parsed.error; // ZodError.
 }
 
 // Handle environment variables.
