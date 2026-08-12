@@ -283,6 +283,27 @@ cmdName.forEach(cmdName => {
       expect(output[1]).toMatch('\r\nsize: rows 10 x columns 20\r\n');
       expect(output[2]).toMatch('\r\nsize: rows 0 x columns 0\r\n');
     });
+
+    test('should emit commandStateChanged signals', async ({ page }) => {
+      const output = await page.evaluate(async cmdName => {
+        const { externalCommands, shellSetupEmpty } = globalThis.cockle;
+        const { commandStateChanged, shell } = await shellSetupEmpty({
+          externalCommands,
+          wantCommandStateChanged: true
+        });
+        await shell.inputLine(`${cmdName} stdout`);
+        return commandStateChanged;
+      }, cmdName);
+      expect(output).toHaveLength(3);
+      expect(output[0]).toEqual({
+        commandId: 0,
+        name: cmdName,
+        args: ['stdout'],
+        state: 'loading'
+      });
+      expect(output[1]).toEqual({ commandId: 0, state: 'running' });
+      expect(output[2]).toEqual({ commandId: 0, exitCode: 0, state: 'finished' });
+    });
   });
 });
 

@@ -16,7 +16,8 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
   }
 
   async run(context: IRunContext): Promise<number> {
-    const { name } = context;
+    const { name, args } = context;
+
     const jsModule = await this.module.loader.getJavaScriptModule(
       this.packageName,
       this.moduleName
@@ -30,7 +31,7 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
     }
 
     // Narrow context passed to JavaScript command so that we don't leak cockle internals.
-    const { args, environment, fileSystem, shellId, stdout, stderr, termios, size } = context;
+    const { commandId, environment, fileSystem, shellId, stdout, stderr, termios, size } = context;
     const stdin = new JavaScriptInput(context.stdin);
     const jsContext: IJavaScriptRunContext = {
       name,
@@ -44,6 +45,8 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
       size,
       termios
     };
+
+    context.commandRegistry.commandStateChangedCallback({ commandId, state: 'running' });
 
     try {
       return await jsModule.run(jsContext);

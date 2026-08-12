@@ -9,6 +9,7 @@ import type {
 import type {
   ICallExternalCommandNoReturn,
   ICallExternalTabComplete,
+  ICommandStateChangedCallback,
   IDownloadModuleCallback,
   IEnableBufferedStdinCallback,
   IExternalCommandResult,
@@ -68,6 +69,7 @@ export interface IShellWorker extends IShellCommon {
   registerCallbacks(
     callExternalCommand: ICallExternalCommandNoReturn,
     callExternalTabComplete: ICallExternalTabComplete,
+    commandStateChangedCallback: ICommandStateChangedCallback,
     downloadModuleCallback: IDownloadModuleCallback,
     enableBufferedStdinCallback: IEnableBufferedStdinCallback,
     externalInputReturn: IExternalInputReturnCallback,
@@ -96,6 +98,7 @@ export namespace IShellImpl {
   export interface IOptions extends IOptionsCommon {
     callExternalCommand: ICallExternalCommandNoReturn;
     callExternalTabComplete: ICallExternalTabComplete;
+    commandStateChangedCallback: ICommandStateChangedCallback;
     downloadModuleCallback: IDownloadModuleCallback;
     enableBufferedStdinCallback: IEnableBufferedStdinCallback;
     initDriveFSCallback: IInitDriveFSCallback;

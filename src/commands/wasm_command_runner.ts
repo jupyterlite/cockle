@@ -19,8 +19,10 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
   }
 
   async run(context: IRunContext): Promise<number> {
-    const { name, args, workerIO, fileSystem, stdin, stdout, stderr, termios, size } = context;
+    const { name, args, workerIO, commandId, fileSystem, stdin, stdout, stderr, termios, size } =
+      context;
     const { wasmBaseUrl } = this.module.loader;
+    const { commandStateChangedCallback } = context.commandRegistry;
     const avoidInfinitePollTimeout = name === 'less';
 
     const start = performance.now();
@@ -111,7 +113,9 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     const wasm = await wasmModule({
       thisProgram: name,
       arguments: args,
-      locateFile: (path: string) => joinURL(wasmBaseUrl, this.packageName + '/' + path),
+      locateFile: (path: string) => {
+        return joinURL(wasmBaseUrl, this.packageName + '/' + path);
+      },
       onExit: (moduleExitCode: number) => setExitCode(moduleExitCode),
       quit: (moduleExitCode: number, toThrow: any) => setExitCode(moduleExitCode),
       preRun: [
@@ -152,6 +156,8 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
             stream_ops.read = read;
             stream_ops.write = write;
           }
+
+          commandStateChangedCallback({ commandId, state: 'running' });
         }
       ],
       stdin: this._inputHandler(stdin),

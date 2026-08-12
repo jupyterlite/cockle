@@ -4,10 +4,15 @@ import type { ICommandRunner } from './command_runner';
 import { CommandType } from './command_type';
 import { ExternalCommandRunner } from './external_command_runner';
 import * as AllBuiltinCommands from '../builtin';
-import type { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
+import type {
+  ICallExternalCommand,
+  ICallExternalTabComplete,
+  ICommandStateChangedCallback
+} from '../callback_internal';
 
 export class CommandRegistry {
   constructor(
+    readonly commandStateChangedCallback: ICommandStateChangedCallback,
     readonly callExternalCommand: ICallExternalCommand,
     readonly callExternalTabComplete: ICallExternalTabComplete
   ) {

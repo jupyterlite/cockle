@@ -32,6 +32,7 @@ export class CoincidentShellWorker extends BaseShellWorker implements IShellWork
     this.registerCallbacks(
       proxy.callExternalCommand.bind(proxy),
       proxy.callExternalTabComplete.bind(proxy),
+      proxy.commandStateChangedCallback.bind(proxy),
       proxy.downloadModuleCallback.bind(proxy),
       proxy.enableBufferedStdinCallback.bind(proxy),
       proxy.externalInputReturn.bind(proxy),

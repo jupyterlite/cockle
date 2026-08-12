@@ -42,71 +42,8 @@ export abstract class BaseShell implements IShell {
     this._initialize(options);
   }
 
-  /**
-   * Call an external command, i.e. one that runs in the browser UI thread.
-   */
-  callExternalCommand(
-    name: string,
-    args: string[],
-    environment: Record<string, string>,
-    stdinIsTerminal: boolean,
-    stdoutIsTerminal: boolean,
-    stderrIsTerminal: boolean,
-    termiosFlags: Termios.IFlags
-  ): void {
-    const remote = this._remote!;
-    const commandOptions = this._externalCommands.get(name);
-    if (commandOptions === undefined) {
-      // This should not happen unless the command has not been registered properly.
-      remote.exitExternalCommand({ exitCode: ExitCode.CANNOT_FIND_COMMAND });
-      return;
-    }
-
-    const { command } = commandOptions;
-    const externalEnvironment = new ExternalEnvironment(Object.entries(environment));
-    const stdin = new ExternalInput(this.externalInput.bind(this), stdinIsTerminal);
-    const stdout = new ExternalOutput(text => remote.externalOutput(text, false), stdoutIsTerminal);
-    const stderr = new ExternalOutput(text => remote.externalOutput(text, true), stderrIsTerminal);
-    const termios = new ExternalTermios(termiosFlags, remote.externalSetTermios);
-
-    const context: IExternalRunContext = {
-      name,
-      args,
-      environment: externalEnvironment,
-      shellId: this._shellId,
-      stdin,
-      stdout,
-      stderr,
-      size: () => this.size,
-      termios
-    };
-    command(context).then(exitCode => {
-      // Exit code is returned via a separate message to the web worker rather than a return from this
-      // function.
-      const environmentChanges = externalEnvironment.changed;
-      remote.exitExternalCommand({ exitCode, environmentChanges });
-    });
-  }
-
-  /**
-   * Call tab completion for an external command.
-   */
-  async callExternalTabComplete(name: string, args: string[]): Promise<IExternalTabCompleteResult> {
-    const commandOptions = this._externalCommands.get(name);
-    if (commandOptions === undefined) {
-      // This should not happen unless the command has not been registered properly.
-      console.warn("'{name} is not a registered external command");
-      return {};
-    }
-
-    const { tabComplete } = commandOptions;
-    if (tabComplete === undefined) {
-      // This should not happen unless the command has not been registered properly.
-      console.warn("External command '{name} does not support tab completion");
-      return {};
-    }
-
-    return await tabComplete({ name, args, shellId: this._shellId });
+  get commandStateChanged(): ISignal<this, IShell.ICommandStateChangedArgs> {
+    return this._commandStateChanged;
   }
 
   protected createRemote(
@@ -116,11 +53,12 @@ export abstract class BaseShell implements IShell {
     if (this.workerType === 'coincident') {
       const remote = (worker as any).proxy as ICoincidentShellWorker;
 
-      remote.callExternalCommand = this.callExternalCommand.bind(this);
-      remote.callExternalTabComplete = this.callExternalTabComplete.bind(this);
-      remote.downloadModuleCallback = this.downloadWasmModuleCallback.bind(this);
-      remote.enableBufferedStdinCallback = this.enableBufferedStdinCallback.bind(this);
-      remote.externalInputReturn = this.externalInputReturn.bind(this);
+      remote.callExternalCommand = this._callExternalCommand.bind(this);
+      remote.callExternalTabComplete = this._callExternalTabComplete.bind(this);
+      remote.commandStateChangedCallback = this._commandStateChangedCallback.bind(this);
+      remote.downloadModuleCallback = this._downloadWasmModuleCallback.bind(this);
+      remote.enableBufferedStdinCallback = this._enableBufferedStdinCallback.bind(this);
+      remote.externalInputReturn = this._externalInputReturn.bind(this);
       remote.outputCallback = options.outputCallback.bind(this);
       remote.setMainIOCallback = this._setMainIO.bind(this);
       remote.terminateCallback = this.dispose.bind(this);
@@ -138,11 +76,12 @@ export abstract class BaseShell implements IShell {
       const remote = wrap(worker) as IComlinkShellWorker;
 
       remote.registerCallbacks(
-        proxy(this.callExternalCommand.bind(this)),
-        proxy(this.callExternalTabComplete.bind(this)),
-        proxy(this.downloadWasmModuleCallback.bind(this)),
-        proxy(this.enableBufferedStdinCallback.bind(this)),
-        proxy(this.externalInputReturn.bind(this)),
+        proxy(this._callExternalCommand.bind(this)),
+        proxy(this._callExternalTabComplete.bind(this)),
+        proxy(this._commandStateChangedCallback.bind(this)),
+        proxy(this._downloadWasmModuleCallback.bind(this)),
+        proxy(this._enableBufferedStdinCallback.bind(this)),
+        proxy(this._externalInputReturn.bind(this)),
         proxy(options.outputCallback),
         proxy(this._setMainIO.bind(this)),
         proxy(this.dispose.bind(this)), // terminateCallback
@@ -186,37 +125,6 @@ export abstract class BaseShell implements IShell {
     return this._disposed;
   }
 
-  downloadWasmModuleCallback(packageName: string, moduleName: string, start: boolean): void {
-    if (start) {
-      if (this._downloadTracker !== undefined) {
-        this._downloadTracker.dispose();
-      }
-
-      this._downloadTracker = new DownloadTracker(packageName, moduleName, this._outputCallback);
-      this._downloadTracker.start();
-    } else {
-      if (
-        this._downloadTracker !== undefined &&
-        packageName === this._downloadTracker.packageName &&
-        moduleName === this._downloadTracker.moduleName
-      ) {
-        this._downloadTracker.stop();
-      }
-    }
-  }
-
-  private async enableBufferedStdinCallback(enable: boolean): Promise<void> {
-    if (this.isDisposed) {
-      return;
-    }
-
-    if (enable) {
-      await this._mainIO?.enable();
-    } else {
-      await this._mainIO?.disable();
-    }
-  }
-
   async exitCode(): Promise<number> {
     return (await this._remote?.exitCode()) ?? 1;
   }
@@ -230,14 +138,6 @@ export abstract class BaseShell implements IShell {
 
     this._remote!.externalInput(maxChars);
     return await promise.promise;
-  }
-
-  // Handler for externalInputReturn callback from worker.
-  externalInputReturn(text: string): void {
-    if (this._externalStdinPromise !== undefined) {
-      this._externalStdinPromise.resolve(text);
-      this._externalStdinPromise = undefined;
-    }
   }
 
   protected initRemoteOptions(options: IShell.IOptions): IShellWorker.IOptions {
@@ -351,6 +251,123 @@ export abstract class BaseShell implements IShell {
       this._workerType = this.useCoincidentWorker() ? 'coincident' : 'comlink';
     }
     return this._workerType;
+  }
+
+  /**
+   * Call an external command, i.e. one that runs in the browser UI thread.
+   */
+  private _callExternalCommand(
+    name: string,
+    args: string[],
+    environment: Record<string, string>,
+    stdinIsTerminal: boolean,
+    stdoutIsTerminal: boolean,
+    stderrIsTerminal: boolean,
+    termiosFlags: Termios.IFlags
+  ): void {
+    const remote = this._remote!;
+    const commandOptions = this._externalCommands.get(name);
+    if (commandOptions === undefined) {
+      // This should not happen unless the command has not been registered properly.
+      remote.exitExternalCommand({ exitCode: ExitCode.CANNOT_FIND_COMMAND });
+      return;
+    }
+
+    const { command } = commandOptions;
+    const externalEnvironment = new ExternalEnvironment(Object.entries(environment));
+    const stdin = new ExternalInput(this.externalInput.bind(this), stdinIsTerminal);
+    const stdout = new ExternalOutput(text => remote.externalOutput(text, false), stdoutIsTerminal);
+    const stderr = new ExternalOutput(text => remote.externalOutput(text, true), stderrIsTerminal);
+    const termios = new ExternalTermios(termiosFlags, remote.externalSetTermios);
+
+    const context: IExternalRunContext = {
+      name,
+      args,
+      environment: externalEnvironment,
+      shellId: this._shellId,
+      stdin,
+      stdout,
+      stderr,
+      size: () => this.size,
+      termios
+    };
+    command(context).then(exitCode => {
+      // Exit code is returned via a separate message to the web worker rather than a return from this
+      // function.
+      const environmentChanges = externalEnvironment.changed;
+      remote.exitExternalCommand({ exitCode, environmentChanges });
+    });
+  }
+
+  /**
+   * Call tab completion for an external command.
+   */
+  private async _callExternalTabComplete(
+    name: string,
+    args: string[]
+  ): Promise<IExternalTabCompleteResult> {
+    const commandOptions = this._externalCommands.get(name);
+    if (commandOptions === undefined) {
+      // This should not happen unless the command has not been registered properly.
+      console.warn("'{name} is not a registered external command");
+      return {};
+    }
+
+    const { tabComplete } = commandOptions;
+    if (tabComplete === undefined) {
+      // This should not happen unless the command has not been registered properly.
+      console.warn("External command '{name} does not support tab completion");
+      return {};
+    }
+
+    return await tabComplete({ name, args, shellId: this._shellId });
+  }
+
+  private _commandStateChangedCallback(args: IShell.ICommandStateChangedArgs): void {
+    this._commandStateChanged.emit(args);
+  }
+
+  private _downloadWasmModuleCallback(
+    packageName: string,
+    moduleName: string,
+    start: boolean
+  ): void {
+    if (start) {
+      if (this._downloadTracker !== undefined) {
+        this._downloadTracker.dispose();
+      }
+
+      this._downloadTracker = new DownloadTracker(packageName, moduleName, this._outputCallback);
+      this._downloadTracker.start();
+    } else {
+      if (
+        this._downloadTracker !== undefined &&
+        packageName === this._downloadTracker.packageName &&
+        moduleName === this._downloadTracker.moduleName
+      ) {
+        this._downloadTracker.stop();
+      }
+    }
+  }
+
+  private async _enableBufferedStdinCallback(enable: boolean): Promise<void> {
+    if (this.isDisposed) {
+      return;
+    }
+
+    if (enable) {
+      await this._mainIO?.enable();
+    } else {
+      await this._mainIO?.disable();
+    }
+  }
+
+  // Handler for externalInputReturn callback from worker.
+  private _externalInputReturn(text: string): void {
+    if (this._externalStdinPromise !== undefined) {
+      this._externalStdinPromise.resolve(text);
+      this._externalStdinPromise = undefined;
+    }
   }
 
   private async _initialize(options: IShell.IOptions): Promise<void> {
@@ -482,6 +499,7 @@ export abstract class BaseShell implements IShell {
   private _sharedArrayBufferMainIO?: SharedArrayBufferMainIO;
   private _mainIO?: IMainIO;
 
+  private _commandStateChanged = new Signal<this, IShell.ICommandStateChangedArgs>(this);
   private _downloadTracker?: DownloadTracker;
   private _outputCallback: IOutputCallback; // Only used by _downloadTracker.
 }

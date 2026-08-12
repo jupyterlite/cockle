@@ -29,12 +29,14 @@ export class ExternalCommandRunner implements ICommandRunner {
   }
 
   async run(context: IRunContext): Promise<number> {
-    const { name, args, environment, stdin, stdout, stderr } = context;
+    const { args, commandId, environment, name, stdin, stdout, stderr } = context;
 
     if (name !== this.name) {
       // This should not happen.
       throw new FindCommandError(name);
     }
+
+    context.commandRegistry.commandStateChangedCallback({ commandId, state: 'running' });
 
     const { exitCode, environmentChanges } = await this.callExternalCommand(
       name,

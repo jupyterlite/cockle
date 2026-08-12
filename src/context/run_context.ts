@@ -14,6 +14,7 @@ import type { Termios } from '../termios';
  * Full context used to run builtin and WebAssembly commands.
  */
 export interface IRunContext {
+  commandId: number;
   name: string;
   args: string[];
   fileSystem: IFileSystem;

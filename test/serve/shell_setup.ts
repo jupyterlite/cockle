@@ -5,6 +5,7 @@ import { MockTerminalOutput } from './output_setup';
 export interface IShellSetup {
   shell: IShell;
   output: MockTerminalOutput;
+  commandStateChanged?: IShell.ICommandStateChangedArgs[];
 }
 
 export interface IOptions {
@@ -18,7 +19,8 @@ export interface IOptions {
   noShellManager?: boolean;
   shellId?: string;
   shellManager?: ShellManager;
-  stdinOption?: string; // Set initial synchronous stdin option,
+  stdinOption?: string; // Set initial synchronous stdin option.
+  wantCommandStateChanged?: boolean;
 }
 
 export async function shellSetupEmpty(options: IOptions = {}): Promise<IShellSetup> {
@@ -65,8 +67,16 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
   }
 
   const baseUrl = location.href;
-  const { aliases, cwd, environment, externalCommands, noShellManager, shellId, stdinOption } =
-    options;
+  const {
+    aliases,
+    cwd,
+    environment,
+    externalCommands,
+    noShellManager,
+    shellId,
+    stdinOption,
+    wantCommandStateChanged
+  } = options;
 
   // All tests have a ShellManager unless explicitly not required, so that they can use the service
   // worker.
@@ -103,6 +113,14 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
   };
   (shell as any).inputLine = inputLine;
 
+  let commandStateChanged: IShell.ICommandStateChangedArgs[] | undefined;
+  if (wantCommandStateChanged) {
+    commandStateChanged = [];
+    shell.commandStateChanged.connect((_, args) => {
+      commandStateChanged!.push(args);
+    });
+  }
+
   await shell.start();
   await shell.setSize({ rows: 24, columns: 80 });
 
@@ -116,5 +134,5 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
 
   output.start();
 
-  return { shell, output };
+  return { shell, output, commandStateChanged };
 }

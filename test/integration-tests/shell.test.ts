@@ -160,6 +160,45 @@ test.describe('Shell', () => {
       const output = await shellLineSimple(page, 'echo 🚀');
       expect(output).toMatch(/^echo 🚀\r\n🚀\r\n/);
     });
+
+    test('should emit commandStateChanged signals', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { commandStateChanged, shell } = await globalThis.cockle.shellSetupEmpty({
+          wantCommandStateChanged: true
+        });
+        await shell.inputLine('which ls'); // Built-in command.
+        const exitCode0 = await shell.exitCode();
+
+        await shell.inputLine('pwd'); // Successful wasm command.
+        const exitCode1 = await shell.exitCode();
+
+        await shell.inputLine('ls xyz'); // Failed wasm command.
+        const exitCode2 = await shell.exitCode();
+
+        return { exitCodes: [exitCode0, exitCode1, exitCode2], commandStateChanged };
+      });
+      expect(output.exitCodes).toEqual([0, 0, 2]);
+
+      const csc = output.commandStateChanged;
+      expect(csc).toHaveLength(9);
+
+      expect(csc[0]).toEqual({ commandId: 0, state: 'loading', name: 'which', args: ['ls'] });
+      expect(csc[1]).toEqual({ commandId: 0, state: 'running' });
+      expect(csc[2]).toEqual({ commandId: 0, state: 'finished', exitCode: 0 });
+
+      expect(csc[3]).toEqual({ commandId: 1, state: 'loading', name: 'pwd', args: [] });
+      expect(csc[4]).toEqual({ commandId: 1, state: 'running' });
+      expect(csc[5]).toEqual({ commandId: 1, state: 'finished', exitCode: 0 });
+
+      expect(csc[6]).toEqual({
+        commandId: 2,
+        state: 'loading',
+        name: 'ls',
+        args: ['--color=auto', 'xyz']
+      });
+      expect(csc[7]).toEqual({ commandId: 2, state: 'running' });
+      expect(csc[8]).toEqual({ commandId: 2, state: 'finished', exitCode: 2 });
+    });
   });
 
   test.describe('echo input', () => {

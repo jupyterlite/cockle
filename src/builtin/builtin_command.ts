@@ -22,13 +22,14 @@ export abstract class BuiltinCommand implements ICommandRunner {
 
   abstract get name(): string;
 
-  run(context: IRunContext): Promise<number> {
-    const { name } = context;
+  async run(context: IRunContext): Promise<number> {
+    const { commandId, commandRegistry, name } = context;
     if (name !== this.name) {
       // This should not happen.
       throw new FindCommandError(name);
     }
-    return this._run(context);
+    commandRegistry.commandStateChangedCallback({ commandId, state: 'running' });
+    return await this._run(context);
   }
 
   protected abstract _run(context: IRunContext): Promise<number>;

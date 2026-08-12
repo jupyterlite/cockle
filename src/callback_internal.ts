@@ -1,4 +1,5 @@
 import type { IOutputCallback, IQueryParamsCallback } from './callback';
+import type { IShell } from './defs';
 import type { IExternalTabCompleteResult } from './external_command';
 import type { Termios } from './termios';
 
@@ -46,6 +47,10 @@ export interface ICallExternalCommandNoReturn {
 
 export interface ICallExternalTabComplete {
   (name: string, args: string[]): Promise<IExternalTabCompleteResult>;
+}
+
+export interface ICommandStateChangedCallback {
+  (args: IShell.ICommandStateChangedArgs): void;
 }
 
 /**
@@ -103,6 +108,7 @@ export interface IExternalInputReturnCallback {
 export interface IWorkerCallbacks {
   callExternalCommand: ICallExternalCommandNoReturn;
   callExternalTabComplete: ICallExternalTabComplete;
+  commandStateChangedCallback: ICommandStateChangedCallback;
   downloadModuleCallback: IDownloadModuleCallback;
   enableBufferedStdinCallback: IEnableBufferedStdinCallback;
   externalInputReturn: IExternalInputReturnCallback;

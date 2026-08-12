@@ -4,6 +4,7 @@ import type { IOutputCallback, IQueryParamsCallback, ISize } from './callback';
 import type {
   ICallExternalCommandNoReturn,
   ICallExternalTabComplete,
+  ICommandStateChangedCallback,
   IDownloadModuleCallback,
   IEnableBufferedStdinCallback,
   IExternalCommandResult,
@@ -67,6 +68,7 @@ export abstract class BaseShellWorker implements IShellWorker {
     const {
       callExternalCommand,
       callExternalTabComplete,
+      commandStateChangedCallback,
       downloadModuleCallback,
       terminateCallback,
       wasmUrlQueryParamsCallback
@@ -76,6 +78,7 @@ export abstract class BaseShellWorker implements IShellWorker {
       ...options,
       callExternalCommand,
       callExternalTabComplete,
+      commandStateChangedCallback,
       downloadModuleCallback,
       enableBufferedStdinCallback: this.enableBufferedStdin.bind(this),
       initDriveFSCallback: this.initDriveFS.bind(this),
@@ -143,6 +146,7 @@ export abstract class BaseShellWorker implements IShellWorker {
   registerCallbacks(
     callExternalCommand: ICallExternalCommandNoReturn,
     callExternalTabComplete: ICallExternalTabComplete,
+    commandStateChangedCallback: ICommandStateChangedCallback,
     downloadModuleCallback: IDownloadModuleCallback,
     enableBufferedStdinCallback: IEnableBufferedStdinCallback,
     externalInputReturn: IExternalInputReturnCallback,
@@ -154,6 +158,7 @@ export abstract class BaseShellWorker implements IShellWorker {
     this._callbacks = {
       callExternalCommand,
       callExternalTabComplete,
+      commandStateChangedCallback,
       downloadModuleCallback,
       enableBufferedStdinCallback,
       externalInputReturn,

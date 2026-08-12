@@ -1,9 +1,15 @@
 import type { IObservableDisposable } from '@lumino/disposable';
+import type { ISignal } from '@lumino/signaling';
 import type { IHandleStdin, IStdinReply, IStdinRequest } from './buffered_io';
 import type { IOutputCallback, IQueryParamsCallback, ISize } from './callback';
 import type { IExternalCommand } from './external_command';
 
 export interface IShell extends IObservableDisposable {
+  /**
+   * Signal emitted just before and after a command is run.
+   */
+  readonly commandStateChanged: ISignal<this, IShell.ICommandStateChangedArgs>;
+
   /**
    * Return exit code of last command run.
    */
@@ -136,6 +142,39 @@ export namespace IShell {
   }
 
   export type IFiles = Record<string, string>;
+
+  export type CommandState = 'loading' | 'running' | 'finished';
+
+  export interface ICommandStateChangedArgs {
+    /**
+     * Unique ID for this command in this shell.
+     */
+    commandId: number;
+
+    /**
+     * Command state, goes from 'loading' through 'running' to 'finished'.
+     */
+    state: CommandState;
+
+    /**
+     * Name of command, only set if state is 'loading'.
+     * This is the real name of the command, after aliases have been resolved, and hence may be
+     * different from the called name.
+     */
+    name?: string;
+
+    /**
+     * Arguments passed to command, only set if state is 'loading'.
+     * These may be different from the arguments used to invoke the command as they might be
+     * altered by aliases and/or variable substitution.
+     */
+    args?: string[];
+
+    /**
+     * Exit code of command, only set if state is 'finished'.
+     */
+    exitCode?: number;
+  }
 }
 
 export interface IShellManager {

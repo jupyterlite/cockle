@@ -53,11 +53,13 @@ export class ShellImpl implements IShellImpl {
 
     // Content within which commands are run.
     this._runContext = {
+      commandId: -1,
       name: '',
       args: [],
       fileSystem: this._fileSystem,
       aliases: new Aliases(),
       commandRegistry: new CommandRegistry(
+        options.commandStateChangedCallback,
         this.callExternalCommand.bind(this),
         options.callExternalTabComplete
       ),
@@ -630,6 +632,10 @@ export class ShellImpl implements IShellImpl {
     }
   }
 
+  private _nextCommandId(): number {
+    return ++this._commandId;
+  }
+
   private async _outputPrompt(): Promise<void> {
     if (!this._isRunning) {
       return;
@@ -739,11 +745,15 @@ export class ShellImpl implements IShellImpl {
     // Set current properties of IContext.
     let args = commandNode.suffix.map(token => token.value);
     args = this._filenameExpansion(args);
+    const commandId = this._nextCommandId();
+    this._runContext.commandId = commandId;
     this._runContext.name = name;
-    this._runContext.args = args;
+    this._runContext.args = [...args];
     this._runContext.stdin = input;
     this._runContext.stdout = output;
     this._runContext.stderr = error;
+
+    this._options.commandStateChangedCallback({ commandId, name, args, state: 'loading' });
 
     let exitCode = -1;
     try {
@@ -753,6 +763,7 @@ export class ShellImpl implements IShellImpl {
       output.flush();
 
       // Reset properties of IContext.
+      this._runContext.commandId = -1;
       this._runContext.name = '';
       this._runContext.args = [];
       this._runContext.stdin = this._dummyInput;
@@ -760,6 +771,7 @@ export class ShellImpl implements IShellImpl {
       this._runContext.stderr = this._dummyOutput;
     }
 
+    this._options.commandStateChangedCallback({ commandId, exitCode, state: 'finished' });
     return exitCode;
   }
 
@@ -812,6 +824,7 @@ export class ShellImpl implements IShellImpl {
   private _size: ISize = { rows: 0, columns: 0 };
   private _themeStatus = ThemeStatus.PendingChange;
 
+  private _commandId = -1;
   private _commandModuleLoader: CommandModuleLoader;
   private _runContext: IRunContext;
   private _dummyInput = new DummyInput();
