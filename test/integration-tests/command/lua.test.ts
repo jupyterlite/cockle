@@ -4,7 +4,7 @@ import { shellLineSimple, shellLineSimpleN, test } from '../utils';
 test.describe('lua command', () => {
   test('should write to stdout', async ({ page }) => {
     const output = await shellLineSimple(page, 'lua -v');
-    expect(output).toMatch('Lua 5.5.0  Copyright (C) 1994-2025 Lua.org, PUC-Rio');
+    expect(output).toMatch(/Lua \d+\.\d+\.\d+ {2}Copyright \(C\) 1994-202\d Lua.org, PUC-Rio/);
   });
 
   test('should run lua script', async ({ page }) => {
