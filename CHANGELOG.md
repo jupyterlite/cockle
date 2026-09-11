@@ -2,6 +2,29 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.8.0-a1
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.8.0-a0...47abd94bff7835e689211e6acc340dcb11e1ca37))
+
+### Enhancements made
+
+- Allow for asynchronous initDriveFS [#342](https://github.com/jupyterlite/cockle/pull/342) ([@martinRenou](https://github.com/martinRenou), [@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Support different lua versions in tests [#341](https://github.com/jupyterlite/cockle/pull/341) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-08-12&to=2026-09-11&type=c))
+
+@ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-08-12..2026-09-11&type=Issues)) | @martinRenou ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3AmartinRenou+updated%3A2026-08-12..2026-09-11&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 1.8.0-a0
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.7.1...cfbc5cd59798707fc3a52258770a1135cdca852a))
@@ -18,8 +41,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-08-10&to=2026-08-12&type=c))
 
 @ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-08-10..2026-08-12&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 1.7.1
 
