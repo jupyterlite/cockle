@@ -135,7 +135,7 @@ export abstract class BaseShellWorker implements IShellWorker {
   /**
    * Initialize the DriveFS to mount an external file system.
    */
-  protected abstract initDriveFS(options: IDriveFSOptions): void;
+  protected abstract initDriveFS(options: IDriveFSOptions): Promise<void> | void;
 
   async input(char: string): Promise<void> {
     if (this._shellImpl) {

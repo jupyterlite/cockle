@@ -14,5 +14,5 @@ export class ComlinkShellWorker extends BaseShellWorker {
    * Initialize the DriveFS to mount an external file system.
    * Default implementation does nothing.
    */
-  protected initDriveFS(options: IDriveFSOptions): void {}
+  protected initDriveFS(options: IDriveFSOptions): Promise<void> | void {}
 }

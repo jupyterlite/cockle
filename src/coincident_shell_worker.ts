@@ -14,7 +14,7 @@ export class CoincidentShellWorker extends BaseShellWorker implements IShellWork
    * Initialize the DriveFS to mount an external file system.
    * Default implementation does nothing.
    */
-  protected initDriveFS(options: IDriveFSOptions): void {}
+  protected initDriveFS(options: IDriveFSOptions): Promise<void> | void {}
 
   initProxy(proxy: ICoincidentShellWorker): void {
     proxy.exitCode = this.exitCode.bind(this);

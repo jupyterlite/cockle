@@ -535,7 +535,7 @@ export class ShellImpl implements IShellImpl {
     this._runContext.fileSystem.PROXYFS = PROXYFS;
 
     const { browsingContextId, baseUrl, initialDirectories, initialFiles } = this._options;
-    this._options.initDriveFSCallback({
+    await this._options.initDriveFSCallback({
       browsingContextId,
       baseUrl,
       fileSystem: this._runContext.fileSystem,

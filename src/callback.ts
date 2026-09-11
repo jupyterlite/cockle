@@ -15,7 +15,7 @@ export interface IOutputCallback {
  * Initialise DriveFS to mount external drive into the shell's filesystem.
  */
 export interface IInitDriveFSCallback {
-  (options: IDriveFSOptions): void;
+  (options: IDriveFSOptions): Promise<void> | void;
 }
 
 /**
