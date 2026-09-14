@@ -4,6 +4,7 @@ export const keys = {
   enter: '\r',
   tab: '\t',
   EOT: '\x04',
+  ctrlL: '\x0C',
   backspace: '\x7F',
   escape: ESCAPE,
   upArrow: ESCAPE + '[A',

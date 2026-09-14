@@ -262,7 +262,7 @@ test.describe('Shell', () => {
   });
 
   test.describe('command line editing', () => {
-    const { backspace, delete_, end, enter, home, leftArrow, next, prev, rightArrow } = keys;
+    const { backspace, ctrlL, delete_, end, enter, home, leftArrow, next, prev, rightArrow } = keys;
 
     // We can't explicitly check the cursor position without performing a visual test or decoding
     // the ANSI escape sequences, so here we use an echo command that will write to stdout and
@@ -320,6 +320,15 @@ test.describe('Shell', () => {
       expect(output[2]).toMatch(/\r\nabcdefZ\r\n/);
       expect(output[3]).toMatch(/\r\nxyz\r\n/);
       expect(output[4]).toMatch(/\r\nxyz\r\n/);
+    });
+
+    test('should clear screen and redraw command line on Ctrl-L', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [
+        ['echo AB', leftArrow, ctrlL],
+        ['C', enter]
+      ]);
+      expect(output[0]).toEqual('echo AB\x1b[1D\x1b[2J\x1b[3J\x1b[Hjs-shell: echo AB\x1b[1D');
+      expect(output[1]).toMatch(/\r\nACB\r\n/);
     });
   });
 
