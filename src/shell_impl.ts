@@ -226,6 +226,14 @@ export class ShellImpl implements IShellImpl {
           break;
         case 4: // EOT, usually = Ctrl-D
           break;
+        case 12: {
+          // FF, usually = Ctrl-L. Clear screen, then redraw prompt and command line.
+          const { cursorIndex, text } = this._commandLine;
+          this.output(ansi.eraseScreen + ansi.eraseSavedLines + ansi.cursorHome);
+          await this._outputPrompt();
+          this.output(text + ansi.cursorLeft(text.length - cursorIndex));
+          break;
+        }
         default:
           // Add char to command line at cursor position.
           if (this._commandLine.cursorIndex === this._commandLine.text.length) {
