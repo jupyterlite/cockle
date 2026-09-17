@@ -13,5 +13,6 @@ export * from './output';
 export * from './pipe';
 export * from './pipe_input';
 export * from './redirect_output';
+export * from './string_input';
 export * from './terminal_input';
 export * from './terminal_output';

@@ -20,12 +20,14 @@ import {
   FileInput,
   FileOutput,
   Pipe,
+  StringInput,
   TerminalInput,
   TerminalOutput
 } from './io';
-import { CommandNode, parse, PipeNode } from './parse';
+import { CommandNode, isCommandComplete, parse, PipeNode } from './parse';
 import { TabCompleter } from './tab_completer';
 import type { Termios } from './termios';
+import { isHeredocToken } from './tokenize';
 import { joinURL, stringFromCharCodes } from './utils';
 
 /**
@@ -195,14 +197,20 @@ export class ShellImpl implements IShellImpl {
       const char = chars[index];
       const code = char.charCodeAt(0);
       switch (code) {
-        case 13: {
-          // \r
+        case 10:
+        case 13: { // \r or \n: run the command line, or continue it on the next line if incomplete.
           this.output('\n');
           const cmdText = this._commandLine.text;
           this._commandLine.text = '';
           this._commandLine.cursorIndex = 0;
           if (cmdText.length > 0) {
-            await this._runCommands(cmdText);
+            if (isCommandComplete(cmdText, this.aliases)) {
+              await this._runCommands(cmdText);
+            } else {
+              // Keep the text and wait for the next line.
+              this._commandLine.text = `${cmdText}\n`;
+              this._commandLine.cursorIndex = this._commandLine.text.length;
+            }
           }
           await this._outputPrompt();
           break;
@@ -651,7 +659,12 @@ export class ShellImpl implements IShellImpl {
     if (this._themeStatus === ThemeStatus.PendingChange) {
       await this._handleThemeChange();
     }
-    this._runContext.workerIO.write(`\n${this.environment.getPrompt()}`);
+    // Use the secondary prompt when a command continues on the next line.
+    const prompt : string =
+      this._commandLine.text.length > 0
+        ? this.environment.getSecondaryPrompt()
+        : this.environment.getPrompt();
+    this._runContext.workerIO.write(`\n${prompt}`);
   }
 
   private async _runCommands(cmdText: string): Promise<void> {
@@ -744,6 +757,13 @@ export class ShellImpl implements IShellImpl {
           error = new FileOutput(this._runContext.fileSystem, path, redirectChars === '2>>');
         } else if (redirectChars === '<') {
           input = new FileInput(this._runContext.fileSystem, path);
+        } else if (isHeredocToken(redirectChars)) {
+          const body: string | undefined = redirect.token.heredoc;
+          if (body === undefined) {
+            // Should not occur as the shell only runs complete commands.
+            throw new GeneralError('Here document is incomplete');
+          }
+          input = new StringInput(body);
         } else {
           throw new GeneralError('Unrecognised redirect ' + redirectChars);
         }

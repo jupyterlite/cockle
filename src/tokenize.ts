@@ -8,12 +8,37 @@ export type Token = {
   // Stores offset into source string for error reporting.
   offset: number;
   value: string;
+  // Body of a here document, set on '<<' and '<<-' tokens once the delimiter line has been read.
+  heredoc?: string;
 };
+
+/** A here document whose delimiter word has been read but whose body has not yet. */
+interface IPendingHeredoc {
+  token: Token;
+  delimiter: string;
+  stripTabs: boolean;
+}
 
 export function tokenize(source: string, throwErrors: boolean = true, aliases?: Aliases): Token[] {
   const tokenizer = new Tokenizer(source, throwErrors, aliases);
   tokenizer.run();
   return tokenizer.tokens;
+}
+
+/**
+ * Whether the source ends inside a quoted section, so that further input is required.
+ */
+export function hasOpenQuote(source: string): boolean {
+  const tokenizer = new Tokenizer(source, false);
+  tokenizer.run();
+  return tokenizer.openQuote !== '';
+}
+
+/**
+ * Whether a token value is a here document operator, '<<' or '<<-'.
+ */
+export function isHeredocToken(value: string): boolean {
+  return value === '<<' || value === '<<-';
 }
 
 enum CharType {
@@ -51,6 +76,11 @@ class Tokenizer {
     return this._tokens;
   }
 
+  /** End quote if the source ended within a quoted section, otherwise an empty string. */
+  get openQuote(): string {
+    return this._endQuote;
+  }
+
   private _addToken(): boolean {
     const offset = this._offset;
     const value = this._value;
@@ -78,6 +108,17 @@ class Tokenizer {
     }
 
     this._tokens.push({ offset, value });
+
+    // A token following a here document operator is its delimiter word.
+    const previous : Token | undefined = this._tokens[this._tokens.length - 2];
+    if (previous !== undefined && isHeredocToken(previous.value)) {
+      this._pendingHeredocs.push({
+        token: previous,
+        delimiter: value,
+        stripTabs: previous.value.endsWith('-')
+      });
+    }
+
     this._endQuote = '';
     return true;
   }
@@ -112,6 +153,17 @@ class Tokenizer {
     let charType = this._getCharType(char);
     const endQuote = this._endQuoteFromCharType(charType);
 
+    if (char === '\\' && this._endQuote !== "'" && this._source[i + 1] === '\n') {
+      // Backslash-newline is a line continuation outside single quotes.
+      this._index++; // Also skip the newline.
+      return;
+    }
+
+    if (char === '\n' && this._endQuote === '') {
+      this._newline();
+      return;
+    }
+
     if (this._offset >= 0) {
       // In token.
       if (this._endQuote) {
@@ -137,6 +189,10 @@ class Tokenizer {
         if (this._value === '2' && char === '>') {
           // Special case stderr redirection to file.
           this._value += char;
+        } else if (this._value === '<<' && char === '-') {
+          // Special case here document with leading tab stripping.
+          this._value += char;
+          charType = CharType.Delimiter;
         } else if (this._addToken()) {
           // Finish current token and start new one.
           this._offset = i;
@@ -159,6 +215,79 @@ class Tokenizer {
     this._prevCharType = charType;
   }
 
+  /** Handle a newline that is not within a quoted section. */
+  private _newline(): void {
+    if (this._offset >= 0 && !this._addToken()) {
+      // Alias substitution modified the source, the newline will be handled again.
+      return;
+    }
+    this._offset = -1;
+
+    if (this._tokens.at(-1)?.value === '|') {
+      // A newline after a pipe is ignored, as the command continues on the next line.
+      return;
+    }
+
+    this._tokens.push({ offset: this._index, value: ';' });
+
+    if (this._pendingHeredocs.length > 0) {
+      this._readHeredocs();
+    }
+  }
+
+  /** Read the bodies of pending here documents, which start after the command line. */
+  private _readHeredocs(): void {
+    while (this._pendingHeredocs.length > 0) {
+      const { token, delimiter, stripTabs } = this._pendingHeredocs[0];
+      const body : string | undefined = this._readHeredocBody(delimiter, stripTabs);
+      if (body === undefined) {
+        // The terminating delimiter line has not been read yet. Stop tokenizing as the
+        // remainder of the source is here document content.
+        this._index = this._source.length;
+        return;
+      }
+      else
+      {
+        token.heredoc = body;
+        this._pendingHeredocs.shift();
+      }
+    }
+  }
+
+  /**
+   * Read a single here document body, starting on the line after the current position. Returns
+   * undefined if the line containing only the delimiter is not present in the source.
+   */
+  private _readHeredocBody(delimiter: string, stripTabs: boolean): string | undefined {
+    let body : string = '';
+    let index : number = this._index + 1; // Skip the newline that ends the command line.
+
+    while (index <= this._source.length) {
+      const endOfLine : number = this._source.indexOf('\n', index);
+      const lineEnd : number = endOfLine < 0 ? this._source.length : endOfLine;
+      let line : string = this._source.slice(index, lineEnd);
+      if (stripTabs) {
+        line = line.replace(/^\t+/, '');
+      }
+
+      if (line === delimiter) {
+        // Found the terminating delimiter line.
+        this._index = lineEnd;
+        return body;
+      }
+
+      if (endOfLine < 0) {
+        // No terminating delimiter before the end of the source.
+        return undefined;
+      }
+
+      body += `${line}\n`;
+      index = endOfLine + 1;
+    }
+
+    return undefined;
+  }
+
   private _source: string;
   private _tokens: Token[];
 
@@ -170,4 +299,5 @@ class Tokenizer {
   private _aliasOffset: number = -1;
   private _value: string = ''; // Current token.
   private _endQuote: string = ''; // End quote if in quoted section, otherwise emptry string.
+  private _pendingHeredocs: IPendingHeredoc[] = [];
 }

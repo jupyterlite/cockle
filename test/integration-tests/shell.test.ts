@@ -125,7 +125,7 @@ test.describe('Shell', () => {
         'cd dirA',
         'env|grep ?',
         // Parse error.
-        'ls "blah ',
+        'ls >>',
         'env|grep ?',
         // Command does not exist.
         'abcde',
@@ -198,6 +198,53 @@ test.describe('Shell', () => {
       });
       expect(csc[7]).toEqual({ commandId: 2, state: 'running' });
       expect(csc[8]).toEqual({ commandId: 2, state: 'finished', exitCode: 2 });
+    });
+  });
+
+  test.describe('multiline input', () => {
+    test('should continue a command ending with a backslash', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['echo hello \\', 'world']);
+      expect(output[0]).toMatch('> ');
+      expect(output[1]).toMatch('\r\nhello world\r\n');
+    });
+
+    test('should continue a command with an open quote', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['echo "hello', 'world"']);
+      expect(output[0]).toMatch('> ');
+      expect(output[1]).toMatch('\r\nhello\r\nworld\r\n');
+    });
+
+    test('should continue a command ending with a pipe', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['ls file1 |', 'cat']);
+      expect(output[0]).toMatch('> ');
+      expect(output[1]).toMatch('\r\nfile1\r\n');
+    });
+
+    test('should support here documents', async ({ page }) => {
+      const output = await shellLineSimpleN(page, [
+        'cat <<EOF',
+        'Hello',
+        'World',
+        'EOF',
+        'cat <<EOF > heredoc.txt',
+        'A file',
+        'EOF',
+        'cat heredoc.txt'
+      ]);
+      expect(output[0]).toMatch('> ');
+      expect(output[3]).toMatch('\r\nHello\r\nWorld\r\n');
+      expect(output[7]).toMatch('\r\nA file\r\n');
+    });
+
+    test('should run pasted multi-line input', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupEmpty();
+        await shell.input('echo one\necho two\r');
+        await globalThis.cockle.delay();
+        return output.textAndClear();
+      });
+      expect(output).toMatch('\r\none\r\n');
+      expect(output).toMatch('\r\ntwo\r\n');
     });
   });
 

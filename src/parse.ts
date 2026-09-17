@@ -1,7 +1,7 @@
 import type { Aliases } from './aliases';
 import { GeneralError } from './error_exit_code';
 import type { Token } from './tokenize';
-import { tokenize } from './tokenize';
+import { hasOpenQuote, isHeredocToken, tokenize } from './tokenize';
 
 const endOfCommand = ';&';
 //const ignore_trailing = ";"
@@ -143,4 +143,49 @@ function _createRedirectNodes(tokens: Token[]): RedirectNode[] {
 
 function _isRedirect(str: string): boolean {
   return str.startsWith('>') || str.startsWith('2>') || str.startsWith('<');
+}
+
+/**
+ * Whether a command is complete (it can be run). Incomplete commands require further input
+ * lines: they end with a backslash or a pipe, contain an unterminated quote, or are waiting for
+ * the end of a here document.
+ */
+export function isCommandComplete(source: string, aliases?: Aliases): boolean {
+  if (hasOpenQuote(source)) {
+    return false;
+  }
+
+  const trimmed : string = source.trimEnd();
+
+  // Match a run of one or more backslashes at the end of the input.
+  const backslashes : RegExpExecArray | null = /\\+$/.exec(trimmed);
+  if (backslashes !== null && backslashes[0].length % 2 === 1) {
+    return false;
+  }
+
+  if (trimmed.endsWith('|') && !trimmed.endsWith('>|') && !trimmed.endsWith('||')) {
+    // A line ending with a pipe continues on the next line.
+    return false;
+  }
+
+  try {
+    return parse(source, false, aliases).every(_heredocsComplete);
+  } catch {
+    // Invalid commands are complete so that the error is reported when they are run.
+    return true;
+  }
+}
+
+/** Whether all here documents in a node have their bodies so that the node can be run. */
+function _heredocsComplete(node: Node): boolean {
+  if (node instanceof CommandNode) {
+    const redirects: RedirectNode[] = node.redirects ?? [];
+    return redirects.every(
+      redirect => !isHeredocToken(redirect.token.value) || redirect.token.heredoc !== undefined
+    );
+  } else if (node instanceof PipeNode) {
+    return node.commands.every(_heredocsComplete);
+  } else {
+    return true;
+  }
 }

@@ -1,5 +1,5 @@
 import { Aliases } from '../../src/aliases';
-import { tokenize } from '../../src/tokenize';
+import { hasOpenQuote, isHeredocToken, tokenize } from '../../src/tokenize';
 
 function getAliases(): Aliases {
   const aliases = new Aliases();
@@ -259,5 +259,91 @@ describe('tokenize', () => {
         { offset: 18, value: '-v' }
       ]);
     });
+  });
+
+  test('should support multi-line input', () => {
+    expect(tokenize('echo hello \\\nworld')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'hello' },
+      { offset: 13, value: 'world' }
+    ]);
+    expect(tokenize('echo hello\\\nworld')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'helloworld' }
+    ]);
+    expect(tokenize('ls |\nwc')).toEqual([
+      { offset: 0, value: 'ls' },
+      { offset: 3, value: '|' },
+      { offset: 5, value: 'wc' }
+    ]);
+    expect(tokenize('echo one\necho two')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'one' },
+      { offset: 8, value: ';' },
+      { offset: 9, value: 'echo' },
+      { offset: 14, value: 'two' }
+    ]);
+    expect(tokenize('echo "hello\nworld"')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'hello\nworld' }
+    ]);
+  });
+
+  test('should detect open quotes', () => {
+    expect(hasOpenQuote('echo "hello')).toBe(true);
+    expect(hasOpenQuote("echo 'hello")).toBe(true);
+    expect(hasOpenQuote('echo "hello"')).toBe(false);
+    expect(hasOpenQuote('echo hello')).toBe(false);
+  });
+
+  test('should detect here document operators', () => {
+    expect(isHeredocToken('<<')).toBe(true);
+    expect(isHeredocToken('<<-')).toBe(true);
+    expect(isHeredocToken('<')).toBe(false);
+    expect(isHeredocToken('<<<')).toBe(false);
+  });
+
+  test('should support here documents', () => {
+    expect(tokenize('cat <<EOF\nhello\nEOF\n')).toEqual([
+      { offset: 0, value: 'cat' },
+      { offset: 4, value: '<<', heredoc: 'hello\n' },
+      { offset: 6, value: 'EOF' },
+      { offset: 9, value: ';' }
+    ]);
+    expect(tokenize('cat <<-EOF\n\thello\n\tEOF\n')).toEqual([
+      { offset: 0, value: 'cat' },
+      { offset: 4, value: '<<-', heredoc: 'hello\n' },
+      { offset: 7, value: 'EOF' },
+      { offset: 10, value: ';' }
+    ]);
+    expect(tokenize('cat <<EOF\nhi\nEOF')).toEqual([
+      { offset: 0, value: 'cat' },
+      { offset: 4, value: '<<', heredoc: 'hi\n' },
+      { offset: 6, value: 'EOF' },
+      { offset: 9, value: ';' }
+    ]);
+    expect(tokenize('cat <<EOF\nhi\nEOF\necho done\n')).toEqual([
+      { offset: 0, value: 'cat' },
+      { offset: 4, value: '<<', heredoc: 'hi\n' },
+      { offset: 6, value: 'EOF' },
+      { offset: 9, value: ';' },
+      { offset: 17, value: 'echo' },
+      { offset: 22, value: 'done' },
+      { offset: 26, value: ';' }
+    ]);
+    expect(tokenize('cat <<-EOF')).toEqual([
+      { offset: 0, value: 'cat' },
+      { offset: 4, value: '<<-' },
+      { offset: 7, value: 'EOF' }
+    ]);
+  });
+
+  test('should not tokenize an incomplete here document body', () => {
+    expect(tokenize('cat <<EOF\nhello')).toEqual([
+      { offset: 0, value: 'cat' },
+      { offset: 4, value: '<<' },
+      { offset: 6, value: 'EOF' },
+      { offset: 9, value: ';' }
+    ]);
   });
 });

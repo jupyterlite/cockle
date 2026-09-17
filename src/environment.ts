@@ -45,6 +45,10 @@ export class Environment extends Map<string, string> {
     return this.get('PS1') ?? '$ ';
   }
 
+  getSecondaryPrompt(): string {
+    return this.get('PS2') ?? '> ';
+  }
+
   get color(): boolean {
     return this.has('TERM');
   }
