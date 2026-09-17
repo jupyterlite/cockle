@@ -198,7 +198,8 @@ export class ShellImpl implements IShellImpl {
       const code = char.charCodeAt(0);
       switch (code) {
         case 10:
-        case 13: { // \r or \n: run the command line, or continue it on the next line if incomplete.
+        case 13: {
+          // \r or \n: run the command line, or continue it on the next line if incomplete.
           this.output('\n');
           const cmdText = this._commandLine.text;
           this._commandLine.text = '';
@@ -660,7 +661,7 @@ export class ShellImpl implements IShellImpl {
       await this._handleThemeChange();
     }
     // Use the secondary prompt when a command continues on the next line.
-    const prompt : string =
+    const prompt: string =
       this._commandLine.text.length > 0
         ? this.environment.getSecondaryPrompt()
         : this.environment.getPrompt();

@@ -110,7 +110,7 @@ class Tokenizer {
     this._tokens.push({ offset, value });
 
     // A token following a here document operator is its delimiter word.
-    const previous : Token | undefined = this._tokens[this._tokens.length - 2];
+    const previous: Token | undefined = this._tokens[this._tokens.length - 2];
     if (previous !== undefined && isHeredocToken(previous.value)) {
       this._pendingHeredocs.push({
         token: previous,
@@ -239,15 +239,13 @@ class Tokenizer {
   private _readHeredocs(): void {
     while (this._pendingHeredocs.length > 0) {
       const { token, delimiter, stripTabs } = this._pendingHeredocs[0];
-      const body : string | undefined = this._readHeredocBody(delimiter, stripTabs);
+      const body: string | undefined = this._readHeredocBody(delimiter, stripTabs);
       if (body === undefined) {
         // The terminating delimiter line has not been read yet. Stop tokenizing as the
         // remainder of the source is here document content.
         this._index = this._source.length;
         return;
-      }
-      else
-      {
+      } else {
         token.heredoc = body;
         this._pendingHeredocs.shift();
       }
@@ -259,13 +257,13 @@ class Tokenizer {
    * undefined if the line containing only the delimiter is not present in the source.
    */
   private _readHeredocBody(delimiter: string, stripTabs: boolean): string | undefined {
-    let body : string = '';
-    let index : number = this._index + 1; // Skip the newline that ends the command line.
+    let body: string = '';
+    let index: number = this._index + 1; // Skip the newline that ends the command line.
 
     while (index <= this._source.length) {
-      const endOfLine : number = this._source.indexOf('\n', index);
-      const lineEnd : number = endOfLine < 0 ? this._source.length : endOfLine;
-      let line : string = this._source.slice(index, lineEnd);
+      const endOfLine: number = this._source.indexOf('\n', index);
+      const lineEnd: number = endOfLine < 0 ? this._source.length : endOfLine;
+      let line: string = this._source.slice(index, lineEnd);
       if (stripTabs) {
         line = line.replace(/^\t+/, '');
       }

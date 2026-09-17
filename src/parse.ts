@@ -155,10 +155,10 @@ export function isCommandComplete(source: string, aliases?: Aliases): boolean {
     return false;
   }
 
-  const trimmed : string = source.trimEnd();
+  const trimmed: string = source.trimEnd();
 
   // Match a run of one or more backslashes at the end of the input.
-  const backslashes : RegExpExecArray | null = /\\+$/.exec(trimmed);
+  const backslashes: RegExpExecArray | null = /\\+$/.exec(trimmed);
   if (backslashes !== null && backslashes[0].length % 2 === 1) {
     return false;
   }
