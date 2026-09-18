@@ -235,6 +235,12 @@ export class ShellImpl implements IShellImpl {
         case 27: // Escape following by 1+ more characters
           index += this._escapedInput(chars, index);
           break;
+        case 3: // Ctrl-C: discard the current command line and show a new prompt.
+          this.output('^C');
+          this._commandLine.text = '';
+          this._commandLine.cursorIndex = 0;
+          await this._outputPrompt();
+          break;
         case 4: // EOT, usually = Ctrl-D
           break;
         case 12: {
