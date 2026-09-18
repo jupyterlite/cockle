@@ -110,7 +110,7 @@ class Tokenizer {
     this._tokens.push({ offset, value });
 
     // A token following a here document operator is its delimiter word.
-    const previous: Token | undefined = this._tokens[this._tokens.length - 2];
+    const previous: Token | undefined = this._tokens.at(-2);
     if (previous !== undefined && isHeredocToken(previous.value)) {
       this._pendingHeredocs.push({
         token: previous,
