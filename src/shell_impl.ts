@@ -20,12 +20,14 @@ import {
   FileInput,
   FileOutput,
   Pipe,
+  StringInput,
   TerminalInput,
   TerminalOutput
 } from './io';
-import { CommandNode, parse, PipeNode } from './parse';
+import { CommandNode, isCommandComplete, parse, PipeNode } from './parse';
 import { TabCompleter } from './tab_completer';
 import type { Termios } from './termios';
+import { isHeredocToken } from './tokenize';
 import { joinURL, stringFromCharCodes } from './utils';
 
 /**
@@ -195,16 +197,25 @@ export class ShellImpl implements IShellImpl {
       const char = chars[index];
       const code = char.charCodeAt(0);
       switch (code) {
+        case 10:
         case 13: {
-          // \r
+          // \r or \n: run the command line, or continue it on the next line if incomplete.
           this.output('\n');
           const cmdText = this._commandLine.text;
           this._commandLine.text = '';
           this._commandLine.cursorIndex = 0;
+          let prompt = this.environment.getPrompt(1);
           if (cmdText.length > 0) {
-            await this._runCommands(cmdText);
+            if (isCommandComplete(cmdText, this.aliases)) {
+              await this._runCommands(cmdText);
+            } else {
+              // Keep the text and wait for the next line.
+              this._commandLine.text = `${cmdText}\n`;
+              this._commandLine.cursorIndex = this._commandLine.text.length;
+              prompt = this.environment.getPrompt(2);
+            }
           }
-          await this._outputPrompt();
+          await this._outputPrompt(prompt);
           break;
         }
         case 127: // Backspace
@@ -330,7 +341,7 @@ export class ShellImpl implements IShellImpl {
         this.output(
           ansi.eraseEndLine +
             ansi.eraseStartLine +
-            `\r${this.environment.getPrompt()}${this._commandLine.text}`
+            `\r${this.environment.getPrompt(1)}${this._commandLine.text}`
         );
         break;
       }
@@ -644,14 +655,14 @@ export class ShellImpl implements IShellImpl {
     return ++this._commandId;
   }
 
-  private async _outputPrompt(): Promise<void> {
+  private async _outputPrompt(prompt: string = this.environment.getPrompt(1)): Promise<void> {
     if (!this._isRunning) {
       return;
     }
     if (this._themeStatus === ThemeStatus.PendingChange) {
       await this._handleThemeChange();
     }
-    this._runContext.workerIO.write(`\n${this.environment.getPrompt()}`);
+    this._runContext.workerIO.write(`\n${prompt}`);
   }
 
   private async _runCommands(cmdText: string): Promise<void> {
@@ -744,6 +755,13 @@ export class ShellImpl implements IShellImpl {
           error = new FileOutput(this._runContext.fileSystem, path, redirectChars === '2>>');
         } else if (redirectChars === '<') {
           input = new FileInput(this._runContext.fileSystem, path);
+        } else if (isHeredocToken(redirectChars)) {
+          const body: string | undefined = redirect.token.heredoc;
+          if (body === undefined) {
+            // Should not occur as the shell only runs complete commands.
+            throw new GeneralError('Here document is incomplete');
+          }
+          input = new StringInput(body);
         } else {
           throw new GeneralError('Unrecognised redirect ' + redirectChars);
         }

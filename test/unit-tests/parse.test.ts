@@ -1,5 +1,5 @@
 import { Aliases } from '../../src/aliases';
-import { CommandNode, parse, PipeNode, RedirectNode } from '../../src/parse';
+import { CommandNode, isCommandComplete, parse, PipeNode, RedirectNode } from '../../src/parse';
 
 function getAliases(): Aliases {
   const aliases = new Aliases();
@@ -191,5 +191,23 @@ describe('parse', () => {
         { offset: 7, value: 'A=3;B=9' }
       ])
     ]);
+  });
+
+  test('should detect complete commands', () => {
+    expect(isCommandComplete('ls')).toBe(true);
+    expect(isCommandComplete('ls -l | wc')).toBe(true);
+    expect(isCommandComplete('cat <<EOF\nhello\nEOF')).toBe(true);
+    expect(isCommandComplete('echo "hello\nworld"')).toBe(true);
+    expect(isCommandComplete('echo hello \\\nworld')).toBe(true);
+
+    expect(isCommandComplete('echo "hello')).toBe(false);
+    expect(isCommandComplete('echo hello \\')).toBe(false);
+    expect(isCommandComplete('ls |')).toBe(false);
+    expect(isCommandComplete('cat <<EOF')).toBe(false);
+    expect(isCommandComplete('cat <<EOF\nhello')).toBe(false);
+  });
+
+  test('should treat invalid commands as complete', () => {
+    expect(isCommandComplete('ls > >')).toBe(true);
   });
 });
