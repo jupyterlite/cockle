@@ -204,6 +204,7 @@ export class ShellImpl implements IShellImpl {
           const cmdText = this._commandLine.text;
           this._commandLine.text = '';
           this._commandLine.cursorIndex = 0;
+          let prompt = this.environment.getPrompt();
           if (cmdText.length > 0) {
             if (isCommandComplete(cmdText, this.aliases)) {
               await this._runCommands(cmdText);
@@ -211,9 +212,10 @@ export class ShellImpl implements IShellImpl {
               // Keep the text and wait for the next line.
               this._commandLine.text = `${cmdText}\n`;
               this._commandLine.cursorIndex = this._commandLine.text.length;
+              prompt = this.environment.getSecondaryPrompt();
             }
           }
-          await this._outputPrompt();
+          await this._outputPrompt(prompt);
           break;
         }
         case 127: // Backspace
@@ -653,18 +655,13 @@ export class ShellImpl implements IShellImpl {
     return ++this._commandId;
   }
 
-  private async _outputPrompt(): Promise<void> {
+  private async _outputPrompt(prompt: string = this.environment.getPrompt()): Promise<void> {
     if (!this._isRunning) {
       return;
     }
     if (this._themeStatus === ThemeStatus.PendingChange) {
       await this._handleThemeChange();
     }
-    // Use the secondary prompt when a command continues on the next line.
-    const prompt: string =
-      this._commandLine.text.length > 0
-        ? this.environment.getSecondaryPrompt()
-        : this.environment.getPrompt();
     this._runContext.workerIO.write(`\n${prompt}`);
   }
 
