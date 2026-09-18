@@ -41,12 +41,14 @@ export class Environment extends Map<string, string> {
     return isNaN(number) ? null : number;
   }
 
-  getPrompt(): string {
-    return this.get('PS1') ?? '$ ';
-  }
-
-  getSecondaryPrompt(): string {
-    return this.get('PS2') ?? '> ';
+  getPrompt(index: number): string {
+    switch (index) {
+      case 1:
+        return this.get('PS1') ?? '$ ';
+      case 2:
+        return this.get('PS2') ?? '> ';
+    }
+    throw new Error(`Unknown prompt index: ${index}`);
   }
 
   get color(): boolean {

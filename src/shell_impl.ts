@@ -204,7 +204,7 @@ export class ShellImpl implements IShellImpl {
           const cmdText = this._commandLine.text;
           this._commandLine.text = '';
           this._commandLine.cursorIndex = 0;
-          let prompt = this.environment.getPrompt();
+          let prompt = this.environment.getPrompt(1);
           if (cmdText.length > 0) {
             if (isCommandComplete(cmdText, this.aliases)) {
               await this._runCommands(cmdText);
@@ -212,7 +212,7 @@ export class ShellImpl implements IShellImpl {
               // Keep the text and wait for the next line.
               this._commandLine.text = `${cmdText}\n`;
               this._commandLine.cursorIndex = this._commandLine.text.length;
-              prompt = this.environment.getSecondaryPrompt();
+              prompt = this.environment.getPrompt(2);
             }
           }
           await this._outputPrompt(prompt);
@@ -341,7 +341,7 @@ export class ShellImpl implements IShellImpl {
         this.output(
           ansi.eraseEndLine +
             ansi.eraseStartLine +
-            `\r${this.environment.getPrompt()}${this._commandLine.text}`
+            `\r${this.environment.getPrompt(1)}${this._commandLine.text}`
         );
         break;
       }
@@ -655,7 +655,7 @@ export class ShellImpl implements IShellImpl {
     return ++this._commandId;
   }
 
-  private async _outputPrompt(prompt: string = this.environment.getPrompt()): Promise<void> {
+  private async _outputPrompt(prompt: string = this.environment.getPrompt(1)): Promise<void> {
     if (!this._isRunning) {
       return;
     }

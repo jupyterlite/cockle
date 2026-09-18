@@ -196,7 +196,7 @@ export class TabCompleter {
 
     // Rewrite prompt and command line.
     this.context.workerIO.write(
-      output + environment.getPrompt() + commandLine.text + ansi.cursorLeft(suffix.length)
+      output + environment.getPrompt(1) + commandLine.text + ansi.cursorLeft(suffix.length)
     );
   }
 
