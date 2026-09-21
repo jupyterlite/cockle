@@ -204,7 +204,7 @@ export class ShellImpl implements IShellImpl {
           const cmdText = this._commandLine.text;
           this._commandLine.text = '';
           this._commandLine.cursorIndex = 0;
-          let prompt = this.environment.getPrompt(1);
+          let promptIndex = 1;
           if (cmdText.length > 0) {
             if (isCommandComplete(cmdText, this.aliases)) {
               await this._runCommands(cmdText);
@@ -212,10 +212,10 @@ export class ShellImpl implements IShellImpl {
               // Keep the text and wait for the next line.
               this._commandLine.text = `${cmdText}\n`;
               this._commandLine.cursorIndex = this._commandLine.text.length;
-              prompt = this.environment.getPrompt(2);
+              promptIndex = 2;
             }
           }
-          await this._outputPrompt(prompt);
+          await this._outputPrompt(promptIndex);
           break;
         }
         case 127: // Backspace
@@ -655,13 +655,15 @@ export class ShellImpl implements IShellImpl {
     return ++this._commandId;
   }
 
-  private async _outputPrompt(prompt: string = this.environment.getPrompt(1)): Promise<void> {
+  private async _outputPrompt(promptIndex: number = 1): Promise<void> {
     if (!this._isRunning) {
       return;
     }
     if (this._themeStatus === ThemeStatus.PendingChange) {
       await this._handleThemeChange();
     }
+    // Get prompt just before using as a theme change above can change the PS1 prompt colors.
+    const prompt = this.environment.getPrompt(promptIndex);
     this._runContext.workerIO.write(`\n${prompt}`);
   }
 
