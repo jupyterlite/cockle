@@ -248,6 +248,27 @@ test.describe('Shell', () => {
     });
   });
 
+  test.describe('ctrl-c', () => {
+    test('should discard the current input line', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [['abc'], ['\x03'], ['echo ok\r']]);
+      expect(output[1]).toMatch('^C');
+      expect(output[1]).toMatch('js-shell: ');
+      expect(output[2]).toMatch('\r\nok\r\n');
+    });
+
+    test('should cancel a multi-line command', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [
+        ['echo hello \\\r'],
+        ['\x03'],
+        ['echo done\r']
+      ]);
+      expect(output[0]).toMatch('> ');
+      expect(output[1]).toMatch('^C');
+      expect(output[1]).toMatch('js-shell: ');
+      expect(output[2]).toMatch('\r\ndone\r\n');
+    });
+  });
+
   test.describe('echo input', () => {
     test('should echo input up to \\r', async ({ page }) => {
       expect(await shellInputsSimple(page, ['l', 's', ' ', '-', 'a', 'l'])).toEqual('ls -al');
