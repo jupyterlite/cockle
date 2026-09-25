@@ -27,8 +27,13 @@ import {
 import { CommandNode, isCommandComplete, parse, PipeNode } from './parse';
 import { TabCompleter } from './tab_completer';
 import type { Termios } from './termios';
-import { isHeredocToken } from './tokenize';
+import { splitRedirect } from './tokenize';
 import { joinURL, stringFromCharCodes } from './utils';
+
+/** Error for a redirection to a file descriptor that the shell does not support. */
+function _unsupportedRedirect(token: string, fd: number): GeneralError {
+  return new GeneralError(`Redirect '${token}' to file descriptor ${fd} is not supported`);
+}
 
 /**
  * Shell implementation.
@@ -737,67 +742,167 @@ export class ShellImpl implements IShellImpl {
     output: IOutput,
     error: IOutput
   ): Promise<number> {
-    const name = commandNode.name.value;
-    const runner = this._runContext.commandRegistry.get(name);
-    if (runner === null) {
+    const name = commandNode.name?.value ?? '';
+    const runner = name === '' ? null : this._runContext.commandRegistry.get(name);
+    if (name !== '' && runner === null) {
       // Give location of command in input?
       throw new FindCommandError(name);
     }
 
     if (commandNode.redirects) {
+      const fileSystem = this._runContext.fileSystem;
       for (const redirect of commandNode.redirects) {
-        // If multiple redirects of the same type, use the last one.
-        const redirectChars = redirect.token.value;
-        const path = redirect.target.value;
-        if (redirectChars === '>' || redirectChars === '>>') {
-          output = new FileOutput(this._runContext.fileSystem, path, redirectChars === '>>');
-        } else if (redirectChars === '2>' || redirectChars === '2>>') {
-          error = new FileOutput(this._runContext.fileSystem, path, redirectChars === '2>>');
-        } else if (redirectChars === '<') {
-          input = new FileInput(this._runContext.fileSystem, path);
-        } else if (isHeredocToken(redirectChars)) {
-          const body: string | undefined = redirect.token.heredoc;
-          if (body === undefined) {
-            // Should not occur as the shell only runs complete commands.
-            throw new GeneralError('Here document is incomplete');
+        // Redirections are applied left to right, so a duplicated file descriptor refers to the
+        // target in force at that point. If there are multiple redirects of the same type, the last
+        // one wins.
+        const token = redirect.token.value;
+        const target = redirect.target.value;
+        const { fd, operator } = splitRedirect(token);
+
+        switch (operator) {
+          case '>':
+          case '>|':
+          case '>>': {
+            const append : boolean = operator === '>>';
+            const fileOutput = new FileOutput(fileSystem, target, append);
+            if (fd === 1) {
+              output = fileOutput;
+            } else if (fd === 2) {
+              error = fileOutput;
+            } else {
+              throw _unsupportedRedirect(token, fd);
+            }
+            break;
           }
-          input = new StringInput(body);
-        } else {
-          throw new GeneralError('Unrecognised redirect ' + redirectChars);
+
+          case '&>':
+          case '&>>': {
+            // Both standard output and standard error ('cmd &> file).
+            const appendBoth: boolean = operator === '&>>';
+            output = error = new FileOutput(fileSystem, target, appendBoth);
+            break;
+          }
+
+          case '<':
+          case '<>': {
+            if (fd !== 0) {
+              throw _unsupportedRedirect(token, fd);
+            }
+            // '<> file' opens for reading and writing. cockle commands only read from stdin.
+            const readWrite: boolean = operator === '<>';
+            input = new FileInput(fileSystem, target, readWrite);
+            break;
+          }
+          
+          case '<<':
+          case '<<-': {
+            const body: string | undefined = redirect.token.heredoc;
+            if (body === undefined) {
+              // Should not occur as the shell only runs complete commands.
+              throw new GeneralError('Here document is incomplete');
+            }
+            input = new StringInput(body);
+            break;
+          }
+
+          case '<<<':
+            if (fd !== 0) {
+              throw _unsupportedRedirect(token, fd);
+            }
+            // Here string: 'cat <<< hello'.
+            input = new StringInput(`${target}\n`);
+            break;
+
+          case '<&':
+            if (fd !== 0) {
+              throw _unsupportedRedirect(token, fd);
+            } else if (target === '-') {
+              // Closed standard input, reads return nothing.
+              input = this._dummyInput;
+            } else if (target !== '0') {
+              throw new GeneralError(`Redirect '${token}${target}' is not supported`);
+            }
+            break;
+
+          case '>&': {
+            const match = /^(\d*)(-?)$/.exec(target);
+            
+            if (match === null) {
+              // A word that is not a file descriptor redirects both streams: 'cmd >& file'.
+              output = error = new FileOutput(fileSystem, target, false);
+              break;
+            }
+
+            // A bare '-' closes this file descriptor: 'cmd 2>&-'.
+            const targetFd = match[1] === '' ? fd : parseInt(match[1], 10);
+            if (fd === 1 && targetFd === 2) {
+              output = error;
+            } else if (fd === 2 && targetFd === 1) {
+              error = output;
+            } else if (fd !== targetFd || (fd !== 1 && fd !== 2)) {
+              throw new GeneralError(`Redirect '${token}${target}' is not supported`);
+            }
+
+            if (match[2] === '-') {
+              // Moving a file descriptor closes the target: '2>&1-'
+              if (targetFd === 1) {
+                output = this._dummyOutput;
+              } else {
+                error = this._dummyOutput;
+              }
+            }
+            break;
+          }
+
+          default:
+            throw new GeneralError(`Unrecognised redirect ${token}`);
         }
       }
     }
 
-    // Set current properties of IContext.
-    let args = commandNode.suffix.map(token => token.value);
-    args = this._filenameExpansion(args);
-    const commandId = this._nextCommandId();
-    this._runContext.commandId = commandId;
-    this._runContext.name = name;
-    this._runContext.args = [...args];
-    this._runContext.stdin = input;
-    this._runContext.stdout = output;
-    this._runContext.stderr = error;
-
-    this._options.commandStateChangedCallback({ commandId, name, args, state: 'loading' });
-
-    let exitCode = -1;
+    let commandId = -1;
+    let exitCode: number = ExitCode.SUCCESS;
     try {
-      exitCode = await runner.run(this._runContext);
-    } finally {
-      error.flush();
-      output.flush();
+      if (runner !== null) {
+        // Set current properties of IContext.
+        let args = commandNode.suffix.map(token => token.value);
+        args = this._filenameExpansion(args);
+        commandId = this._nextCommandId();
+        this._runContext.commandId = commandId;
+        this._runContext.name = name;
+        this._runContext.args = [...args];
+        this._runContext.stdin = input;
+        this._runContext.stdout = output;
+        this._runContext.stderr = error;
 
-      // Reset properties of IContext.
-      this._runContext.commandId = -1;
-      this._runContext.name = '';
-      this._runContext.args = [];
-      this._runContext.stdin = this._dummyInput;
-      this._runContext.stdout = this._dummyOutput;
-      this._runContext.stderr = this._dummyOutput;
+        this._options.commandStateChangedCallback({ commandId, name, args, state: 'loading' });
+
+        exitCode = await runner.run(this._runContext);
+      }
+    } finally {
+      // stdout and stderr can be the same IOutput, e.g. '> out 2>&1'. Flush only once: a second
+      // FileOutput.flush() would write an empty string and truncate the file.
+      if (error === output) {
+        output.flush();
+      } else {
+        error.flush();
+        output.flush();
+      }
+
+      if (runner !== null) {
+        // Reset properties of IContext.
+        this._runContext.commandId = -1;
+        this._runContext.name = '';
+        this._runContext.args = [];
+        this._runContext.stdin = this._dummyInput;
+        this._runContext.stdout = this._dummyOutput;
+        this._runContext.stderr = this._dummyOutput;
+      }
     }
 
-    this._options.commandStateChangedCallback({ commandId, exitCode, state: 'finished' });
+    if (runner !== null) {
+      this._options.commandStateChangedCallback({ commandId, exitCode, state: 'finished' });
+    }
     return exitCode;
   }
 

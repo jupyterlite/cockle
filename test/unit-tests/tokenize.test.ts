@@ -1,5 +1,12 @@
 import { Aliases } from '../../src/aliases';
-import { hasOpenQuote, isHeredocToken, tokenize } from '../../src/tokenize';
+import {
+  hasOpenQuote,
+  isHeredocToken,
+  isRedirectToken,
+  redirectOperator,
+  splitRedirect,
+  tokenize
+} from '../../src/tokenize';
 
 function getAliases(): Aliases {
   const aliases = new Aliases();
@@ -152,6 +159,129 @@ describe('tokenize', () => {
       { offset: 0, value: 'pwd' },
       { offset: 4, value: '2>>' },
       { offset: 7, value: 'somefile' }
+    ]);
+  });
+
+  test('should support redirection to a file descriptor', () => {
+    expect(tokenize('pwd 2>&1')).toEqual([
+      { offset: 0, value: 'pwd' },
+      { offset: 4, value: '2>&' },
+      { offset: 7, value: '1' }
+    ]);
+    expect(tokenize('pwd 1>&2')).toEqual([
+      { offset: 0, value: 'pwd' },
+      { offset: 4, value: '1>&' },
+      { offset: 7, value: '2' }
+    ]);
+    expect(tokenize('pwd 1>somefile')).toEqual([
+      { offset: 0, value: 'pwd' },
+      { offset: 4, value: '1>' },
+      { offset: 6, value: 'somefile' }
+    ]);
+  });
+
+  test('should support all redirection operators', () => {
+    expect(tokenize('echo a &> out')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'a' },
+      { offset: 7, value: '&>' },
+      { offset: 10, value: 'out' }
+    ]);
+    expect(tokenize('echo a &>> out')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'a' },
+      { offset: 7, value: '&>>' },
+      { offset: 11, value: 'out' }
+    ]);
+    expect(tokenize('echo a >& out')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'a' },
+      { offset: 7, value: '>&' },
+      { offset: 10, value: 'out' }
+    ]);
+    expect(tokenize('echo a >| out')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'a' },
+      { offset: 7, value: '>|' },
+      { offset: 10, value: 'out' }
+    ]);
+    expect(tokenize('cat <<< word')).toEqual([
+      { offset: 0, value: 'cat' },
+      { offset: 4, value: '<<<' },
+      { offset: 8, value: 'word' }
+    ]);
+    expect(tokenize('cat 0<<<word')).toEqual([
+      { offset: 0, value: 'cat' },
+      { offset: 4, value: '0<<<' },
+      { offset: 8, value: 'word' }
+    ]);
+    expect(tokenize('cat <> file')).toEqual([
+      { offset: 0, value: 'cat' },
+      { offset: 4, value: '<>' },
+      { offset: 7, value: 'file' }
+    ]);
+    expect(tokenize('cat <&0')).toEqual([
+      { offset: 0, value: 'cat' },
+      { offset: 4, value: '<&' },
+      { offset: 6, value: '0' }
+    ]);
+    expect(tokenize('cat <&-')).toEqual([
+      { offset: 0, value: 'cat' },
+      { offset: 4, value: '<&' },
+      { offset: 6, value: '-' }
+    ]);
+    expect(tokenize('echo x 2>&-')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'x' },
+      { offset: 7, value: '2>&' },
+      { offset: 10, value: '-' }
+    ]);
+    expect(tokenize('echo x 21> file')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'x' },
+      { offset: 7, value: '21>' },
+      { offset: 11, value: 'file' }
+    ]);
+    expect(tokenize('echo abc2> file')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'abc2' },
+      { offset: 9, value: '>' },
+      { offset: 11, value: 'file' }
+    ]);
+    expect(tokenize('cat 2>&1-')).toEqual([
+      { offset: 0, value: 'cat' },
+      { offset: 4, value: '2>&' },
+      { offset: 7, value: '1-' }
+    ]);
+    expect(tokenize('echo x 1<&2')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'x' },
+      { offset: 7, value: '1<&' },
+      { offset: 10, value: '2' }
+    ]);
+    expect(tokenize('echo A 2&>f5')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'A' },
+      { offset: 7, value: '2' },
+      { offset: 8, value: '&>' },
+      { offset: 10, value: 'f5' }
+    ]);
+    expect(tokenize('echo 3>f')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: '3>' },
+      { offset: 7, value: 'f' }
+    ]);
+    // Unchanged behaviour, guards against operator-hungry regressions.
+    expect(tokenize('ls -1|sort')).toEqual([
+      { offset: 0, value: 'ls' },
+      { offset: 3, value: '-1' },
+      { offset: 5, value: '|' },
+      { offset: 6, value: 'sort' }
+    ]);
+    expect(tokenize('a && b')).toEqual([
+      { offset: 0, value: 'a' },
+      { offset: 2, value: '&&' },
+      { offset: 5, value: 'b' }
     ]);
   });
 
@@ -345,5 +475,51 @@ describe('tokenize', () => {
       { offset: 6, value: 'EOF' },
       { offset: 9, value: ';' }
     ]);
+  });
+});
+
+describe('redirectOperator', () => {
+  test('should remove any leading file descriptor digits', () => {
+    expect(redirectOperator('>')).toBe('>');
+    expect(redirectOperator('2>')).toBe('>');
+    expect(redirectOperator('2>&')).toBe('>&');
+    expect(redirectOperator('21>')).toBe('>');
+    expect(redirectOperator('<<-')).toBe('<<-');
+    expect(redirectOperator('abc2')).toBe('abc2');
+  });
+});
+
+describe('isRedirectToken', () => {
+  test('should recognise every redirection operator', () => {
+    const operators = ['<', '<&', '<>', '<<', '<<-', '<<<', '>', '>>', '>|', '>&', '&>', '&>>'];
+    operators.forEach(operator => expect(isRedirectToken(operator)).toBe(true));
+  });
+
+  test('should recognise operators preceded by a file descriptor', () => {
+    const redirects = ['0<', '1>', '2>', '2>>', '1>&', '2>&', '21>', '10<&'];
+    redirects.forEach(redirect => expect(isRedirectToken(redirect)).toBe(true));
+  });
+
+  test('should not recognise other tokens', () => {
+    const others = ['', '2', '21', '-1', '|', '&&', ';', 'abc2'];
+    others.forEach(other => expect(isRedirectToken(other)).toBe(false));
+  });
+});
+
+describe('splitRedirect', () => {
+  test('should split a file descriptor from its operator', () => {
+    expect(splitRedirect('1>>')).toEqual({ fd: 1, operator: '>>' });
+    expect(splitRedirect('2>&')).toEqual({ fd: 2, operator: '>&' });
+    expect(splitRedirect('21>')).toEqual({ fd: 21, operator: '>' });
+    expect(splitRedirect('0<')).toEqual({ fd: 0, operator: '<' });
+  });
+
+  test('should default to stdout, or stdin for < operators', () => {
+    expect(splitRedirect('>')).toEqual({ fd: 1, operator: '>' });
+    expect(splitRedirect('&>')).toEqual({ fd: 1, operator: '&>' });
+    expect(splitRedirect('>&')).toEqual({ fd: 1, operator: '>&' });
+    expect(splitRedirect('<')).toEqual({ fd: 0, operator: '<' });
+    expect(splitRedirect('<>')).toEqual({ fd: 0, operator: '<>' });
+    expect(splitRedirect('<<<')).toEqual({ fd: 0, operator: '<<<' });
   });
 });

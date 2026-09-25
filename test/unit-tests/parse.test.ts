@@ -141,6 +141,84 @@ describe('parse', () => {
     ]);
   });
 
+  test('should support redirect to a file descriptor', () => {
+    expect(parse('pwd 2>&1')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'pwd' },
+        [],
+        [new RedirectNode({ offset: 4, value: '2>&' }, { offset: 7, value: '1' })]
+      )
+    ]);
+    expect(parse('pwd 1>&2')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'pwd' },
+        [],
+        [new RedirectNode({ offset: 4, value: '1>&' }, { offset: 7, value: '2' })]
+      )
+    ]);
+    expect(parse('ls unknown > out 2>&1')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'ls' },
+        [{ offset: 3, value: 'unknown' }],
+        [
+          new RedirectNode({ offset: 11, value: '>' }, { offset: 13, value: 'out' }),
+          new RedirectNode({ offset: 17, value: '2>&' }, { offset: 20, value: '1' })
+        ]
+      )
+    ]);
+  });
+
+  test('should support redirects anywhere in a command', () => {
+    expect(parse('echo a > f b')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'echo' },
+        [
+          { offset: 5, value: 'a' },
+          { offset: 11, value: 'b' }
+        ],
+        [new RedirectNode({ offset: 7, value: '>' }, { offset: 9, value: 'f' })]
+      )
+    ]);
+    expect(parse('> f echo hi')).toEqual([
+      new CommandNode(
+        { offset: 4, value: 'echo' },
+        [{ offset: 9, value: 'hi' }],
+        [new RedirectNode({ offset: 0, value: '>' }, { offset: 2, value: 'f' })]
+      )
+    ]);
+    expect(parse('cat <<< word')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'cat' },
+        [],
+        [new RedirectNode({ offset: 4, value: '<<<' }, { offset: 8, value: 'word' })]
+      )
+    ]);
+    expect(parse('cat <> f')).toEqual([
+      new CommandNode(
+        { offset: 0, value: 'cat' },
+        [],
+        [new RedirectNode({ offset: 4, value: '<>' }, { offset: 7, value: 'f' })]
+      )
+    ]);
+  });
+
+  test('should support a command of redirections alone', () => {
+    expect(parse('> f')).toEqual([
+      new CommandNode(
+        undefined,
+        [],
+        [new RedirectNode({ offset: 0, value: '>' }, { offset: 2, value: 'f' })]
+      )
+    ]);
+    expect(parse('2> f')).toEqual([
+      new CommandNode(
+        undefined,
+        [],
+        [new RedirectNode({ offset: 0, value: '2>' }, { offset: 3, value: 'f' })]
+      )
+    ]);
+  });
+
   test('should raise on redirect of stdout without target file', () => {
     expect(() => parse('ls >')).toThrow();
     expect(() => parse('ls >>')).toThrow();
@@ -149,6 +227,7 @@ describe('parse', () => {
   test('should raise on redirect of stderr without target file', () => {
     expect(() => parse('ls 2>')).toThrow();
     expect(() => parse('ls 2>>')).toThrow();
+    expect(() => parse('ls 2>&')).toThrow();
   });
 
   test('should support redirect of input', () => {

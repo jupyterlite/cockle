@@ -41,6 +41,41 @@ export function isHeredocToken(value: string): boolean {
   return value === '<<' || value === '<<-';
 }
 
+/** Redirection operators, without any leading file descriptor digits. */
+const redirectOperators : string[] = ['<', '<<', '<<-', '<<<', '<>', '<&', '>', '>>', '>|', '>&', '&>', '&>>'];
+
+/** The redirection operator of a token value, without any leading file descriptor digits. */
+export function redirectOperator(value: string): string {
+  return value.replace(/^\d+/, '');
+}
+
+/** Whether a token value is a redirection, optionally preceded by a file descriptor number. */
+export function isRedirectToken(value: string): boolean {
+  return redirectOperators.includes(redirectOperator(value));
+}
+
+/**
+ * Split a redirection token value into its file descriptor and operator. The file descriptor
+ * defaults to standard input for '<' operators and to standard output otherwise.
+ */
+export function splitRedirect(value: string): { fd: number; operator: string } {
+  const digits: RegExpExecArray | null = /^(\d+)/.exec(value);
+  const operator : string = redirectOperator(value);
+  const fd : number = digits !== null ? parseInt(digits[1], 10) : operator.startsWith('<') ? 0 : 1;
+  return { fd, operator };
+}
+
+/** Whether appending char to an in-progress token continues a redirection operator. */
+function extendsRedirect(value: string, char: string): boolean {
+  const digits : RegExpExecArray | null = /^\d+/.exec(value);
+  const operator : string = (digits !== null ? value.slice(digits[0].length) : value) + char;
+  if (digits !== null && operator.startsWith('&')) {
+    // A file descriptor never precedes '&>' or '&>>'.
+    return false;
+  }
+  return redirectOperators.some(op => op.startsWith(operator));
+}
+
 enum CharType {
   None,
   Delimiter,
@@ -186,11 +221,8 @@ class Tokenizer {
         charType !== this._prevCharType ||
         (charType === CharType.Delimiter && char !== this._prevChar)
       ) {
-        if (this._value === '2' && char === '>') {
-          // Special case stderr redirection to file.
-          this._value += char;
-        } else if (this._value === '<<' && char === '-') {
-          // Special case here document with leading tab stripping.
+        if (extendsRedirect(this._value, char)) {
+          // Continue a redirection operator, e.g. the '>' after '2' or the '&' after '>'.
           this._value += char;
           charType = CharType.Delimiter;
         } else if (this._addToken()) {

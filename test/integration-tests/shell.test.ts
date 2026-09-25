@@ -64,6 +64,135 @@ test.describe('Shell', () => {
       );
     });
 
+    test('should redirect stderr to stdout', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['ls unknown 2>&1', 'ls file1 unknown 2>&1']);
+      expect(output[0]).toMatch("\r\nls: cannot access 'unknown': No such file or directory\r\n");
+      expect(output[1]).toContain('file1');
+      expect(output[1]).toContain("ls: cannot access 'unknown': No such file or directory");
+    });
+
+    test('should redirect stdout and stderr to the same file', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['ls file1 unknown > out 2>&1', 'cat out']);
+      expect(output[1]).toMatch(/^cat out\r\n/);
+      expect(output[1]).toContain('file1');
+      expect(output[1]).toContain("ls: cannot access 'unknown': No such file or directory");
+    });
+
+    test('should redirect stderr to stdout of a pipe', async ({ page }) => {
+      const output = await shellLineSimple(page, 'ls unknown 2>&1 | sed s/unknown/here/');
+      expect(output).toMatch("\r\nls: cannot access 'here': No such file or directory\r\n");
+    });
+
+    test('should report redirect to an unsupported file descriptor', async ({ page }) => {
+      const output = await shellLineSimple(page, 'ls unknown 2>&3');
+      expect(output).toContain("Redirect '2>&3' is not supported");
+    });
+
+    test('should redirect stdout to stderr', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['echo Hello > out 1>&2', 'cat out']);
+      // 'Hello' went to the terminal (after the typed line's own echo), not into the file.
+      expect(output[0]).toMatch(/\r\nHello\r\n/);
+      expect(output[1]).not.toContain('Hello');
+    });
+
+    test('should apply file descriptor redirects from left to right', async ({ page }) => {
+      // '2>&1' duplicates the stdout in force at that point, so the file redirect that follows it
+      // must not capture stderr.
+      const output = await shellLineSimpleN(page, ['ls file1 unknown 2>&1 > out', 'cat out']);
+      expect(output[0]).toContain("ls: cannot access 'unknown'");
+      expect(output[1]).toContain('file1');
+      expect(output[1]).not.toContain("cannot access 'unknown'");
+    });
+
+    test('should redirect stdout to file using file descriptor 1', async ({ page }) => {
+      const output = await shellLineSimpleN(page, [
+        'echo Hello 1> out',
+        'echo Goodbye 1>> out',
+        'cat out'
+      ]);
+      expect(output[2]).toMatch(/\r\nHello\r\nGoodbye\r\n/);
+    });
+
+    test('should redirect stdout and stderr with &> and >&', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['ls file1 unknown &> out', 'cat out']);
+      expect(output[1]).toContain('file1');
+      expect(output[1]).toContain("ls: cannot access 'unknown'");
+      const output2 = await shellLineSimpleN(page, ['echo Hello >& out2', 'cat out2']);
+      expect(output2[1]).toMatch(/\r\nHello\r\n/);
+    });
+
+    test('should append stdout and stderr with &>>', async ({ page }) => {
+      const output = await shellLineSimpleN(page, [
+        'echo One &> out',
+        'echo Two &>> out',
+        'cat out'
+      ]);
+      expect(output[2]).toMatch(/\r\nOne\r\nTwo\r\n/);
+    });
+
+    test('should treat >| like >', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['echo Hello >| out', 'cat out']);
+      expect(output[1]).toMatch(/\r\nHello\r\n/);
+    });
+
+    test('should redirect stdin from a here string', async ({ page }) => {
+      expect(await shellLineSimple(page, 'cat <<< hello')).toMatch(/\r\nhello\r\n/);
+    });
+
+    test('should create and read a file with <>', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['cat <> newfile', 'ls newfile']);
+      expect(output[1]).toMatch(/\r\nnewfile\r\n/);
+    });
+
+    test('should discard output of a closed file descriptor', async ({ page }) => {
+      const output = await shellLineSimple(page, 'ls unknown 2>&-');
+      expect(output).toMatch(/ls unknown 2>&-\r\n/);
+      expect(output).not.toContain('cannot access');
+    });
+
+    test('should read nothing from closed stdin', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['cat <&-', 'echo after']);
+      expect(output[1]).toContain('after');
+    });
+
+    test('should move a file descriptor', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['ls file1 unknown 2>&1- > out', 'cat out']);
+      // stderr was duplicated onto the terminal before stdout was redirected, and stdout is closed.
+      expect(output[0]).toContain("ls: cannot access 'unknown'");
+      expect(output[1]).not.toContain('unknown');
+    });
+
+    test('should report an unsupported file descriptor', async ({ page }) => {
+      const output = await shellLineSimple(page, 'echo hi 21> out');
+      expect(output).toContain("Redirect '21>' to file descriptor 21 is not supported");
+    });
+
+    test('should report a redirect of a file descriptor for output', async ({ page }) => {
+      const output = await shellLineSimple(page, 'echo hi 0> out');
+      expect(output).toContain("Redirect '0>' to file descriptor 0 is not supported");
+    });
+
+    test('should redirect between and around arguments', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['echo a > out b', 'cat out']);
+      expect(output[1]).toMatch(/\r\na b\r\n/);
+    });
+
+    test('should redirect before the command name', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['> out echo hi', 'cat out']);
+      expect(output[1]).toMatch(/\r\nhi\r\n/);
+    });
+
+    test('should support a command of redirections alone', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['> out', 'cat out', 'ls out']);
+      expect(output[2]).toMatch(/\r\nout\r\n/); // created, and still empty
+      const exitCode = await page.evaluate(async () => {
+        const { shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('> out2');
+        return await shell.exitCode();
+      });
+      expect(exitCode).toEqual(0);
+    });
+
     test('should stdin redirect from file', async ({ page }) => {
       expect(await shellLineSimple(page, 'wc < file2')).toMatch('      1       5      27\r\n');
     });
