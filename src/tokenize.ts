@@ -42,7 +42,20 @@ export function isHeredocToken(value: string): boolean {
 }
 
 /** Redirection operators, without any leading file descriptor digits. */
-const redirectOperators : string[] = ['<', '<<', '<<-', '<<<', '<>', '<&', '>', '>>', '>|', '>&', '&>', '&>>'];
+const redirectOperators: string[] = [
+  '<',
+  '<<',
+  '<<-',
+  '<<<',
+  '<>',
+  '<&',
+  '>',
+  '>>',
+  '>|',
+  '>&',
+  '&>',
+  '&>>'
+];
 
 /** The redirection operator of a token value, without any leading file descriptor digits. */
 export function redirectOperator(value: string): string {
@@ -60,15 +73,15 @@ export function isRedirectToken(value: string): boolean {
  */
 export function splitRedirect(value: string): { fd: number; operator: string } {
   const digits: RegExpExecArray | null = /^(\d+)/.exec(value);
-  const operator : string = redirectOperator(value);
-  const fd : number = digits !== null ? parseInt(digits[1], 10) : operator.startsWith('<') ? 0 : 1;
+  const operator: string = redirectOperator(value);
+  const fd: number = digits !== null ? parseInt(digits[1], 10) : operator.startsWith('<') ? 0 : 1;
   return { fd, operator };
 }
 
 /** Whether appending char to an in-progress token continues a redirection operator. */
 function extendsRedirect(value: string, char: string): boolean {
-  const digits : RegExpExecArray | null = /^\d+/.exec(value);
-  const operator : string = (digits !== null ? value.slice(digits[0].length) : value) + char;
+  const digits: RegExpExecArray | null = /^\d+/.exec(value);
+  const operator: string = (digits !== null ? value.slice(digits[0].length) : value) + char;
   if (digits !== null && operator.startsWith('&')) {
     // A file descriptor never precedes '&>' or '&>>'.
     return false;

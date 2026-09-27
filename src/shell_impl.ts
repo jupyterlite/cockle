@@ -763,7 +763,7 @@ export class ShellImpl implements IShellImpl {
           case '>':
           case '>|':
           case '>>': {
-            const append : boolean = operator === '>>';
+            const append: boolean = operator === '>>';
             const fileOutput = new FileOutput(fileSystem, target, append);
             if (fd === 1) {
               output = fileOutput;
@@ -793,7 +793,7 @@ export class ShellImpl implements IShellImpl {
             input = new FileInput(fileSystem, target, readWrite);
             break;
           }
-          
+
           case '<<':
           case '<<-': {
             const body: string | undefined = redirect.token.heredoc;
@@ -826,7 +826,7 @@ export class ShellImpl implements IShellImpl {
 
           case '>&': {
             const match = /^(\d*)(-?)$/.exec(target);
-            
+
             if (match === null) {
               // A word that is not a file descriptor redirects both streams: 'cmd >& file'.
               output = error = new FileOutput(fileSystem, target, false);
