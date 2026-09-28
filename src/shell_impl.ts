@@ -752,9 +752,9 @@ export class ShellImpl implements IShellImpl {
     if (commandNode.redirects) {
       const fileSystem = this._runContext.fileSystem;
       for (const redirect of commandNode.redirects) {
-        // Redirections are applied left to right, so a duplicated file descriptor refers to the
-        // target in force at that point. If there are multiple redirects of the same type, the last
-        // one wins.
+        // Redirects take effect left to right, so duplicating a file descriptor copies whichever
+        // target it points to at that moment. When several redirects target the same descriptor,
+        // the last one wins.
         const token = redirect.token.value;
         const target = redirect.target.value;
         const { fd, operator } = splitRedirect(token);

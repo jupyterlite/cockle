@@ -41,7 +41,7 @@ export function isHeredocToken(value: string): boolean {
   return value === '<<' || value === '<<-';
 }
 
-/** Redirection operators, without any leading file descriptor digits. */
+/** Redirection operators. */
 const redirectOperators: string[] = [
   '<',
   '<<',
@@ -74,7 +74,12 @@ export function isRedirectToken(value: string): boolean {
 export function splitRedirect(value: string): { fd: number; operator: string } {
   const digits: RegExpExecArray | null = /^(\d+)/.exec(value);
   const operator: string = redirectOperator(value);
-  const fd: number = digits !== null ? parseInt(digits[1], 10) : operator.startsWith('<') ? 0 : 1;
+  const fd: number =
+    digits !== null
+      ? parseInt(digits[1], 10)
+      : operator.startsWith('<')
+        ? 0
+        : 1;
   return { fd, operator };
 }
 
