@@ -2,6 +2,38 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.8.0
+
+Cockle 1.8.0 adds support for multiline inputs at the command prompt, and use of Ctrl-L to clear the screen. There are also improvements in support for asynchronous shared drives in JupyterLite.
+
+([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.7.1...c79a709b1a8f19a99741ea7add53f4ea179a027d))
+
+### Enhancements made
+
+- Add the support of input multiline [#344](https://github.com/jupyterlite/cockle/pull/344) ([@Alex-PLACET](https://github.com/Alex-PLACET), [@ianthomas23](https://github.com/ianthomas23))
+- Support Ctrl-L to clear the screen [#343](https://github.com/jupyterlite/cockle/pull/343) ([@jtpio](https://github.com/jtpio), [@ianthomas23](https://github.com/ianthomas23))
+- Allow for asynchronous initDriveFS [#342](https://github.com/jupyterlite/cockle/pull/342) ([@martinRenou](https://github.com/martinRenou), [@ianthomas23](https://github.com/ianthomas23))
+- Add signal for command state changed [#340](https://github.com/jupyterlite/cockle/pull/340) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Fix theme change altering prompt colour [#347](https://github.com/jupyterlite/cockle/pull/347) ([@ianthomas23](https://github.com/ianthomas23), [@Alex-PLACET](https://github.com/Alex-PLACET))
+
+### Maintenance and upkeep improvements
+
+- Support different lua versions in tests [#341](https://github.com/jupyterlite/cockle/pull/341) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-08-10&to=2026-09-29&type=c))
+
+@Alex-PLACET ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3AAlex-PLACET+updated%3A2026-08-10..2026-09-29&type=Issues)) | @ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-08-10..2026-09-29&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Ajtpio+updated%3A2026-08-10..2026-09-29&type=Issues)) | @martinRenou ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3AmartinRenou+updated%3A2026-08-10..2026-09-29&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 1.8.0-a1
 
 ([Full Changelog](https://github.com/jupyterlite/cockle/compare/v1.8.0-a0...47abd94bff7835e689211e6acc340dcb11e1ca37))
@@ -22,8 +54,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlite/cockle/graphs/contributors?from=2026-08-12&to=2026-09-11&type=c))
 
 @ianthomas23 ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3Aianthomas23+updated%3A2026-08-12..2026-09-11&type=Issues)) | @martinRenou ([activity](https://github.com/search?q=repo%3Ajupyterlite%2Fcockle+involves%3AmartinRenou+updated%3A2026-08-12..2026-09-11&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 1.8.0-a0
 
