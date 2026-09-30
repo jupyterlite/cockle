@@ -3,7 +3,9 @@
   "compilerOptions": {
     "composite": false,
     "outDir": "dist",
-    "rootDir": "../"
+    "rootDir": "../",
+    "types": ["jest", "node"]
   },
-  "include": ["serve/*", "integration-tests/*", "unit-tests/*", "../src/*"]
+  "include": ["serve/*", "integration-tests/*", "unit-tests/*", "../src/**/*"],
+  "exclude": ["../src/tools"]
 }

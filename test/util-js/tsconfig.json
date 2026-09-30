@@ -2,9 +2,9 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "incremental": true,
-    "lib": ["es2022"],
+    "lib": ["es2024"],
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noEmitOnError": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
@@ -15,7 +15,7 @@
     "sourceMap": false,
     "strict": true,
     "strictNullChecks": true,
-    "target": "es2022"
+    "target": "es2024"
   },
   "include": ["src/*"]
 }
