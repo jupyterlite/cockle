@@ -22,8 +22,7 @@
     "types": "lib/index.d.ts",
     "sideEffects": false,
     "scripts": {
-        "build": "tsc && npm run build:copy-dts",
-        "build:copy-dts": "copyfiles -u 1 \"src/**/*.d.ts\" lib",
+        "build": "tsc && tsc -p tsconfig.tools.json",
         "eslint": "npm run eslint:check -- --fix",
         "eslint:check": "eslint . --cache --ext .ts,.tsx",
         "lint": "npm run prettier && npm run eslint",
@@ -45,7 +44,7 @@
     },
     "devDependencies": {
         "@types/json-schema": "^7.0.15",
-        "@types/node": "^20.14.12",
+        "@types/node": "^22.0.0",
         "@types/react": "^18.2.79",
         "@typescript-eslint/eslint-plugin": "^7.16.1",
         "@typescript-eslint/parser": "^7.16.1",
@@ -57,7 +56,10 @@
         "prettier": "^3.8.3",
         "source-map-loader": "^5.0.0",
         "ts-loader": "^9.6.0",
-        "typescript": "~5.5.4"
+        "typescript": "^6.0.3"
+    },
+    "engines": {
+        "node": ">=22"
     },
     "eslintIgnore": [
         "node_modules",
