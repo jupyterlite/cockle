@@ -8,14 +8,12 @@
  * Also accepts command packages in local directories that are WebAssembly or pure JavaScript.
  */
 
-/* eslint-disable */
-const { deepmerge } = require('deepmerge-ts');
-const fs = require('node:fs');
-const path = require('node:path');
-const { execSync } = require('node:child_process');
-const { rimrafSync } = require('rimraf');
-const zod = require('zod');
-/* eslint-enable */
+import { deepmerge } from 'deepmerge-ts';
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { rimrafSync } from 'rimraf';
+import zod from 'zod';
 
 const ENV_NAME = 'cockle_wasm_env';
 const PLATFORM = 'emscripten-wasm32';
@@ -64,18 +62,18 @@ function getWasmPackageInfo(micromambaCmd: string, envPath: string): any {
     packages: packagesSchema
   });
 
-  let parsed = listSchema.safeParse(micromambaList);
-  if (parsed.success) {
-    return parsed.data.packages;
+  const parsedList = listSchema.safeParse(micromambaList);
+  if (parsedList.success) {
+    return parsedList.data.packages;
   }
 
   // For backward compatibility, try micromamba < 2.9.0 schema.
-  parsed = packagesSchema.safeParse(micromambaList);
-  if (parsed.success) {
-    return parsed.data;
+  const parsedPackages = packagesSchema.safeParse(micromambaList);
+  if (parsedPackages.success) {
+    return parsedPackages.data;
   }
 
-  throw parsed.error; // ZodError.
+  throw parsedPackages.error; // ZodError.
 }
 
 // Handle environment variables.

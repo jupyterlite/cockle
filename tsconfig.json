@@ -6,9 +6,9 @@
     "declaration": true,
     "esModuleInterop": true,
     "incremental": true,
-    "lib": ["dom", "es2022", "webworker"],
+    "lib": ["dom", "es2024", "webworker"],
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noEmitOnError": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
@@ -19,8 +19,10 @@
     "skipLibCheck": true,
     "strict": true,
     "strictNullChecks": true,
-    "target": "es2022",
+    "target": "es2024",
+    "types": [],
     "sourceMap": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["src/tools"]
 }

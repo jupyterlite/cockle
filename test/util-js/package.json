@@ -11,6 +11,6 @@
         "esbuild": "^0.25.0",
         "rollup": "^4.34.8",
         "ts-loader": "^9.5.1",
-        "typescript": "^5.5.4"
+        "typescript": "^6.0.3"
     }
 }
