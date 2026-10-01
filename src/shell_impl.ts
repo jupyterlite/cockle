@@ -9,7 +9,12 @@ import { CommandModule, CommandModuleLoader, CommandPackage, CommandRegistry } f
 import type { IRunContext } from './context';
 import type { IShellImpl } from './defs_internal';
 import { Environment } from './environment';
-import { ErrorExitCode, FindCommandError, GeneralError } from './error_exit_code';
+import {
+  ErrorExitCode,
+  FindCommandError,
+  GeneralError,
+  unsupportedRedirect
+} from './error_exit_code';
 import { ExitCode } from './exit_code';
 import type { IFileSystem } from './file_system';
 import { History } from './history';
@@ -29,11 +34,6 @@ import { TabCompleter } from './tab_completer';
 import type { Termios } from './termios';
 import { splitRedirect } from './tokenize';
 import { joinURL, stringFromCharCodes } from './utils';
-
-/** Error for a redirection to a file descriptor that the shell does not support. */
-function _unsupportedRedirect(token: string, fd: number): GeneralError {
-  return new GeneralError(`Redirect '${token}' to file descriptor ${fd} is not supported`);
-}
 
 /**
  * Shell implementation.
@@ -743,122 +743,13 @@ export class ShellImpl implements IShellImpl {
     error: IOutput
   ): Promise<number> {
     const name = commandNode.name?.value ?? '';
-    const runner = name === '' ? null : this._runContext.commandRegistry.get(name);
+    const runner = this._runContext.commandRegistry.get(name);
     if (name !== '' && runner === null) {
       // Give location of command in input?
       throw new FindCommandError(name);
     }
 
-    if (commandNode.redirects) {
-      const fileSystem = this._runContext.fileSystem;
-      for (const redirect of commandNode.redirects) {
-        // Redirects take effect left to right, so duplicating a file descriptor copies whichever
-        // target it points to at that moment. When several redirects target the same descriptor,
-        // the last one wins.
-        const token = redirect.token.value;
-        const target = redirect.target.value;
-        const { fd, operator } = splitRedirect(token);
-
-        switch (operator) {
-          case '>':
-          case '>|':
-          case '>>': {
-            const append: boolean = operator === '>>';
-            const fileOutput = new FileOutput(fileSystem, target, append);
-            if (fd === 1) {
-              output = fileOutput;
-            } else if (fd === 2) {
-              error = fileOutput;
-            } else {
-              throw _unsupportedRedirect(token, fd);
-            }
-            break;
-          }
-
-          case '&>':
-          case '&>>': {
-            // Both standard output and standard error ('cmd &> file).
-            const appendBoth: boolean = operator === '&>>';
-            output = error = new FileOutput(fileSystem, target, appendBoth);
-            break;
-          }
-
-          case '<':
-          case '<>': {
-            if (fd !== 0) {
-              throw _unsupportedRedirect(token, fd);
-            }
-            // '<> file' opens for reading and writing. cockle commands only read from stdin.
-            const readWrite: boolean = operator === '<>';
-            input = new FileInput(fileSystem, target, readWrite);
-            break;
-          }
-
-          case '<<':
-          case '<<-': {
-            const body: string | undefined = redirect.token.heredoc;
-            if (body === undefined) {
-              // Should not occur as the shell only runs complete commands.
-              throw new GeneralError('Here document is incomplete');
-            }
-            input = new StringInput(body);
-            break;
-          }
-
-          case '<<<':
-            if (fd !== 0) {
-              throw _unsupportedRedirect(token, fd);
-            }
-            // Here string: 'cat <<< hello'.
-            input = new StringInput(`${target}\n`);
-            break;
-
-          case '<&':
-            if (fd !== 0) {
-              throw _unsupportedRedirect(token, fd);
-            } else if (target === '-') {
-              // Closed standard input, reads return nothing.
-              input = this._dummyInput;
-            } else if (target !== '0') {
-              throw new GeneralError(`Redirect '${token}${target}' is not supported`);
-            }
-            break;
-
-          case '>&': {
-            const match = /^(\d*)(-?)$/.exec(target);
-
-            if (match === null) {
-              // A word that is not a file descriptor redirects both streams: 'cmd >& file'.
-              output = error = new FileOutput(fileSystem, target, false);
-              break;
-            }
-
-            // A bare '-' closes this file descriptor: 'cmd 2>&-'.
-            const targetFd = match[1] === '' ? fd : parseInt(match[1], 10);
-            if (fd === 1 && targetFd === 2) {
-              output = error;
-            } else if (fd === 2 && targetFd === 1) {
-              error = output;
-            } else if (fd !== targetFd || (fd !== 1 && fd !== 2)) {
-              throw new GeneralError(`Redirect '${token}${target}' is not supported`);
-            }
-
-            if (match[2] === '-') {
-              // Moving a file descriptor closes the target: '2>&1-'
-              if (targetFd === 1) {
-                output = this._dummyOutput;
-              } else {
-                error = this._dummyOutput;
-              }
-            }
-            break;
-          }
-
-          default:
-            throw new GeneralError(`Unrecognised redirect ${token}`);
-        }
-      }
-    }
+    ({ input, output, error } = this._applyRedirects(commandNode, input, output, error));
 
     let commandId = -1;
     let exitCode: number = ExitCode.SUCCESS;
@@ -904,6 +795,126 @@ export class ShellImpl implements IShellImpl {
       this._options.commandStateChangedCallback({ commandId, exitCode, state: 'finished' });
     }
     return exitCode;
+  }
+
+  private _applyRedirects(
+    commandNode: CommandNode,
+    input: IInput,
+    output: IOutput,
+    error: IOutput
+  ): { input: IInput; output: IOutput; error: IOutput } {
+    if (commandNode.redirects) {
+      const fileSystem = this._runContext.fileSystem;
+      for (const redirect of commandNode.redirects) {
+        // Redirects take effect left to right, so duplicating a file descriptor copies whichever
+        // target it points to at that moment. When several redirects target the same descriptor,
+        // the last one wins.
+        const token = redirect.token.value;
+        const target = redirect.target.value;
+        const { fd, operator } = splitRedirect(token);
+
+        switch (operator) {
+          case '>':
+          case '>|':
+          case '>>': {
+            const append: boolean = operator === '>>';
+            const fileOutput = new FileOutput(fileSystem, target, append);
+            if (fd === 1) {
+              output = fileOutput;
+            } else if (fd === 2) {
+              error = fileOutput;
+            } else {
+              throw unsupportedRedirect(token, fd);
+            }
+            break;
+          }
+
+          case '&>':
+          case '&>>': {
+            // Both standard output and standard error ('cmd &> file').
+            const appendBoth: boolean = operator === '&>>';
+            output = error = new FileOutput(fileSystem, target, appendBoth);
+            break;
+          }
+
+          case '<':
+          case '<>': {
+            if (fd !== 0) {
+              throw unsupportedRedirect(token, fd);
+            }
+            // '<> file' opens for reading and writing. cockle commands only read from stdin.
+            const readWrite: boolean = operator === '<>';
+            input = new FileInput(fileSystem, target, readWrite);
+            break;
+          }
+
+          case '<<':
+          case '<<-': {
+            const body: string | undefined = redirect.token.heredoc;
+            if (body === undefined) {
+              // Should not occur as the shell only runs complete commands.
+              throw new GeneralError('Here document is incomplete');
+            }
+            input = new StringInput(body);
+            break;
+          }
+
+          case '<<<':
+            if (fd !== 0) {
+              throw unsupportedRedirect(token, fd);
+            }
+            // Here string: 'cat <<< hello'.
+            input = new StringInput(`${target}\n`);
+            break;
+
+          case '<&':
+            if (fd !== 0) {
+              throw unsupportedRedirect(token, fd);
+            } else if (target === '-') {
+              // Closed standard input, reads return nothing.
+              input = this._dummyInput;
+            } else if (target !== '0') {
+              throw new GeneralError(`Redirect '${token}${target}' is not supported`);
+            }
+            break;
+
+          case '>&': {
+            const match = /^(\d*)(-?)$/.exec(target);
+
+            if (match === null) {
+              // A word that is not a file descriptor redirects both streams: 'cmd >& file'.
+              output = error = new FileOutput(fileSystem, target, false);
+              break;
+            }
+
+            // A bare '-' closes this file descriptor: 'cmd 2>&-'.
+            const targetFd = match[1] === '' ? fd : parseInt(match[1], 10);
+            if (fd === 1 && targetFd === 2) {
+              output = error;
+            } else if (fd === 2 && targetFd === 1) {
+              error = output;
+            } else if (fd !== targetFd || (fd !== 1 && fd !== 2)) {
+              throw new GeneralError(`Redirect '${token}${target}' is not supported`);
+            }
+
+            if (match[2] === '-') {
+              // Moving a file descriptor closes the target: '2>&1-'
+              if (targetFd === 1) {
+                output = this._dummyOutput;
+              } else {
+                error = this._dummyOutput;
+              }
+            }
+            break;
+          }
+
+          default:
+            throw new GeneralError(`Unrecognised redirect ${token}`);
+        }
+      }
+    }
+
+    return { input, output, error };
   }
 
   private _setDarkMode(darkMode: boolean | undefined): void {

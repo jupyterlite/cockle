@@ -38,3 +38,8 @@ export class RunCommandError extends ErrorExitCode {
     super(ExitCode.CANNOT_RUN_COMMAND, `'${commandName}': cannot run command`);
   }
 }
+
+/** Error for a redirection to a file descriptor that the shell does not support. */
+export function unsupportedRedirect(token: string, fd: number): GeneralError {
+  return new GeneralError(`Redirect '${token}' to file descriptor ${fd} is not supported`);
+}
