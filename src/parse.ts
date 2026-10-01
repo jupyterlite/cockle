@@ -1,7 +1,7 @@
 import type { Aliases } from './aliases';
 import { GeneralError } from './error_exit_code';
 import type { Token } from './tokenize';
-import { hasOpenQuote, isHeredocToken, tokenize } from './tokenize';
+import { hasOpenQuote, isHeredocToken, isRedirectToken, tokenize } from './tokenize';
 
 const endOfCommand = ';&';
 //const ignore_trailing = ";"
@@ -13,7 +13,7 @@ export abstract class Node {
 
 export class CommandNode extends Node {
   constructor(
-    readonly name: Token,
+    readonly name: Token | undefined,
     readonly suffix: Token[],
     readonly redirects?: RedirectNode[]
   ) {
@@ -26,7 +26,7 @@ export class CommandNode extends Node {
     } else if (this.suffix.length > 0) {
       return [this.suffix[this.suffix.length - 1], false];
     } else {
-      return [this.name, true];
+      return [this.name ?? null, true];
     }
   }
 }
@@ -109,40 +109,27 @@ export function parse(source: string, throwErrors: boolean = true, aliases?: Ali
 }
 
 function _createCommandNode(tokens: Token[]): CommandNode {
-  let args = tokens.slice(1);
-
-  // Handle redirects.
-  let redirectNodes: RedirectNode[] | undefined;
-  const index = args.findIndex(token => _isRedirect(token.value));
-  if (index >= 0) {
-    redirectNodes = _createRedirectNodes(args.slice(index));
-    args = args.slice(0, index);
-  }
-
-  return new CommandNode(tokens[0], args, redirectNodes);
-}
-
-function _createRedirectNodes(tokens: Token[]): RedirectNode[] {
+  const args: Token[] = [];
   const redirectNodes: RedirectNode[] = [];
-  while (tokens.length > 0) {
-    const token = tokens.shift()!;
-    if (!_isRedirect(token.value)) {
-      throw new GeneralError(`Expected redirect token not '${token.value}'`);
-    }
+  let name: Token | undefined;
 
-    if (tokens.length < 1) {
-      throw new GeneralError(
-        `Redirect '${token.value}' should be followed by a file to redirect to`
-      );
+  for (let i = 0; i < tokens.length; ++i) {
+    const token = tokens[i];
+    if (isRedirectToken(token.value)) {
+      if (i + 1 >= tokens.length) {
+        throw new GeneralError(
+          `Redirect '${token.value}' should be followed by a file to redirect to`
+        );
+      }
+      redirectNodes.push(new RedirectNode(token, tokens[++i]));
+    } else if (name === undefined) {
+      name = token;
+    } else {
+      args.push(token);
     }
-    const target = tokens.shift()!;
-    redirectNodes.push(new RedirectNode(token, target));
   }
-  return redirectNodes;
-}
 
-function _isRedirect(str: string): boolean {
-  return str.startsWith('>') || str.startsWith('2>') || str.startsWith('<');
+  return new CommandNode(name, args, redirectNodes.length > 0 ? redirectNodes : undefined);
 }
 
 /**

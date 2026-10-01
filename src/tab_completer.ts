@@ -38,7 +38,7 @@ export class TabCompleter {
       tabCompleteResult = { possibles: this._getPossibleCompletionsCommand(tokenToComplete) };
     } else if (lastParsedNode instanceof CommandNode) {
       const commandNode = lastParsedNode as CommandNode;
-      const name = commandNode.name.value;
+      const name = commandNode.name?.value ?? '';
       const runner = this.context.commandRegistry.get(name);
       if (runner !== null && runner.tabComplete !== undefined) {
         const args = commandNode.suffix.map(token => token.value);
