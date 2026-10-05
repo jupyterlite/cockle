@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "declaration": false,
+    "esModuleInterop": true,
+    "lib": ["es2024"],
+    "module": "nodenext",
+    "noEmitOnError": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "outDir": "lib/tools",
+    "rootDir": "src/tools",
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "es2024",
+    "types": ["node"],
+    "sourceMap": true
+  },
+  "include": ["src/tools/**/*"]
+}
