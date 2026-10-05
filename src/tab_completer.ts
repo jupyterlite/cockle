@@ -104,6 +104,10 @@ export class TabCompleter {
    * Insert text at the end of the word being completed, which may be after the cursor. The
    * remainder of the command line is unchanged and the cursor is moved to the end of the
    * inserted text.
+   * @param commandLine The current command line object.
+   * @param wordEnd The index at the end of the word being completed.
+   * @param extra The text to insert at the end of the word.
+   * @returns The updated command line object.
    */
   private _insertCompletion(
     commandLine: ICommandLine,
