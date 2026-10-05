@@ -55,10 +55,38 @@ test.describe('TabCompleter', () => {
       );
     });
 
-    test('should complete within a command preserving suffix', async ({ page }) => {
+    test('should not complete when the whole word is not a command', async ({ page }) => {
       const { enter, leftArrow, tab } = keys;
+      // Cursor is before the final `X` so the whole word is `ecX` which is not a command.
       const output = await shellInputsSimpleN(page, [['e', 'c', 'X', leftArrow, tab], [enter]]);
-      expect(output[1]).toMatch(/^\r\nX\r\n/);
+      expect(output[0]).toEqual('ecX\x1b[1D');
+      expect(output[1]).toMatch(/^\r\nError: 'ecX': command not found\r\n/);
+    });
+
+    test('should complete whole word with cursor not at end of command line', async ({ page }) => {
+      const { enter, leftArrow, tab } = keys;
+      // Cursor is inside the word `echo` which is already a complete command, so only the
+      // separating space is added at the end of the command line.
+      const output = await shellInputsSimpleN(page, [
+        ['e', 'c', 'h', 'o', leftArrow, leftArrow],
+        [tab],
+        [enter]
+      ]);
+      expect(output[1]).toEqual('ho ');
+      expect(output[2]).toMatch(/^\r\n\r\n/);
+    });
+
+    test('should complete whole word before text following the cursor', async ({ page }) => {
+      const { enter, leftArrow, tab } = keys;
+      // `echo` followed by ` ho`: the word at the cursor is `ec` and is completed to `echo`,
+      // leaving the text after the cursor unchanged.
+      const output = await shellInputsSimpleN(page, [
+        ['e', 'c', ' ', 'h', 'o', leftArrow, leftArrow, leftArrow],
+        [tab],
+        [enter]
+      ]);
+      expect(output[1]).toEqual('ho ho\x1b[3D');
+      expect(output[2]).toMatch(/^\r\nho\r\n/);
     });
   });
 

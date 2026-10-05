@@ -94,3 +94,27 @@ export function toColumns(strings: string[], columnWidth: number): string[] {
   }
   return lines;
 }
+
+/**
+ * Find the word containing the cursor.
+ * Returns the start and end indices of the word in the text. Words are delimited by whitespace,
+ * newlines, command separators, redirection characters and quotes.
+ * @param text The text containing the word.
+ * @param cursorIndex The index of the cursor within the text.
+ * @returns A tuple [start, end] representing the start and end indices of the word at the cursor.
+ */
+export function wordAtCursor(text: string, cursorIndex: number): [number, number] {
+  const isDelimiter = (char: string) => ' \n;&|><\'"'.includes(char);
+
+  let start = cursorIndex;
+  while (start > 0 && !isDelimiter(text[start - 1])) {
+    start--;
+  }
+
+  let end = cursorIndex;
+  while (end < text.length && !isDelimiter(text[end])) {
+    end++;
+  }
+
+  return [start, end];
+}

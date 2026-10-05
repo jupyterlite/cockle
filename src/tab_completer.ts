@@ -7,7 +7,7 @@ import type { ITabCompleteResult } from './tab_complete';
 import { PathType } from './tab_complete';
 import type { Termios } from './termios';
 import type { RuntimeExports } from './types/wasm_module';
-import { longestStartsWith, toColumns } from './utils';
+import { longestStartsWith, toColumns, wordAtCursor } from './utils';
 
 export class TabCompleter {
   /**
@@ -23,14 +23,14 @@ export class TabCompleter {
     const text = commandLine.text.slice(0, commandLine.cursorIndex);
     const suffix = commandLine.text.slice(commandLine.cursorIndex);
 
+    // Complete the whole word containing the cursor, not just the part before it.
+    const [wordStart, wordEnd] = wordAtCursor(commandLine.text, commandLine.cursorIndex);
+
     const parsed = parse(text, false);
     const lastParsedNode = parsed.at(-1); // Deal with multiple commands in commandLine.
-    const [lastToken, isCommand] = text.endsWith(' ')
-      ? [null, false]
-      : lastParsedNode !== undefined
-        ? lastParsedNode.lastToken()
-        : [null, true];
-    let tokenToComplete = lastToken?.value ?? '';
+    const isCommand =
+      !text.endsWith(' ') && (lastParsedNode === undefined || lastParsedNode.lastToken()[1]);
+    let tokenToComplete = commandLine.text.slice(wordStart, wordEnd);
 
     // Get possible matches, default is to match path.
     let tabCompleteResult: ITabCompleteResult = { pathType: PathType.Any };
@@ -41,9 +41,13 @@ export class TabCompleter {
       const name = commandNode.name?.value ?? '';
       const runner = this.context.commandRegistry.get(name);
       if (runner !== null && runner.tabComplete !== undefined) {
+        // The last argument is the word being completed. It replaces the last parsed argument
+        // when the cursor is in the middle of it, otherwise it is a new argument.
         const args = commandNode.suffix.map(token => token.value);
-        if (!tokenToComplete) {
-          args.push('');
+        if (args.length > 0 && commandLine.cursorIndex !== wordStart) {
+          args[args.length - 1] = tokenToComplete;
+        } else {
+          args.push(tokenToComplete);
         }
         const { commandRegistry, environment, stdinContext } = this.context;
         tabCompleteResult = await runner.tabComplete({
@@ -78,27 +82,50 @@ export class TabCompleter {
     // If a single possible match, complete using it.
     if (possibles.length === 1) {
       let extra = possibles[0].slice(tokenToComplete.length);
-      if (!extra.endsWith('/')) {
+      if (!extra.endsWith('/') && wordEnd === commandLine.text.length) {
         extra += ' ';
       }
-      commandLine.text = commandLine.text.slice(0, commandLine.cursorIndex) + extra + suffix;
-      commandLine.cursorIndex += extra.length;
-      this.context.workerIO.write(extra + suffix + ansi.cursorLeft(suffix.length));
-      return commandLine;
+      return this._insertCompletion(commandLine, wordEnd, extra);
     }
 
-    // If all the possible matches start with the same text that is longer than the tokenToMatch,
-    // complete up to that,
+    // If all the possible matches start with the same text that is longer than the word being
+    // completed, complete up to that.
     const startsWith = longestStartsWith(possibles, tokenToComplete.length);
     if (startsWith.length > tokenToComplete.length) {
       const extra = startsWith.slice(tokenToComplete.length);
-      commandLine.text = commandLine.text.slice(0, commandLine.cursorIndex) + extra + suffix;
-      commandLine.cursorIndex += extra.length;
-      this.context.workerIO.write(extra + suffix + ansi.cursorLeft(suffix.length));
-      return commandLine;
+      return this._insertCompletion(commandLine, wordEnd, extra);
     }
 
     await this._showPossibleCompletions(commandLine, suffix, possibles);
+    return commandLine;
+  }
+
+  /**
+   * Insert text at the end of the word being completed, which may be after the cursor. The
+   * remainder of the command line is unchanged and the cursor is moved to the end of the
+   * inserted text.
+   * @param commandLine The current command line object.
+   * @param wordEnd The index at the end of the word being completed.
+   * @param extra The text to insert at the end of the word.
+   * @returns The updated command line object.
+   */
+  private _insertCompletion(
+    commandLine: ICommandLine,
+    wordEnd: number,
+    extra: string
+  ): ICommandLine {
+    if (extra.length === 0) {
+      return commandLine;
+    }
+
+    const { text, cursorIndex } = commandLine;
+    const afterWord = text.slice(wordEnd);
+
+    commandLine.text = text.slice(0, wordEnd) + extra + afterWord;
+    commandLine.cursorIndex = wordEnd + extra.length;
+    this.context.workerIO.write(
+      text.slice(cursorIndex, wordEnd) + extra + afterWord + ansi.cursorLeft(afterWord.length)
+    );
     return commandLine;
   }
 
