@@ -101,7 +101,7 @@ export function toColumns(strings: string[], columnWidth: number): string[] {
  * newlines, command separators, redirection characters and quotes.
  * @param text The text containing the word.
  * @param cursorIndex The index of the cursor within the text.
- * @returns A tuple [start, end] representing the start and end indices of the word at the cursor.  
+ * @returns A tuple [start, end] representing the start and end indices of the word at the cursor.
  */
 export function wordAtCursor(text: string, cursorIndex: number): [number, number] {
   const isDelimiter = (char: string) => ' \n;&|><\'"'.includes(char);
