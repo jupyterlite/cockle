@@ -106,7 +106,7 @@ export abstract class WorkerIO implements IWorkerIO {
   }
 
   write(text: string | Int8Array | number[]): void {
-    let chars: number[] = [];
+    let chars: number[];
     if (typeof text === 'string') {
       chars = this._processWriteChars(text.split('').map(ch => ch.charCodeAt(0)));
     } else {

@@ -64,7 +64,7 @@ export class TabCompleter {
     const possibles = tabCompleteResult.possibles ?? [];
     if (tabCompleteResult.pathType !== undefined) {
       // FileSystem matches are special as slashes can modify commandLine and tokenToComplete.
-      let pathPossibles: string[] = [];
+      let pathPossibles: string[];
       [commandLine, tokenToComplete, pathPossibles] = this._getPossibleCompletionsFileSystem(
         commandLine,
         tokenToComplete,

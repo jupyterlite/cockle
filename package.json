@@ -24,7 +24,7 @@
     "scripts": {
         "build": "tsc && tsc -p tsconfig.tools.json",
         "eslint": "npm run eslint:check -- --fix",
-        "eslint:check": "eslint . --cache --ext .ts,.tsx",
+        "eslint:check": "eslint . --cache",
         "lint": "npm run prettier && npm run eslint",
         "lint:check": "npm run prettier:check && npm run eslint:check",
         "prebuild": "node -p \"'export const COCKLE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
@@ -43,124 +43,24 @@
         "zod": "^3.23.8"
     },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@stylistic/eslint-plugin": "^5.10.0",
         "@types/json-schema": "^7.0.15",
         "@types/node": "^22.0.0",
         "@types/react": "^18.2.79",
-        "@typescript-eslint/eslint-plugin": "^7.16.1",
-        "@typescript-eslint/parser": "^7.16.1",
         "copyfiles": "^2.4.1",
-        "eslint": "^8.56.0",
-        "eslint-config-prettier": "^9.1.0",
+        "eslint": "^10.12.0",
+        "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-prettier": "^5.5.6",
         "eslint-plugin-sort": "^4.0.0",
         "prettier": "^3.8.3",
         "source-map-loader": "^5.0.0",
         "ts-loader": "^9.6.0",
-        "typescript": "^6.0.3"
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.71.1"
     },
     "engines": {
         "node": ">=22"
-    },
-    "eslintIgnore": [
-        "node_modules",
-        "dist",
-        "coverage",
-        "**/*.d.ts",
-        "**/*.wasm",
-        "**/package-lock.json",
-        "src/version.ts"
-    ],
-    "eslintConfig": {
-        "extends": [
-            "eslint:recommended",
-            "plugin:@typescript-eslint/eslint-recommended",
-            "plugin:@typescript-eslint/recommended",
-            "plugin:prettier/recommended"
-        ],
-        "parser": "@typescript-eslint/parser",
-        "parserOptions": {
-            "sourceType": "module"
-        },
-        "plugins": [
-            "@typescript-eslint",
-            "eslint-plugin-sort"
-        ],
-        "rules": {
-            "@typescript-eslint/consistent-type-imports": [
-                "error",
-                {
-                    "prefer": "type-imports",
-                    "fixStyle": "separate-type-imports"
-                }
-            ],
-            "@typescript-eslint/naming-convention": [
-                "error",
-                {
-                    "selector": "interface",
-                    "format": [
-                        "PascalCase"
-                    ],
-                    "custom": {
-                        "regex": "^I[A-Z]",
-                        "match": true
-                    }
-                }
-            ],
-            "@typescript-eslint/no-unused-vars": [
-                "warn",
-                {
-                    "args": "none"
-                }
-            ],
-            "@typescript-eslint/no-explicit-any": "off",
-            "@typescript-eslint/no-namespace": "off",
-            "@typescript-eslint/no-use-before-define": "off",
-            "@typescript-eslint/quotes": [
-                "error",
-                "single",
-                {
-                    "avoidEscape": true,
-                    "allowTemplateLiterals": false
-                }
-            ],
-            "curly": [
-                "error",
-                "all"
-            ],
-            "eqeqeq": "error",
-            "prefer-arrow-callback": "error",
-            "sort/imports": [
-                "warn",
-                {
-                    "caseSensitive": false,
-                    "groups": [
-                        {
-                            "regex": "^@",
-                            "order": 0
-                        },
-                        {
-                            "regex": "^\\./",
-                            "order": 20
-                        },
-                        {
-                            "regex": "^\\.\\./",
-                            "order": 30
-                        },
-                        {
-                            "type": "other",
-                            "order": 10
-                        }
-                    ],
-                    "typeOrder": "first"
-                }
-            ],
-            "sort/import-members": [
-                "error",
-                {
-                    "caseSensitive": false
-                }
-            ]
-        }
     },
     "prettier": {
         "printWidth": 100,
@@ -179,5 +79,10 @@
     },
     "publishConfig": {
         "access": "public"
+    },
+    "overrides": {
+        "eslint-plugin-sort": {
+            "@typescript-eslint/utils": "^8.71.1"
+        }
     }
 }
