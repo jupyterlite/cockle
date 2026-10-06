@@ -30,6 +30,7 @@ import {
   TerminalOutput
 } from './io';
 import { CommandNode, isCommandComplete, parse, PipeNode } from './parse';
+import { SharedFS } from './shared_fs';
 import { TabCompleter } from './tab_completer';
 import type { Termios } from './termios';
 import { splitRedirect } from './tokenize';
@@ -556,13 +557,42 @@ export class ShellImpl implements IShellImpl {
     });
     const { FS, PATH, ERRNO_CODES, PROXYFS } = module;
 
-    const mountpoint = this._fileSystem.mountpoint;
-    FS.mkdirTree(mountpoint, 0o777);
-
     this._runContext.fileSystem.FS = FS;
     this._runContext.fileSystem.PATH = PATH;
     this._runContext.fileSystem.ERRNO_CODES = ERRNO_CODES;
     this._runContext.fileSystem.PROXYFS = PROXYFS;
+
+    // Create new directories.
+    SharedFS.NON_WASM_DIRECTORIES_SHARED.forEach(dir => {
+      try {
+        FS.mkdir(dir, SharedFS.TOP_LEVEL_DIRECTORY_PERMISSIONS);
+      } catch (err: any) {
+        console.error(`Failed to create directory ${dir}`);
+      }
+    });
+
+    const mountpoint = this._fileSystem.mountpoint;
+    try {
+      FS.mkdirTree(mountpoint, SharedFS.TOP_LEVEL_DIRECTORY_PERMISSIONS);
+    } catch (err: any) {
+      console.error(`Failed to create mountpoint directory ${mountpoint}`);
+    }
+
+    // Set permissions of directories that are created in wasm module.
+    SharedFS.ALL_WASM_DIRECTORIES.forEach(dir => {
+      try {
+        FS.chmod(dir, SharedFS.TOP_LEVEL_DIRECTORY_PERMISSIONS);
+      } catch (err: any) {
+        console.error(`Failed to chmod ${dir}`);
+      }
+    });
+
+    // Set permissions of root directory.
+    try {
+      FS.chmod('/', SharedFS.ROOT_DIRECTORY_PERMISSIONS);
+    } catch (err: any) {
+      console.error('Failed to chmod of root directory');
+    }
 
     const { browsingContextId, baseUrl, initialDirectories, initialFiles } = this._options;
     await this._options.initDriveFSCallback({
