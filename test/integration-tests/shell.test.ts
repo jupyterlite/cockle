@@ -419,6 +419,36 @@ test.describe('Shell', () => {
     });
   });
 
+  test.describe('prompt expansion', () => {
+    test('should expand PS1 on every use', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { delay, shellSetupSimple } = globalThis.cockle;
+        const { shell, output } = await shellSetupSimple({ environment: { PS1: '[$PWD]$ ' } });
+        await shell.inputLine('');
+        await delay(10);
+        const ret0 = output.textAndClear();
+        await shell.inputLine('cd dirA');
+        await delay(10);
+        await shell.inputLine('');
+        await delay(10);
+        return [ret0, output.textAndClear()];
+      });
+      expect(output[0]).toMatch('[/drive]$ '); // Prompt of the first line.
+      expect(output[1]).toMatch('\r\n[/drive/dirA]$ '); // Recomputed after cd.
+    });
+
+    test('should expand an unknown prompt variable to an empty string', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { delay, shellSetupEmpty } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ environment: { PS1: 'p$NOT_SET: ' } });
+        await shell.inputLine('');
+        await delay(10);
+        return output.text;
+      });
+      expect(output).toMatch('p: ');
+    });
+  });
+
   test.describe('echo input', () => {
     test('should echo input up to \\r', async ({ page }) => {
       expect(await shellInputsSimple(page, ['l', 's', ' ', '-', 'a', 'l'])).toEqual('ls -al');

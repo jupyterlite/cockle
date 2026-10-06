@@ -476,6 +476,50 @@ describe('tokenize', () => {
       { offset: 9, value: ';' }
     ]);
   });
+
+  test('should record quoted sections of tokens containing a dollar', () => {
+    expect(tokenize("echo '$HOME'")).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: '$HOME', quoted: [[0, 5]], singleQuoted: [[0, 5]] }
+    ]);
+    expect(tokenize("echo pre'$X'")).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'pre$X', quoted: [[3, 5]], singleQuoted: [[3, 5]] }
+    ]);
+    expect(tokenize("echo '$X'$Y")).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: '$X$Y', quoted: [[0, 2]], singleQuoted: [[0, 2]] }
+    ]);
+    // A token that starts inside quotes resets the section start: without it the offset of the
+    // quoted section of the previous token would leak into this one.
+    expect(tokenize('echo "a" \'$b\'')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'a' },
+      { offset: 9, value: '$b', quoted: [[0, 2]], singleQuoted: [[0, 2]] }
+    ]);
+  });
+
+  test('should record sections for a dollar adjacent to a quoted section', () => {
+    expect(tokenize("echo $X'a'")).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: '$Xa', quoted: [[2, 3]], singleQuoted: [[2, 3]] }
+    ]);
+    expect(tokenize('echo "$X"a')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: '$Xa', quoted: [[0, 2]] }
+    ]);
+  });
+
+  test('should not record sections for tokens without a dollar', () => {
+    expect(tokenize("echo 'plain'")).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'plain' }
+    ]);
+    expect(tokenize('echo $HOME')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: '$HOME' }
+    ]);
+  });
 });
 
 describe('redirectOperator', () => {

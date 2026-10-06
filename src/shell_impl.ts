@@ -16,6 +16,7 @@ import {
   unsupportedRedirect
 } from './error_exit_code';
 import { ExitCode } from './exit_code';
+import { expandString, expandToken, expandTokens, nameRegex } from './expand';
 import type { IFileSystem } from './file_system';
 import { History } from './history';
 import type { IInput, IOutput } from './io';
@@ -33,8 +34,31 @@ import { CommandNode, isCommandComplete, parse, PipeNode } from './parse';
 import { SharedFS } from './shared_fs';
 import { TabCompleter } from './tab_completer';
 import type { Termios } from './termios';
+import type { Token } from './tokenize';
 import { splitRedirect } from './tokenize';
 import { joinURL, stringFromCharCodes } from './utils';
+
+/** `NAME=value` assignment token: a leading name whose equals sign is outside any single-quoted section.
+ * @param token The token to parse for a `NAME=value` assignment.
+ * @returns A tuple containing the name and value if the token is a valid `NAME=value` assignment, or undefined otherwise.
+ */
+function _parseAssignment(token: Token): [string, string] | undefined {
+  const index: number = token.value.indexOf('=');
+  const isSingleQuotedAtIndex: boolean =
+    token.singleQuoted?.some(([start, end]) => index >= start && index < end) ?? false;
+  if (index <= 0 || isSingleQuotedAtIndex) {
+    // '=1' (empty name), '1X=2' and "'X'=1" (equals inside single quotes) are not assignments;
+    // bash reports command not found for all three because the name regex rejects them.
+    // TODO: Consider handling more edge cases for assignment parsing.
+    // TODO: Should we return an error or some indication that the assignment is invalid
+    return undefined;
+  }
+  const name: string = token.value.slice(0, index);
+  if (!nameRegex.test(name)) {
+    return undefined;
+  }
+  return [name, token.value.slice(index + 1)];
+}
 
 /**
  * Shell implementation.
@@ -116,7 +140,10 @@ export class ShellImpl implements IShellImpl {
     stdoutIsTerminal: boolean,
     stderrIsTerminal: boolean,
     termiosFlags: Termios.IFlags
-  ): Promise<{ exitCode: number; environmentChanges?: { [key: string]: string | undefined } }> {
+  ): Promise<{
+    exitCode: number;
+    environmentChanges?: { [key: string]: string | undefined };
+  }> {
     // Separates the start of the external command and its end which is handled by a promise
     // delegate. This is so that we are not awaiting the end of the command across the web worker to
     // main UI thread interface whilst we are potentially also awaiting stdin across that interface.
@@ -358,7 +385,7 @@ export class ShellImpl implements IShellImpl {
         this.output(
           ansi.eraseEndLine +
             ansi.eraseStartLine +
-            `\r${this.environment.getPrompt(1)}${this._commandLine.text}`
+            `\r${expandString(this.environment.getPrompt(1), this.environment)}${this._commandLine.text}`
         );
         break;
       }
@@ -709,7 +736,7 @@ export class ShellImpl implements IShellImpl {
       await this._handleThemeChange();
     }
     // Get prompt just before using as a theme change above can change the PS1 prompt colors.
-    const prompt = this.environment.getPrompt(promptIndex);
+    const prompt = expandString(this.environment.getPrompt(promptIndex), this.environment);
     this._runContext.workerIO.write(`\n${prompt}`);
   }
 
@@ -785,7 +812,23 @@ export class ShellImpl implements IShellImpl {
     output: IOutput,
     error: IOutput
   ): Promise<number> {
-    const name = commandNode.name?.value ?? '';
+    const head = commandNode.name;
+    if (
+      head !== undefined &&
+      _parseAssignment(head) !== undefined &&
+      commandNode.suffix.every(_parseAssignment)
+    ) {
+      for (const token of [head, ...commandNode.suffix]) {
+        const name = _parseAssignment(token)?.[0];
+        if (name === undefined) {
+          continue;
+        }
+        this.environment.set(name, expandToken(token, this.environment).slice(name.length + 1));
+      }
+      return ExitCode.SUCCESS;
+    }
+    // Anything else, such as `A=1 echo hi`, is treated as a command, which is not found.
+    const name = head?.value ?? '';
     const runner = this._runContext.commandRegistry.get(name);
     if (name !== '' && runner === null) {
       // Give location of command in input?
@@ -799,7 +842,7 @@ export class ShellImpl implements IShellImpl {
     try {
       if (runner !== null) {
         // Set current properties of IContext.
-        let args = commandNode.suffix.map(token => token.value);
+        let args: string[] = expandTokens(commandNode.suffix, this.environment);
         args = this._filenameExpansion(args);
         commandId = this._nextCommandId();
         this._runContext.commandId = commandId;
@@ -809,7 +852,12 @@ export class ShellImpl implements IShellImpl {
         this._runContext.stdout = output;
         this._runContext.stderr = error;
 
-        this._options.commandStateChangedCallback({ commandId, name, args, state: 'loading' });
+        this._options.commandStateChangedCallback({
+          commandId,
+          name,
+          args,
+          state: 'loading'
+        });
 
         exitCode = await runner.run(this._runContext);
       }
@@ -835,7 +883,11 @@ export class ShellImpl implements IShellImpl {
     }
 
     if (runner !== null) {
-      this._options.commandStateChangedCallback({ commandId, exitCode, state: 'finished' });
+      this._options.commandStateChangedCallback({
+        commandId,
+        exitCode,
+        state: 'finished'
+      });
     }
     return exitCode;
   }

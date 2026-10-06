@@ -2,6 +2,7 @@ import { ansi } from './ansi';
 import type { IEnableBufferedStdinCallback } from './callback_internal';
 import type { ICommandLine } from './command_line';
 import type { IRunContext } from './context';
+import { expandString } from './expand';
 import { CommandNode, parse } from './parse';
 import type { ITabCompleteResult } from './tab_complete';
 import { PathType } from './tab_complete';
@@ -223,7 +224,10 @@ export class TabCompleter {
 
     // Rewrite prompt and command line.
     this.context.workerIO.write(
-      output + environment.getPrompt(1) + commandLine.text + ansi.cursorLeft(suffix.length)
+      output +
+        expandString(environment.getPrompt(1), environment) +
+        commandLine.text +
+        ansi.cursorLeft(suffix.length)
     );
   }
 
