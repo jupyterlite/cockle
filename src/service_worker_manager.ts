@@ -90,10 +90,11 @@ export class ServiceWorkerManager {
     event: MessageEvent<{
       data: any;
       browsingContextId: string;
+      requestId?: string;
       pathname: string;
     }>
   ): Promise<void> => {
-    const { browsingContextId, data, pathname } = event.data;
+    const { browsingContextId, data, pathname, requestId } = event.data;
 
     if (browsingContextId !== this._browsingContextId) {
       // Message is not meant for us
@@ -105,9 +106,12 @@ export class ServiceWorkerManager {
     }
 
     const response = await this.shellManager.handleStdin(data);
+    // Pass the browsingContextId and requestId back so that the service worker can identify which
+    // request this is the reply to.
     this._broadcastChannel.postMessage({
       response,
-      browsingContextId: this._browsingContextId
+      browsingContextId: this._browsingContextId,
+      requestId
     });
   };
 

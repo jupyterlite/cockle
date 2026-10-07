@@ -69,4 +69,37 @@ test.describe('ShellManager', () => {
     });
     expect(output).toEqual('Duplicate shellId: abc');
   });
+
+  // Multiple shells sharing a ShellManager, and hence a browsingContextId, can each be waiting for
+  // stdin via the service worker at the same time. Each must receive only the input sent to it.
+  ['wasm-test', 'js-test'].forEach(cmdName => {
+    test(`should route service worker stdin to the correct shell using ${cmdName}`, async ({
+      page
+    }) => {
+      const output = await page.evaluate(async cmdName => {
+        const { keys, shellManager, shellSetupEmpty, terminalInput } = globalThis.cockle;
+        const stdinOption = 'sw';
+        const shellA = await shellSetupEmpty({ shellManager, stdinOption });
+        const shellB = await shellSetupEmpty({ shellManager, stdinOption });
+
+        // Start a command in each shell that waits for stdin.
+        const cmdA = shellA.shell.inputLine(`${cmdName} stdin`);
+        const cmdB = shellB.shell.inputLine(`${cmdName} stdin`);
+
+        // Send a line of input to each shell in turn, then EOT to finish each command.
+        await terminalInput(shellA.shell, ['a', 'b', 'c', '\n']);
+        await terminalInput(shellB.shell, ['x', 'y', 'z', '\n']);
+        await terminalInput(shellA.shell, [keys.EOT]);
+        await terminalInput(shellB.shell, [keys.EOT]);
+        await Promise.all([cmdA, cmdB]);
+
+        return [shellA.output.text, shellB.output.text];
+      }, cmdName);
+
+      expect(output[0]).toMatch(`${cmdName} stdin\r\nabc\r\nABC\r\n`);
+      expect(output[0]).not.toMatch('xyz');
+      expect(output[1]).toMatch(`${cmdName} stdin\r\nxyz\r\nXYZ\r\n`);
+      expect(output[1]).not.toMatch('abc');
+    });
+  });
 });
