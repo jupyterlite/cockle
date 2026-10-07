@@ -6,8 +6,27 @@ import type { ISize } from './callback';
  * commands.
  */
 export class Environment extends Map<string, string> {
-  constructor(color: boolean, shellId: string, browsingContextId: string | undefined) {
+  constructor(source: Environment);
+  constructor(
+    color: boolean,
+    shellId: string,
+    browsingContextId: string | undefined,
+    entries?: Iterable<readonly [string, string]>
+  );
+  constructor(
+    colorOrSource: boolean | Environment,
+    shellId?: string,
+    browsingContextId?: string,
+    entries?: Iterable<readonly [string, string]>
+  ) {
     super();
+    if (typeof colorOrSource !== 'boolean') {
+      for (const [name, value] of colorOrSource) {
+        this.set(name, value);
+      }
+      return;
+    }
+    const color = colorOrSource;
     if (shellId) {
       this.set('COCKLE_SHELL_ID', shellId);
     }
@@ -20,6 +39,11 @@ export class Environment extends Map<string, string> {
       this.set('TERMINFO', '/usr/local/share/terminfo'); // Needed for nano
     } else {
       this.set('PS1', 'js-shell: ');
+    }
+    if (entries) {
+      for (const [name, value] of entries) {
+        this.set(name, value);
+      }
     }
   }
 

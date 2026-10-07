@@ -5,6 +5,7 @@ import type { IWorkerIO } from './buffered_io';
 import type { ISize } from './callback';
 import type { IExternalCommandResult } from './callback_internal';
 import type { ICommandLine } from './command_line';
+import type { ICommandRunner } from './commands';
 import { CommandModule, CommandModuleLoader, CommandPackage, CommandRegistry } from './commands';
 import type { IRunContext } from './context';
 import type { IShellImpl } from './defs_internal';
@@ -16,7 +17,7 @@ import {
   unsupportedRedirect
 } from './error_exit_code';
 import { ExitCode } from './exit_code';
-import { expandString, expandToken, expandTokens, nameRegex } from './expand';
+import { expandHeredoc, expandString, expandToken, expandTokens, splitToken } from './expand';
 import type { IFileSystem } from './file_system';
 import { History } from './history';
 import type { IInput, IOutput } from './io';
@@ -38,26 +39,27 @@ import type { Token } from './tokenize';
 import { splitRedirect } from './tokenize';
 import { joinURL, stringFromCharCodes } from './utils';
 
-/** `NAME=value` assignment token: a leading name whose equals sign is outside any single-quoted section.
+/** `NAME=value` assignment token: a leading name which is followed directly by an unquoted '='.
+ *
+ * As in bash, the name is never expanded or unquoted, so a '$', a quote character or any character
+ * outside the name regex makes the token a command word instead. The value is everything after the
+ * first '=' that is outside a single-quoted section, so `A='b=c'` and `A=b'='c` both assign the
+ * value `b=c`, whereas `A=B=1` assigns `B=1` to `A`.
  * @param token The token to parse for a `NAME=value` assignment.
  * @returns A tuple containing the name and value if the token is a valid `NAME=value` assignment, or undefined otherwise.
  */
-function _parseAssignment(token: Token): [string, string] | undefined {
-  const index: number = token.value.indexOf('=');
-  const isSingleQuotedAtIndex: boolean =
-    token.singleQuoted?.some(([start, end]) => index >= start && index < end) ?? false;
-  if (index <= 0 || isSingleQuotedAtIndex) {
-    // '=1' (empty name), '1X=2' and "'X'=1" (equals inside single quotes) are not assignments;
-    // bash reports command not found for all three because the name regex rejects them.
-    // TODO: Consider handling more edge cases for assignment parsing.
-    // TODO: Should we return an error or some indication that the assignment is invalid
+export function parseAssignment(token: Token): [string, string] | undefined {
+  const match: RegExpExecArray | null = /^[A-Za-z_][A-Za-z0-9_]*=/.exec(token.value);
+  if (match === null) {
     return undefined;
   }
-  const name: string = token.value.slice(0, index);
-  if (!nameRegex.test(name)) {
+  const index: number = match[0].length - 1;
+  if (token.quoted?.some(([start]) => start <= index)) {
+    // The name is not expanded or unquoted, so a quote at or before the '=' makes the token a
+    // command word, as bash does: "'X'=1", "A''=1" and "A'x'=1" all report command not found.
     return undefined;
   }
-  return [name, token.value.slice(index + 1)];
+  return [match[0].slice(0, -1), token.value.slice(index + 1)];
 }
 
 /**
@@ -776,7 +778,7 @@ export class ShellImpl implements IShellImpl {
 
       for (const node of nodes) {
         if (node instanceof CommandNode) {
-          exitCode = await this._runCommand(node, stdin, stdout, stderr);
+          exitCode = await this._runCommand(node, stdin, stdout, stderr, false);
         } else if (node instanceof PipeNode) {
           const { commands } = node;
           const n = commands.length;
@@ -784,7 +786,7 @@ export class ShellImpl implements IShellImpl {
           for (let i = 0; i < n; i++) {
             const input = i === 0 ? stdin : prevPipe!.input;
             const output = i < n - 1 ? (prevPipe = new Pipe()) : stdout;
-            exitCode = await this._runCommand(commands[i], input, output, stderr);
+            exitCode = await this._runCommand(commands[i], input, output, stderr, true);
           }
         } else {
           // This should not occur.
@@ -810,93 +812,229 @@ export class ShellImpl implements IShellImpl {
     commandNode: CommandNode,
     input: IInput,
     output: IOutput,
-    error: IOutput
+    error: IOutput,
+    inPipeline: boolean
   ): Promise<number> {
     const head = commandNode.name;
-    if (
-      head !== undefined &&
-      _parseAssignment(head) !== undefined &&
-      commandNode.suffix.every(_parseAssignment)
-    ) {
-      for (const token of [head, ...commandNode.suffix]) {
-        const name = _parseAssignment(token)?.[0];
-        if (name === undefined) {
-          continue;
-        }
-        this.environment.set(name, expandToken(token, this.environment).slice(name.length + 1));
-      }
-      return ExitCode.SUCCESS;
+    const tokens = head !== undefined ? [head, ...commandNode.suffix] : [];
+
+    // Leading 'NAME=value' tokens before the command word are assignments. A command which is only
+    // assignments defines them in the shell; otherwise they apply to that command alone.
+    const k = this._assignmentCount(tokens);
+
+    if (k === tokens.length && k > 0) {
+      return this._runAssignmentsOnly(commandNode, tokens, k, input, output, error, inPipeline);
     }
-    // Anything else, such as `A=1 echo hi`, is treated as a command, which is not found.
-    const name = head?.value ?? '';
+
+    // Redirections are applied before the command is looked up: bash reports an ambiguous redirect
+    // in preference to command not found, and creates the file before reporting the latter.
+    ({ input, output, error } = this._applyRedirects(
+      commandNode,
+      input,
+      output,
+      error,
+      this.environment
+    ));
+
+    // A 'NAME=value' prefix applies to the command alone, and a later name in the prefix sees an
+    // earlier one: 'B=1 C=$B cmd' runs cmd with C=1.
+    const saved_env: Environment = this._runContext.environment;
+    let environment: Environment = saved_env;
+    let temporary: boolean = false;
+    if (k > 0) {
+      environment = new Environment(this.environment);
+      temporary = true;
+      for (let i = 0; i < k; i++) {
+        this._assign(tokens[i], environment);
+      }
+    }
+
+    const name = tokens[k]?.value ?? '';
     const runner = this._runContext.commandRegistry.get(name);
     if (name !== '' && runner === null) {
       // Give location of command in input?
       throw new FindCommandError(name);
     }
+    if (runner === null) {
+      this._flushOutputs(output, error);
+      if (temporary) {
+        this._runContext.environment = saved_env;
+      }
+      return ExitCode.SUCCESS;
+    }
 
-    ({ input, output, error } = this._applyRedirects(commandNode, input, output, error));
+    return this._executeCommand(
+      runner,
+      name,
+      tokens,
+      k,
+      environment,
+      saved_env,
+      temporary,
+      input,
+      output,
+      error
+    );
+  }
 
+  /**
+   * Count the number of assignment tokens at the start of the token list.
+   * @param tokens The tokens representing the command and its arguments.
+   * @returns The number of assignment tokens at the start of the token list.
+   */
+  private _assignmentCount(tokens: Token[]): number {
+    let count = 0;
+    while (count < tokens.length && parseAssignment(tokens[count]) !== undefined) {
+      count++;
+    }
+    return count;
+  }
+
+  /**
+   * Run only the assignment part of a command, without executing the command itself.
+   * Handles input/output redirections and temporary environment changes for pipeline elements.
+   * @param commandNode The command node representing the command in the AST.
+   * @param tokens The tokens representing the command and its arguments.
+   * @param assignmentCount The number of assignment tokens at the start of the command.
+   * @param input The input stream for the command.
+   * @param output The output stream for the command.
+   * @param error The error stream for the command.
+   * @param inPipeline Whether the command is part of a pipeline.
+   * @returns The exit code of the assignment execution.
+   */
+  private _runAssignmentsOnly(
+    commandNode: CommandNode,
+    tokens: Token[],
+    assignmentCount: number,
+    input: IInput,
+    output: IOutput,
+    error: IOutput,
+    inPipeline: boolean
+  ): number {
+    // bash runs a pipeline element in a subshell, so 'A=1 | cat' discards the assignment.
+    const environment = inPipeline ? new Environment(this.environment) : this.environment;
+    for (let i = 0; i < assignmentCount; i++) {
+      this._assign(tokens[i], environment);
+    }
+    // The assignment happens before the redirections, so 'A=f > $A' writes to f.
+    ({ input, output, error } = this._applyRedirects(
+      commandNode,
+      input,
+      output,
+      error,
+      environment
+    ));
+    this._flushOutputs(output, error);
+    return ExitCode.SUCCESS;
+  }
+
+  /*
+   * Execute a command with the given runner, name, tokens, and environment.
+   * Handles temporary environment changes and input/output redirections.
+   * @param runner The command runner to execute.
+   * @param name The name of the command.
+   * @param tokens The tokens representing the command and its arguments.
+   * @param assignmentCount The number of assignment tokens at the start of the command.
+   * @param environment The current environment for the command.
+   * @param savedEnvironment The saved environment to restore if temporary changes were made.
+   * @param temporaryEnvironment Whether the environment changes are temporary.
+   * @param input The input stream for the command.
+   * @param output The output stream for the command.
+   * @param error The error stream for the command.
+   * @returns The exit code of the executed command.
+   */
+  private async _executeCommand(
+    runner: ICommandRunner,
+    name: string,
+    tokens: Token[],
+    assignmentCount: number,
+    environment: Environment,
+    savedEnvironment: Environment,
+    temporaryEnvironment: boolean,
+    input: IInput,
+    output: IOutput,
+    error: IOutput
+  ): Promise<number> {
     let commandId = -1;
     let exitCode: number = ExitCode.SUCCESS;
     try {
-      if (runner !== null) {
-        // Set current properties of IContext.
-        let args: string[] = expandTokens(commandNode.suffix, this.environment);
-        args = this._filenameExpansion(args);
-        commandId = this._nextCommandId();
-        this._runContext.commandId = commandId;
-        this._runContext.name = name;
-        this._runContext.args = [...args];
-        this._runContext.stdin = input;
-        this._runContext.stdout = output;
-        this._runContext.stderr = error;
+      let args: string[] = expandTokens(tokens.slice(assignmentCount + 1), environment);
+      args = this._filenameExpansion(args);
+      commandId = this._nextCommandId();
+      this._runContext.commandId = commandId;
+      this._runContext.name = name;
+      this._runContext.args = [...args];
+      this._runContext.stdin = input;
+      this._runContext.stdout = output;
+      this._runContext.stderr = error;
+      this._runContext.environment = environment;
 
-        this._options.commandStateChangedCallback({
-          commandId,
-          name,
-          args,
-          state: 'loading'
-        });
-
-        exitCode = await runner.run(this._runContext);
-      }
-    } finally {
-      // stdout and stderr can be the same IOutput, e.g. '> out 2>&1'. Flush only once: a second
-      // FileOutput.flush() would write an empty string and truncate the file.
-      if (error === output) {
-        output.flush();
-      } else {
-        error.flush();
-        output.flush();
-      }
-
-      if (runner !== null) {
-        // Reset properties of IContext.
-        this._runContext.commandId = -1;
-        this._runContext.name = '';
-        this._runContext.args = [];
-        this._runContext.stdin = this._dummyInput;
-        this._runContext.stdout = this._dummyOutput;
-        this._runContext.stderr = this._dummyOutput;
-      }
-    }
-
-    if (runner !== null) {
       this._options.commandStateChangedCallback({
         commandId,
-        exitCode,
-        state: 'finished'
+        name,
+        args,
+        state: 'loading'
       });
+
+      exitCode = await runner.run(this._runContext);
+    } finally {
+      this._flushOutputs(output, error);
+
+      // Reset properties of IContext.
+      this._runContext.commandId = -1;
+      this._runContext.name = '';
+      this._runContext.args = [];
+      this._runContext.stdin = this._dummyInput;
+      this._runContext.stdout = this._dummyOutput;
+      this._runContext.stderr = this._dummyOutput;
+
+      if (temporaryEnvironment) {
+        this._runContext.environment = savedEnvironment;
+      }
     }
+
+    this._options.commandStateChangedCallback({
+      commandId,
+      exitCode,
+      state: 'finished'
+    });
     return exitCode;
+  }
+
+  /**
+   * Flush the output and error streams, ensuring that any buffered data is written out.
+   * If the output and error streams are the same, flush only once to avoid truncating the file.
+   * @param output The output stream to be flushed.
+   * @param error The error stream to be flushed.
+   */
+  private _flushOutputs(output: IOutput, error: IOutput): void {
+    if (error === output) {
+      output.flush();
+    } else {
+      error.flush();
+      output.flush();
+    }
+  }
+
+  /** Set the variable named by an assignment token in an environment, expanding its value against
+   * that environment so that a later name in the same prefix sees an earlier one.
+   * @param token The assignment token to be processed.
+   * @param environment The environment in which the assignment should be applied.
+   */
+  private _assign(token: Token, environment: Environment): void {
+    const assignment = parseAssignment(token);
+    if (assignment !== undefined) {
+      const [name] = assignment;
+      environment.set(name, expandToken(token, environment).slice(name.length + 1));
+    }
   }
 
   private _applyRedirects(
     commandNode: CommandNode,
     input: IInput,
     output: IOutput,
-    error: IOutput
+    error: IOutput,
+    environment: ReadonlyMap<string, string>
   ): { input: IInput; output: IOutput; error: IOutput } {
     if (commandNode.redirects) {
       const fileSystem = this._runContext.fileSystem;
@@ -905,8 +1043,20 @@ export class ShellImpl implements IShellImpl {
         // target it points to at that moment. When several redirects target the same descriptor,
         // the last one wins.
         const token = redirect.token.value;
-        const target = redirect.target.value;
+        const word = redirect.target.value;
         const { fd, operator } = splitRedirect(token);
+
+        // A redirect target is expanded and split as a normal word is: 'OUT=f; echo hi > $OUT'
+        // writes to 'f'. A here string is not split, so it keeps its single value.
+        const fields =
+          operator === '<<<'
+            ? [expandToken(redirect.target, environment)]
+            : splitToken(redirect.target, environment);
+        if (fields.length !== 1) {
+          // bash reports the unexpanded word: 'A="a b"; echo hi > $A' gives '$A: ambiguous redirect'.
+          throw new GeneralError(`${word}: ambiguous redirect`);
+        }
+        const target = fields[0];
 
         switch (operator) {
           case '>':
@@ -950,7 +1100,12 @@ export class ShellImpl implements IShellImpl {
               // Should not occur as the shell only runs complete commands.
               throw new GeneralError('Here document is incomplete');
             }
-            input = new StringInput(body);
+            // A quoted delimiter makes the body literal; otherwise it is expanded but not split,
+            // as in bash. Backslash removal within double quotes does not apply here.
+            const content: string = redirect.token.quotedDelimiter
+              ? body
+              : expandHeredoc(body, environment);
+            input = new StringInput(content);
             break;
           }
 

@@ -1,4 +1,4 @@
-import { expandString, expandToken, expandTokens } from '../../src/expand';
+import { expandString, expandToken, expandTokens, splitToken } from '../../src/expand';
 import { tokenize } from '../../src/tokenize';
 
 function getEnvironment(): Map<string, string> {
@@ -42,8 +42,15 @@ describe('expandString', () => {
     expect(expandString('${', environment)).toEqual('${');
   });
 
-  test('should not expand a reference preceded by a backslash', () => {
-    expect(expandString('\\$HOME', environment)).toEqual('\\$HOME');
+  test('should remove a backslash and not expand the following reference', () => {
+    // bash: 'X=w; echo \$X' prints '$X'.
+    expect(expandString('\\$HOME', environment)).toEqual('$HOME');
+    expect(expandString('a\\$HOME', environment)).toEqual('a$HOME');
+  });
+
+  test('should remove a backslash before a character that is not special', () => {
+    expect(expandString('\\\\', environment)).toEqual('\\');
+    expect(expandString('a\\qb', environment)).toEqual('aqb');
   });
 
   test('should not recursively expand', () => {
@@ -122,5 +129,49 @@ describe('expandToken / expandTokens', () => {
     env2.set('Y', 'z');
     expect(expandToken(tokenize('B=$Y')[0], env2)).toEqual('B=z');
     expect(expandToken(tokenize('B=$A')[0], environment)).toEqual('B=x');
+  });
+});
+
+describe('splitToken', () => {
+  const environment = getEnvironment();
+  environment.set('SP', 'a b');
+  environment.set('SPACES', '  ');
+
+  const split = (source: string): string[] => splitToken(tokenize(source)[0], environment);
+
+  test('should split an unquoted expansion on whitespace', () => {
+    expect(split('$SP')).toEqual(['a', 'b']);
+    expect(split('a$SP')).toEqual(['aa', 'b']);
+    expect(split('$SP$SP')).toEqual(['a', 'ba', 'b']);
+    expect(split('x $SP')).toEqual(['x']);
+  });
+
+  test('should not split a quoted or literal space', () => {
+    expect(split('"$SP"')).toEqual(['a b']);
+    expect(split('pre"$SP"')).toEqual(['prea b']);
+    expect(split('a b')).toEqual(['a']);
+  });
+
+  test('should not split when the whitespace run includes a literal character', () => {
+    // bash: 'A=" "; set -- x$A" "y' gives the two fields 'x' and ' y'.
+    const env2 = new Map(environment);
+    env2.set('A', ' ');
+    const tokens = tokenize('x$A" "y');
+    expect(splitToken(tokens[0], env2)).toEqual(['x', ' y']);
+  });
+
+  test('should discard a field produced only by an expansion', () => {
+    const env2 = new Map(environment);
+    env2.set('EMPTY', '');
+    env2.set('SPACES', '  ');
+    expect(splitToken(tokenize('$EMPTY')[0], env2)).toEqual([]);
+    expect(splitToken(tokenize('"$EMPTY"')[0], env2)).toEqual(['']);
+    expect(splitToken(tokenize('$SPACES')[0], env2)).toEqual([]);
+    expect(splitToken(tokenize('x$SPACES')[0], env2)).toEqual(['x']);
+  });
+
+  test('should keep a multi-character value in one field', () => {
+    expect(split('$HOME')).toEqual(['/home/cockle']);
+    expect(split('plain')).toEqual(['plain']);
   });
 });

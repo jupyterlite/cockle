@@ -344,8 +344,10 @@ describe('tokenize', () => {
 
   describe('quote handling', () => {
     test('should support matching single and double quotes', () => {
-      expect(tokenize("'ls -l'")).toEqual([{ offset: 0, value: 'ls -l' }]);
-      expect(tokenize('"ls -l"')).toEqual([{ offset: 0, value: 'ls -l' }]);
+      expect(tokenize("'ls -l'")).toEqual([
+        { offset: 0, value: 'ls -l', quoted: [[0, 5]], singleQuoted: [[0, 5]] }
+      ]);
+      expect(tokenize('"ls -l"')).toEqual([{ offset: 0, value: 'ls -l', quoted: [[0, 5]] }]);
     });
 
     test('should throw if end quotes missing', () => {
@@ -356,36 +358,47 @@ describe('tokenize', () => {
     test('should work next to whitespace', () => {
       expect(tokenize('ls "a b"')).toEqual([
         { offset: 0, value: 'ls' },
-        { offset: 3, value: 'a b' }
+        { offset: 3, value: 'a b', quoted: [[0, 3]] }
       ]);
       expect(tokenize('"a b" ls')).toEqual([
-        { offset: 0, value: 'a b' },
+        { offset: 0, value: 'a b', quoted: [[0, 3]] },
         { offset: 6, value: 'ls' }
       ]);
     });
 
     test('should support containing the other quote type', () => {
-      expect(tokenize('"xy\'s"')).toEqual([{ offset: 0, value: "xy's" }]);
-      expect(tokenize("'xy\"s'")).toEqual([{ offset: 0, value: 'xy"s' }]);
+      expect(tokenize('"xy\'s"')).toEqual([{ offset: 0, value: "xy's", quoted: [[0, 4]] }]);
+      expect(tokenize("'xy\"s'")).toEqual([
+        { offset: 0, value: 'xy"s', quoted: [[0, 4]], singleQuoted: [[0, 4]] }
+      ]);
     });
 
     test('should join adjacent quoted sections', () => {
-      expect(tokenize('"ls -l""h"')).toEqual([{ offset: 0, value: 'ls -lh' }]);
+      expect(tokenize('"ls -l""h"')).toEqual([
+        {
+          offset: 0,
+          value: 'ls -lh',
+          quoted: [
+            [0, 5],
+            [5, 6]
+          ]
+        }
+      ]);
     });
 
     test('should join a preceding non-quoted section', () => {
-      expect(tokenize('ABC="ab c"')).toEqual([{ offset: 0, value: 'ABC=ab c' }]);
+      expect(tokenize('ABC="ab c"')).toEqual([{ offset: 0, value: 'ABC=ab c', quoted: [[4, 8]] }]);
     });
 
     test('should join a following non-quoted section', () => {
-      expect(tokenize('"ab c"d')).toEqual([{ offset: 0, value: 'ab cd' }]);
+      expect(tokenize('"ab c"d')).toEqual([{ offset: 0, value: 'ab cd', quoted: [[0, 4]] }]);
     });
 
     test('should support a complicated example', () => {
       expect(tokenize('lua -e "A=3; B=7" -v')).toEqual([
         { offset: 0, value: 'lua' },
         { offset: 4, value: '-e' },
-        { offset: 7, value: 'A=3; B=7' },
+        { offset: 7, value: 'A=3; B=7', quoted: [[0, 8]] },
         { offset: 18, value: '-v' }
       ]);
     });
@@ -415,7 +428,7 @@ describe('tokenize', () => {
     ]);
     expect(tokenize('echo "hello\nworld"')).toEqual([
       { offset: 0, value: 'echo' },
-      { offset: 5, value: 'hello\nworld' }
+      { offset: 5, value: 'hello\nworld', quoted: [[0, 11]] }
     ]);
   });
 
@@ -490,13 +503,6 @@ describe('tokenize', () => {
       { offset: 0, value: 'echo' },
       { offset: 5, value: '$X$Y', quoted: [[0, 2]], singleQuoted: [[0, 2]] }
     ]);
-    // A token that starts inside quotes resets the section start: without it the offset of the
-    // quoted section of the previous token would leak into this one.
-    expect(tokenize('echo "a" \'$b\'')).toEqual([
-      { offset: 0, value: 'echo' },
-      { offset: 5, value: 'a' },
-      { offset: 9, value: '$b', quoted: [[0, 2]], singleQuoted: [[0, 2]] }
-    ]);
   });
 
   test('should record sections for a dollar adjacent to a quoted section', () => {
@@ -510,14 +516,24 @@ describe('tokenize', () => {
     ]);
   });
 
-  test('should not record sections for tokens without a dollar', () => {
-    expect(tokenize("echo 'plain'")).toEqual([
-      { offset: 0, value: 'echo' },
-      { offset: 5, value: 'plain' }
-    ]);
+  test('should not record sections for tokens without quoted sections', () => {
     expect(tokenize('echo $HOME')).toEqual([
       { offset: 0, value: 'echo' },
       { offset: 5, value: '$HOME' }
+    ]);
+  });
+
+  test('should record sections for tokens without a dollar', () => {
+    expect(tokenize("echo 'plain'")).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'plain', quoted: [[0, 5]], singleQuoted: [[0, 5]] }
+    ]);
+    // A token that starts inside quotes resets the section start: without it the offset of the
+    // quoted section of the previous token would leak into this one.
+    expect(tokenize('echo "a" \'b\'')).toEqual([
+      { offset: 0, value: 'echo' },
+      { offset: 5, value: 'a', quoted: [[0, 1]] },
+      { offset: 9, value: 'b', quoted: [[0, 1]], singleQuoted: [[0, 1]] }
     ]);
   });
 });

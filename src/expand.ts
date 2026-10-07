@@ -53,44 +53,89 @@ function _reference(
   return [end, environment.get(value.slice(index + 1, end)) ?? ''];
 }
 
+/** The result of expanding a value: the expanded text and, for each character of it, whether that
+ * character came from an unquoted `$NAME` reference. Such a character is a candidate for word
+ * splitting, whereas a literal or quoted character is not.
+ */
+export type Expansion = { text: string; expandable: boolean[] };
+
 /**
  * Expand environment variable references in part of a command. Supports ` $NAME` and `${NAME}`.
  * A reference to an unset variable becomes an empty string.
- * A '$' that does not start a reference is left untouched: followed by anything other than a name or '{', preceded by a backslash, or within a single-quoted section.
+ * A backslash outside single quotes removes itself and prevents the next character from being
+ * special, so `\$HOME` becomes `$HOME`.
+ * A '$' that does not start a reference is left untouched: followed by anything other than a name or '{', or within a single-quoted section.
  * @param value The string containing the potential variable references.
  * @param environment The environment mapping variable names to their values.
  * @param quoted An array of quoted sections in the string.
  * @param singleQuoted An array of single-quoted sections in the string.
- * @returns The string with environment variable references expanded.
+ * @param heredoc Whether the value is the body of a here document. Its backslashes quote only '$',
+ * '`', '\\' and newline, and its text is never split into fields.
+ * @returns The expanded text and a mask of the characters which came from an unquoted reference.
  */
 function _expand(
   value: string,
   environment: ReadonlyMap<string, string>,
   quoted?: [number, number][],
-  singleQuoted?: [number, number][]
-): string {
+  singleQuoted?: [number, number][],
+  heredoc: boolean = false
+): Expansion {
   const isSingleQuoted = (index: number): boolean =>
     singleQuoted?.some(([start, end]) => index >= start && index < end) ?? false;
+  const isDoubleQuoted = (index: number): boolean =>
+    !isSingleQuoted(index) &&
+    (quoted?.some(([start, end]) => index >= start && index < end) ?? false);
 
-  let ret: string = '';
+  let text: string = '';
+  const expandable: boolean[] = [];
   let index: number = 0;
   while (index < value.length) {
     const char: string = value[index];
-    if (char !== '$' || value[index - 1] === '\\' || isSingleQuoted(index)) {
-      ret += char;
+    const next: string | undefined = value[index + 1];
+    // A backslash outside single quotes removes itself and prevents the next character from being
+    // special, so `\$HOME` becomes `$HOME`.
+    // Within double quotes and here documents bash only removes it before a character that is special there, so `echo "a\qb"` keeps the backslash.
+    const quotesNext: boolean =
+      !isDoubleQuoted(index) || (heredoc ? '$`\\\n' : '$`"\\\n').includes(next ?? '');
+    if (char === '\\' && next !== undefined && !isSingleQuoted(index) && quotesNext) {
+      text += next;
+      expandable.push(false);
+      index += 2;
+      continue;
+    }
+    if (char !== '$' || isSingleQuoted(index)) {
+      text += char;
+      expandable.push(false);
       index++;
       continue;
     }
     const reference: [number, string] | undefined = _reference(value, index, environment, quoted);
     if (reference === undefined) {
-      ret += char;
+      text += char;
+      expandable.push(false);
       index++;
     } else {
-      ret += reference[1];
+      text += reference[1];
+      // A reference inside double quotes or a here document is not a split point.
+      const splittable: boolean = !isDoubleQuoted(index) && !heredoc;
+      for (let i = 0; i < reference[1].length; i++) {
+        expandable.push(splittable);
+      }
       index = reference[0];
     }
   }
-  return ret;
+  return { text, expandable };
+}
+
+/**
+ * Expand environment variable references in a here document body, which is expanded but not split
+ * into fields. A quoted delimiter makes the body literal and so does not call this.
+ * @param value The here document body.
+ * @param environment The environment mapping variable names to their values.
+ * @returns The body with environment variable references expanded.
+ */
+export function expandHeredoc(value: string, environment: ReadonlyMap<string, string>): string {
+  return _expand(value, environment, undefined, undefined, true).text;
 }
 
 /**
@@ -100,7 +145,7 @@ function _expand(
  * @returns The string with environment variable references expanded.
  */
 export function expandString(value: string, environment: ReadonlyMap<string, string>): string {
-  return _expand(value, environment);
+  return _expand(value, environment).text;
 }
 
 /**
@@ -111,7 +156,49 @@ export function expandString(value: string, environment: ReadonlyMap<string, str
  * @returns The string with environment variable references expanded.
  */
 export function expandToken(token: Token, environment: ReadonlyMap<string, string>): string {
-  return _expand(token.value, environment, token.quoted, token.singleQuoted);
+  return _expand(token.value, environment, token.quoted, token.singleQuoted).text;
+}
+
+/**
+ * Expand a token and split it into fields as the shell does for an unquoted expansion. An
+ * unquoted reference to a value containing whitespace produces several fields, whereas the same
+ * reference in quotes or a literal space in the source does not.
+ * @param token The token containing the potential variable references.
+ * @param environment The environment mapping variable names to their values.
+ * @returns The fields of the expanded token, which is empty if the token expands to nothing.
+ */
+export function splitToken(token: Token, environment: ReadonlyMap<string, string>): string[] {
+  const { text, expandable } = _expand(token.value, environment, token.quoted, token.singleQuoted);
+  if (text === '') {
+    // bash: 'E=; $E' gives no fields, '"$E"' gives one empty field.
+    return token.quoted?.length ? [''] : [];
+  }
+
+  const fields: string[] = [];
+  let field: string = '';
+  let index: number = 0;
+  while (index < text.length) {
+    if (' \t\n'.includes(text[index]) && expandable[index]) {
+      // The start of a whitespace run produced by expansion is a field separator. A run which
+      // includes any literal or quoted character is not, so 'x$A' with A=' y' is one field.
+      let end: number = index;
+      while (end < text.length && ' \t\n'.includes(text[end]) && expandable[end]) {
+        end++;
+      }
+      fields.push(field);
+      field = '';
+      index = end;
+    } else {
+      field += text[index];
+      index++;
+    }
+  }
+  fields.push(field);
+
+  // A field which is empty was produced only by expansion, so bash discards it: 'x$A' with A=' '
+  // is one field. A quoted section keeps one empty field, so '"$E"' with E unset is one field.
+  const nonEmpty: string[] = fields.filter(f => f !== '');
+  return nonEmpty.length > 0 ? nonEmpty : token.quoted?.length ? [''] : [];
 }
 
 /**
@@ -121,5 +208,5 @@ export function expandToken(token: Token, environment: ReadonlyMap<string, strin
  * @returns An array of strings with environment variable references expanded.
  */
 export function expandTokens(tokens: Token[], environment: ReadonlyMap<string, string>): string[] {
-  return tokens.map(token => expandToken(token, environment));
+  return tokens.flatMap(token => splitToken(token, environment));
 }

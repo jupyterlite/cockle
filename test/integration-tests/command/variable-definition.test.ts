@@ -40,6 +40,21 @@ test.describe('variable definition', () => {
     expect(output[0]).toMatch("'1X=2': command not found");
   });
 
+  test('should reject a name which is not a valid identifier', async ({ page }) => {
+    // bash runs all of these as commands, reporting command not found.
+    const output = await shellLineSimpleN(page, ['A-B=1', 'A.1=2', 'A@1=2', 'A$B=1']);
+    expect(output[0]).toMatch("'A-B=1': command not found");
+    expect(output[1]).toMatch("'A.1=2': command not found");
+    expect(output[2]).toMatch("'A@1=2': command not found");
+    expect(output[3]).toMatch("'A$B=1': command not found");
+  });
+
+  test('should reject a quoted name and expand a quoted value', async ({ page }) => {
+    const output = await shellLineSimpleN(page, ["'X'=1", 'A=B=1', 'echo $A']);
+    expect(output[0]).toMatch(/'X=1': command not found/);
+    expect(output[2]).toMatch('\r\nB=1\r\n');
+  });
+
   test('should succeed with exit code 0 for a standalone assignment', async ({ page }) => {
     const exitCode = await page.evaluate(async () => {
       const { shell } = await globalThis.cockle.shellSetupSimple();
