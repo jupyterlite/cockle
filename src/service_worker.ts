@@ -36,10 +36,16 @@ async function onFetch(event: FetchEvent): Promise<void> {
 
 async function broadcastOne(request: Request, url: URL): Promise<Response> {
   const message = await request.json();
+
+  // Unique id to match the reply to this request, as multiple shells in the same browsing context
+  // may be waiting for stdin at the same time.
+  const requestId: string = message.requestId ?? crypto.randomUUID();
+  message.requestId = requestId;
+
   const promise = new Promise<Response>(resolve => {
     const messageHandler = (event: MessageEvent) => {
       const data = event.data;
-      if (data.browsingContextId !== message.browsingContextId) {
+      if (data.browsingContextId !== message.browsingContextId || data.requestId !== requestId) {
         // bail if the message is not for us
         return;
       }
