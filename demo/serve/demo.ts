@@ -8,20 +8,32 @@ import { externalRun, externalTabComplete } from './external_command_tab';
 import { externalTuiCommand } from './external_command_tui';
 
 export async function runDemo(useLocalCorsProxy: boolean) {
-  const baseUrl = window.location.href;
+  // Directory containing the current page, so that relative URLs work for any page.
+  const baseUrl = new URL('.', window.location.href).href;
   const shellManager = new ShellManager();
   const browsingContextId = await shellManager.installServiceWorker(baseUrl);
 
-  const targetDiv: HTMLElement = document.getElementById('targetdiv')!;
-  const demo = new Demo({ baseUrl, browsingContextId, shellManager, targetDiv, useLocalCorsProxy });
+  const targetDivs = document.querySelectorAll<HTMLElement>('.targetdiv');
+  const demos = [...targetDivs].map(targetDiv => {
+    const demo = new Demo({
+      baseUrl,
+      browsingContextId,
+      shellManager,
+      targetDiv,
+      useLocalCorsProxy
+    });
 
-  const themeSelect = document.getElementById('theme-select') as HTMLSelectElement;
-  themeSelect?.addEventListener('change', (event: any) => {
-    const [foreground, background, mode] = themeSelect.value.split('-');
-    demo.setTheme(foreground, background, mode);
+    // Theme selector that is a sibling of the targetDiv controls that shell only.
+    const themeSelect = targetDiv.parentElement?.querySelector<HTMLSelectElement>('.theme-select');
+    themeSelect?.addEventListener('change', (event: any) => {
+      const [foreground, background, mode] = themeSelect.value.split('-');
+      demo.setTheme(foreground, background, mode);
+    });
+
+    return demo;
   });
 
-  await demo.start();
+  await Promise.all(demos.map(demo => demo.start()));
 }
 
 export class Demo {
@@ -30,7 +42,6 @@ export class Demo {
 
     const termOptions = {
       fontSize: 14,
-      rows: 50,
       theme: {
         foreground: 'white',
         background: 'black',
