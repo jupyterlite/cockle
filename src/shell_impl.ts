@@ -247,7 +247,12 @@ export class ShellImpl implements IShellImpl {
           this._commandLine.cursorIndex = 0;
           await this._outputPrompt();
           break;
-        case 4: // EOT, usually = Ctrl-D
+        case 4: // EOT, usually = Ctrl-D: exit the shell if the command line is empty.
+          if (this._commandLine.text.length === 0) {
+            this.output('exit\n');
+            this.terminate();
+            return;
+          }
           break;
         case 12: {
           // FF, usually = Ctrl-L. Clear screen, then redraw prompt and command line.
