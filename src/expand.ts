@@ -101,18 +101,21 @@ function _expand(
     const quotesNext: boolean = heredoc
       ? '$`\\\n'.includes(next ?? '')
       : !doubleQuotedAtIndex || '$`"\\\n'.includes(next ?? '');
+    // Determine if the next character is quoted based on the context (heredoc, double quotes, etc.)
     if (char === '\\' && next !== undefined && !singleQuotedAtIndex && quotesNext) {
       text += next;
       expandable.push(false);
       index += 2;
       continue;
     }
+
     if (char !== '$' || singleQuotedAtIndex) {
       text += char;
       expandable.push(false);
       index++;
       continue;
     }
+
     const reference: [number, string] | undefined = _reference(value, index, environment, quoted);
     if (reference === undefined) {
       text += char;
