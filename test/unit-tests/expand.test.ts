@@ -1,4 +1,10 @@
-import { expandString, expandToken, expandTokens, splitToken } from '../../src/expand';
+import {
+  expandHeredoc,
+  expandString,
+  expandToken,
+  expandTokens,
+  splitToken
+} from '../../src/expand';
 import { tokenize } from '../../src/tokenize';
 
 function getEnvironment(): Map<string, string> {
@@ -57,6 +63,18 @@ describe('expandString', () => {
     const env2 = new Map(environment);
     env2.set('A', '$B');
     expect(expandString('$A', env2)).toEqual('$B');
+  });
+});
+
+describe('expandHeredoc', () => {
+  const environment = getEnvironment();
+
+  test('should preserve backslashes before characters that are not special', () => {
+    expect(expandHeredoc('\\q', environment)).toEqual('\\q');
+  });
+
+  test('should remove backslashes only before special characters', () => {
+    expect(expandHeredoc('\\$HOME \\\\ \\`', environment)).toEqual('$HOME \\ `');
   });
 });
 
@@ -149,6 +167,7 @@ describe('splitToken', () => {
   test('should not split a quoted or literal space', () => {
     expect(split('"$SP"')).toEqual(['a b']);
     expect(split('pre"$SP"')).toEqual(['prea b']);
+    expect(split('"a b"')).toEqual(['a b']);
     expect(split('a b')).toEqual(['a']);
   });
 

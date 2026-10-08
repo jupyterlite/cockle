@@ -80,11 +80,12 @@ function _expand(
   singleQuoted?: [number, number][],
   heredoc: boolean = false
 ): Expansion {
-  const isSingleQuoted = (index: number): boolean =>
-    singleQuoted?.some(([start, end]) => index >= start && index < end) ?? false;
-  const isDoubleQuoted = (index: number): boolean =>
-    !isSingleQuoted(index) &&
-    (quoted?.some(([start, end]) => index >= start && index < end) ?? false);
+  if (value.indexOf('$') < 0 && value.indexOf('\\') < 0) {
+    return { text: value, expandable: new Array<boolean>(value.length).fill(false) };
+  }
+
+  const isInSection = (index: number, sections?: [number, number][]): boolean =>
+    sections?.some(([start, end]) => index >= start && index < end) ?? false;
 
   let text: string = '';
   const expandable: boolean[] = [];
@@ -92,18 +93,21 @@ function _expand(
   while (index < value.length) {
     const char: string = value[index];
     const next: string | undefined = value[index + 1];
+    const singleQuotedAtIndex: boolean = isInSection(index, singleQuoted);
+    const doubleQuotedAtIndex: boolean = !singleQuotedAtIndex && isInSection(index, quoted);
     // A backslash outside single quotes removes itself and prevents the next character from being
     // special, so `\$HOME` becomes `$HOME`.
     // Within double quotes and here documents bash only removes it before a character that is special there, so `echo "a\qb"` keeps the backslash.
-    const quotesNext: boolean =
-      !isDoubleQuoted(index) || (heredoc ? '$`\\\n' : '$`"\\\n').includes(next ?? '');
-    if (char === '\\' && next !== undefined && !isSingleQuoted(index) && quotesNext) {
+    const quotesNext: boolean = heredoc
+      ? '$`\\\n'.includes(next ?? '')
+      : !doubleQuotedAtIndex || '$`"\\\n'.includes(next ?? '');
+    if (char === '\\' && next !== undefined && !singleQuotedAtIndex && quotesNext) {
       text += next;
       expandable.push(false);
       index += 2;
       continue;
     }
-    if (char !== '$' || isSingleQuoted(index)) {
+    if (char !== '$' || singleQuotedAtIndex) {
       text += char;
       expandable.push(false);
       index++;
@@ -117,7 +121,7 @@ function _expand(
     } else {
       text += reference[1];
       // A reference inside double quotes or a here document is not a split point.
-      const splittable: boolean = !isDoubleQuoted(index) && !heredoc;
+      const splittable: boolean = !doubleQuotedAtIndex && !heredoc;
       for (let i = 0; i < reference[1].length; i++) {
         expandable.push(splittable);
       }
@@ -168,6 +172,13 @@ export function expandToken(token: Token, environment: ReadonlyMap<string, strin
  * @returns The fields of the expanded token, which is empty if the token expands to nothing.
  */
 export function splitToken(token: Token, environment: ReadonlyMap<string, string>): string[] {
+  if (token.value.indexOf('$') < 0 && token.value.indexOf('\\') < 0) {
+    if (token.value === '') {
+      return token.quoted?.length ? [''] : [];
+    }
+    return [token.value];
+  }
+
   const { text, expandable } = _expand(token.value, environment, token.quoted, token.singleQuoted);
   if (text === '') {
     // bash: 'E=; $E' gives no fields, '"$E"' gives one empty field.
