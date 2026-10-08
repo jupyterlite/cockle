@@ -1,19 +1,13 @@
-import { type Page, test as base } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import type { IOptions } from '../serve/shell_setup';
 
 export type TestOptions = {
   supportsSAB: boolean;
 };
 
-// Override page fixture to navigate to specific page.
-export const test = base.extend<TestOptions>({
-  supportsSAB: [false, { option: true }],
-
-  page: async ({ page }, use) => {
-    await page.goto('/');
-    await use(page);
-  }
-});
+// `test` (with the page override and the coverage fixture) lives in coverage.ts to keep this module
+// free of the coverage dependency. Re-exported here so existing imports are unchanged.
+export { test } from './coverage';
 
 export function sequenceOfLetters(n: number): string {
   let ret = '';

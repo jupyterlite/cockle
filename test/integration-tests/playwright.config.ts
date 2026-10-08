@@ -3,6 +3,8 @@ import type { TestOptions } from './utils';
 
 export default defineConfig<TestOptions>({
   testDir: './',
+  globalSetup: './coverage-setup.ts',
+  globalTeardown: './coverage-teardown.ts',
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
