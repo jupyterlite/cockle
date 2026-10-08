@@ -398,6 +398,27 @@ test.describe('Shell', () => {
     });
   });
 
+  test.describe('ctrl-d', () => {
+    test('should exit the shell if the command line is empty', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupEmpty();
+        const disposed = new Promise<void>(resolve => shell.disposed.connect(() => resolve()));
+        // Do not await the input as the web worker may be terminated before it returns.
+        shell.input(globalThis.cockle.keys.EOT);
+        await disposed;
+        return { isDisposed: shell.isDisposed, text: output.text };
+      });
+      expect(output.isDisposed).toBeTruthy();
+      expect(output.text).toMatch(/exit\r\n$/);
+    });
+
+    test('should not exit the shell if the command line is not empty', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [['echo ok', keys.EOT], ['\r']]);
+      expect(output[0]).toEqual('echo ok');
+      expect(output[1]).toMatch('\r\nok\r\n');
+    });
+  });
+
   test.describe('echo input', () => {
     test('should echo input up to \\r', async ({ page }) => {
       expect(await shellInputsSimple(page, ['l', 's', ' ', '-', 'a', 'l'])).toEqual('ls -al');
