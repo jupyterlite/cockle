@@ -8,7 +8,7 @@
     "types": "dist/index.d.ts",
     "private": true,
     "scripts": {
-        "build": "rspack build",
+        "build": "tsc --noEmit && rspack build",
         "postbuild": "npm run postbuild:copy-assets && npm run postbuild:prepare-wasm",
         "postbuild:copy-assets": "copyfiles -u 1 assets/* dist/",
         "postbuild:prepare-wasm": "node node_modules/@jupyterlite/cockle/lib/tools/prepare_wasm.js --copy dist/",

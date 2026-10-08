@@ -3,15 +3,41 @@
 body {
   background-color: lightgrey;
   margin: 0;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
-#targetdiv {
+.targetdiv {
   --target-background: #000000;
   padding: 0.3em;
   box-sizing: content-box;
   background-color: var(--target-background);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
-#theme {
+.theme {
   margin: 0.5em;
+  flex: none;
+}
+
+#shells {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 0.3em;
+}
+
+.shell {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.theme-select {
+  max-width: 100%;
 }
