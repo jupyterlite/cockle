@@ -24,8 +24,8 @@ function _reference(
       // Unterminated '${'.
       return undefined;
     }
-    const replacement_text: string = environment.get(value.slice(index + 2, end)) ?? '';
-    return [end + 1, replacement_text];
+    const replacementText: string = environment.get(value.slice(index + 2, end)) ?? '';
+    return [end + 1, replacementText];
   }
   if (value[index + 1] === '?') {
     // '$?' is the exit code of the most recent command, held in the environment under '?'.

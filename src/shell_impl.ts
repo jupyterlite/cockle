@@ -97,7 +97,11 @@ export class ShellImpl implements IShellImpl {
         this.callExternalCommand.bind(this),
         options.callExternalTabComplete
       ),
-      environment: new Environment(options.color, options.shellId, options.browsingContextId),
+      environment: Environment.createDefault(
+        options.color,
+        options.shellId,
+        options.browsingContextId
+      ),
       history: new History(),
       shellId,
       terminate: this.terminate.bind(this),
@@ -929,7 +933,7 @@ export class ShellImpl implements IShellImpl {
     return ExitCode.SUCCESS;
   }
 
-  /*
+  /**
    * Execute a command with the given runner, name, tokens, and environment.
    * Handles temporary environment changes and input/output redirections.
    * @param runner The command runner to execute.

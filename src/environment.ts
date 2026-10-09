@@ -6,45 +6,33 @@ import type { ISize } from './callback';
  * commands.
  */
 export class Environment extends Map<string, string> {
-  constructor(source: Environment);
-  constructor(
+  constructor(entries?: Iterable<readonly [string, string]>) {
+    super(entries);
+  }
+
+  /**
+   * Create the top-level environment of a shell, populated with the default variables.
+   */
+  static createDefault(
     color: boolean,
     shellId: string,
-    browsingContextId: string | undefined,
-    entries?: Iterable<readonly [string, string]>
-  );
-  constructor(
-    colorOrSource: boolean | Environment,
-    shellId?: string,
-    browsingContextId?: string,
-    entries?: Iterable<readonly [string, string]>
-  ) {
-    super();
-    if (typeof colorOrSource !== 'boolean') {
-      for (const [name, value] of colorOrSource) {
-        this.set(name, value);
-      }
-      return;
-    }
-    const color = colorOrSource;
+    browsingContextId: string | undefined
+  ): Environment {
+    const env = new Environment();
     if (shellId) {
-      this.set('COCKLE_SHELL_ID', shellId);
+      env.set('COCKLE_SHELL_ID', shellId);
     }
     if (browsingContextId) {
-      this.set('COCKLE_BROWSING_CONTEXT_ID', browsingContextId);
+      env.set('COCKLE_BROWSING_CONTEXT_ID', browsingContextId);
     }
     if (color) {
-      this.set('PS1', ansi.styleGreen + 'js-shell:' + ansi.styleReset + ' ');
-      this.set('TERM', 'xterm-256color');
-      this.set('TERMINFO', '/usr/local/share/terminfo'); // Needed for nano
+      env.set('PS1', ansi.styleGreen + 'js-shell:' + ansi.styleReset + ' ');
+      env.set('TERM', 'xterm-256color');
+      env.set('TERMINFO', '/usr/local/share/terminfo'); // Needed for nano
     } else {
-      this.set('PS1', 'js-shell: ');
+      env.set('PS1', 'js-shell: ');
     }
-    if (entries) {
-      for (const [name, value] of entries) {
-        this.set(name, value);
-      }
-    }
+    return env;
   }
 
   /**
