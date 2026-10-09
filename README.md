@@ -119,6 +119,9 @@ The testing framework serves its own CORS proxy using
 [cors-anywhere](https://github.com/Rob--W/cors-anywhere) so that `git clone` of github repositories
 can be tested without using an external CORS proxy that may be rate limited or otherwise restricted.
 
+In addition, the `demo` directory contains separate visual tests that can be run in the same way.
+Only Linux screenshots are stored within the repository.
+
 ### Code coverage
 
 The test commands collect coverage for `src/*.ts` automatically, so there is no separate command to
@@ -138,13 +141,5 @@ Each suite writes its own report to the top level of the repository while it run
 
 Both directories contain an `index.html` to open in a browser for per-file and per-line coverage, plus
 an `lcov.info` with paths relative to the repository root, for editor coverage gutters and CI tools. A
-console summary is printed when each suite finishes. Files that are never exercised are listed at `0%`,
-so the report also answers "what still needs tests". The `.coverage/` directory is git-ignored, and the
-[Test](https://github.com/jupyterlite/cockle/blob/main/.github/workflows/test.yml) workflow uploads
-both directories as the `cockle-coverage-<os>` artifact.
+console summary is printed when each suite finishes.
 
-The two reports are deliberately not merged: Jest instruments Node with Istanbul while the integration
-tests instrument Chromium with V8, and the two data formats cannot be combined.
-
-In addition, the `demo` directory contains separate visual tests that can be run in the same way.
-Only Linux screenshots are stored within the repository.
