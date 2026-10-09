@@ -5,8 +5,9 @@ export type TestOptions = {
   supportsSAB: boolean;
 };
 
-// `test` (with the page override and the coverage fixture) lives in coverage.ts to keep this module
-// free of the coverage dependency. Re-exported here so existing imports are unchanged.
+// `test` (the page override plus the automatic coverage fixture) and the CDP/report plumbing live in
+// coverage.ts. Re-exported here so the existing `import { test } from '../utils'` call sites are
+// unchanged.
 export { test } from './coverage';
 
 export function sequenceOfLetters(n: number): string {
