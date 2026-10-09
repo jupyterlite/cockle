@@ -243,46 +243,46 @@ test.describe('Shell', () => {
       const output = await shellLineSimpleN(page, [
         // WASM command success.
         'ls unknown',
-        'env|grep ?',
+        'echo $?',
         // WASM command error.
         'ls file2',
-        'env|grep ?',
+        'echo $?',
         // Built-in command success.
         'cd unknown',
-        'env|grep ?',
+        'echo $?',
         // Built-in command error.
         'cd dirA',
-        'env|grep ?',
+        'echo $?',
         // Parse error.
         'ls >>',
-        'env|grep ?',
+        'echo $?',
         // Command does not exist.
         'abcde',
-        'env|grep ?',
+        'echo $?',
         // Multiple commands success.
         'echo Hello; pwd',
-        'env|grep ?',
+        'echo $?',
         // Multiple commands failure.
         'cd a b; pwd',
-        'env|grep ?',
+        'echo $?',
         // True and false commands
         'true',
-        'env|grep ?',
+        'echo $?',
         'false',
-        'env|grep ?'
+        'echo $?'
       ]);
-      expect(output[1]).toMatch('\r\n?=2\r\n');
-      expect(output[3]).toMatch('\r\n?=0\r\n');
-      expect(output[5]).toMatch('\r\n?=1\r\n');
-      expect(output[7]).toMatch('\r\n?=0\r\n');
-      expect(output[9]).toMatch('\r\n?=1\r\n');
-      expect(output[11]).toMatch('\r\n?=127\r\n');
+      expect(output[1]).toMatch('\r\n2\r\n');
+      expect(output[3]).toMatch('\r\n0\r\n');
+      expect(output[5]).toMatch('\r\n1\r\n');
+      expect(output[7]).toMatch('\r\n0\r\n');
+      expect(output[9]).toMatch('\r\n1\r\n');
+      expect(output[11]).toMatch('\r\n127\r\n');
       expect(output[12]).toMatch('\r\nHello\r\n/drive/dirA\r\n');
-      expect(output[13]).toMatch('\r\n?=0\r\n');
+      expect(output[13]).toMatch('\r\n0\r\n');
       expect(output[14]).toMatch(/Error: cd: too many arguments/);
-      expect(output[15]).toMatch('\r\n?=1\r\n');
-      expect(output[17]).toMatch('\r\n?=0\r\n');
-      expect(output[19]).toMatch('\r\n?=1\r\n');
+      expect(output[15]).toMatch('\r\n1\r\n');
+      expect(output[17]).toMatch('\r\n0\r\n');
+      expect(output[19]).toMatch('\r\n1\r\n');
     });
 
     test('should support unicode', async ({ page }) => {
@@ -416,6 +416,36 @@ test.describe('Shell', () => {
       const output = await shellInputsSimpleN(page, [['echo ok', keys.EOT], ['\r']]);
       expect(output[0]).toEqual('echo ok');
       expect(output[1]).toMatch('\r\nok\r\n');
+    });
+  });
+
+  test.describe('prompt expansion', () => {
+    test('should expand PS1 on every use', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { delay, shellSetupSimple } = globalThis.cockle;
+        const { shell, output } = await shellSetupSimple({ environment: { PS1: '[$PWD]$ ' } });
+        await shell.inputLine('');
+        await delay(10);
+        const ret0 = output.textAndClear();
+        await shell.inputLine('cd dirA');
+        await delay(10);
+        await shell.inputLine('');
+        await delay(10);
+        return [ret0, output.textAndClear()];
+      });
+      expect(output[0]).toMatch('[/drive]$ '); // Prompt of the first line.
+      expect(output[1]).toMatch('\r\n[/drive/dirA]$ '); // Recomputed after cd.
+    });
+
+    test('should expand an unknown prompt variable to an empty string', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { delay, shellSetupEmpty } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ environment: { PS1: 'p$NOT_SET: ' } });
+        await shell.inputLine('');
+        await delay(10);
+        return output.text;
+      });
+      expect(output).toMatch('p: ');
     });
   });
 

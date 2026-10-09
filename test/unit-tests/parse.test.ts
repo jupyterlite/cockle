@@ -259,15 +259,26 @@ describe('parse', () => {
 
   test('should support quotes', () => {
     expect(parse('alias ll="ls -lF"')).toEqual([
-      new CommandNode({ offset: 0, value: 'alias' }, [{ offset: 6, value: 'll=ls -lF' }])
+      new CommandNode({ offset: 0, value: 'alias' }, [
+        { offset: 6, value: 'll=ls -lF', quoted: [[3, 9]] }
+      ])
     ]);
     expect(parse('alias ll="ls ""-lF"')).toEqual([
-      new CommandNode({ offset: 0, value: 'alias' }, [{ offset: 6, value: 'll=ls -lF' }])
+      new CommandNode({ offset: 0, value: 'alias' }, [
+        {
+          offset: 6,
+          value: 'll=ls -lF',
+          quoted: [
+            [3, 6],
+            [6, 9]
+          ]
+        }
+      ])
     ]);
     expect(parse('lua -e "A=3;B=9"')).toEqual([
       new CommandNode({ offset: 0, value: 'lua' }, [
         { offset: 4, value: '-e' },
-        { offset: 7, value: 'A=3;B=9' }
+        { offset: 7, value: 'A=3;B=9', quoted: [[0, 7]] }
       ])
     ]);
   });

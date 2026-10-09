@@ -10,6 +10,15 @@ export type Token = {
   value: string;
   // Body of a here document, set on '<<' and '<<-' tokens once the delimiter line has been read.
   heredoc?: string;
+  // Set on '<<' and '<<-' tokens whose delimiter word contained a quoted section. As in bash, that
+  // makes the here document body literal, without it the body is expanded but not split.
+  quotedDelimiter?: boolean;
+  // Value offsets [start, end) of characters that came from a quoted section of the source,
+  // single or double quoted. A '$' reference does not span a section boundary. Set for tokens
+  // which contain quoted sections.
+  quoted?: [number, number][];
+  // Subset of 'quoted' for single-quoted sections: '$' references within them are not expanded.
+  singleQuoted?: [number, number][];
 };
 
 /** A here document whose delimiter word has been read but whose body has not yet. */
@@ -150,16 +159,30 @@ class Tokenizer {
           this._prevCharType = CharType.None;
           this._value = '';
           this._endQuote = '';
+          this._quoted = [];
+          this._singleQuoted = [];
           return false;
         }
       }
     }
 
-    this._tokens.push({ offset, value });
+    const token: Token = { offset, value };
+    if (this._quoted.length > 0) {
+      token.quoted = this._quoted;
+    }
+    if (this._singleQuoted.length > 0) {
+      token.singleQuoted = this._singleQuoted;
+    }
+    this._quoted = [];
+    this._singleQuoted = [];
+    this._tokens.push(token);
 
     // A token following a here document operator is its delimiter word.
     const previous: Token | undefined = this._tokens.at(-2);
     if (previous !== undefined && isHeredocToken(previous.value)) {
+      if (token.quoted !== undefined) {
+        previous.quotedDelimiter = true;
+      }
       this._pendingHeredocs.push({
         token: previous,
         delimiter: value,
@@ -219,12 +242,31 @@ class Tokenizer {
         if (char !== this._endQuote) {
           this._value += char;
         } else {
+          if (this._endQuote === "'") {
+            this._singleQuoted.push([this._quoteStart, this._value.length]);
+          }
+          this._quoted.push([this._quoteStart, this._value.length]);
           this._endQuote = '';
           charType = CharType.Other;
         }
       } else if (endQuote) {
-        // Start quoted section within current token.
-        this._endQuote = endQuote;
+        if (isRedirectToken(this._value)) {
+          // A redirection operator ends before a quoted word: '<<"EOF"' is the operator '<<'
+          // followed by the quoted delimiter 'EOF'.
+          if (!this._addToken()) {
+            // Alias substitution modified the source, the quote will be handled again.
+            return;
+          }
+          this._offset = i;
+          this._endQuote = endQuote;
+          this._value = '';
+          this._quoteStart = 0; // The value is empty at the start of a token.
+          charType = CharType.Other;
+        } else {
+          // Start quoted section within current token.
+          this._endQuote = endQuote;
+          this._quoteStart = this._value.length;
+        }
       } else if (charType === CharType.Whitespace) {
         // Finish current token.
         if (this._addToken()) {
@@ -254,6 +296,9 @@ class Tokenizer {
         this._offset = i;
         this._endQuote = this._endQuoteFromCharType(charType);
         this._value = this._endQuote === '' ? char : '';
+        if (this._endQuote !== '') {
+          this._quoteStart = 0; // The value is empty at the start of a token.
+        }
       }
     }
     this._prevChar = char;
@@ -341,6 +386,9 @@ class Tokenizer {
   private _offset: number = -1; // Offset of start of current token, -1 if not in token.
   private _aliasOffset: number = -1;
   private _value: string = ''; // Current token.
+  private _quoted: [number, number][] = []; // Quoted sections of current token.
+  private _singleQuoted: [number, number][] = []; // Single-quoted sections of current token.
+  private _quoteStart: number = 0; // Value offset of start of current quoted section.
   private _endQuote: string = ''; // End quote if in quoted section, otherwise emptry string.
   private _pendingHeredocs: IPendingHeredoc[] = [];
 }
