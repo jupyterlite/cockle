@@ -121,3 +121,13 @@ can be tested without using an external CORS proxy that may be rate limited or o
 
 In addition, the `demo` directory contains separate visual tests that can be run in the same way.
 Only Linux screenshots are stored within the repository.
+
+The test commands collect coverage for `src/*.ts` automatically.
+Each suite writes its own report to the top level of the repository while it runs:
+
+- `.coverage/unit/` from the Jest unit tests.
+- `.coverage/integration/` from the Playwright integration tests.
+
+Both directories contain an `index.html` to open in a browser for per-file and per-line coverage, plus
+an `lcov.info` with paths relative to the repository root, for editor coverage gutters and CI tools. A
+console summary is printed when each suite finishes.

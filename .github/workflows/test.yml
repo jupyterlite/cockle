@@ -70,6 +70,15 @@ jobs:
           npm run build
           npm run test
 
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cockle-coverage-${{ matrix.os }}
+          path: |
+            .coverage/unit
+            .coverage/integration
+
   ui-test:
     name: Visual tests
     runs-on: ubuntu-latest
