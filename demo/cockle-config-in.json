@@ -1,10 +1,10 @@
 {
   "packages": {
+    "awk": {},
     "git2cpp": {},
     "lua": {},
     "nano": {},
     "tree": {},
-    "awk": {},
     "util-js": {
       "modules": {
         "js-tab": {},
