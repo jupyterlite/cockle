@@ -917,6 +917,7 @@ export class ShellImpl implements IShellImpl {
       this._assign(tokens[i], environment);
     }
     // The assignment happens before the redirections, so 'A=f > $A' writes to f.
+    // eslint-disable-next-line no-useless-assignment
     ({ input, output, error } = this._applyRedirects(
       commandNode,
       input,
@@ -955,8 +956,8 @@ export class ShellImpl implements IShellImpl {
     output: IOutput,
     error: IOutput
   ): Promise<number> {
-    let commandId = -1;
-    let exitCode: number = ExitCode.SUCCESS;
+    let commandId: number = -1; // eslint-disable-line no-useless-assignment
+    let exitCode: number = ExitCode.SUCCESS; // eslint-disable-line no-useless-assignment
     try {
       let args: string[] = expandTokens(tokens.slice(assignmentCount + 1), environment);
       args = this._filenameExpansion(args);
