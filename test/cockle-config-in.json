@@ -4,6 +4,7 @@
     "lua": {},
     "nano": {},
     "tree": {},
+    "awk": {},
     "util-js": {
       "modules": {
         "js-tab": {},
