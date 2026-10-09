@@ -41,6 +41,16 @@ describe('expandString', () => {
     expect(expandString('$EMPTY-x', environment)).toEqual('-x');
   });
 
+  test('should expand $? to the exit code of the previous command', () => {
+    const env2 = new Map(environment);
+    env2.set('?', '2');
+    expect(expandString('$?', env2)).toEqual('2');
+    expect(expandString('$?x', env2)).toEqual('2x');
+    expect(expandString('${?}', env2)).toEqual('2');
+    // Nothing has run yet, and bash reports 0 there.
+    expect(expandString('$?', environment)).toEqual('0');
+  });
+
   test('should leave a dollar that starts no reference', () => {
     expect(expandString('$', environment)).toEqual('$');
     expect(expandString('a$', environment)).toEqual('a$');

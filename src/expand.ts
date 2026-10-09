@@ -27,6 +27,11 @@ function _reference(
     const replacement_text: string = environment.get(value.slice(index + 2, end)) ?? '';
     return [end + 1, replacement_text];
   }
+  if (value[index + 1] === '?') {
+    // '$?' is the exit code of the most recent command, held in the environment under '?'.
+    // It is not a valid variable name so it needs handling here rather than via nameRegex.
+    return [index + 2, environment.get('?') ?? '0'];
+  }
   const match: RegExpExecArray | null = nameRegex.exec(value.slice(index + 1));
   if (match === null) {
     return undefined;
