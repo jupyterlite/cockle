@@ -28,6 +28,7 @@ Commands of the following types are supported:
 currently supported and tested are as follows. Each package contains a single commmand with the same
 name as the package unless otherwise specified:
 
+- `awk`
 - `coreutils`: multiple core commands including `cat`, `cp`, `echo`, `ls`, `mkdir`, `mv`, `rm`, `touch`, `uname`, and `wc`
 - [`git2cpp`](https://git2cpp.readthedocs.io/): a `git` implementation
 - `grep`
