@@ -12,8 +12,6 @@
         "coreutils": {
           "commands": [
             "basename",
-            "base32",
-            "base64",
             "cat",
             "chmod",
             "cp",
