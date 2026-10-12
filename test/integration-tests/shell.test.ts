@@ -285,6 +285,60 @@ test.describe('Shell', () => {
       expect(output[19]).toMatch('\r\n1\r\n');
     });
 
+    test('should run the command after && when the first command succeeds', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['true && echo right > out', 'cat out']);
+      expect(output[1]).toMatch(/^cat out\r\nright\r\n/);
+    });
+
+    test('should skip the command after && when the first command fails', async ({ page }) => {
+      const output = await shellLineSimpleN(page, [
+        'false && echo wrong > out',
+        'echo $?',
+        'cat out'
+      ]);
+      // The second command is not run, so the exit code stays 1 and the file is not created.
+      expect(output[1]).toMatch('\r\n1\r\n');
+      expect(output[2]).toContain('cat: out: No such file or directory');
+    });
+
+    test('should run the command after || when the first command fails', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['ls unknown || echo recovered', 'echo $?']);
+      expect(output[0]).toContain("ls: cannot access 'unknown': No such file or directory");
+      expect(output[0]).toMatch('\r\nrecovered\r\n');
+      expect(output[1]).toMatch('\r\n0\r\n');
+    });
+
+    test('should skip the command after || when the first command succeeds', async ({ page }) => {
+      const output = await shellLineSimpleN(page, [
+        'true || echo wrong > out',
+        'echo $?',
+        'cat out'
+      ]);
+      expect(output[1]).toMatch('\r\n0\r\n');
+      expect(output[2]).toContain('cat: out: No such file or directory');
+    });
+
+    test('should support || true to ignore a failure', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['ls unknown || true', 'echo $?']);
+      expect(output[0]).toContain("ls: cannot access 'unknown': No such file or directory");
+      expect(output[1]).toMatch('\r\n0\r\n');
+    });
+
+    test('should apply && and || from left to right', async ({ page }) => {
+      const output = await shellLineSimpleN(page, [
+        // (true || echo alpha) && echo beta: only beta is run.
+        'true || echo alpha && echo beta > out',
+        'cat out',
+        // (false && echo alpha) || echo beta: only beta is run.
+        'false && echo alpha || echo beta > out',
+        'cat out'
+      ]);
+      expect(output[1]).toMatch(/^cat out\r\nbeta\r\n/);
+      expect(output[1]).not.toContain('alpha');
+      expect(output[3]).toMatch(/^cat out\r\nbeta\r\n/);
+      expect(output[3]).not.toContain('alpha');
+    });
+
     test('should support unicode', async ({ page }) => {
       const output = await shellLineSimple(page, 'echo 🚀');
       expect(output).toMatch(/^echo 🚀\r\n🚀\r\n/);
@@ -347,6 +401,13 @@ test.describe('Shell', () => {
       const output = await shellLineSimpleN(page, ['ls file1 |', 'cat']);
       expect(output[0]).toMatch('> ');
       expect(output[1]).toMatch('\r\nfile1\r\n');
+    });
+
+    test('should continue a command ending with a conditional operator', async ({ page }) => {
+      const output = await shellLineSimpleN(page, ['ls file1 &&', 'echo done']);
+      expect(output[0]).toMatch('> ');
+      expect(output[1]).toMatch('\r\nfile1\r\n');
+      expect(output[1]).toMatch('\r\ndone\r\n');
     });
 
     test('should support here documents', async ({ page }) => {

@@ -781,6 +781,14 @@ export class ShellImpl implements IShellImpl {
       const nodes = parse(cmdText, true, this.aliases);
 
       for (const node of nodes) {
+        // '&&' and '||' run the next node only when the previous one succeeded or failed. Nodes
+        // are joined left to right, so a skipped node leaves the exit code unchanged.
+        if (node.separator === '&&' && exitCode !== 0) {
+          continue;
+        }
+        if (node.separator === '||' && exitCode === 0) {
+          continue;
+        }
         if (node instanceof CommandNode) {
           exitCode = await this._runCommand(node, stdin, stdout, stderr, false);
         } else if (node instanceof PipeNode) {
