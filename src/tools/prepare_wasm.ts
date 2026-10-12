@@ -110,7 +110,7 @@ const inputSchema = zod
               zod.string(),
               zod
                 .object({
-                  commands: zod.optional(zod.string())
+                  commands: zod.optional(zod.array(zod.string()))
                 })
                 .strict()
             )
@@ -248,7 +248,7 @@ for (const packageName in cockleConfig.packages) {
   for (const moduleName in packageConfig.modules) {
     const module = packageConfig.modules[moduleName];
     if (!Object.hasOwn(module, 'commands')) {
-      module.commands = moduleName;
+      module.commands = [moduleName];
       console.log(`Adding default commands for ${packageName} module ${moduleName}`);
     }
   }
@@ -271,7 +271,7 @@ const outputSchema = zod
               zod.string(),
               zod
                 .object({
-                  commands: zod.optional(zod.string())
+                  commands: zod.optional(zod.array(zod.string()))
                 })
                 .strict()
             )

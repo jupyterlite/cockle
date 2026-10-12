@@ -687,16 +687,16 @@ export class ShellImpl implements IShellImpl {
     // Create command runners for each wasm module of each emscripten-forge package.
     for (const packageName of packageNames) {
       const pkgConfig = cockleConfig.packages[packageName]; // Not type safe
-      const commandModules = Object.entries(pkgConfig.modules).map(
-        ([moduleName, moduleConfig]) =>
-          new CommandModule(
-            this._commandModuleLoader,
-            moduleName,
-            (moduleConfig as any).commands ? (moduleConfig as any).commands.split(',') : [],
-            packageName,
-            pkgConfig.wasm
-          )
-      );
+      const commandModules = Object.entries(pkgConfig.modules).map(([moduleName, moduleConfig]) => {
+        const { commands } = moduleConfig as { commands: string[] };
+        return new CommandModule(
+          this._commandModuleLoader,
+          moduleName,
+          commands,
+          packageName,
+          pkgConfig.wasm
+        );
+      });
       const commandPackage = new CommandPackage(
         packageName,
         pkgConfig.version,
