@@ -3,12 +3,28 @@ import { GeneralError } from './error_exit_code';
 import type { Token } from './tokenize';
 import { hasOpenQuote, isHeredocToken, isRedirectToken, tokenize } from './tokenize';
 
-const endOfCommand = ';&';
-//const ignore_trailing = ";"
+/** Operator joining two commands in a list. */
+export type Separator = '&&' | '||';
+const SEPARATORS: Set<string> = new Set([';', '&', '&&', '||']);
+
+/** Whether a token value separates commands
+ * @param value The token value to check.
+ * @returns True if the token value is a command separator, false otherwise.
+ */
+function isSeparator(value: string): boolean {
+  return SEPARATORS.has(value);
+}
+
+/** Whether a token value is a list operator, i.e. a `Separator`. */
+function isListOperator(value: string): value is Separator {
+  return value === '&&' || value === '||';
+}
 
 export abstract class Node {
   // Return last token and whether it is a command or not.
   abstract lastToken(): [Token | null, boolean];
+
+  declare separator?: Separator;
 }
 
 export class CommandNode extends Node {
@@ -65,34 +81,43 @@ export function parse(source: string, throwErrors: boolean = true, aliases?: Ali
   const ret: Node[] = [];
   const stack: CommandNode[] = [];
   let offset: number = -1; // Offset of start of current command, -1 if not in command.
+  let separator: Separator | undefined; // Operator joining the next node to the previous one.
   const n = tokens.length;
 
-  function clearStack() {
+  function clearStack(separator?: Separator) {
+    let node: Node | undefined;
     if (stack.length === 1) {
-      ret.push(stack[0]);
+      node = stack[0];
     } else if (stack.length > 1) {
-      ret.push(new PipeNode([...stack]));
+      node = new PipeNode([...stack]);
     }
     stack.length = 0;
+    if (node !== undefined) {
+      if (separator !== undefined) {
+        node.separator = separator;
+      }
+      ret.push(node);
+    }
   }
 
   for (let i = 0; i < n; i++) {
     const token = tokens[i];
     if (offset >= 0) {
       // In command
-      if (endOfCommand.includes(token.value)) {
-        // Finish current command, ignore endOfCommand token.
-        stack.push(_createCommandNode(tokens.slice(offset, i)));
-        clearStack();
-        offset = -1;
-      } else if (token.value === '|') {
+      if (token.value === '|') {
         // Finish current command which is in a pipe.
         stack.push(_createCommandNode(tokens.slice(offset, i)));
+        offset = -1;
+      } else if (isSeparator(token.value)) {
+        // Finish current command, the separator joins the next command to it.
+        stack.push(_createCommandNode(tokens.slice(offset, i)));
+        clearStack(separator);
+        separator = isListOperator(token.value) ? token.value : undefined;
         offset = -1;
       }
     } else {
       // Not in command
-      if (!endOfCommand.includes(token.value)) {
+      if (!isSeparator(token.value)) {
         // Start new command.
         offset = i;
       }
@@ -104,7 +129,7 @@ export function parse(source: string, throwErrors: boolean = true, aliases?: Ali
     stack.push(_createCommandNode(tokens.slice(offset, n)));
   }
 
-  clearStack();
+  clearStack(separator);
   return ret;
 }
 
@@ -150,8 +175,8 @@ export function isCommandComplete(source: string, aliases?: Aliases): boolean {
     return false;
   }
 
-  if (trimmed.endsWith('|') && !trimmed.endsWith('>|') && !trimmed.endsWith('||')) {
-    // A line ending with a pipe continues on the next line.
+  if (trimmed.endsWith('&&') || (trimmed.endsWith('|') && !trimmed.endsWith('>|'))) {
+    // A line ending with a pipe or a joining operator continues on the next line.
     return false;
   }
 

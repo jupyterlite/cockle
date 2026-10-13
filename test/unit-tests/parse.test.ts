@@ -1,4 +1,5 @@
 import { Aliases } from '../../src/aliases';
+import type { Node, Separator } from '../../src/parse';
 import { CommandNode, isCommandComplete, parse, PipeNode, RedirectNode } from '../../src/parse';
 
 function getAliases(): Aliases {
@@ -283,9 +284,37 @@ describe('parse', () => {
     ]);
   });
 
+  test('should support conditional operators', () => {
+    function joined(node: Node, separator: Separator): Node {
+      node.separator = separator;
+      return node;
+    }
+
+    expect(parse('ls && pwd')).toEqual([
+      new CommandNode({ offset: 0, value: 'ls' }, []),
+      joined(new CommandNode({ offset: 6, value: 'pwd' }, []), '&&')
+    ]);
+    expect(parse('ls || pwd; cat && sort')).toEqual([
+      new CommandNode({ offset: 0, value: 'ls' }, []),
+      joined(new CommandNode({ offset: 6, value: 'pwd' }, []), '||'),
+      new CommandNode({ offset: 11, value: 'cat' }, []),
+      joined(new CommandNode({ offset: 18, value: 'sort' }, []), '&&')
+    ]);
+    expect(parse('ls | sort || wc')).toEqual([
+      new PipeNode([
+        new CommandNode({ offset: 0, value: 'ls' }, []),
+        new CommandNode({ offset: 5, value: 'sort' }, [])
+      ]),
+      joined(new CommandNode({ offset: 13, value: 'wc' }, []), '||')
+    ]);
+    // An operator with no command after it joins nothing.
+    expect(parse('ls &&')).toEqual([new CommandNode({ offset: 0, value: 'ls' }, [])]);
+  });
+
   test('should detect complete commands', () => {
     expect(isCommandComplete('ls')).toBe(true);
     expect(isCommandComplete('ls -l | wc')).toBe(true);
+    expect(isCommandComplete('ls -l && wc')).toBe(true);
     expect(isCommandComplete('cat <<EOF\nhello\nEOF')).toBe(true);
     expect(isCommandComplete('echo "hello\nworld"')).toBe(true);
     expect(isCommandComplete('echo hello \\\nworld')).toBe(true);
@@ -293,6 +322,8 @@ describe('parse', () => {
     expect(isCommandComplete('echo "hello')).toBe(false);
     expect(isCommandComplete('echo hello \\')).toBe(false);
     expect(isCommandComplete('ls |')).toBe(false);
+    expect(isCommandComplete('ls &&')).toBe(false);
+    expect(isCommandComplete('ls ||')).toBe(false);
     expect(isCommandComplete('cat <<EOF')).toBe(false);
     expect(isCommandComplete('cat <<EOF\nhello')).toBe(false);
   });
