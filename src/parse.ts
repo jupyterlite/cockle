@@ -5,10 +5,19 @@ import { hasOpenQuote, isHeredocToken, isRedirectToken, tokenize } from './token
 
 /** Operator joining two commands in a list. */
 export type Separator = '&&' | '||';
+const SEPARATORS: Set<string> = new Set([';', '&', '&&', '||']);
 
-/** Whether a token value separates commands: ';', '&', '&&' or '||'. */
+/** Whether a token value separates commands
+ * @param value The token value to check.
+ * @returns True if the token value is a command separator, false otherwise.
+ */
 function isSeparator(value: string): boolean {
-  return value === ';' || value === '&' || value === '&&' || value === '||';
+  return SEPARATORS.has(value);
+}
+
+/** Whether a token value is a list operator, i.e. a `Separator`. */
+function isListOperator(value: string): value is Separator {
+  return value === '&&' || value === '||';
 }
 
 export abstract class Node {
@@ -103,7 +112,7 @@ export function parse(source: string, throwErrors: boolean = true, aliases?: Ali
         // Finish current command, the separator joins the next command to it.
         stack.push(_createCommandNode(tokens.slice(offset, i)));
         clearStack(separator);
-        separator = token.value === '&&' || token.value === '||' ? token.value : undefined;
+        separator = isListOperator(token.value) ? token.value : undefined;
         offset = -1;
       }
     } else {
