@@ -1,5 +1,7 @@
-import type { Aliases } from './aliases';
-import { GeneralError } from './error_exit_code';
+import { isHeredocToken, readHeredocBody } from './heredoc';
+import { extendsRedirect, isRedirectToken } from './redirect';
+import type { Aliases } from '../aliases';
+import { GeneralError } from '../error_exit_code';
 
 const delimiters = ';&|><';
 const whitespace = ' ';
@@ -41,61 +43,6 @@ export function hasOpenQuote(source: string): boolean {
   const tokenizer = new Tokenizer(source, false);
   tokenizer.run();
   return tokenizer.openQuote !== '';
-}
-
-/**
- * Whether a token value is a here document operator, '<<' or '<<-'.
- */
-export function isHeredocToken(value: string): boolean {
-  return value === '<<' || value === '<<-';
-}
-
-/** Redirection operators. */
-const redirectOperators: string[] = [
-  '<',
-  '<<',
-  '<<-',
-  '<<<',
-  '<>',
-  '<&',
-  '>',
-  '>>',
-  '>|',
-  '>&',
-  '&>',
-  '&>>'
-];
-
-/** The redirection operator of a token value, without any leading file descriptor digits. */
-export function redirectOperator(value: string): string {
-  return value.replace(/^\d+/, '');
-}
-
-/** Whether a token value is a redirection, optionally preceded by a file descriptor number. */
-export function isRedirectToken(value: string): boolean {
-  return redirectOperators.includes(redirectOperator(value));
-}
-
-/**
- * Split a redirection token value into its file descriptor and operator. The file descriptor
- * defaults to standard input for '<' operators and to standard output otherwise.
- */
-export function splitRedirect(value: string): { fd: number; operator: string } {
-  const digits: RegExpExecArray | null = /^(\d+)/.exec(value);
-  const operator: string = redirectOperator(value);
-  const fd: number = digits !== null ? parseInt(digits[1], 10) : operator.startsWith('<') ? 0 : 1;
-  return { fd, operator };
-}
-
-/** Whether appending char to an in-progress token continues a redirection operator. */
-function extendsRedirect(value: string, char: string): boolean {
-  const digits: RegExpExecArray | null = /^\d+/.exec(value);
-  const operator: string = (digits !== null ? value.slice(digits[0].length) : value) + char;
-  if (digits !== null && operator.startsWith('&')) {
-    // A file descriptor never precedes '&>' or '&>>'.
-    return false;
-  }
-  return redirectOperators.some(op => op.startsWith(operator));
 }
 
 enum CharType {
@@ -329,51 +276,18 @@ class Tokenizer {
   private _readHeredocs(): void {
     while (this._pendingHeredocs.length > 0) {
       const { token, delimiter, stripTabs } = this._pendingHeredocs[0];
-      const body: string | undefined = this._readHeredocBody(delimiter, stripTabs);
-      if (body === undefined) {
+      const heredoc = readHeredocBody(this._source, this._index, delimiter, stripTabs);
+      if (heredoc === undefined) {
         // The terminating delimiter line has not been read yet. Stop tokenizing as the
         // remainder of the source is here document content.
         this._index = this._source.length;
         return;
       } else {
-        token.heredoc = body;
+        token.heredoc = heredoc.body;
+        this._index = heredoc.end;
         this._pendingHeredocs.shift();
       }
     }
-  }
-
-  /**
-   * Read a single here document body, starting on the line after the current position. Returns
-   * undefined if the line containing only the delimiter is not present in the source.
-   */
-  private _readHeredocBody(delimiter: string, stripTabs: boolean): string | undefined {
-    let body: string = '';
-    let index: number = this._index + 1; // Skip the newline that ends the command line.
-
-    while (index <= this._source.length) {
-      const endOfLine: number = this._source.indexOf('\n', index);
-      const lineEnd: number = endOfLine < 0 ? this._source.length : endOfLine;
-      let line: string = this._source.slice(index, lineEnd);
-      if (stripTabs) {
-        line = line.replace(/^\t+/, '');
-      }
-
-      if (line === delimiter) {
-        // Found the terminating delimiter line.
-        this._index = lineEnd;
-        return body;
-      }
-
-      if (endOfLine < 0) {
-        // No terminating delimiter before the end of the source.
-        return undefined;
-      }
-
-      body += `${line}\n`;
-      index = endOfLine + 1;
-    }
-
-    return undefined;
   }
 
   private _source: string;
