@@ -18,6 +18,7 @@
         "serve:cross-origin": "npx static-handler --coi --port 8001 dist/",
         "serve:cors-proxy": "HOST=localhost PORT=8881 node node_modules/cors-anywhere/server.js",
         "test": "npm run test:unit && npm run test:integration",
+        "test:coverage": "COVERAGE=1 npm run test",
         "test:integration": "cd integration-tests && playwright test",
         "test:integration:ui": "cd integration-tests && playwright test --ui",
         "test:unit": "jest"

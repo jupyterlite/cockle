@@ -14,7 +14,8 @@ const config: Config = {
     ]
   },
   testRegex: ['test/unit-tests/.*\\.test\\.ts$'],
-  collectCoverage: true,
+  // Opt-in: `npm run test:coverage`, or `COVERAGE=1 npm run test:unit`.
+  collectCoverage: process.env.COVERAGE === '1',
   collectCoverageFrom: ['src/**/*.ts', '!src/tools/**', '!src/version.ts'],
   coverageDirectory: '.coverage/unit',
   coverageReporters: [

@@ -12,6 +12,8 @@ const SRC_DIR = path.join(ROOT, 'src');
 const COVERAGE_DIR = path.join(ROOT, '.coverage');
 const INTEGRATION_DIR = path.join(COVERAGE_DIR, 'integration');
 
+export const coverageEnabled = process.env.COVERAGE === '1';
+
 /**
  * Collapse any entry/source url shape to a repo-relative path. Verified inputs:
  * 'webpack://cockle-tests/../src/x.ts', 'cockle-tests/src/x.ts', 'src/x.ts'.
@@ -206,7 +208,7 @@ export const test = base.extend<TestOptions & { coverage: void }>({
 
   coverage: [
     async ({ context, page }, use) => {
-      if (!test.info().project.name.startsWith('chromium')) {
+      if (!coverageEnabled || !test.info().project.name.startsWith('chromium')) {
         await use();
         return;
       }
