@@ -1,55 +1,26 @@
 import { PromiseDelegate } from '@lumino/coreutils';
-import { expandFilenames } from './filename_expansion';
+import { CommandExecutor } from './command_execution';
 import type { IInitContext } from './initialization';
 import { initFileSystem, initWasmPackages } from './initialization';
-import { applyRedirects } from './redirects';
+import { LineEditor } from './line_editor';
 import { ThemeManager } from './theme';
 import { Aliases } from '../aliases';
 import { ansi } from '../ansi';
 import type { IWorkerIO } from '../buffered_io';
 import type { ISize } from '../callback';
 import type { IExternalCommandResult } from '../callback_internal';
-import type { ICommandLine } from '../command_line';
-import type { ICommandRunner } from '../commands';
 import { CommandModuleLoader, CommandRegistry } from '../commands';
 import type { IRunContext } from '../context';
 import type { IShellImpl } from '../defs_internal';
 import { Environment } from '../environment';
-import { ErrorExitCode, FindCommandError, GeneralError } from '../error_exit_code';
-import { ExitCode } from '../exit_code';
-import { expandString, expandToken, expandTokens } from '../expand';
+import { expandString } from '../expand';
 import type { IFileSystem } from '../file_system';
 import { History } from '../history';
-import type { IInput, IOutput } from '../io';
-import { DummyInput, DummyOutput, Pipe, TerminalInput, TerminalOutput } from '../io';
-import { CommandNode, isCommandComplete, parse, PipeNode } from '../parse';
+import type { IOutput } from '../io';
+import { DummyInput, DummyOutput, TerminalOutput } from '../io';
 import { TabCompleter } from '../tab_completer';
 import type { Termios } from '../termios';
-import type { Token } from '../tokenize';
 import { stringFromCharCodes } from '../utils';
-
-/** `NAME=value` assignment token: a leading name which is followed directly by an unquoted '='.
- *
- * As in bash, the name is never expanded or unquoted, so a '$', a quote character or any character
- * outside the name regex makes the token a command word instead. The value is everything after the
- * first '=' that is outside a single-quoted section, so `A='b=c'` and `A=b'='c` both assign the
- * value `b=c`, whereas `A=B=1` assigns `B=1` to `A`.
- * @param token The token to parse for a `NAME=value` assignment.
- * @returns A tuple containing the name and value if the token is a valid `NAME=value` assignment, or undefined otherwise.
- */
-export function parseAssignment(token: Token): [string, string] | undefined {
-  const match: RegExpExecArray | null = /^[A-Za-z_][A-Za-z0-9_]*=/.exec(token.value);
-  if (match === null) {
-    return undefined;
-  }
-  const index: number = match[0].length - 1;
-  if (token.quoted?.some(([start]) => start <= index)) {
-    // The name is not expanded or unquoted, so a quote at or before the '=' makes the token a
-    // command word, as bash does: "'X'=1", "A''=1" and "A'x'=1" all report command not found.
-    return undefined;
-  }
-  return [match[0].slice(0, -1), token.value.slice(index + 1)];
-}
 
 /**
  * Shell implementation.
@@ -122,10 +93,34 @@ export class ShellImpl implements IShellImpl {
       output: this.output.bind(this)
     });
 
-    this._tabCompleter = new TabCompleter(
+    this._commandExecutor = new CommandExecutor(
+      options,
       this._runContext,
-      this._options.enableBufferedStdinCallback,
-      this._options.termios
+      this._stderr,
+      this._dummyInput,
+      this._dummyOutput,
+      {
+        output: this.output.bind(this),
+        outputPrompt: this._outputPrompt.bind(this),
+        setExitCode: this._setExitCode.bind(this)
+      }
+    );
+
+    this._lineEditor = new LineEditor(
+      {
+        aliases: this._runContext.aliases,
+        history: this._runContext.history,
+        environment: () => this.environment,
+        output: this.output.bind(this),
+        outputPrompt: this._outputPrompt.bind(this),
+        runCommands: text => this._commandExecutor.runCommands(text),
+        terminate: this.terminate.bind(this)
+      },
+      new TabCompleter(
+        this._runContext,
+        this._options.enableBufferedStdinCallback,
+        this._options.termios
+      )
     );
   }
 
@@ -225,95 +220,10 @@ export class ShellImpl implements IShellImpl {
   }
 
   async input(chars: string): Promise<void> {
-    // Input can be from the keyboard or a paste operation.
-    // Input from the keyboard is for a single keystroke which may be a single character or
-    // multiple characters if it is an escape code (e.g. left arrow).
-    // Input from a paste operation will be a single, potentially very large, string.
     if (!this._isRunning) {
       return;
     }
-
-    const n = chars.length;
-    for (let index = 0; index < n; ++index) {
-      const char = chars[index];
-      const code = char.charCodeAt(0);
-      switch (code) {
-        case 10:
-        case 13: {
-          // \r or \n: run the command line, or continue it on the next line if incomplete.
-          this.output('\n');
-          const cmdText = this._commandLine.text;
-          this._commandLine.text = '';
-          this._commandLine.cursorIndex = 0;
-          let promptIndex = 1;
-          if (cmdText.length > 0) {
-            if (isCommandComplete(cmdText, this.aliases)) {
-              await this._runCommands(cmdText);
-            } else {
-              // Keep the text and wait for the next line.
-              this._commandLine.text = `${cmdText}\n`;
-              this._commandLine.cursorIndex = this._commandLine.text.length;
-              promptIndex = 2;
-            }
-          }
-          await this._outputPrompt(promptIndex);
-          break;
-        }
-        case 127: // Backspace
-          if (this._commandLine.cursorIndex > 0) {
-            const { cursorIndex, text } = this._commandLine;
-            const suffix = text.slice(cursorIndex);
-            this._commandLine.text = text.slice(0, cursorIndex - 1) + suffix;
-            this._commandLine.cursorIndex--;
-            this.output(
-              ansi.cursorLeft(1) + suffix + ansi.eraseEndLine + ansi.cursorLeft(suffix.length)
-            );
-          }
-          break;
-        case 9: // Tab \t
-          this._commandLine = await this._tabCompleter.complete(this._commandLine);
-          break;
-        case 27: // Escape following by 1+ more characters
-          index += this._escapedInput(chars, index);
-          break;
-        case 3: // Ctrl-C: discard the current command line and show a new prompt.
-          this.output('^C');
-          this._commandLine.text = '';
-          this._commandLine.cursorIndex = 0;
-          await this._outputPrompt();
-          break;
-        case 4: // EOT, usually = Ctrl-D: exit the shell if the command line is empty.
-          if (this._commandLine.text.length === 0) {
-            this.output('exit\n');
-            this.terminate();
-            return;
-          }
-          break;
-        case 12: {
-          // FF, usually = Ctrl-L. Clear screen, then redraw prompt and command line.
-          const { cursorIndex, text } = this._commandLine;
-          this.output(ansi.eraseScreen + ansi.eraseSavedLines + ansi.cursorHome);
-          await this._outputPrompt();
-          this.output(text + ansi.cursorLeft(text.length - cursorIndex));
-          break;
-        }
-        default:
-          // Add char to command line at cursor position.
-          if (this._commandLine.cursorIndex === this._commandLine.text.length) {
-            // Append char.
-            this._commandLine.text += char;
-            this.output(char);
-          } else {
-            // Insert char.
-            const { cursorIndex, text } = this._commandLine;
-            const suffix = text.slice(cursorIndex);
-            this._commandLine.text = text.slice(0, cursorIndex) + char + suffix;
-            this.output(ansi.eraseEndLine + char + suffix + ansi.cursorLeft(suffix.length));
-          }
-          this._commandLine.cursorIndex++;
-          break;
-      }
-    }
+    await this._lineEditor.input(chars);
   }
 
   output(text: string): void {
@@ -321,6 +231,11 @@ export class ShellImpl implements IShellImpl {
       return;
     }
     this._runContext.workerIO.write(text);
+  }
+
+  // Runs commands directly, bypassing the line editor. Used by integration tests.
+  async _runCommands(cmdText: string): Promise<void> {
+    await this._commandExecutor.runCommands(cmdText);
   }
 
   setSize(size: ISize): void {
@@ -353,115 +268,6 @@ export class ShellImpl implements IShellImpl {
     }
   }
 
-  /**
-   * Handle input where the first character is an escape (ascii 27).
-   * @param chars Input string.
-   * @param index Index of the ESCAPE character in input string.
-   * @returns Number of characters consumed.
-   */
-  private _escapedInput(chars: string, index: number): number {
-    if (chars.at(index + 1) !== '[') {
-      return 0;
-    }
-
-    // Escape token excluding initial ESC and [
-    const regex = /^[^A-Z~]*[A-Z~]/;
-    const match = regex.exec(chars.slice(index + 2));
-    if (match === null) {
-      return 1; // Skip the [
-    }
-
-    const token = match[0];
-    switch (token) {
-      case 'A': // Up arrow
-      case '1A':
-      case 'B': // Down arrow
-      case '1B': {
-        const cmdText = this.history.scrollCurrent(token.endsWith('B'));
-        this._commandLine.text = cmdText !== null ? cmdText : '';
-        this._commandLine.cursorIndex = this._commandLine.text.length;
-        // Re-output whole line.
-        this.output(
-          ansi.eraseEndLine +
-            ansi.eraseStartLine +
-            `\r${expandString(this.environment.getPrompt(1), this.environment)}${this._commandLine.text}`
-        );
-        break;
-      }
-      case 'D': // Left arrow
-      case '1D':
-        if (this._commandLine.cursorIndex > 0) {
-          this._commandLine.cursorIndex--;
-          this.output(ansi.cursorLeft());
-        }
-        break;
-      case 'C': // Right arrow
-      case '1C':
-        if (this._commandLine.cursorIndex < this._commandLine.text.length) {
-          this._commandLine.cursorIndex++;
-          this.output(ansi.cursorRight());
-        }
-        break;
-      case '3~': // Delete
-        if (this._commandLine.cursorIndex < this._commandLine.text.length) {
-          const { cursorIndex, text } = this._commandLine;
-          const suffix = text.slice(cursorIndex + 1);
-          this._commandLine.text = text.slice(0, cursorIndex) + suffix;
-          this.output(ansi.eraseEndLine + suffix + ansi.cursorLeft(suffix.length));
-        }
-        break;
-      case 'H': // Home
-      case '1;2H':
-        if (this._commandLine.cursorIndex > 0) {
-          this.output(ansi.cursorLeft(this._commandLine.cursorIndex));
-          this._commandLine.cursorIndex = 0;
-        }
-        break;
-      case 'F': // End
-      case '1;2F': {
-        const { length } = this._commandLine.text;
-        if (this._commandLine.cursorIndex < length) {
-          this.output(ansi.cursorRight(length - this._commandLine.cursorIndex));
-          this._commandLine.cursorIndex = length;
-        }
-        break;
-      }
-      case '1;2D': // Start of previous word
-      case '1;5D':
-        if (this._commandLine.cursorIndex > 0) {
-          const { cursorIndex, text } = this._commandLine;
-          const index = text.slice(0, cursorIndex).trimEnd().lastIndexOf(' ') + 1;
-          this.output(ansi.cursorLeft(cursorIndex - index));
-          this._commandLine.cursorIndex = index;
-        }
-        break;
-      case '1;2C': // End of next word
-      case '1;5C': {
-        const { length } = this._commandLine.text;
-        if (this._commandLine.cursorIndex < length - 1) {
-          const { cursorIndex, text } = this._commandLine;
-          const end = text.slice(cursorIndex);
-          const trimmed = end.trimStart();
-          const i = trimmed.indexOf(' ');
-          const index = i < 0 ? length : cursorIndex + end.length - trimmed.length + i;
-          this.output(ansi.cursorRight(index - cursorIndex));
-          this._commandLine.cursorIndex = index;
-        }
-        break;
-      }
-      default:
-        // Unrecognised control sequence, ignore.
-        console.warn(`Unrecognised escape sequence '[${token}'`);
-        break;
-    }
-
-    return token.length + 1;
-  }
-
-  private _nextCommandId(): number {
-    return ++this._commandId;
-  }
-
   private async _outputPrompt(promptIndex: number = 1): Promise<void> {
     if (!this._isRunning) {
       return;
@@ -472,308 +278,6 @@ export class ShellImpl implements IShellImpl {
     // Get prompt just before using as a theme change above can change the PS1 prompt colors.
     const prompt = expandString(this.environment.getPrompt(promptIndex), this.environment);
     this._runContext.workerIO.write(`\n${prompt}`);
-  }
-
-  private async _runCommands(cmdText: string): Promise<void> {
-    if (cmdText.startsWith('!')) {
-      // Get command from history and run that.
-      const index = parseInt(cmdText.slice(1));
-      const possibleCmd = this.history.at(index);
-      if (possibleCmd === null) {
-        // Does not set exit code.
-        let text = '!' + index + ': event not found';
-        if (this._options.color) {
-          text = ansi.styleBoldRed + text + ansi.styleReset;
-        }
-        this.output(`${text}\n`);
-        await this._outputPrompt();
-        return;
-      }
-      cmdText = possibleCmd;
-    }
-
-    await this._options.enableBufferedStdinCallback(true);
-    this._options.termios.setDefaultWasm();
-
-    this.history.add(cmdText);
-
-    let exitCode!: number;
-    const stdin = new TerminalInput(
-      timeoutMs => this._runContext.workerIO.pollInput(timeoutMs),
-      maxChars => this._runContext.workerIO.read(maxChars),
-      maxChars => this._runContext.workerIO.readAsync(maxChars, -1) // -1 means infinite wait
-    );
-    const stdout = new TerminalOutput(this.output.bind(this));
-    const stderr = this._stderr;
-    try {
-      const nodes = parse(cmdText, true, this.aliases);
-
-      for (const node of nodes) {
-        // '&&' and '||' run the next node only when the previous one succeeded or failed. Nodes
-        // are joined left to right, so a skipped node leaves the exit code unchanged.
-        if (node.separator === '&&' && exitCode !== 0) {
-          continue;
-        }
-        if (node.separator === '||' && exitCode === 0) {
-          continue;
-        }
-        if (node instanceof CommandNode) {
-          exitCode = await this._runCommand(node, stdin, stdout, stderr, false);
-        } else if (node instanceof PipeNode) {
-          const { commands } = node;
-          const n = commands.length;
-          let prevPipe: Pipe;
-          for (let i = 0; i < n; i++) {
-            const input = i === 0 ? stdin : prevPipe!.input;
-            const output = i < n - 1 ? (prevPipe = new Pipe()) : stdout;
-            exitCode = await this._runCommand(commands[i], input, output, stderr, true);
-          }
-        } else {
-          // This should not occur.
-          throw new GeneralError(`Expected CommandNode or PipeNode not ${node}`);
-        }
-      }
-    } catch (error: any) {
-      if (error instanceof ErrorExitCode) {
-        exitCode = error.exitCode;
-      }
-      stderr.write(error + '\n');
-      stderr.flush();
-    } finally {
-      exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
-      this._setExitCode(exitCode);
-
-      this._options.termios.setDefaultShell();
-      await this._options.enableBufferedStdinCallback(false);
-    }
-  }
-
-  private async _runCommand(
-    commandNode: CommandNode,
-    input: IInput,
-    output: IOutput,
-    error: IOutput,
-    inPipeline: boolean
-  ): Promise<number> {
-    const head = commandNode.name;
-    const tokens = head !== undefined ? [head, ...commandNode.suffix] : [];
-
-    // Leading 'NAME=value' tokens before the command word are assignments. A command which is only
-    // assignments defines them in the shell; otherwise they apply to that command alone.
-    const k = this._assignmentCount(tokens);
-
-    if (k === tokens.length && k > 0) {
-      return this._runAssignmentsOnly(commandNode, tokens, k, input, output, error, inPipeline);
-    }
-
-    // Redirections are applied before the command is looked up: bash reports an ambiguous redirect
-    // in preference to command not found, and creates the file before reporting the latter.
-    ({ input, output, error } = applyRedirects(
-      commandNode,
-      input,
-      output,
-      error,
-      this.environment,
-      this._runContext.fileSystem,
-      this._dummyInput,
-      this._dummyOutput
-    ));
-
-    // A 'NAME=value' prefix applies to the command alone, and a later name in the prefix sees an
-    // earlier one: 'B=1 C=$B cmd' runs cmd with C=1.
-    const saved_env: Environment = this._runContext.environment;
-    let environment: Environment = saved_env;
-    let temporary: boolean = false;
-    if (k > 0) {
-      environment = new Environment(this.environment);
-      temporary = true;
-      for (let i = 0; i < k; i++) {
-        this._assign(tokens[i], environment);
-      }
-    }
-
-    const name = tokens[k]?.value ?? '';
-    const runner = this._runContext.commandRegistry.get(name);
-    if (name !== '' && runner === null) {
-      // Give location of command in input?
-      throw new FindCommandError(name);
-    }
-    if (runner === null) {
-      this._flushOutputs(output, error);
-      if (temporary) {
-        this._runContext.environment = saved_env;
-      }
-      return ExitCode.SUCCESS;
-    }
-
-    return this._executeCommand(
-      runner,
-      name,
-      tokens,
-      k,
-      environment,
-      saved_env,
-      temporary,
-      input,
-      output,
-      error
-    );
-  }
-
-  /**
-   * Count the number of assignment tokens at the start of the token list.
-   * @param tokens The tokens representing the command and its arguments.
-   * @returns The number of assignment tokens at the start of the token list.
-   */
-  private _assignmentCount(tokens: Token[]): number {
-    let count = 0;
-    while (count < tokens.length && parseAssignment(tokens[count]) !== undefined) {
-      count++;
-    }
-    return count;
-  }
-
-  /**
-   * Run only the assignment part of a command, without executing the command itself.
-   * Handles input/output redirections and temporary environment changes for pipeline elements.
-   * @param commandNode The command node representing the command in the AST.
-   * @param tokens The tokens representing the command and its arguments.
-   * @param assignmentCount The number of assignment tokens at the start of the command.
-   * @param input The input stream for the command.
-   * @param output The output stream for the command.
-   * @param error The error stream for the command.
-   * @param inPipeline Whether the command is part of a pipeline.
-   * @returns The exit code of the assignment execution.
-   */
-  private _runAssignmentsOnly(
-    commandNode: CommandNode,
-    tokens: Token[],
-    assignmentCount: number,
-    input: IInput,
-    output: IOutput,
-    error: IOutput,
-    inPipeline: boolean
-  ): number {
-    // bash runs a pipeline element in a subshell, so 'A=1 | cat' discards the assignment.
-    const environment = inPipeline ? new Environment(this.environment) : this.environment;
-    for (let i = 0; i < assignmentCount; i++) {
-      this._assign(tokens[i], environment);
-    }
-    // The assignment happens before the redirections, so 'A=f > $A' writes to f.
-    // eslint-disable-next-line no-useless-assignment
-    ({ input, output, error } = applyRedirects(
-      commandNode,
-      input,
-      output,
-      error,
-      environment,
-      this._runContext.fileSystem,
-      this._dummyInput,
-      this._dummyOutput
-    ));
-    this._flushOutputs(output, error);
-    return ExitCode.SUCCESS;
-  }
-
-  /**
-   * Execute a command with the given runner, name, tokens, and environment.
-   * Handles temporary environment changes and input/output redirections.
-   * @param runner The command runner to execute.
-   * @param name The name of the command.
-   * @param tokens The tokens representing the command and its arguments.
-   * @param assignmentCount The number of assignment tokens at the start of the command.
-   * @param environment The current environment for the command.
-   * @param savedEnvironment The saved environment to restore if temporary changes were made.
-   * @param temporaryEnvironment Whether the environment changes are temporary.
-   * @param input The input stream for the command.
-   * @param output The output stream for the command.
-   * @param error The error stream for the command.
-   * @returns The exit code of the executed command.
-   */
-  private async _executeCommand(
-    runner: ICommandRunner,
-    name: string,
-    tokens: Token[],
-    assignmentCount: number,
-    environment: Environment,
-    savedEnvironment: Environment,
-    temporaryEnvironment: boolean,
-    input: IInput,
-    output: IOutput,
-    error: IOutput
-  ): Promise<number> {
-    let commandId: number = -1; // eslint-disable-line no-useless-assignment
-    let exitCode: number = ExitCode.SUCCESS; // eslint-disable-line no-useless-assignment
-    try {
-      let args: string[] = expandTokens(tokens.slice(assignmentCount + 1), environment);
-      args = expandFilenames(args, this._runContext.fileSystem);
-      commandId = this._nextCommandId();
-      this._runContext.commandId = commandId;
-      this._runContext.name = name;
-      this._runContext.args = [...args];
-      this._runContext.stdin = input;
-      this._runContext.stdout = output;
-      this._runContext.stderr = error;
-      this._runContext.environment = environment;
-
-      this._options.commandStateChangedCallback({
-        commandId,
-        name,
-        args,
-        state: 'loading'
-      });
-
-      exitCode = await runner.run(this._runContext);
-    } finally {
-      this._flushOutputs(output, error);
-
-      // Reset properties of IContext.
-      this._runContext.commandId = -1;
-      this._runContext.name = '';
-      this._runContext.args = [];
-      this._runContext.stdin = this._dummyInput;
-      this._runContext.stdout = this._dummyOutput;
-      this._runContext.stderr = this._dummyOutput;
-
-      if (temporaryEnvironment) {
-        this._runContext.environment = savedEnvironment;
-      }
-    }
-
-    this._options.commandStateChangedCallback({
-      commandId,
-      exitCode,
-      state: 'finished'
-    });
-    return exitCode;
-  }
-
-  /**
-   * Flush the output and error streams, ensuring that any buffered data is written out.
-   * If the output and error streams are the same, flush only once to avoid truncating the file.
-   * @param output The output stream to be flushed.
-   * @param error The error stream to be flushed.
-   */
-  private _flushOutputs(output: IOutput, error: IOutput): void {
-    if (error === output) {
-      output.flush();
-    } else {
-      error.flush();
-      output.flush();
-    }
-  }
-
-  /** Set the variable named by an assignment token in an environment, expanding its value against
-   * that environment so that a later name in the same prefix sees an earlier one.
-   * @param token The assignment token to be processed.
-   * @param environment The environment in which the assignment should be applied.
-   */
-  private _assign(token: Token, environment: Environment): void {
-    const assignment = parseAssignment(token);
-    if (assignment !== undefined) {
-      const [name] = assignment;
-      environment.set(name, expandToken(token, environment).slice(name.length + 1));
-    }
   }
 
   private _setExitCode(exitCode: number) {
@@ -793,13 +297,13 @@ export class ShellImpl implements IShellImpl {
     return '';
   }
 
-  private _commandLine: ICommandLine = { text: '', cursorIndex: 0 };
   private _exitCode: number = 0;
   private _isRunning = false;
   private _size: ISize = { rows: 0, columns: 0 };
 
-  private _commandId = -1;
+  private _commandExecutor: CommandExecutor;
   private _commandModuleLoader: CommandModuleLoader;
+  private _lineEditor: LineEditor;
   private _runContext: IRunContext;
   private _dummyInput = new DummyInput();
   private _dummyOutput = new DummyOutput();
@@ -807,6 +311,5 @@ export class ShellImpl implements IShellImpl {
   private _fileSystem: IFileSystem;
   private _options: IShellImpl.IOptions;
   private _stderr: TerminalOutput;
-  private _tabCompleter: TabCompleter;
   private _theme: ThemeManager;
 }
