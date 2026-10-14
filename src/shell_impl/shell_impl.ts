@@ -1,43 +1,32 @@
 import { PromiseDelegate } from '@lumino/coreutils';
-import { Aliases } from './aliases';
-import { ansi } from './ansi';
-import type { IWorkerIO } from './buffered_io';
-import type { ISize } from './callback';
-import type { IExternalCommandResult } from './callback_internal';
-import type { ICommandLine } from './command_line';
-import type { ICommandRunner } from './commands';
-import { CommandModule, CommandModuleLoader, CommandPackage, CommandRegistry } from './commands';
-import type { IRunContext } from './context';
-import type { IShellImpl } from './defs_internal';
-import { Environment } from './environment';
-import {
-  ErrorExitCode,
-  FindCommandError,
-  GeneralError,
-  unsupportedRedirect
-} from './error_exit_code';
-import { ExitCode } from './exit_code';
-import { expandHeredoc, expandString, expandToken, expandTokens, splitToken } from './expand';
-import type { IFileSystem } from './file_system';
-import { History } from './history';
-import type { IInput, IOutput } from './io';
-import {
-  DummyInput,
-  DummyOutput,
-  FileInput,
-  FileOutput,
-  Pipe,
-  StringInput,
-  TerminalInput,
-  TerminalOutput
-} from './io';
-import { CommandNode, isCommandComplete, parse, PipeNode } from './parse';
-import { SharedFS } from './shared_fs';
-import { TabCompleter } from './tab_completer';
-import type { Termios } from './termios';
-import type { Token } from './tokenize';
-import { splitRedirect } from './tokenize';
-import { joinURL, stringFromCharCodes } from './utils';
+import { expandFilenames } from './filename_expansion';
+import type { IInitContext } from './initialization';
+import { initFileSystem, initWasmPackages } from './initialization';
+import { applyRedirects } from './redirects';
+import { ThemeManager } from './theme';
+import { Aliases } from '../aliases';
+import { ansi } from '../ansi';
+import type { IWorkerIO } from '../buffered_io';
+import type { ISize } from '../callback';
+import type { IExternalCommandResult } from '../callback_internal';
+import type { ICommandLine } from '../command_line';
+import type { ICommandRunner } from '../commands';
+import { CommandModuleLoader, CommandRegistry } from '../commands';
+import type { IRunContext } from '../context';
+import type { IShellImpl } from '../defs_internal';
+import { Environment } from '../environment';
+import { ErrorExitCode, FindCommandError, GeneralError } from '../error_exit_code';
+import { ExitCode } from '../exit_code';
+import { expandString, expandToken, expandTokens } from '../expand';
+import type { IFileSystem } from '../file_system';
+import { History } from '../history';
+import type { IInput, IOutput } from '../io';
+import { DummyInput, DummyOutput, Pipe, TerminalInput, TerminalOutput } from '../io';
+import { CommandNode, isCommandComplete, parse, PipeNode } from '../parse';
+import { TabCompleter } from '../tab_completer';
+import type { Termios } from '../termios';
+import type { Token } from '../tokenize';
+import { stringFromCharCodes } from '../utils';
 
 /** `NAME=value` assignment token: a leading name which is followed directly by an unquoted '='.
  *
@@ -127,6 +116,12 @@ export class ShellImpl implements IShellImpl {
       this._options.color ? ansi.styleReset : undefined
     );
 
+    this._theme = new ThemeManager(options, {
+      stderr: this._stderr,
+      environment: () => this.environment,
+      output: this.output.bind(this)
+    });
+
     this._tabCompleter = new TabCompleter(
       this._runContext,
       this._options.enableBufferedStdinCallback,
@@ -204,7 +199,14 @@ export class ShellImpl implements IShellImpl {
   }
 
   async initialize() {
-    await this._initWasmPackages();
+    const initContext: IInitContext = {
+      commandModuleLoader: this._commandModuleLoader,
+      options: this._options,
+      runContext: this._runContext,
+      wasmUrlQueryParams: this._wasmUrlQueryParams.bind(this)
+    };
+
+    await initWasmPackages(initContext);
 
     // Aliases and env vars from constructor options override those from cockle-config.json
     Object.entries(this._options.aliases).forEach(([name, value]) =>
@@ -219,7 +221,7 @@ export class ShellImpl implements IShellImpl {
       }
     });
 
-    await this._initFileSystem();
+    await initFileSystem(initContext);
   }
 
   async input(chars: string): Promise<void> {
@@ -346,17 +348,8 @@ export class ShellImpl implements IShellImpl {
   }
 
   async themeChange(isDark?: boolean): Promise<void> {
-    this._requestedDarkMode = isDark;
-
-    if (this._themeStatus !== ThemeStatus.Ok) {
-      // Already pending or changing, don't need to repeat.
-      return;
-    }
-
-    this._themeStatus = ThemeStatus.PendingChange;
-
-    if (!this._runContext.workerIO.enabled) {
-      await this._handleThemeChange();
+    if (this._theme.request(isDark) && !this._runContext.workerIO.enabled) {
+      await this._theme.resolve();
     }
   }
 
@@ -465,271 +458,6 @@ export class ShellImpl implements IShellImpl {
     return token.length + 1;
   }
 
-  private _filenameExpansion(args: string[]): string[] {
-    const { PATH } = this._runContext.fileSystem;
-    const ret: string[] = [];
-
-    // ToDo:
-    // - Handling of absolute paths
-    // - Handling of . and .. and hidden files
-    // - Wildcards in quoted strings should be ignored
-    // - [ab] syntax
-    // - Multiple wildcards in different directory levels in the same arg
-    for (const arg of args) {
-      // May not always be appropriate to do filename wildcard expansion, it depends if we have
-      // information the possible command arguments.
-      if (arg.startsWith('-')) {
-        ret.push(arg);
-        continue;
-      } else if (!(arg.includes('*') || arg.includes('?'))) {
-        ret.push(arg);
-        continue;
-      }
-
-      const { FS } = this._runContext.fileSystem!;
-      const analyze = FS.analyzePath(arg, false);
-      if (!analyze.parentExists) {
-        ret.push(arg);
-        continue;
-      }
-      const parentPath = analyze.parentPath;
-
-      // Assume relative path.
-      let relativePath = parentPath;
-      const pwd = FS.cwd();
-      if (relativePath.startsWith(pwd)) {
-        relativePath = relativePath.slice(pwd.length);
-        if (relativePath.startsWith('/')) {
-          relativePath = relativePath.slice(1);
-        }
-      }
-
-      let possibles = FS.readdir(parentPath);
-
-      // Transform match string to a regex.
-      // Escape special characters, * and ? dealt with separately.
-      let match = analyze.name.replace(/[.+^${}()|[\]\\]/g, '\\$&');
-      match = match.replaceAll('*', '.*');
-      match = match.replaceAll('?', '.');
-      const regex = new RegExp(`^${match}$`);
-      possibles = possibles.filter((path: string) => path.match(regex));
-
-      // Remove all . files/directories; need to fix this.
-      possibles = possibles.filter((path: string) => !path.startsWith('.'));
-
-      if (relativePath.length > 0) {
-        possibles = possibles.map((path: string) => PATH.join(relativePath, path));
-      }
-
-      if (possibles.length > 0) {
-        ret.push(...possibles);
-      } else {
-        ret.push(arg);
-      }
-    }
-
-    return ret;
-  }
-
-  private async _handleThemeChange(): Promise<void> {
-    if (this._themeStatus === ThemeStatus.Changing) {
-      // Don't run more than once concurrently.
-      return;
-    }
-
-    if (this._requestedDarkMode !== undefined) {
-      // Early return as we already know if dark/light mode.
-      this._setDarkMode(this._requestedDarkMode);
-      return;
-    }
-
-    // Need to determine if dark or light mode.
-    this._themeStatus = ThemeStatus.Changing;
-
-    await this._options.enableBufferedStdinCallback(true);
-    const { termios, workerIO } = this._options;
-    termios.setRawMode();
-
-    // Operating System Command to get terminal background color.
-    // https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Operating-System-Commands
-    this.output('\x1b]11;?\x07');
-
-    const timeoutMs = 100;
-    const start = performance.now();
-    const chars = await workerIO.readAsync(null, timeoutMs);
-    console.debug('Cockle theme change', (performance.now() - start).toFixed(1), 'ms');
-
-    termios.setDefaultShell();
-    await this._options.enableBufferedStdinCallback(false);
-
-    this._themeStatus = ThemeStatus.Ok;
-
-    const charStr = stringFromCharCodes(chars);
-    // Expecting something like this: ]11;rgb:8080/0000/ffff\
-    // eslint-disable-next-line no-control-regex
-    const re = /^\x1b]11;rgb:([0-9A-Fa-f]{2,})\/([0-9A-Fa-f]{2,})\/([0-9A-Fa-f]{2,})\x1b\\$/;
-    const match = re.exec(charStr);
-    if (!match) {
-      console.warn('Unable to determine terminal background color');
-      this._setDarkMode(undefined);
-    } else {
-      const r = parseInt(match[1].slice(0, 2), 16) / 255.0;
-      const g = parseInt(match[2].slice(0, 2), 16) / 255.0;
-      const b = parseInt(match[3].slice(0, 2), 16) / 255.0;
-      const lum = (r + g + b) / 3.0;
-      this._setDarkMode(lum < 0.6);
-    }
-  }
-
-  private async _initFileSystem(): Promise<void> {
-    const { wasmBaseUrl } = this._options;
-    const fsModule = await this._commandModuleLoader.getWasmModule('cockle_fs', 'fs');
-    if (fsModule === undefined) {
-      // Cannot report this in the terminal as it has not been started yet.
-      // TODO: Store this information and report it when the terminal is up and running?
-      console.error('Unable to load cockle_fs, shell cannot function');
-      return;
-    }
-    const module = await fsModule({
-      locateFile: (path: string) => joinURL(wasmBaseUrl, 'cockle_fs/' + path)
-    });
-    const { FS, PATH, ERRNO_CODES, PROXYFS } = module;
-
-    this._runContext.fileSystem.FS = FS;
-    this._runContext.fileSystem.PATH = PATH;
-    this._runContext.fileSystem.ERRNO_CODES = ERRNO_CODES;
-    this._runContext.fileSystem.PROXYFS = PROXYFS;
-
-    // Create new directories.
-    SharedFS.NON_WASM_DIRECTORIES_SHARED.forEach(dir => {
-      try {
-        FS.mkdir(dir, SharedFS.TOP_LEVEL_DIRECTORY_PERMISSIONS);
-      } catch (err: any) {
-        console.error(`Failed to create directory ${dir}`);
-      }
-    });
-
-    const mountpoint = this._fileSystem.mountpoint;
-    try {
-      FS.mkdirTree(mountpoint, SharedFS.TOP_LEVEL_DIRECTORY_PERMISSIONS);
-    } catch (err: any) {
-      console.error(`Failed to create mountpoint directory ${mountpoint}`);
-    }
-
-    // Set permissions of directories that are created in wasm module.
-    SharedFS.ALL_WASM_DIRECTORIES.forEach(dir => {
-      try {
-        FS.chmod(dir, SharedFS.TOP_LEVEL_DIRECTORY_PERMISSIONS);
-      } catch (err: any) {
-        console.error(`Failed to chmod ${dir}`);
-      }
-    });
-
-    // Set permissions of root directory.
-    try {
-      FS.chmod('/', SharedFS.ROOT_DIRECTORY_PERMISSIONS);
-    } catch (err: any) {
-      console.error('Failed to chmod of root directory');
-    }
-
-    const { browsingContextId, baseUrl, initialDirectories, initialFiles } = this._options;
-    await this._options.initDriveFSCallback({
-      browsingContextId,
-      baseUrl,
-      fileSystem: this._runContext.fileSystem,
-      mountpoint
-    });
-
-    FS.chdir(mountpoint);
-
-    if (initialDirectories) {
-      initialDirectories.forEach((directory: string) => FS.mkdir(directory, 0o775));
-    }
-
-    if (initialFiles) {
-      Object.entries(initialFiles).forEach(([filename, contents]) =>
-        FS.writeFile(filename, contents, { mode: 0o664 })
-      );
-    }
-
-    if (this._options.cwd !== undefined) {
-      try {
-        FS.chdir(this._options.cwd);
-      } catch (err: any) {
-        // Remains in mountpoint.
-        console.error('Failed to cd to ' + this._options.cwd);
-      }
-    }
-
-    this.environment.set('PWD', FS.cwd());
-  }
-
-  private async _initWasmPackages(): Promise<void> {
-    const filename = 'cockle-config.json';
-    const queryParams = await this._wasmUrlQueryParams(filename);
-    const url = joinURL(this._options.wasmBaseUrl, filename + queryParams);
-    const response = await fetch(url);
-    if (!response.ok) {
-      // Would be nice to report this via the terminal.
-      console.error(`Failed to fetch ${url}, terminal cannot function without it`);
-    }
-
-    const cockleConfig = await response.json();
-    // Check JSON follows schema?
-    // May want to store JSON config.
-
-    const packageNames = Object.keys(cockleConfig.packages);
-    const fsPackage = 'cockle_fs';
-    if (!packageNames.includes(fsPackage)) {
-      console.error(`cockle-config.json does not include required package '${fsPackage}'`);
-    }
-
-    // Create command runners for each wasm module of each emscripten-forge package.
-    for (const packageName of packageNames) {
-      const pkgConfig = cockleConfig.packages[packageName]; // Not type safe
-      const commandModules = Object.entries(pkgConfig.modules).map(
-        ([moduleName, moduleConfig]) =>
-          new CommandModule(
-            this._commandModuleLoader,
-            moduleName,
-            (moduleConfig as any).commands ? (moduleConfig as any).commands.split(',') : [],
-            packageName,
-            pkgConfig.wasm
-          )
-      );
-      const commandPackage = new CommandPackage(
-        packageName,
-        pkgConfig.version,
-        pkgConfig.build_string,
-        pkgConfig.channel,
-        pkgConfig.platform,
-        pkgConfig.wasm,
-        commandModules
-      );
-      this._runContext.commandRegistry.registerCommandPackage(commandPackage);
-    }
-
-    // Initialise aliases.
-    if (Object.hasOwn(cockleConfig, 'aliases')) {
-      for (const [key, v] of Object.entries(cockleConfig.aliases)) {
-        const value = v as string;
-        if (value.length > 0) {
-          this.aliases.set(key, value);
-        }
-      }
-    }
-
-    // Initialise environment variables.
-    if (Object.hasOwn(cockleConfig, 'environment')) {
-      for (const [key, v] of Object.entries(cockleConfig.environment)) {
-        const value = v as string;
-        if (value.length > 0) {
-          this.environment.set(key, value);
-        }
-      }
-    }
-  }
-
   private _nextCommandId(): number {
     return ++this._commandId;
   }
@@ -738,8 +466,8 @@ export class ShellImpl implements IShellImpl {
     if (!this._isRunning) {
       return;
     }
-    if (this._themeStatus === ThemeStatus.PendingChange) {
-      await this._handleThemeChange();
+    if (this._theme.isPending()) {
+      await this._theme.resolve();
     }
     // Get prompt just before using as a theme change above can change the PS1 prompt colors.
     const prompt = expandString(this.environment.getPrompt(promptIndex), this.environment);
@@ -840,12 +568,15 @@ export class ShellImpl implements IShellImpl {
 
     // Redirections are applied before the command is looked up: bash reports an ambiguous redirect
     // in preference to command not found, and creates the file before reporting the latter.
-    ({ input, output, error } = this._applyRedirects(
+    ({ input, output, error } = applyRedirects(
       commandNode,
       input,
       output,
       error,
-      this.environment
+      this.environment,
+      this._runContext.fileSystem,
+      this._dummyInput,
+      this._dummyOutput
     ));
 
     // A 'NAME=value' prefix applies to the command alone, and a later name in the prefix sees an
@@ -930,12 +661,15 @@ export class ShellImpl implements IShellImpl {
     }
     // The assignment happens before the redirections, so 'A=f > $A' writes to f.
     // eslint-disable-next-line no-useless-assignment
-    ({ input, output, error } = this._applyRedirects(
+    ({ input, output, error } = applyRedirects(
       commandNode,
       input,
       output,
       error,
-      environment
+      environment,
+      this._runContext.fileSystem,
+      this._dummyInput,
+      this._dummyOutput
     ));
     this._flushOutputs(output, error);
     return ExitCode.SUCCESS;
@@ -972,7 +706,7 @@ export class ShellImpl implements IShellImpl {
     let exitCode: number = ExitCode.SUCCESS; // eslint-disable-line no-useless-assignment
     try {
       let args: string[] = expandTokens(tokens.slice(assignmentCount + 1), environment);
-      args = this._filenameExpansion(args);
+      args = expandFilenames(args, this._runContext.fileSystem);
       commandId = this._nextCommandId();
       this._runContext.commandId = commandId;
       this._runContext.name = name;
@@ -1042,168 +776,6 @@ export class ShellImpl implements IShellImpl {
     }
   }
 
-  private _applyRedirects(
-    commandNode: CommandNode,
-    input: IInput,
-    output: IOutput,
-    error: IOutput,
-    environment: ReadonlyMap<string, string>
-  ): { input: IInput; output: IOutput; error: IOutput } {
-    if (commandNode.redirects) {
-      const fileSystem = this._runContext.fileSystem;
-      for (const redirect of commandNode.redirects) {
-        // Redirects take effect left to right, so duplicating a file descriptor copies whichever
-        // target it points to at that moment. When several redirects target the same descriptor,
-        // the last one wins.
-        const token = redirect.token.value;
-        const word = redirect.target.value;
-        const { fd, operator } = splitRedirect(token);
-
-        // A redirect target is expanded and split as a normal word is: 'OUT=f; echo hi > $OUT'
-        // writes to 'f'. A here string is not split, so it keeps its single value.
-        const fields =
-          operator === '<<<'
-            ? [expandToken(redirect.target, environment)]
-            : splitToken(redirect.target, environment);
-        if (fields.length !== 1) {
-          // bash reports the unexpanded word: 'A="a b"; echo hi > $A' gives '$A: ambiguous redirect'.
-          throw new GeneralError(`${word}: ambiguous redirect`);
-        }
-        const target = fields[0];
-
-        switch (operator) {
-          case '>':
-          case '>|':
-          case '>>': {
-            const append: boolean = operator === '>>';
-            const fileOutput = new FileOutput(fileSystem, target, append);
-            if (fd === 1) {
-              output = fileOutput;
-            } else if (fd === 2) {
-              error = fileOutput;
-            } else {
-              throw unsupportedRedirect(token, fd);
-            }
-            break;
-          }
-
-          case '&>':
-          case '&>>': {
-            // Both standard output and standard error ('cmd &> file').
-            const appendBoth: boolean = operator === '&>>';
-            output = error = new FileOutput(fileSystem, target, appendBoth);
-            break;
-          }
-
-          case '<':
-          case '<>': {
-            if (fd !== 0) {
-              throw unsupportedRedirect(token, fd);
-            }
-            // '<> file' opens for reading and writing. cockle commands only read from stdin.
-            const readWrite: boolean = operator === '<>';
-            input = new FileInput(fileSystem, target, readWrite);
-            break;
-          }
-
-          case '<<':
-          case '<<-': {
-            const body: string | undefined = redirect.token.heredoc;
-            if (body === undefined) {
-              // Should not occur as the shell only runs complete commands.
-              throw new GeneralError('Here document is incomplete');
-            }
-            // A quoted delimiter makes the body literal; otherwise it is expanded but not split,
-            // as in bash. Backslash removal within double quotes does not apply here.
-            const content: string = redirect.token.quotedDelimiter
-              ? body
-              : expandHeredoc(body, environment);
-            input = new StringInput(content);
-            break;
-          }
-
-          case '<<<':
-            if (fd !== 0) {
-              throw unsupportedRedirect(token, fd);
-            }
-            // Here string: 'cat <<< hello'.
-            input = new StringInput(`${target}\n`);
-            break;
-
-          case '<&':
-            if (fd !== 0) {
-              throw unsupportedRedirect(token, fd);
-            } else if (target === '-') {
-              // Closed standard input, reads return nothing.
-              input = this._dummyInput;
-            } else if (target !== '0') {
-              throw new GeneralError(`Redirect '${token}${target}' is not supported`);
-            }
-            break;
-
-          case '>&': {
-            const match = /^(\d*)(-?)$/.exec(target);
-
-            if (match === null) {
-              // A word that is not a file descriptor redirects both streams: 'cmd >& file'.
-              output = error = new FileOutput(fileSystem, target, false);
-              break;
-            }
-
-            // A bare '-' closes this file descriptor: 'cmd 2>&-'.
-            const targetFd = match[1] === '' ? fd : parseInt(match[1], 10);
-            if (fd === 1 && targetFd === 2) {
-              output = error;
-            } else if (fd === 2 && targetFd === 1) {
-              error = output;
-            } else if (fd !== targetFd || (fd !== 1 && fd !== 2)) {
-              throw new GeneralError(`Redirect '${token}${target}' is not supported`);
-            }
-
-            if (match[2] === '-') {
-              // Moving a file descriptor closes the target: '2>&1-'
-              if (targetFd === 1) {
-                output = this._dummyOutput;
-              } else {
-                error = this._dummyOutput;
-              }
-            }
-            break;
-          }
-
-          default:
-            throw new GeneralError(`Unrecognised redirect ${token}`);
-        }
-      }
-    }
-
-    return { input, output, error };
-  }
-
-  private _setDarkMode(darkMode: boolean | undefined): void {
-    if (darkMode === this._darkMode) {
-      return;
-    }
-
-    this._darkMode = darkMode;
-
-    // Set prompt color.
-    if (this._options.color) {
-      this._stderr.prefix = darkMode ? ansi.styleBrightRed : ansi.styleRed;
-
-      const promptColor = darkMode ? ansi.styleBoldGreen : ansi.styleGreen;
-      this._runContext.environment.set('PS1', promptColor + 'js-shell:' + ansi.styleReset + ' ');
-    }
-
-    // Set/delete environment variable.
-    const envVarName = 'COCKLE_DARK_MODE';
-    if (darkMode === undefined) {
-      this.environment.delete(envVarName);
-    } else {
-      this.environment.set(envVarName, darkMode ? '1' : '0');
-    }
-  }
-
   private _setExitCode(exitCode: number) {
     this._exitCode = exitCode;
     this.environment.set('?', `${exitCode}`);
@@ -1222,12 +794,9 @@ export class ShellImpl implements IShellImpl {
   }
 
   private _commandLine: ICommandLine = { text: '', cursorIndex: 0 };
-  private _darkMode?: boolean;
   private _exitCode: number = 0;
-  private _requestedDarkMode?: boolean;
   private _isRunning = false;
   private _size: ISize = { rows: 0, columns: 0 };
-  private _themeStatus = ThemeStatus.PendingChange;
 
   private _commandId = -1;
   private _commandModuleLoader: CommandModuleLoader;
@@ -1239,13 +808,5 @@ export class ShellImpl implements IShellImpl {
   private _options: IShellImpl.IOptions;
   private _stderr: TerminalOutput;
   private _tabCompleter: TabCompleter;
-}
-
-/**
- * Status of theme used to track changes and avoid multiple changes at the same time.
- */
-enum ThemeStatus {
-  Ok = 0,
-  PendingChange = 1,
-  Changing = 2
+  private _theme: ThemeManager;
 }
