@@ -18,14 +18,10 @@ export interface ILineEditorHost {
 }
 
 export class LineEditor {
-  private _commandLine: ICommandLine = { text: '', cursorIndex: 0 };
-  private _host: ILineEditorHost;
-  private _tabCompleter: TabCompleter;
-
-  constructor(host: ILineEditorHost, tabCompleter: TabCompleter) {
-    this._host = host;
-    this._tabCompleter = tabCompleter;
-  }
+  constructor(
+    private readonly _host: ILineEditorHost,
+    private readonly _tabCompleter: TabCompleter
+  ) {}
 
   async input(chars: string): Promise<void> {
     // Input can be from the keyboard or a paste operation.
@@ -219,4 +215,6 @@ export class LineEditor {
 
     return token.length + 1;
   }
+
+  private _commandLine: ICommandLine = { text: '', cursorIndex: 0 };
 }
