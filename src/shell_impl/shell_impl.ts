@@ -1,6 +1,6 @@
 import { PromiseDelegate } from '@lumino/coreutils';
 import { CommandExecutor } from './command_execution';
-import type { IInitContext } from './initialization';
+import type { IInitOptions } from './initialization';
 import { initFileSystem, initWasmPackages } from './initialization';
 import { LineEditor } from './line_editor';
 import { ThemeManager } from './theme';
@@ -194,14 +194,14 @@ export class ShellImpl implements IShellImpl {
   }
 
   async initialize() {
-    const initContext: IInitContext = {
+    const initOptions: IInitOptions = {
       commandModuleLoader: this._commandModuleLoader,
-      options: this._options,
+      shellImplOptions: this._options,
       runContext: this._runContext,
       wasmUrlQueryParams: this._wasmUrlQueryParams.bind(this)
     };
 
-    await initWasmPackages(initContext);
+    await initWasmPackages(initOptions);
 
     // Aliases and env vars from constructor options override those from cockle-config.json
     Object.entries(this._options.aliases).forEach(([name, value]) =>
@@ -216,7 +216,7 @@ export class ShellImpl implements IShellImpl {
       }
     });
 
-    await initFileSystem(initContext);
+    await initFileSystem(initOptions);
   }
 
   async input(chars: string): Promise<void> {

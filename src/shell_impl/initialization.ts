@@ -5,16 +5,16 @@ import type { IShellImpl } from '../defs_internal';
 import { SharedFS } from '../shared_fs';
 import { joinURL } from '../utils';
 
-export interface IInitContext {
+export interface IInitOptions {
   commandModuleLoader: CommandModuleLoader;
-  options: IShellImpl.IOptions;
+  shellImplOptions: IShellImpl.IOptions;
   runContext: IRunContext;
   wasmUrlQueryParams: (filename: string) => Promise<string>;
 }
 
-export async function initFileSystem(context: IInitContext): Promise<void> {
-  const { runContext, options, commandModuleLoader } = context;
-  const { wasmBaseUrl } = options;
+export async function initFileSystem(initOptions: IInitOptions): Promise<void> {
+  const { runContext, shellImplOptions, commandModuleLoader } = initOptions;
+  const { wasmBaseUrl } = shellImplOptions;
   const fsModule = await commandModuleLoader.getWasmModule('cockle_fs', 'fs');
   if (fsModule === undefined) {
     // Cannot report this in the terminal as it has not been started yet.
@@ -64,8 +64,8 @@ export async function initFileSystem(context: IInitContext): Promise<void> {
     console.error('Failed to chmod of root directory');
   }
 
-  const { browsingContextId, baseUrl, initialDirectories, initialFiles } = options;
-  await options.initDriveFSCallback({
+  const { browsingContextId, baseUrl, initialDirectories, initialFiles } = shellImplOptions;
+  await shellImplOptions.initDriveFSCallback({
     browsingContextId,
     baseUrl,
     fileSystem: runContext.fileSystem,
@@ -84,23 +84,23 @@ export async function initFileSystem(context: IInitContext): Promise<void> {
     );
   }
 
-  if (options.cwd !== undefined) {
+  if (shellImplOptions.cwd !== undefined) {
     try {
-      FS.chdir(options.cwd);
+      FS.chdir(shellImplOptions.cwd);
     } catch (err: any) {
       // Remains in mountpoint.
-      console.error('Failed to cd to ' + options.cwd);
+      console.error('Failed to cd to ' + shellImplOptions.cwd);
     }
   }
 
   runContext.environment.set('PWD', FS.cwd());
 }
 
-export async function initWasmPackages(context: IInitContext): Promise<void> {
-  const { runContext, options, commandModuleLoader, wasmUrlQueryParams } = context;
+export async function initWasmPackages(initOptions: IInitOptions): Promise<void> {
+  const { runContext, shellImplOptions, commandModuleLoader, wasmUrlQueryParams } = initOptions;
   const filename = 'cockle-config.json';
   const queryParams = await wasmUrlQueryParams(filename);
-  const url = joinURL(options.wasmBaseUrl, filename + queryParams);
+  const url = joinURL(shellImplOptions.wasmBaseUrl, filename + queryParams);
   const response = await fetch(url);
   if (!response.ok) {
     // Would be nice to report this via the terminal.
