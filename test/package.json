@@ -18,6 +18,7 @@
         "serve:cross-origin": "npx static-handler --coi --port 8001 dist/",
         "serve:cors-proxy": "HOST=localhost PORT=8881 node node_modules/cors-anywhere/server.js",
         "test": "npm run test:unit && npm run test:integration",
+        "test:coverage": "COVERAGE=1 npm run test",
         "test:integration": "cd integration-tests && playwright test",
         "test:integration:ui": "cd integration-tests && playwright test --ui",
         "test:unit": "jest"
@@ -31,6 +32,8 @@
         "concurrently": "^10.0.3",
         "cors-anywhere": "^0.4.4",
         "jest": "^30.4.2",
+        "monocart-coverage-reports": "^2.13.2",
+        "source-map-loader": "^5.0.0",
         "static-handler": "^0.5.3",
         "ts-jest": "^29.4.11",
         "ts-loader": "^9.6.2",
