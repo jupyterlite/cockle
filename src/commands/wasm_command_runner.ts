@@ -8,7 +8,13 @@ import type { IInput, IOutput } from '../io';
 import { SharedFS } from '../shared_fs';
 import type { Termios } from '../termios';
 import type { MainModule } from '../types/wasm_module';
-import { joinURL } from '../utils';
+import { joinURL, utf8BytesFromCharCodes } from '../utils';
+
+/**
+ * Number of characters of stdin to read and convert to UTF-8 at a time. Reading and converting
+ * characters in chunks is much faster than one character at a time.
+ */
+const INPUT_CHARS_PER_READ = 8192;
 
 export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
   constructor(readonly module: CommandModule) {
@@ -30,6 +36,21 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     const wasmModule = await this.module.loader.getWasmModule(this.packageName, this.moduleName);
     if (wasmModule === undefined) {
       throw new FindCommandError(name);
+    }
+
+    // Buffer which converts the UTF-16 characters of stdin into the UTF-8 bytes of a wasm
+    // command, retaining bytes which do not fit in a read buffer until the next read.
+    const inputBytes = new Utf8InputBuffer();
+
+    // Read characters from stdin for the wasm command. Defined once because it is called many
+    // times as the command reads its input.
+    function readCharsFromStdin(maxChars: number): number[] {
+      let chars = stdin.finished ? workerIO.read(maxChars) : stdin.read(maxChars);
+      if (chars.length === 1 && chars[0] === 4) {
+        // End of text (e.g. Ctrl+D typed at the terminal): treat as the end of the input.
+        chars = [];
+      }
+      return chars;
     }
 
     function getTermios(tty: any): Termios.IFlags {
@@ -58,7 +79,10 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
         timeoutMs = 0;
       }
 
-      const readable = stdin.finished ? workerIO.pollInput(timeoutMs) : stdin.poll(timeoutMs);
+      let readable = inputBytes.length > 0;
+      if (!readable) {
+        readable = stdin.finished ? workerIO.pollInput(timeoutMs) : stdin.poll(timeoutMs);
+      }
       const writable = true;
       return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
     }
@@ -74,13 +98,15 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
         // No buffer to store in.
         return 0;
       }
-      let chars = stdin.finished ? workerIO.read(length) : stdin.read(length);
-      if (chars.length === 1 && chars[0] === 4) {
-        chars = [];
+
+      if (inputBytes.length === 0) {
+        inputBytes.fill(readCharsFromStdin, length);
       }
-      // Should check have enough space to store new chars.
-      buffer.set(chars, offset);
-      return chars.length;
+
+      // Do not pass more bytes to the wasm command than fit in the buffer.
+      const bytes = inputBytes.take(length);
+      buffer.set(bytes, offset);
+      return bytes.length;
     }
 
     function write(
@@ -94,7 +120,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
         return 0;
       }
 
-      const chars = buffer.slice(offset, offset + length);
+      const chars = buffer.subarray(offset, offset + length);
       const text = workerIO.utf8ArrayToString(chars);
       const isStderr = stream.path === '/dev/tty1';
 
@@ -110,6 +136,12 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
         exitCode = moduleExitCode;
       }
     }
+
+    // Output handlers which buffer bytes until a line ends or the command has finished. A single
+    // handler is used when stdout and stderr are the same stream (e.g. 'cmd &> file') so that the
+    // bytes are kept in the order the command wrote them.
+    const stdoutHandler = this._outputHandler(stdout);
+    const stderrHandler = stdout === stderr ? stdoutHandler : this._outputHandler(stderr);
 
     const wasm = await wasmModule({
       thisProgram: name,
@@ -190,10 +222,14 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
           commandStateChangedCallback({ commandId, state: 'running' });
         }
       ],
-      stdin: this._inputHandler(stdin),
-      stderr: this._outputHandler(stderr),
-      stdout: this._outputHandler(stdout)
+      stdin: this._inputHandler(stdin, inputBytes),
+      stderr: stderrHandler?.write,
+      stdout: stdoutHandler?.write
     });
+
+    // Flush the remaining output bytes.
+    stdoutHandler?.flush();
+    stderrHandler?.flush();
 
     if (exitCode === undefined) {
       exitCode = ExitCode.CANNOT_RUN_COMMAND;
@@ -217,21 +253,145 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
    * By default a WebAssembly command assumes stdin, stdout and stderr are terminals (TTYs).
    * If this is not the case, provide an input reading or output writing wrapper.
    * With this, WebAssembly commands can use `isatty` correctly.
+   * The wrapper returns the UTF-8 bytes expected by the WebAssembly command, one byte at a time.
    */
-  private _inputHandler(input: IInput): (() => number | null | undefined) | undefined {
+  private _inputHandler(
+    input: IInput,
+    inputBytes: Utf8InputBuffer
+  ): (() => number | null | undefined) | undefined {
     if (!input.isTerminal()) {
+      const readChars = (maxChars: number) => input.read(maxChars);
       return () => {
-        const read = input.read(1);
-        return read.length > 0 ? read[0] : null;
+        inputBytes.fill(readChars, INPUT_CHARS_PER_READ);
+        return inputBytes.readByte();
       };
     }
     return undefined;
   }
 
-  private _outputHandler(output: IOutput): ((x: number) => void) | undefined {
-    if (!output.isTerminal()) {
-      return (x: number) => output.write(String.fromCharCode(x));
+  /**
+   * The WebAssembly command writes UTF-8 bytes, one at a time. Decode them to characters using a
+   * streaming decoder, as a multi-byte character may be split over multiple calls, and batch the
+   * bytes before passing them to the output. The returned write function must be called with one
+   * byte at a time, then flush() must be called when the command has finished.
+   */
+  private _outputHandler(
+    output: IOutput
+  ): { write: (x: number) => void; flush: () => void } | undefined {
+    if (output.isTerminal()) {
+      return undefined;
     }
-    return undefined;
+
+    const decoder = new TextDecoder('utf-8');
+    const staging = new Uint8Array(1024);
+    let count = 0;
+
+    const flush = (final: boolean) => {
+      let text = '';
+      if (count > 0) {
+        text = decoder.decode(staging.subarray(0, count), { stream: !final });
+        count = 0;
+      } else if (final) {
+        // Emit the replacement character for an incomplete character at the end of the output.
+        text = decoder.decode();
+      }
+      if (text.length > 0) {
+        output.write(text);
+      }
+    };
+
+    return {
+      write: (x: number) => {
+        staging[count++] = x;
+        if (count === staging.length || x === 10) {
+          // Flush when the buffer is full, or at the end of a line, so that the output is
+          // available incrementally.
+          flush(false);
+        }
+      },
+      flush: () => flush(true)
+    };
   }
+}
+
+/**
+ * Buffer which converts UTF-16 characters into the UTF-8 bytes of a wasm command input stream.
+ * A character may produce multiple UTF-8 bytes, and a code unit may be one half of a surrogate
+ * pair split between reads, so pending bytes and characters are retained between reads.
+ */
+class Utf8InputBuffer {
+  /**
+   * Read characters using the supplied function until at least one byte is available, or the
+   * input is exhausted.
+   * @param readChars Function to read up to maxChars characters from the input.
+   * @param maxChars Maximum characters to request per read.
+   */
+  fill(readChars: (maxChars: number) => number[], maxChars: number): void {
+    while (this._index === this._bytes.length) {
+      const chars = readChars(maxChars);
+      if (chars.length === 0) {
+        // End of input: a retained high surrogate is invalid on its own.
+        this._flushPendingHighSurrogate();
+        return;
+      }
+      this._push(chars);
+    }
+  }
+
+  /**
+   * Remove and return the next byte, or null if none is available.
+   */
+  readByte(): number | null {
+    return this._index < this._bytes.length ? this._bytes[this._index++] : null;
+  }
+
+  /**
+   * Remove and return up to maxBytes bytes as a view into the buffer.
+   */
+  take(maxBytes: number): Uint8Array {
+    const end = Math.min(this._index + maxBytes, this._bytes.length);
+    const bytes = this._bytes.subarray(this._index, end);
+    this._index = end;
+    return bytes;
+  }
+
+  get length(): number {
+    return this._bytes.length - this._index;
+  }
+
+  /**
+   * Add characters read from the input. Only called when the buffer is empty.
+   */
+  private _push(chars: number[]): void {
+    if (this._pendingHighSurrogate !== undefined) {
+      chars = [this._pendingHighSurrogate, ...chars];
+      this._pendingHighSurrogate = undefined;
+    }
+
+    const last = chars.at(-1)!;
+    if (last >= 0xd800 && last <= 0xdbff) {
+      // Trailing high surrogate: retain it to join with the next character.
+      this._pendingHighSurrogate = last;
+      chars = chars.slice(0, -1);
+    }
+
+    this._bytes = utf8BytesFromCharCodes(chars);
+    this._index = 0;
+  }
+
+  /**
+   * Encode a retained high surrogate from an incomplete surrogate pair as the Unicode replacement
+   * character.
+   */
+  private _flushPendingHighSurrogate(): void {
+    if (this._pendingHighSurrogate !== undefined) {
+      this._bytes = utf8BytesFromCharCodes([this._pendingHighSurrogate]);
+      this._index = 0;
+      this._pendingHighSurrogate = undefined;
+    }
+  }
+
+  private _bytes: Uint8Array = new Uint8Array(0);
+  private _index = 0;
+  private _pendingHighSurrogate?: number;
 }

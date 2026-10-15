@@ -47,12 +47,25 @@ export function stringFromCharCodes(codes: number[] | Int8Array): string {
   // Using the spread operator with a very long array (e.g. 100000) can lead to a RangeError as
   // maximum call size is exceeded. So here chunking into smaller arrays.
   const chunkSize = 10000;
-  const strings: string[] = [];
   const n = codes.length;
+  if (n <= chunkSize) {
+    return String.fromCharCode(...codes);
+  }
+  const strings: string[] = [];
   for (let i = 0; i < n; i += chunkSize) {
     strings.push(String.fromCharCode(...codes.slice(i, i + chunkSize)));
   }
   return strings.join('');
+}
+
+const textEncoder = new TextEncoder();
+
+/**
+ * Convert array of UTF-16 character codes to array of UTF-8 byte codes. This is needed at the
+ * boundary with WebAssembly commands which use streams of UTF-8 bytes.
+ */
+export function utf8BytesFromCharCodes(codes: number[]): Uint8Array {
+  return textEncoder.encode(stringFromCharCodes(codes));
 }
 
 /**

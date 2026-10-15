@@ -344,6 +344,35 @@ test.describe('Shell', () => {
       expect(output).toMatch(/^echo 🚀\r\n🚀\r\n/);
     });
 
+    test('should support unicode in pipe', async ({ page }) => {
+      const output = await shellLineSimple(page, "echo 'héllo 🎉' | cat");
+      expect(output).toMatch(/^echo 'héllo 🎉' \| cat\r\nhéllo 🎉\r\n/);
+    });
+
+    test('should support unicode in redirected input', async ({ page }) => {
+      const output = await shellLineSimpleN(page, [
+        "echo 'héllo 🎉' > unicode.txt",
+        'cat < unicode.txt'
+      ]);
+      expect(output[1]).toMatch(/^cat < unicode\.txt\r\nhéllo 🎉\r\n/);
+    });
+
+    test('should support unicode input larger than the read chunk', async ({ page }) => {
+      // Place a surrogate pair across a read boundary (chunks of 8192 code units) to check that
+      // both halves are joined before conversion to UTF-8. The expected byte count is
+      // 8191 + 4 + 64*2 + 1 = 8324 bytes.
+      const content = 'a'.repeat(8191) + '🎉' + 'é'.repeat(64) + '\n';
+      const options = { initialFiles: { 'big.txt': content } };
+      const output = await shellLineSimpleN(
+        page,
+        ['wc -c big.txt', 'cat big.txt | wc -c', 'cat < big.txt | wc -c'],
+        options
+      );
+      expect(output[0]).toMatch(/^wc -c big\.txt\r\n8324 big\.txt\r\n/);
+      expect(output[1]).toMatch(/^cat big\.txt \| wc -c\r\n8324\r\n/);
+      expect(output[2]).toMatch(/^cat < big\.txt \| wc -c\r\n8324\r\n/);
+    });
+
     test('should emit commandStateChanged signals', async ({ page }) => {
       const output = await page.evaluate(async () => {
         const { commandStateChanged, shell } = await globalThis.cockle.shellSetupEmpty({

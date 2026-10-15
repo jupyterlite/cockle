@@ -1,4 +1,9 @@
-import { joinURL, wordAtCursor } from '../../src/utils';
+import {
+  joinURL,
+  stringFromCharCodes,
+  utf8BytesFromCharCodes,
+  wordAtCursor
+} from '../../src/utils';
 
 describe('wordAtCursor', () => {
   test('should return the whole word when the cursor is at the end of the text', () => {
@@ -35,5 +40,35 @@ describe('joinURL', () => {
     expect(joinURL('http://localhost//', '/path')).toEqual(expected);
     expect(joinURL('http://localhost/', '//path')).toEqual(expected);
     expect(joinURL('http://localhost//', '//path')).toEqual(expected);
+  });
+});
+
+describe('utf8BytesFromCharCodes', () => {
+  test('should return ascii characters unchanged', () => {
+    expect(Array.from(utf8BytesFromCharCodes([104, 105]))).toEqual([104, 105]);
+  });
+
+  test('should return 2 byte UTF-8 sequences', () => {
+    expect(Array.from(utf8BytesFromCharCodes([0x00e9]))).toEqual([0xc3, 0xa9]);
+  });
+
+  test('should return 3 byte UTF-8 sequences', () => {
+    expect(Array.from(utf8BytesFromCharCodes([0x2502]))).toEqual([0xe2, 0x94, 0x82]);
+  });
+
+  test('should return 4 byte UTF-8 sequences for surrogate pairs', () => {
+    expect(Array.from(utf8BytesFromCharCodes([0xd83c, 0xdf89]))).toEqual([0xf0, 0x9f, 0x8e, 0x89]);
+  });
+});
+
+describe('stringFromCharCodes', () => {
+  test('should convert char codes to string', () => {
+    expect(stringFromCharCodes([104, 105])).toBe('hi');
+  });
+
+  test('should convert many char codes to string', () => {
+    const codes = Array.from({ length: 100001 }, (_, i) => 97 + (i % 26));
+    const expected = codes.map(code => String.fromCharCode(code)).join('');
+    expect(stringFromCharCodes(codes)).toBe(expected);
   });
 });

@@ -68,6 +68,14 @@ test.describe('cockle-config command', () => {
     expect(output1).toMatch('\r\nError: Unknown package(s): xyz123\r\n');
   });
 
+  test('should write table output to a pipe', async ({ page }) => {
+    // Table borders are non-ASCII so check they are encoded as valid UTF-8 for wasm commands.
+    const output = await shellLineSimple(page, 'cockle-config | grep package');
+    expect(output).not.toMatch(/binary file matches/);
+    expect(output).toMatch(/│ package\s+│ type\s+│ version\s+│ build string\s+│ source\s+│/);
+    expect(output).toMatch(/│ module\s+│ package\s+│ cached\s+│/);
+  });
+
   test('should run module subcommand', async ({ page }) => {
     const output = await shellLineSimple(page, 'cockle-config module fs');
     const lines = output.split('\r\n');
