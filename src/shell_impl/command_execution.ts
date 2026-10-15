@@ -21,14 +21,6 @@ export interface ICommandExecutorHost {
 }
 
 export class CommandExecutor {
-  private _commandId = -1;
-  private _dummyInput: IInput;
-  private _dummyOutput: IOutput;
-  private _host: ICommandExecutorHost;
-  private _options: IShellImpl.IOptions;
-  private _runContext: IRunContext;
-  private _stderr: TerminalOutput;
-
   constructor(
     options: IShellImpl.IOptions,
     runContext: IRunContext,
@@ -352,4 +344,12 @@ export class CommandExecutor {
       environment.set(name, expandToken(token, environment).slice(name.length + 1));
     }
   }
+
+  private _commandId = -1;
+  private _dummyInput: IInput;
+  private _dummyOutput: IOutput;
+  private _host: ICommandExecutorHost;
+  private _options: IShellImpl.IOptions;
+  private _runContext: IRunContext;
+  private _stderr: TerminalOutput;
 }
