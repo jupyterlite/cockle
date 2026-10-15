@@ -22,20 +22,13 @@ export interface ICommandExecutorHost {
 
 export class CommandExecutor {
   constructor(
-    options: IShellImpl.IOptions,
-    runContext: IRunContext,
-    stderr: TerminalOutput,
-    dummyInput: IInput,
-    dummyOutput: IOutput,
-    host: ICommandExecutorHost
-  ) {
-    this._options = options;
-    this._runContext = runContext;
-    this._stderr = stderr;
-    this._dummyInput = dummyInput;
-    this._dummyOutput = dummyOutput;
-    this._host = host;
-  }
+    private readonly _options: IShellImpl.IOptions,
+    private readonly _runContext: IRunContext,
+    private readonly _stderr: TerminalOutput,
+    private readonly _dummyInput: IInput,
+    private readonly _dummyOutput: IOutput,
+    private readonly _host: ICommandExecutorHost
+  ) {}
 
   private _nextCommandId(): number {
     return ++this._commandId;
@@ -346,10 +339,4 @@ export class CommandExecutor {
   }
 
   private _commandId = -1;
-  private _dummyInput: IInput;
-  private _dummyOutput: IOutput;
-  private _host: ICommandExecutorHost;
-  private _options: IShellImpl.IOptions;
-  private _runContext: IRunContext;
-  private _stderr: TerminalOutput;
 }
