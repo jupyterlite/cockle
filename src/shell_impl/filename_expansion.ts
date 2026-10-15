@@ -21,7 +21,7 @@ export function expandFilenames(args: string[], fileSystem: IFileSystem): string
       continue;
     }
 
-    const { FS } = fileSystem!;
+    const { FS } = fileSystem;
     const analyze = FS.analyzePath(arg, false);
     if (!analyze.parentExists) {
       ret.push(arg);
