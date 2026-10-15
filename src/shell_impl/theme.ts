@@ -21,16 +21,10 @@ enum ThemeStatus {
 }
 
 export class ThemeManager {
-  private _darkMode?: boolean;
-  private _host: IThemeHost;
-  private _options: IShellImpl.IOptions;
-  private _requestedDarkMode?: boolean;
-  private _themeStatus = ThemeStatus.PendingChange;
-
-  constructor(options: IShellImpl.IOptions, host: IThemeHost) {
-    this._options = options;
-    this._host = host;
-  }
+  constructor(
+    private readonly _options: IShellImpl.IOptions,
+    private readonly _host: IThemeHost
+  ) {}
 
   request(isDark?: boolean): boolean {
     this._requestedDarkMode = isDark;
@@ -121,4 +115,8 @@ export class ThemeManager {
       this._host.environment().set(envVarName, darkMode ? '1' : '0');
     }
   }
+
+  private _darkMode?: boolean;
+  private _requestedDarkMode?: boolean;
+  private _themeStatus = ThemeStatus.PendingChange;
 }
