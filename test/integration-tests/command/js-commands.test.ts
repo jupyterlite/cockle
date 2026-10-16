@@ -68,6 +68,17 @@ cmdName.forEach(cmdName => {
       expect(output[1]).toMatch('\r\nabcdefghij0123456789\r\n');
     });
 
+    test('should read unicode from named file', async ({ page }) => {
+      const output = await page.evaluate(async cmdName => {
+        const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+        await shell.inputLine("echo 'héllo 🎉' > readfile.txt");
+        output.clear();
+        await shell.inputLine(`${cmdName} readfile`);
+        return output.text;
+      }, cmdName);
+      expect(output).toMatch('\r\nhéllo 🎉\r\n');
+    });
+
     test('should return exit code', async ({ page }) => {
       const exitCodes = await page.evaluate(async cmdName => {
         const { shell } = await globalThis.cockle.shellSetupEmpty();
