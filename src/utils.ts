@@ -58,16 +58,6 @@ export function stringFromCharCodes(codes: number[] | Int8Array): string {
   return strings.join('');
 }
 
-const textEncoder = new TextEncoder();
-
-/**
- * Convert array of UTF-16 character codes to array of UTF-8 byte codes. This is needed at the
- * boundary with WebAssembly commands which use streams of UTF-8 bytes.
- */
-export function utf8BytesFromCharCodes(codes: number[]): Uint8Array {
-  return textEncoder.encode(stringFromCharCodes(codes));
-}
-
 /**
  * Arrange an array of strings into columns that fit within a columnWidth.
  * Each column is the same width.
