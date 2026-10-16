@@ -94,10 +94,10 @@ export class Utf8InputBuffer {
    * @param chars Characters to encode.
    */
   private _encode(chars: number[]): void {
-    const text : string = stringFromCharCodes(chars);
+    const text: string = stringFromCharCodes(chars);
     // A code unit produces up to 3 bytes (a surrogate pair produces 4 bytes for 2 code units),
     // so this capacity always has room for all of the encoded text.
-    const capacity : number = 3 * text.length;
+    const capacity: number = 3 * text.length;
     if (this._bytes.length < capacity) {
       this._bytes = new Uint8Array(capacity);
     }
@@ -106,7 +106,7 @@ export class Utf8InputBuffer {
   }
 
   private _bytes: Uint8Array = new Uint8Array(0);
-  private _end : number = 0;
-  private _index : number = 0;
+  private _end: number = 0;
+  private _index: number = 0;
   private _pendingHighSurrogate?: number;
 }
