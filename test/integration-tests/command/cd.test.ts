@@ -55,7 +55,6 @@ test.describe('cd command', () => {
       await shell.inputLine('cd file1');
       return [await shell.exitCode(), output.textAndClear()];
     });
-    console.log('XXX', output);
     expect(output[0]).toBe(1);
     expect(output[1]).toMatch('\r\ncd: file1: Not a directory\r\n');
   });
