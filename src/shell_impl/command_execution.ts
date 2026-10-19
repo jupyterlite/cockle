@@ -8,7 +8,8 @@ import type { IShellImpl } from '../defs_internal';
 import { Environment } from '../environment';
 import { ErrorExitCode, FindCommandError, GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
-import { expandToken, expandTokens } from '../expand';
+import type { Field } from '../expand';
+import { expandFields, expandToken } from '../expand';
 import type { IInput, IOutput } from '../io';
 import { Pipe, TerminalInput, TerminalOutput } from '../io';
 import { CommandNode, parse, PipeNode } from '../parse';
@@ -267,8 +268,8 @@ export class CommandExecutor {
     let commandId: number = -1; // eslint-disable-line no-useless-assignment
     let exitCode: number = ExitCode.SUCCESS; // eslint-disable-line no-useless-assignment
     try {
-      let args: string[] = expandTokens(tokens.slice(assignmentCount + 1), environment);
-      args = expandFilenames(args, this._runContext.fileSystem);
+      const fields: Field[] = expandFields(tokens.slice(assignmentCount + 1), environment);
+      const args: string[] = expandFilenames(fields, this._runContext.fileSystem);
       commandId = this._nextCommandId();
       this._runContext.commandId = commandId;
       this._runContext.name = name;
