@@ -1,4 +1,4 @@
-import { joinURL, wordAtCursor } from '../../src/utils';
+import { joinURL, stringFromCharCodes, wordAtCursor } from '../../src/utils';
 
 describe('wordAtCursor', () => {
   test('should return the whole word when the cursor is at the end of the text', () => {
@@ -35,5 +35,17 @@ describe('joinURL', () => {
     expect(joinURL('http://localhost//', '/path')).toEqual(expected);
     expect(joinURL('http://localhost/', '//path')).toEqual(expected);
     expect(joinURL('http://localhost//', '//path')).toEqual(expected);
+  });
+});
+
+describe('stringFromCharCodes', () => {
+  test('should convert char codes to string', () => {
+    expect(stringFromCharCodes([104, 105])).toBe('hi');
+  });
+
+  test('should convert many char codes to string', () => {
+    const codes = Array.from({ length: 100001 }, (_, i) => 97 + (i % 26));
+    const expected = codes.map(code => String.fromCharCode(code)).join('');
+    expect(stringFromCharCodes(codes)).toBe(expected);
   });
 });

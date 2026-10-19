@@ -45,6 +45,21 @@ test.describe('grep command', () => {
       expect(output).toMatch(/^grep o\r\nxyz\r\naobc\r\naobc\r\n/);
     });
 
+    test(`should accept unicode stdin via ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
+      const output = await page.evaluate(async stdinOption => {
+        const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ stdinOption });
+        const { enter, EOT } = keys;
+        const cmd = shell.inputLine('grep -c é');
+        await terminalInput(shell, [...('héllo' + enter + EOT)]);
+        await cmd;
+        return output.text;
+      }, stdinOption);
+      expect(output).toMatch(/grep -c é\r\n/);
+      expect(output).toMatch(/\r\n1\r\n/);
+    });
+
     test(`should accept stdin backspace via ${stdinOption}`, async ({ page, supportsSAB }) => {
       test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {

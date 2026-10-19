@@ -25,18 +25,20 @@ export abstract class InputAll implements IInput {
   }
 
   read(maxChars: number | null): number[] {
-    const { buffer } = this;
-
-    if (this._index < buffer.length) {
-      const char = buffer[this._index++];
-      const ret: number[] = [];
-      for (let i = 0; i < char.length; i++) {
-        ret.push(char.charCodeAt(i));
-      }
-      return ret;
-    } else {
+    if (maxChars !== null && maxChars <= 0) {
       return [];
     }
+
+    const { buffer } = this;
+    const start = this._index;
+    const end = maxChars === null ? buffer.length : Math.min(start + maxChars, buffer.length);
+    const n = end - start;
+    const ret = new Array<number>(n);
+    for (let i = 0; i < n; i++) {
+      ret[i] = buffer.charCodeAt(start + i);
+    }
+    this._index = end;
+    return ret;
   }
 
   private get buffer(): string {

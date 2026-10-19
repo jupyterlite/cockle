@@ -1,5 +1,5 @@
-import path from 'node:path';
 import type { Config } from 'jest';
+import path from 'node:path';
 
 // The value import above makes Node detect this file as ESM, so `__dirname` is unavailable.
 const REPO_ROOT = path.resolve(import.meta.dirname, '..');
