@@ -1,4 +1,4 @@
-import { Utf8InputBuffer } from '../../src/commands/wasm_command_runner';
+import { Utf8InputBuffer } from '../../src/commands/utf8_input_buffer';
 
 describe('Utf8InputBuffer', () => {
   test('should encode ascii characters', () => {
