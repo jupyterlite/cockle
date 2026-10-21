@@ -5,7 +5,7 @@ describe('Environment.createDefault', () => {
     test(`should set terminal env vars for color ${color}`, () => {
       const env = Environment.createDefault(color, 'shellId', undefined);
       if (color) {
-        expect(env.get('PS1')).toMatch('js-shell:');  // Not checking ansi color sequences.
+        expect(env.get('PS1')).toMatch('js-shell:'); // Not checking ansi color sequences.
         expect(env.get('PS1')).not.toEqual('js-shell: ');
         expect(env.get('TERM')).toEqual('xterm-256color');
         expect(env.get('TERMINFO')).toEqual('/usr/local/share/terminfo');

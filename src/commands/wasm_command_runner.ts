@@ -1,6 +1,7 @@
 import type { CommandModule } from './command_module';
 import { CommandType } from './command_type';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
+import { Utf8InputBuffer } from './utf8_input_buffer';
 import type { IRunContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
@@ -9,7 +10,6 @@ import { SharedFS } from '../shared_fs';
 import type { Termios } from '../termios';
 import type { MainModule } from '../types/wasm_module';
 import { joinURL } from '../utils';
-import { Utf8InputBuffer } from './utf8_input_buffer';
 
 /**
  * Number of characters of stdin to read and convert to UTF-8 at a time. Reading and converting

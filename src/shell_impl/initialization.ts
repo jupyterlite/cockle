@@ -6,7 +6,6 @@ import { DEFAULT_USER } from '../environment';
 import { SharedFS } from '../shared_fs';
 import { joinURL } from '../utils';
 
-
 export interface IInitOptions {
   commandModuleLoader: CommandModuleLoader;
   shellImplOptions: IShellImpl.IOptions;

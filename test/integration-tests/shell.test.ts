@@ -9,8 +9,8 @@ import {
   shellLineSimpleN,
   test
 } from './utils';
-import { keys } from '../serve/keys';
 import { DEFAULT_USER } from '../../src/environment';
+import { keys } from '../serve/keys';
 
 test.describe('Shell', () => {
   test.describe('run command', () => {
