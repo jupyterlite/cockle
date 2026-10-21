@@ -60,7 +60,8 @@ export class ShellImpl implements IShellImpl {
       environment: Environment.createDefault(
         options.color,
         options.shellId,
-        options.browsingContextId
+        options.browsingContextId,
+        options.user
       ),
       history: new History(),
       shellId,

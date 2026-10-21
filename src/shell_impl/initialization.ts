@@ -2,6 +2,7 @@ import type { CommandModuleLoader } from '../commands';
 import { CommandModule, CommandPackage } from '../commands';
 import type { IRunContext } from '../context';
 import type { IShellImpl } from '../defs_internal';
+import { DEFAULT_USER } from '../environment';
 import { SharedFS } from '../shared_fs';
 import { joinURL } from '../utils';
 
@@ -14,7 +15,7 @@ export interface IInitOptions {
 
 export async function initFileSystem(initOptions: IInitOptions): Promise<void> {
   const { runContext, shellImplOptions, commandModuleLoader } = initOptions;
-  const { wasmBaseUrl } = shellImplOptions;
+  const { user, wasmBaseUrl } = shellImplOptions;
   const fsModule = await commandModuleLoader.getWasmModule('cockle_fs', 'fs');
   if (fsModule === undefined) {
     // Cannot report this in the terminal as it has not been started yet.
@@ -31,6 +32,17 @@ export async function initFileSystem(initOptions: IInitOptions): Promise<void> {
   runContext.fileSystem.PATH = PATH;
   runContext.fileSystem.ERRNO_CODES = ERRNO_CODES;
   runContext.fileSystem.PROXYFS = PROXYFS;
+
+  // Home directory.
+  if (user !== undefined && user !== DEFAULT_USER) {
+    const oldDir = `/home/${DEFAULT_USER}`;
+    const newDir = `/home/${user}`;
+    try {
+      FS.rename(oldDir, newDir);
+    } catch (err: any) {
+      console.error(`Failed to rename home directory from ${oldDir} to ${newDir}`);
+    }
+  }
 
   // Create new directories.
   SharedFS.NON_WASM_DIRECTORIES_SHARED.forEach(dir => {

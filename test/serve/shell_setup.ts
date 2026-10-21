@@ -11,6 +11,7 @@ export interface IShellSetup {
 export interface IOptions {
   color?: boolean;
   cwd?: string;
+  user?: string;
   aliases?: Record<string, string>;
   environment?: Record<string, string | undefined>;
   externalCommands?: IExternalCommand.IOptions[];
@@ -70,6 +71,7 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
   const {
     aliases,
     cwd,
+    user,
     environment,
     externalCommands,
     noShellManager,
@@ -94,6 +96,7 @@ async function _shellSetupCommon(options: IOptions, level: number): Promise<IShe
     wasmBaseUrl: baseUrl,
     browsingContextId,
     cwd,
+    user,
     aliases,
     environment,
     externalCommands,

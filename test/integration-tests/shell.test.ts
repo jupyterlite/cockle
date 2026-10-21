@@ -9,6 +9,7 @@ import {
   shellLineSimpleN,
   test
 } from './utils';
+import { DEFAULT_USER } from '../../src/environment';
 import { keys } from '../serve/keys';
 
 test.describe('Shell', () => {
@@ -1176,6 +1177,29 @@ test.describe('Shell', () => {
         const { cwd, expected } = obj;
         const output = await shellLineComplex(page, 'pwd', { cwd });
         expect(output).toMatch(expected);
+      });
+    });
+
+    [undefined, 'web_user', 'someone'].forEach(user => {
+      test(`should support setting user to ${user}`, async ({ page }) => {
+        const output = await shellLineComplexN(
+          page,
+          ['echo $HOME $LOGNAME $USER', 'ls /home', 'cd $HOME', 'pwd'],
+          { user }
+        );
+        const expected = user ?? DEFAULT_USER;
+        expect(output[0]).toMatch(`\r\n/home/${expected} ${expected} ${expected}\r\n`);
+        expect(output[1]).toMatch(`\r\n${expected}\r\n`);
+        expect(output[3]).toMatch(`\r\n/home/${expected}\r\n`);
+      });
+
+      test(`should support writing to home directory of user ${user}`, async ({ page }) => {
+        const output = await shellLineComplexN(
+          page,
+          ['echo hello > $HOME/afile', 'cat $HOME/afile'],
+          { user }
+        );
+        expect(output[1]).toMatch('\r\nhello\r\n');
       });
     });
 

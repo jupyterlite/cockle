@@ -149,7 +149,7 @@ export abstract class BaseShell implements IShell {
       return { name: x.name, hasTabComplete: x.tabComplete !== undefined };
     });
 
-    const { baseUrl, browsingContextId, color, cwd, mountpoint, wasmBaseUrl } = options;
+    const { baseUrl, browsingContextId, color, cwd, mountpoint, user, wasmBaseUrl } = options;
     const { aliases, environment, initialDirectories, initialFiles } = options;
     const { workerType } = this;
 
@@ -158,6 +158,7 @@ export abstract class BaseShell implements IShell {
       color: color ?? true,
       mountpoint,
       cwd,
+      user,
       baseUrl,
       wasmBaseUrl,
       browsingContextId,
