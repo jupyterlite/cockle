@@ -1,5 +1,6 @@
 import { BufferedOutput } from './buffered_output';
 import type { IFileSystem } from '../file_system';
+import { checkFilePath } from '../file_system';
 
 export class FileOutput extends BufferedOutput {
   constructor(
@@ -8,6 +9,7 @@ export class FileOutput extends BufferedOutput {
     readonly append: boolean
   ) {
     super();
+    checkFilePath(fileSystem, path, true);
   }
 
   override flush(): void {

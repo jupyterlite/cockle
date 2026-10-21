@@ -1,5 +1,6 @@
 import { InputAll } from './input_all';
-import type { IFileSystem } from '../file_system';
+import { type IFileSystem } from '../file_system';
+import { checkFilePath } from '../file_system';
 
 export class FileInput extends InputAll {
   constructor(
@@ -8,6 +9,7 @@ export class FileInput extends InputAll {
     readonly create = false
   ) {
     super();
+    checkFilePath(fileSystem, path, create);
   }
 
   readAll(): string {

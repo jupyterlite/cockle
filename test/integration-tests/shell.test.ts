@@ -197,6 +197,128 @@ test.describe('Shell', () => {
       expect(await shellLineSimple(page, 'wc < file2')).toMatch('      1       5      27\r\n');
     });
 
+    test('should report a missing directory of an output redirect', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('echo hi > nodir/out');
+        return [output.text, await shell.exitCode()];
+      });
+      expect(output[0]).toContain('nodir/out: No such file or directory');
+      expect(output[1]).toBe(1);
+    });
+
+    test('should not run a command if an output redirect fails', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('mkdir newdir > nodir/out');
+        const ret = [output.textAndClear(), await shell.exitCode()];
+        await shell.inputLine('ls newdir');
+        return ret.concat([output.text, await shell.exitCode()]);
+      });
+      expect(output[0]).toContain('nodir/out: No such file or directory');
+      expect(output[1]).toBe(1);
+      expect(output[2]).toContain("cannot access 'newdir'");
+      expect(output[3]).toBe(2);
+    });
+
+    test('should set exit code if an output redirect fails', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('echo hi > nodir/out');
+        return [output.text, await shell.exitCode()];
+      });
+      expect(output[0]).toContain('nodir/out: No such file or directory');
+      expect(output[1]).toBe(1);
+    });
+
+    test('should report an output redirect to a directory', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('echo hi > dirA');
+        return [output.text, await shell.exitCode()];
+      });
+      expect(output[0]).toContain('dirA: Is a directory');
+      expect(output[1]).toBe(1);
+    });
+
+    test('should report an output redirect through a file', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('echo hi > file1/out');
+        return [output.text, await shell.exitCode()];
+      });
+      expect(output[0]).toContain('file1/out: Not a directory');
+      expect(output[1]).toBe(1);
+    });
+
+    test('should report the expanded target of a failed output redirect', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('D=nodir');
+        const ret = [output.textAndClear(), await shell.exitCode()];
+        await shell.inputLine('echo hi > $D/out');
+        return ret.concat([output.text, await shell.exitCode()]);
+      });
+      expect(output[1]).toBe(0);
+      expect(output[2]).toContain('nodir/out: No such file or directory');
+      expect(output[2]).not.toContain('$D/out:');
+      expect(output[3]).toBe(1);
+    });
+
+    test('should not apply later redirects if an output redirect fails', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('echo hi > nodir/out > later');
+        const ret = [output.textAndClear(), await shell.exitCode()];
+        await shell.inputLine('ls later');
+        return ret.concat([output.text, await shell.exitCode()]);
+      });
+      expect(output[0]).toContain('nodir/out: No such file or directory');
+      expect(output[1]).toBe(1);
+      expect(output[2]).toContain("cannot access 'later'");
+      expect(output[3]).toBe(2);
+    });
+
+    test('should report a missing file of an input redirect', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('cat < missing');
+        return [output.text, await shell.exitCode()];
+      });
+      expect(output[0]).toContain('missing: No such file or directory');
+      expect(output[1]).toBe(1);
+    });
+
+    test('should report an input redirect through a file', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('cat < file1/x');
+        return [output.text, await shell.exitCode()];
+      });
+      expect(output[0]).toContain('file1/x: Not a directory');
+      expect(output[1]).toBe(1);
+    });
+
+    test('should report a missing directory of a <> redirect', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('cat <> nodir/new');
+        return [output.text, await shell.exitCode()];
+      });
+      expect(output[0]).toContain('nodir/new: No such file or directory');
+      expect(output[1]).toBe(1);
+    });
+
+    test('should report a <> redirect to a directory', async ({ page }) => {
+      const output = await page.evaluate(async () => {
+        const { output, shell } = await globalThis.cockle.shellSetupSimple();
+        await shell.inputLine('cat <> dirA');
+        return [output.text, await shell.exitCode()];
+      });
+      expect(output[0]).toContain('dirA: Is a directory');
+      expect(output[1]).toBe(1);
+    });
+
     test('should support pipe', async ({ page }) => {
       const output = await shellLineSimpleN(page, ['ls -1|sort -r', 'ls -1|sort -r|uniq -c']);
       expect(output[0]).toMatch('\r\nfile2\r\nfile1\r\ndirA\r\n');
