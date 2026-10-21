@@ -1,6 +1,8 @@
 import { ansi } from './ansi';
 import type { ISize } from './callback';
 
+export const DEFAULT_USER = 'web_user';
+
 /**
  * Collection of environment variables that are known to a shell and are passed in and out of
  * commands.
@@ -16,7 +18,8 @@ export class Environment extends Map<string, string> {
   static createDefault(
     color: boolean,
     shellId: string,
-    browsingContextId: string | undefined
+    browsingContextId: string | undefined,
+    user?: string
   ): Environment {
     const env = new Environment();
     if (shellId) {
@@ -32,6 +35,15 @@ export class Environment extends Map<string, string> {
     } else {
       env.set('PS1', 'js-shell: ');
     }
+
+    // Set env vars for user. These are set by default to use 'web_user' in wasm modules. We only
+    // need to set them for a user that is not the default, but let's set them always for
+    // consistency in case future wasm modules set different env vars.
+    const actualUser = user ?? DEFAULT_USER;
+    env.set('HOME', `/home/${actualUser}`);
+    env.set('LOGNAME', actualUser);
+    env.set('USER', actualUser);
+
     return env;
   }
 

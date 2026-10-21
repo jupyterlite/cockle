@@ -80,6 +80,11 @@ export namespace IShell {
     cwd?: string;
 
     /**
+     * Optional user name to use instead of the default 'web_user'.
+     */
+    user?: string;
+
+    /**
      * Base URL used for stdin and DriveFS requests via ServiceWorker.
      */
     baseUrl: string;

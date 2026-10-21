@@ -59,6 +59,7 @@ export class Demo {
       browsingContextId,
       baseUrl,
       wasmBaseUrl: baseUrl,
+      user: 'demo_user',
       outputCallback: this.outputCallback.bind(this),
       shellManager,
       externalCommands: [

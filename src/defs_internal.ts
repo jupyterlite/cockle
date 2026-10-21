@@ -35,6 +35,7 @@ interface IOptionsCommon {
   color: boolean;
   mountpoint?: string;
   cwd?: string;
+  user?: string;
   baseUrl: string;
   wasmBaseUrl: string;
   browsingContextId?: string;
