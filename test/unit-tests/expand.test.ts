@@ -3,7 +3,8 @@ import {
   expandString,
   expandToken,
   expandTokens,
-  splitToken
+  splitToken,
+  splitTokenFields
 } from '../../src/expand';
 import { tokenize } from '../../src/tokenize';
 
@@ -202,5 +203,50 @@ describe('splitToken', () => {
   test('should keep a multi-character value in one field', () => {
     expect(split('$HOME')).toEqual(['/home/cockle']);
     expect(split('plain')).toEqual(['plain']);
+  });
+});
+
+describe('splitTokenFields', () => {
+  const environment = getEnvironment();
+  environment.set('STAR', '*');
+
+  const fields = (source: string, env: Map<string, string> = environment) =>
+    splitTokenFields(tokenize(source)[0], env);
+
+  test('should mark quoted and escaped characters', () => {
+    expect(fields("'f*'")).toEqual([{ text: 'f*', quoted: [true, true] }]);
+    expect(fields('f\\*')).toEqual([{ text: 'f*', quoted: [false, true] }]);
+    expect(fields('plain')).toEqual([
+      { text: 'plain', quoted: [false, false, false, false, false] }
+    ]);
+  });
+
+  test('should mark only the quoted part of a word', () => {
+    expect(fields('f"*"x')).toEqual([{ text: 'f*x', quoted: [false, true, false] }]);
+  });
+
+  test('should keep an expansion unquoted and a quoted expansion literal', () => {
+    expect(fields('$STAR')).toEqual([{ text: '*', quoted: [false] }]);
+    expect(fields('"$STAR"')).toEqual([{ text: '*', quoted: [true] }]);
+  });
+
+  test('should keep the quoting of each field separate', () => {
+    const env = new Map(environment);
+    env.set('SP', 'a b');
+    expect(fields('x$SP', env)).toEqual([
+      { text: 'xa', quoted: [false, false] },
+      { text: 'b', quoted: [false] }
+    ]);
+    expect(fields('x"$SP"', env)).toEqual([{ text: 'xa b', quoted: [false, true, true, true] }]);
+  });
+
+  test('should have the same text as splitToken', () => {
+    const env = new Map(environment);
+    env.set('SP', 'a b');
+    for (const source of ['$SP', 'x"$SP"', "'a b'", 'plain', '$EMPTY', 'a\\ b']) {
+      expect(splitTokenFields(tokenize(source)[0], env).map(field => field.text)).toEqual(
+        splitToken(tokenize(source)[0], env)
+      );
+    }
   });
 });
