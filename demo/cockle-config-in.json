@@ -2,7 +2,11 @@
   "packages": {
     "awk": {},
     "git2cpp": {},
-    "lua": {},
+    "lua-static": {
+      "modules": {
+        "lua": {}
+      }
+    },
     "nano": {},
     "tree": {},
     "util-js": {
