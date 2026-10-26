@@ -74,6 +74,9 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       const POLLIN = 1;
       const POLLOUT = 4;
 
+      // Emscripten 6 calls poll(stream) without a timeout, treat this as non-blocking.
+      timeoutMs ??= 0;
+
       if (avoidInfinitePollTimeout && timeoutMs < 0) {
         // `less` polls multiple file descriptors at the same time with infinite timeout which end
         // up running sequentially here, workaround is for them to return immediately.

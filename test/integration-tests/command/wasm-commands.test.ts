@@ -208,7 +208,7 @@ test.describe('wasm-test', () => {
       await shell.inputLine('wasm-test emscripten');
       return output.text;
     });
-    expect(output).toMatch('\r\nEmscripten version: 4.0.9\r\n');
+    expect(output).toMatch('\r\nEmscripten version: 6.0.8\r\n');
   });
 
   test('should correctly identify isatty', async ({ page }) => {
