@@ -17,7 +17,7 @@ import zod from 'zod';
 
 const ENV_NAME = 'cockle_wasm_env';
 const PLATFORM = 'emscripten-wasm32';
-const CHANNELS = ['https://repo.prefix.dev/emscripten-forge-4x', 'conda-forge'];
+const CHANNELS = ['https://prefix.dev/emscripten-forge-bot/emscripten-forge-6x', 'conda-forge'];
 
 if (process.argv.length !== 4 || (process.argv[2] !== '--list' && process.argv[2] !== '--copy')) {
   console.log('Usage: prepare_wasm --list list-filename');
