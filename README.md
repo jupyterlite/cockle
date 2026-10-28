@@ -1,5 +1,7 @@
 # cockle
 
+[![codecov](https://codecov.io/gh/jupyterlite/cockle/graph/badge.svg)](https://codecov.io/gh/jupyterlite/cockle)
+
 In-browser bash-like shell implemented in a combination of TypeScript and WebAssembly.
 
 Used in the [JupyterLite terminal extension](https://github.com/jupyterlite/terminal).
