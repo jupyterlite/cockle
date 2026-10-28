@@ -139,4 +139,5 @@ Each suite then writes its own report to the top level of the repository while i
 Both directories contain an `index.html` to open in a browser for per-file and per-line coverage, plus
 an `lcov.info` with paths relative to the repository root, for editor coverage gutters and CI tools. A
 console summary is printed when each suite finishes. The `.coverage/` directory is git-ignored, and CI
-collects coverage on Linux only, uploading it as the `cockle-coverage` artifact.
+collects coverage on Linux only, uploading it as the `cockle-coverage` artifact. CI also uploads both
+`lcov.info` files to [Codecov](https://codecov.io), with the flags `unit` and `integration`.
