@@ -11,7 +11,7 @@ test.describe('export command', () => {
       'export SOME_NAME=',
       'env | grep SOME_NAME'
     ]);
-    expect(output[1]).toMatch('\r\nSOME_NAME=a b c\r\n');
+    expect(output[1]).toMatch("\r\nSOME_NAME='a b c'\r\n");
     expect(output[3]).toMatch('\r\nSOME_NAME=other23\r\n');
     expect(output[5]).toMatch('\r\nSOME_NAME=\r\n');
   });

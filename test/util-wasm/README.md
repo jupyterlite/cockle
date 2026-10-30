@@ -10,13 +10,13 @@ the C files will need to be recompiled. The recommended process to recompile is 
 [emsdk docker image](https://hub.docker.com/r/emscripten/emsdk) as follows:
 
 ```bash
-docker pull emscripten/emsdk:4.0.9
+docker pull emscripten/emsdk:6.0.8
 ```
 
 then from this directory:
 
 ```bash
-docker run -v $PWD:/src -it emscripten/emsdk:4.0.9 bash
+docker run -v $PWD:/src -it emscripten/emsdk:6.0.8 bash
 ```
 
 In the docker image:
