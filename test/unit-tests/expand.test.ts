@@ -1,12 +1,20 @@
 import {
+  expandFields,
   expandHeredoc,
   expandString,
   expandToken,
-  expandTokens,
   splitToken,
   splitTokenFields
 } from '../../src/expand';
+import type { Token } from '../../src/tokenize';
 import { tokenize } from '../../src/tokenize';
+
+/**
+ * Expand environment variable references in command arguments, returning the field texts.
+ */
+function expandTokens(tokens: Token[], environment: ReadonlyMap<string, string>): string[] {
+  return expandFields(tokens, environment).map(field => field.text);
+}
 
 function getEnvironment(): Map<string, string> {
   const environment = new Map<string, string>();

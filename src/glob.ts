@@ -157,9 +157,15 @@ function _kind(fs: IGlobFileSystem, path: string): 'dir' | 'file' | undefined {
 
 /** Names in `dir` which match a component of the pattern. */
 function _namesIn(fs: IGlobFileSystem, dir: string, component: Component): string[] {
-  return typeof component === 'string'
-    ? [component]
-    : fs.readdir(dir).filter(name => component(name));
+  if (typeof component === 'string') {
+    return [component];
+  }
+  try {
+    return fs.readdir(dir).filter(name => component(name));
+  } catch {
+    // Like bash, skip a directory that cannot be read rather than failing the expansion.
+    return [];
+  }
 }
 
 /** One step of filename expansion: the directory, the component, and the names accumulated. */

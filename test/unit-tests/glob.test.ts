@@ -264,6 +264,20 @@ describe('glob', () => {
     expect(run('dir*/*.none')).toEqual([]);
   });
 
+  test('should skip a directory that cannot be read', () => {
+    const unreadable: IGlobFileSystem = {
+      ...FS,
+      readdir(path: string): string[] {
+        if (normalize(path) === '/home/user/dirB') {
+          throw new Error('EACCES: permission denied');
+        }
+        return FS.readdir(path);
+      }
+    };
+    expect(glob('dir*/*.txt', noQuotes('dir*/*.txt'), unreadable)).toEqual(['dirA/x.txt']);
+    expect(glob('dirB/*', noQuotes('dirB/*'), unreadable)).toEqual([]);
+  });
+
   test('should sort the matches', () => {
     expect(run('*')).toEqual([
       '-dashed',

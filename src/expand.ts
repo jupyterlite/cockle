@@ -285,13 +285,3 @@ export function splitToken(token: Token, environment: ReadonlyMap<string, string
 export function expandFields(tokens: Token[], environment: ReadonlyMap<string, string>): Field[] {
   return tokens.flatMap(token => splitTokenFields(token, environment));
 }
-
-/**
- * Expand environment variable references in command arguments.
- * @param tokens The array of tokens containing the potential variable references.
- * @param environment The environment mapping variable names to their values.
- * @returns An array of strings with environment variable references expanded.
- */
-export function expandTokens(tokens: Token[], environment: ReadonlyMap<string, string>): string[] {
-  return expandFields(tokens, environment).map(field => field.text);
-}
