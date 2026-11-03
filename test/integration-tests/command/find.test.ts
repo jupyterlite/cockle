@@ -53,20 +53,26 @@ test.describe('find command', () => {
       'find dir/sub* -type f | sort'
     ]);
     expect(output[0]).toMatch('find d* -name nested*\r\ndir/subdir/nestedfile\r\n');
-    expect(output[1]).toMatch(
-      '\r\ndir/subdir/nestedfile\r\ndir/subfile.md\r\ndir/subfile.txt\r\n'
-    );
+    expect(output[1]).toMatch('\r\ndir/subdir/nestedfile\r\ndir/subfile.md\r\ndir/subfile.txt\r\n');
   });
 
   test('should report error and exit status for missing path', async ({ page }) => {
-    const output = await shellLineComplexN(page, ['find nosuchdir', 'echo $?', 'find dir', 'echo $?']);
+    const output = await shellLineComplexN(page, [
+      'find nosuchdir',
+      'echo $?',
+      'find dir',
+      'echo $?'
+    ]);
     expect(output[0]).toMatch(/find: .nosuchdir.: No such file or directory/);
     expect(output[1]).toMatch('echo $?\r\n1\r\n');
     expect(output[3]).toMatch('echo $?\r\n0\r\n');
   });
 
   test('should support -type', async ({ page }) => {
-    const output = await shellLineComplexN(page, ['find . -type d | sort', 'find . -type f | sort']);
+    const output = await shellLineComplexN(page, [
+      'find . -type d | sort',
+      'find . -type f | sort'
+    ]);
     expect(output[0]).toMatch('find . -type d | sort\r\n.\r\n./dir\r\n./dir/subdir\r\n');
     expect(output[1]).toMatch(
       'find . -type f | sort\r\n' +
@@ -102,7 +108,7 @@ test.describe('find command', () => {
       "find . -path '*/subdir/*'"
     ]);
     expect(output[0]).toMatch('\r\n./dir/subfile.txt\r\n./file1.txt\r\n./file2.txt\r\n');
-    expect(output[1]).toMatch("\r\n./dir/subdir/nestedfile\r\n");
+    expect(output[1]).toMatch('\r\n./dir/subdir/nestedfile\r\n');
   });
 
   test('should support -delete', async ({ page }) => {
@@ -113,7 +119,11 @@ test.describe('find command', () => {
   test('should support absolute paths', async ({ page }) => {
     const output = await shellLineComplexN(
       page,
-      ["find /tmp -name '*.md'", "find /home/web_user -name '*.md'", "find /drive/dir -name '*.md'"],
+      [
+        "find /tmp -name '*.md'",
+        "find /home/web_user -name '*.md'",
+        "find /drive/dir -name '*.md'"
+      ],
       {
         initialFiles: { '/tmp/absolute.md': '', '/home/web_user/home.md': '' }
       }
