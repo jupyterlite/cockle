@@ -35,7 +35,7 @@ test.describe('sed command', () => {
       await shell.inputLine('sed -W');
       return [output.text, await shell.exitCode()];
     });
-    expect(output[0]).toMatch('sed -W\r\nsed: unrecognized option: W\r\n');
+    expect(output[0]).toContain("sed -W\r\nsed: invalid option -- 'W'\r\n");
     expect(output[1]).toEqual(1);
   });
 });
