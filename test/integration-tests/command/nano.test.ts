@@ -149,11 +149,11 @@ test.describe('nano command', () => {
 
   test('should error on redirect stdin from file', async ({ page }) => {
     const output = await shellLineSimple(page, 'nano < file2');
-    expect(output).toMatch('\r\nError opening terminal');
+    expect(output).toMatch(/\r\nncurses: cannot initialize terminal type .*; exiting/);
   });
 
   test('should error on stdin pipe', async ({ page }) => {
     const output = await shellLineSimple(page, 'cat file2 | nano');
-    expect(output).toMatch('\r\nError opening terminal');
+    expect(output).toMatch(/\r\nncurses: cannot initialize terminal type .*; exiting/);
   });
 });
