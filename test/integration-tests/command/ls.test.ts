@@ -43,9 +43,7 @@ test.describe('ls command', () => {
       '\r\na   ccc   dirA	 ffffff  file2	hhhh  jj\r\nbb  dddd  eeeee  file1	 ggggg	iii   k\r\n'
     );
     expect(output[1]).toMatch(
-      '\r\na    dddd   ffffff  ggggg  jj\r\n' +
-        'bb   dirA   file1   hhhh   k\r\n' +
-        'ccc  eeeee  file2   iii\r\n'
+      '\r\na   ccc   dirA	 ffffff  file2	hhhh  jj\r\nbb  dddd  eeeee  file1	 ggggg	iii   k\r\n'
     );
     expect(output[2]).toMatch(
       '\r\na     eeeee   hhhh\r\n' +
