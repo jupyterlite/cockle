@@ -32,6 +32,7 @@ name as the package unless otherwise specified:
 
 - `awk`
 - `coreutils`: multiple core commands including `cat`, `cp`, `echo`, `ls`, `mkdir`, `mv`, `rm`, `touch`, `uname`, and `wc`
+- `findutils`: `find` command
 - [`git2cpp`](https://git2cpp.readthedocs.io/): a `git` implementation
 - `grep`
 - `less`
