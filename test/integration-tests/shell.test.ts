@@ -791,6 +791,32 @@ test.describe('Shell', () => {
       expect(output[0]).toEqual('echo AB\x1b[1D\x1b[2J\x1b[3J\x1b[Hjs-shell: echo AB\x1b[1D');
       expect(output[1]).toMatch(/\r\nACB\r\n/);
     });
+
+    test('should ignore non-printable characters', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [
+        ['\x01', 'l', 's', '\x05', enter], // Ctrl-A and Ctrl-E keystrokes
+        ['​echo﻿ A‎B', enter], // Pasted zero-width space, BOM, bidi mark
+        ['echo A\x80B', enter] // C1 control
+      ]);
+      expect(output[0]).not.toMatch('command not found');
+      expect(output[1]).toMatch(/\r\nAB\r\n/);
+      expect(output[2]).toMatch(/\r\nAB\r\n/);
+    });
+
+    test('should ignore SS3 escape sequences', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [['echo A\x1bOPB', enter]]); // F1
+      expect(output[0]).toMatch(/\r\nAB\r\n/);
+    });
+
+    test('should ignore CSI escape sequences with a lowercase final byte', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [['echo A\x1b[?2004hB', enter]]);
+      expect(output[0]).toMatch(/\r\nAB\r\n/);
+    });
+
+    test('should ignore an incomplete CSI escape sequence', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [['echo AB\x1b[12', enter]]);
+      expect(output[0]).toMatch(/\r\nAB\r\n/);
+    });
   });
 
   test.describe('dispose', () => {

@@ -11,7 +11,12 @@ export abstract class ErrorExitCode extends Error {
 
 export class FindCommandError extends ErrorExitCode {
   constructor(commandName: string) {
-    super(ExitCode.CANNOT_FIND_COMMAND, `'${commandName}': command not found`);
+    // Show non-printable characters as escape codes so that they are visible.
+    const name = commandName.replace(
+      /[\p{Cc}\p{Cf}]/gu,
+      c => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`
+    );
+    super(ExitCode.CANNOT_FIND_COMMAND, `'${name}': command not found`);
   }
 }
 

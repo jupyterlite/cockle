@@ -93,6 +93,10 @@ export class LineEditor {
           break;
         }
         default:
+          if (/[\p{Cc}\p{Cf}]/u.test(char)) {
+            // Ignore unhandled non-printable control and format characters.
+            break;
+          }
           // Add char to command line at cursor position.
           if (this._commandLine.cursorIndex === this._commandLine.text.length) {
             // Append char.
@@ -118,15 +122,21 @@ export class LineEditor {
    * @returns Number of characters consumed.
    */
   private _escapedInput(chars: string, index: number): number {
-    if (chars.at(index + 1) !== '[') {
+    const next = chars.at(index + 1);
+    if (next === 'O') {
+      // SS3 sequence such as F1-F4, ignore it including the following character.
+      return 2;
+    }
+    if (next !== '[') {
       return 0;
     }
 
     // Escape token excluding initial ESC and [
-    const regex = /^[^A-Z~]*[A-Z~]/;
+    const regex = /^[0-9;?]*[\x40-\x7E]/;
     const match = regex.exec(chars.slice(index + 2));
     if (match === null) {
-      return 1; // Skip the [
+      // Incomplete escape sequence, ignore the rest of the input.
+      return chars.length - index - 1;
     }
 
     const token = match[0];
