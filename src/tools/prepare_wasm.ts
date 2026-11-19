@@ -6,6 +6,12 @@
  * to the specified statically-served assets directory or writes a file containing the names
  * of the files to be so copied, depending on the arguments passed to this script.
  * Also accepts command packages in local directories that are WebAssembly or pure JavaScript.
+ *
+ * Environment variables (each accepts a comma-separated list of channels):
+ * - COCKLE_WASM_CHANNELS: replace the default channels, for example
+ *   COCKLE_WASM_CHANNELS=https://prefix.dev/emscripten-forge/4x,conda-forge
+ * - COCKLE_WASM_EXTRA_CHANNEL: prepend one or more extra channels so that they take priority.
+ *   For example COCKLE_WASM_EXTRA_CHANNEL=/path/to/output/directory
  */
 
 import { deepmerge } from 'deepmerge-ts';
@@ -17,7 +23,7 @@ import zod from 'zod';
 
 const ENV_NAME = 'cockle_wasm_env';
 const PLATFORM = 'emscripten-wasm32';
-const CHANNELS = ['https://prefix.dev/emscripten-forge/4x', 'conda-forge'];
+const DEFAULT_CHANNELS = ['https://prefix.dev/emscripten-forge/4x', 'conda-forge'];
 
 if (process.argv.length !== 4 || (process.argv[2] !== '--list' && process.argv[2] !== '--copy')) {
   console.log('Usage: prepare_wasm --list list-filename');
@@ -35,10 +41,26 @@ function isWasmPackage(packageConfig: any): boolean {
   return packageConfig['wasm'];
 }
 
+// Split a comma-separated env var into channels, ignoring whitespace and empty entries.
+function splitChannels(value: string | undefined): string[] {
+  return (value ?? '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+}
+
+function getChannels(): string[] {
+  const channels = splitChannels(process.env.COCKLE_WASM_CHANNELS);
+  const extraChannels = splitChannels(process.env.COCKLE_WASM_EXTRA_CHANNEL);
+  // Extra channels are prepended so that they are used first.
+  return [...extraChannels, ...(channels.length > 0 ? channels : DEFAULT_CHANNELS)];
+}
+
 function getChannelsString(): string {
+  const channels = getChannels();
   console.log('Using channels:');
-  CHANNELS.map(channel => console.log(`  ${channel}`));
-  return CHANNELS.map(channel => `-c ${channel}`).join(' ');
+  channels.map(channel => console.log(`  ${channel}`));
+  return channels.map(channel => `-c ${channel}`).join(' ');
 }
 
 function getWasmPackageInfo(micromambaCmd: string, envPath: string): any {
@@ -74,14 +96,6 @@ function getWasmPackageInfo(micromambaCmd: string, envPath: string): any {
   }
 
   throw parsedPackages.error; // ZodError.
-}
-
-// Handle environment variables.
-const COCKLE_WASM_EXTRA_CHANNEL = process.env.COCKLE_WASM_EXTRA_CHANNEL;
-if (COCKLE_WASM_EXTRA_CHANNEL !== undefined) {
-  // Prepend so used first.
-  const extraChannels = COCKLE_WASM_EXTRA_CHANNEL.split(',');
-  CHANNELS.unshift(...extraChannels);
 }
 
 // Base cockle config file from this repo.
