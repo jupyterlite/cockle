@@ -51,6 +51,7 @@ Emscripten. WebAssembly commands built on Emscripten-forge are hosted on differe
 
 | `cockle` version    | `emscripten` version | `prefix.dev` channel   |
 | ------------------- | -------------------- | ---------------------- |
+| >= 1.9.0            | 6.0.8                | `emscripten-forge/6x`  |
 | >= 1.4.0            | 4.0.9                | `emscripten-forge-4x`  |
 | >= 0.1.14, <= 1.3.0 | 3.1.73               | `emscripten-forge-dev` |
 
