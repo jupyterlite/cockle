@@ -241,7 +241,6 @@ export class ShellImpl implements IShellImpl {
 
   setSize(size: ISize): void {
     this._size = size;
-    this.environment.setSize(size);
   }
 
   setWorkerIO(workerIO: IWorkerIO) {

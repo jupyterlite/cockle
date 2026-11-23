@@ -8,7 +8,7 @@ test.describe('ls command', () => {
     expect(output[1]).toMatch('\r\n.  ..  dirA  file1  file2\r\n');
   });
 
-  test('should vary with COLUMNS', async ({ page }) => {
+  test('should vary with terminal width', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const options = {
         initialFiles: {

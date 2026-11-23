@@ -1,5 +1,4 @@
 import { ansi } from './ansi';
-import type { ISize } from './callback';
 
 export const DEFAULT_USER = 'web_user';
 
@@ -82,22 +81,5 @@ export class Environment extends Map<string, string> {
   names(): string[] {
     const re = /^[A-Za-z_]/;
     return Array.from(this.keys()).filter(name => re.test(name));
-  }
-
-  setSize(size: ISize): void {
-    const { rows, columns } = size;
-    if (rows >= 1) {
-      const rowsString = rows.toString();
-      this.set('LINES', rowsString);
-    } else {
-      this.delete('LINES');
-    }
-
-    if (columns >= 1) {
-      const columnsString = columns.toString();
-      this.set('COLUMNS', columnsString);
-    } else {
-      this.delete('COLUMNS');
-    }
   }
 }

@@ -51,8 +51,6 @@ test.describe('unset command', () => {
     });
     // Check for existence of some specific env vars, do not check all of them.
     expect(output).toMatch('COCKLE_SHELL_ID');
-    expect(output).toMatch('COLUMNS');
-    expect(output).toMatch('LINES');
     expect(output).toMatch('PS1');
     expect(output).toMatch('PWD');
   });

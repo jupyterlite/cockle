@@ -205,13 +205,13 @@ export class TabCompleter {
   ): Promise<void> {
     // Write all the possibles completions in columns across the terminal, and re-output the same
     // command line. Maybe prompt user first, if there are many possible completions.
-    const { environment } = this.context;
-    const lines = toColumns(possibles, environment.getNumber('COLUMNS') ?? 0);
+    const { environment, size } = this.context;
+    const { rows, columns } = size();
+    const lines = toColumns(possibles, columns);
 
     // Display immediately or prompt user to confirm first?
-    const termLines = environment.getNumber('LINES');
     let showPossibles = true;
-    if (possibles.length > 99 || (termLines !== null && lines.length > termLines - 2)) {
+    if (possibles.length > 99 || (rows > 0 && lines.length > rows - 2)) {
       showPossibles = await this._yesNoPrompt(
         `Display all ${possibles.length} possibilities (y or n)?`
       );

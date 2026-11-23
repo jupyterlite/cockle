@@ -675,50 +675,26 @@ test.describe('Shell', () => {
   });
 
   test.describe('setSize', () => {
-    test('should set envVars', async ({ page }) => {
+    test('should set terminal size', async ({ page }) => {
       const output = await page.evaluate(async () => {
         const { output, shell } = await globalThis.cockle.shellSetupEmpty();
         const ret: string[] = [];
         await shell.setSize({ rows: 10, columns: 44 });
-        await shell.inputLine('env|grep LINES;env|grep COLUMNS');
+        await shell.inputLine('stty size');
         ret.push(output.textAndClear());
 
-        await shell.setSize({ rows: 0, columns: 45 });
-        await shell.inputLine('env|grep LINES;env|grep COLUMNS');
+        await shell.setSize({ rows: 12, columns: 45 });
+        await shell.inputLine('stty size');
         ret.push(output.textAndClear());
 
-        await shell.setSize({ rows: 14, columns: -1 });
-        await shell.inputLine('env|grep LINES;env|grep COLUMNS');
+        await shell.setSize({ rows: 14, columns: 46 });
+        await shell.inputLine('stty size');
         ret.push(output.textAndClear());
         return ret;
       });
-      expect(output[0]).toMatch('\r\nLINES=10\r\nCOLUMNS=44\r\n');
-      expect(output[1]).toMatch('\r\nCOLUMNS=45\r\n');
-      expect(output[2]).toMatch('\r\nLINES=14\r\n');
-    });
-
-    test('should support separate rows and columns for backward compatibility', async ({
-      page
-    }) => {
-      const output = await page.evaluate(async () => {
-        const { output, shell } = await globalThis.cockle.shellSetupEmpty();
-        const ret: string[] = [];
-        await shell.setSize(10, 44);
-        await shell.inputLine('env|grep LINES;env|grep COLUMNS');
-        ret.push(output.textAndClear());
-
-        await shell.setSize(0, 45);
-        await shell.inputLine('env|grep LINES;env|grep COLUMNS');
-        ret.push(output.textAndClear());
-
-        await shell.setSize(14, -1);
-        await shell.inputLine('env|grep LINES;env|grep COLUMNS');
-        ret.push(output.textAndClear());
-        return ret;
-      });
-      expect(output[0]).toMatch('\r\nLINES=10\r\nCOLUMNS=44\r\n');
-      expect(output[1]).toMatch('\r\nCOLUMNS=45\r\n');
-      expect(output[2]).toMatch('\r\nLINES=14\r\n');
+      expect(output[0]).toMatch('\r\n10 44\r\n');
+      expect(output[1]).toMatch('\r\n12 45\r\n');
+      expect(output[2]).toMatch('\r\n14 46\r\n');
     });
   });
 
@@ -1357,7 +1333,7 @@ test.describe('Shell', () => {
         async ({ initialFiles }) => {
           const { shellSetupEmpty, terminalInput } = globalThis.cockle;
           const { shell, output } = await shellSetupEmpty({ initialFiles });
-          await shell.inputLine('export LINES=12'); // 2 more than number of files
+          await shell.setSize({ rows: 12, columns: 80 }); // 2 more than number of files
           output.clear();
           await terminalInput(shell, ['l', 's', ' ', 'a', '\t']);
           return output.text;
@@ -1380,7 +1356,7 @@ test.describe('Shell', () => {
           async ({ stdinOption, initialFiles }) => {
             const { shellSetupEmpty, terminalInput } = globalThis.cockle;
             const { shell, output } = await shellSetupEmpty({ initialFiles, stdinOption });
-            await shell.inputLine('export LINES=11'); // 1 more than number of files
+            await shell.setSize({ rows: 11, columns: 80 }); // 1 more than number of files
             output.clear();
 
             terminalInput(shell, ['l', 's', ' ', 'a', '\t']);
@@ -1410,7 +1386,7 @@ test.describe('Shell', () => {
             async ({ stdinOption, initialFiles, rejectChar }) => {
               const { shellSetupEmpty, terminalInput } = globalThis.cockle;
               const { shell, output } = await shellSetupEmpty({ initialFiles, stdinOption });
-              await shell.inputLine('export LINES=11'); // 1 more than number of files
+              await shell.setSize({ rows: 11, columns: 80 }); // 1 more than number of files
               output.clear();
 
               terminalInput(shell, ['l', 's', ' ', 'a', '\t']);
