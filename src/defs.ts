@@ -29,6 +29,11 @@ export interface IShell extends IObservableDisposable {
    * Set the size of the shell.
    * The `ISize` overload is the recommended approach; the separate `rows` and `columns` overload is
    * for backward compatibility and should be considered deprecated.
+   *
+   * If a WebAssembly command is running, the returned promise does not resolve until that command
+   * has finished, as the web worker is blocked. The command is notified of the new size via a
+   * SIGWINCH beforehand, so callers should not wait for this promise whilst a command may be
+   * running.
    */
   setSize(size: ISize): Promise<void>;
   setSize(rows: number, columns: number): Promise<void>;

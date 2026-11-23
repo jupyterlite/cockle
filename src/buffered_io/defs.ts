@@ -1,12 +1,35 @@
 import type { IDisposable } from '@lumino/disposable';
-import type { IOutputCallback } from '../callback';
+import type { IOutputCallback, ISize } from '../callback';
+import type { PosixSignal } from '../posix_signal';
 
 export interface IMainIO extends IDisposable {
   disable(): Promise<void>;
   enable(): Promise<void>;
   get enabled(): boolean;
+  sendPosixSignal(signal: PosixSignal, args?: ISize): Promise<void>;
   push(chars: string): Promise<void>;
   registerSendStdinNow(sendStdinNow: IOutputCallback): void;
+}
+
+/**
+ * A POSIX signal with optional arguments, passed from MainIO to WorkerIO.
+ */
+export interface IPosixSignal {
+  signal: PosixSignal;
+  args?: ISize; // Set for SIGWINCH.
+}
+
+/**
+ * Result of a stdin request: either characters (an empty string means timeout reached before any
+ * input available) or one or more POSIX signals.
+ */
+export type StdinResult = string | IPosixSignal[];
+
+/**
+ * Handler for a POSIX signal received by WorkerIO.
+ */
+export interface IPosixSignalHandler {
+  (item: IPosixSignal): void;
 }
 
 export interface IWorkerIO {
@@ -19,7 +42,6 @@ export interface IWorkerIO {
   read(maxChars: number | null): number[];
   // Negative timeoutMs means wait forever (infinite timeout).
   readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]>;
-  utf8ArrayToString(chars: Int8Array): string;
   write(text: string | Int8Array | number[]): void;
 }
 
@@ -44,5 +66,6 @@ export interface IStdinRequest {
  */
 export interface IStdinReply {
   error?: string;
+  signals?: IPosixSignal[];
   text?: string; // An empty string means timeout reached before any input available.
 }

@@ -19,6 +19,8 @@ import type { Termios } from './termios';
 export interface IExternalCommandResult {
   exitCode: number;
   environmentChanges?: Record<string, string | undefined>;
+  // True if the command threw an error rather than returning an exit code.
+  error?: boolean;
 }
 
 export interface ICallExternalCommand {

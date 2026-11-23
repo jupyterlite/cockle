@@ -8,6 +8,7 @@ import type { IMainIO, IStdinReply, IStdinRequest } from './buffered_io';
 import { ServiceWorkerMainIO, SharedArrayBufferMainIO } from './buffered_io';
 import type { IOutputCallback } from './callback';
 import type { ISize } from './callback';
+import type { IExternalCommandResult } from './callback_internal';
 import type { ICoincidentShellWorker } from './coincident_shell_worker';
 import type { IComlinkShellWorker } from './comlink_shell_worker';
 import type { IExternalRunContext } from './context';
@@ -19,6 +20,8 @@ import type { IExternalCommand, IExternalTabCompleteResult } from './external_co
 import { ExternalEnvironment } from './external_environment';
 import { ExternalTermios } from './external_termios';
 import { ExternalInput, ExternalOutput } from './io';
+import type { IPosixSignalCallback } from './posix_signal';
+import { callPosixSignalCallback, PosixSignal } from './posix_signal';
 import type { Termios } from './termios';
 
 /**
@@ -205,6 +208,11 @@ export abstract class BaseShell implements IShell {
    * Set shell size.  Overloaded to take an `ISize` object or `rows` and `columns`.
    * The former is the recommended approach, the latter was the original implementation and should
    * be considered deprecated for eventual removal.
+   *
+   * If a WebAssembly command is running, the returned promise does not resolve until that command
+   * has finished, as the web worker is blocked. The command is notified of the new size via a
+   * SIGWINCH beforehand, so callers should not wait for this promise whilst a command may be
+   * running.
    */
   async setSize(size: ISize): Promise<void>;
   async setSize(rows: number, columns: number): Promise<void>;
@@ -285,6 +293,9 @@ export abstract class BaseShell implements IShell {
       name,
       args,
       environment: externalEnvironment,
+      onPosixSignal: callback => {
+        this._externalPosixSignalCallback = callback;
+      },
       shellId: this._shellId,
       stdin,
       stdout,
@@ -292,11 +303,21 @@ export abstract class BaseShell implements IShell {
       size: () => this.size,
       termios
     };
-    command(context).then(exitCode => {
-      // Exit code is returned via a separate message to the web worker rather than a return from this
-      // function.
-      const environmentChanges = externalEnvironment.changed;
-      remote.exitExternalCommand({ exitCode, environmentChanges });
+    const runCommand = async (): Promise<IExternalCommandResult> => {
+      try {
+        const exitCode = await command(context);
+        return { exitCode, environmentChanges: externalEnvironment.changed };
+      } catch (err) {
+        console.error(`External command '${name}': ${err}`);
+        return { exitCode: ExitCode.CANNOT_RUN_COMMAND, error: true };
+      }
+    };
+
+    // Exit code is returned via a separate message to the web worker rather than a return from this
+    // function.
+    runCommand().then(result => {
+      this._externalPosixSignalCallback = undefined;
+      remote.exitExternalCommand(result);
     });
   }
 
@@ -433,10 +454,7 @@ export abstract class BaseShell implements IShell {
       throw new Error('Worker does not exist');
     }
 
-    const rrr = this.createRemote({ ...options, worker: this._worker });
-
-    this._remote = rrr;
-
+    this._remote = this.createRemote({ ...options, worker: this._worker });
     const remoteOptions = this.initRemoteOptions(options);
     await this._remote.initialize(remoteOptions);
 
@@ -478,10 +496,21 @@ export abstract class BaseShell implements IShell {
       return;
     }
 
-    this._size.rows = Math.max(0, rows);
-    this._size.columns = Math.max(0, columns);
+    rows = Math.max(0, rows);
+    columns = Math.max(0, columns);
+    if (rows !== this._size.rows || columns !== this._size.columns) {
+      this._size.rows = rows;
+      this._size.columns = columns;
 
-    await this._remote!.setSize(this._size);
+      if (this._externalPosixSignalCallback !== undefined) {
+        // Notify a running external command, which runs in this main UI thread.
+        callPosixSignalCallback(this._externalPosixSignalCallback, PosixSignal.SIGWINCH);
+      } else if (this._mainIO?.enabled) {
+        // Send signal to web worker.
+        await this._mainIO.sendPosixSignal(PosixSignal.SIGWINCH, { ...this._size });
+      }
+      await this._remote!.setSize(this._size);
+    }
   }
 
   private _disposed = new Signal<this, void>(this);
@@ -494,6 +523,7 @@ export abstract class BaseShell implements IShell {
   private _worker?: Worker;
   private _remote?: ICoincidentShellWorker | IComlinkShellWorker;
   private _externalCommands = new Map<string, IExternalCommand.IOptions>();
+  private _externalPosixSignalCallback?: IPosixSignalCallback;
   private _externalStdinPromise?: PromiseDelegate<string>;
 
   private _serviceWorkerMainIO?: ServiceWorkerMainIO;

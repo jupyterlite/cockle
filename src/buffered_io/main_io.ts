@@ -1,6 +1,7 @@
 import { PromiseDelegate } from '@lumino/coreutils';
-import type { IMainIO } from './defs';
-import type { IOutputCallback } from '../callback';
+import type { IMainIO, IPosixSignal, StdinResult } from './defs';
+import type { IOutputCallback, ISize } from '../callback';
+import { PosixSignal } from '../posix_signal';
 import { delay } from '../utils';
 
 export abstract class MainIO implements IMainIO {
@@ -16,6 +17,9 @@ export abstract class MainIO implements IMainIO {
       this._sendStdinNow!(ch);
     }
     this._readBuffer = '';
+
+    // Discard any queued signals as they were intended for the command that has finished.
+    this._signalBuffer = [];
 
     if (this._stdinPromise !== undefined) {
       this._stdinPromise.reject('stdin no longer required');
@@ -45,6 +49,30 @@ export abstract class MainIO implements IMainIO {
     return this._isDisposed;
   }
 
+  async sendPosixSignal(signal: PosixSignal, args?: ISize): Promise<void> {
+    if (!this._enabled) {
+      throw new Error('MainIO.sendPosixSignal when disabled');
+    }
+
+    const item: IPosixSignal = { signal, args };
+    if (this._stdinPromise !== undefined) {
+      // If promise pending, resolve it.
+      this._stdinPromise.resolve([item]);
+      this._stdinPromise = undefined;
+    } else if (signal === PosixSignal.SIGWINCH) {
+      // Only store a single SIGWINCH, replacing any existing one so that it has the latest size.
+      const index = this._signalBuffer.findIndex(s => s.signal === PosixSignal.SIGWINCH);
+      if (index >= 0) {
+        this._signalBuffer[index] = item;
+      } else {
+        this._signalBuffer.push(item);
+      }
+    } else {
+      // Otherwise store it for the next stdin request.
+      this._signalBuffer.push(item);
+    }
+  }
+
   async push(chars: string): Promise<void> {
     if (!this._enabled) {
       throw new Error('MainIO.push when disabled');
@@ -64,12 +92,17 @@ export abstract class MainIO implements IMainIO {
     this._sendStdinNow = sendStdinNow;
   }
 
-  protected async _handleStdinImpl(timeoutMs: number): Promise<string> {
+  protected async _handleStdinImpl(timeoutMs: number): Promise<StdinResult> {
     if (this._stdinPromise !== undefined) {
       console.error('MainIO stdin promise should not exist');
     }
 
-    if (this._readBuffer.length > 0) {
+    if (this._signalBuffer.length > 0) {
+      // Have stored signals, which take priority over text, so return them straight away.
+      const signals = this._signalBuffer;
+      this._signalBuffer = [];
+      return signals;
+    } else if (this._readBuffer.length > 0) {
       // Have stored input, so return it straight away.
       const chars = this._readBuffer;
       this._readBuffer = '';
@@ -79,8 +112,8 @@ export abstract class MainIO implements IMainIO {
       return '';
     }
 
-    // Store stdinPromise so that it can be resolved by next push() call.
-    const stdinPromise = new PromiseDelegate<string>();
+    // Store stdinPromise so that it can be resolved by next push() or sendPosixSignal() call.
+    const stdinPromise = new PromiseDelegate<StdinResult>();
 
     // Negative timeoutMs means wait forever (infinite timeout).
     if (timeoutMs > 0) {
@@ -90,9 +123,9 @@ export abstract class MainIO implements IMainIO {
     }
 
     this._stdinPromise = stdinPromise;
-    const chars = await stdinPromise.promise;
+    const result = await stdinPromise.promise;
     this._stdinPromise = undefined;
-    return chars;
+    return result;
   }
 
   protected _enabled: boolean = false;
@@ -100,5 +133,6 @@ export abstract class MainIO implements IMainIO {
   protected _sendStdinNow?: IOutputCallback;
 
   private _isDisposed: boolean = false;
-  private _stdinPromise?: PromiseDelegate<string>;
+  private _signalBuffer: IPosixSignal[] = [];
+  private _stdinPromise?: PromiseDelegate<StdinResult>;
 }

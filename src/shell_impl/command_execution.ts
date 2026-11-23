@@ -297,6 +297,7 @@ export class CommandExecutor {
       this._runContext.stdin = this._dummyInput;
       this._runContext.stdout = this._dummyOutput;
       this._runContext.stderr = this._dummyOutput;
+      this._runContext.posixSignalCallback = undefined;
 
       if (temporaryEnvironment) {
         this._runContext.environment = savedEnvironment;

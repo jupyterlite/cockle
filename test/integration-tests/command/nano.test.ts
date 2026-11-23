@@ -145,6 +145,41 @@ test.describe('nano command', () => {
       // If backspace fails, filename will be incorrect.
       expect(output).toMatch(/^cat a.txt\r\nAZ\r\n/);
     });
+
+    test(`should redraw on SIGWINCH using ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
+      const output = await page.evaluate(async stdinOption => {
+        const { delay, shellSetupEmpty, terminalInput } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ color: true, stdinOption });
+        const exit = '\x18'; // Ctrl-X
+        await shell.inputLine('seq 50 > lines');
+        const cmd = shell.inputLine('nano lines');
+        await delay(500);
+        output.clear();
+        // Do not await setSize as it does not resolve until nano exits, as the worker is blocked.
+        shell.setSize({ rows: 40, columns: 80 });
+        await delay(500);
+        const redraw0 = output.textAndClear();
+        shell.setSize({ rows: 10, columns: 80 });
+        await delay(500);
+        const redraw1 = output.text;
+        await terminalInput(shell, [exit]);
+        await cmd;
+        return [redraw0, redraw1];
+      }, stdinOption);
+      // Initially 24 rows. After each resize nano reinitializes ncurses with the new number of
+      // rows, so check the scroll region and that the two shortcut lines are on the last two rows.
+      const shortcutLines = (rows: number) =>
+        new RegExp(
+          `\\x1b\\[${rows - 1}d\\x1b\\(B\\x1b\\[0;7m\\^G[\\s\\S]*\\x1b\\[${rows}d\\x1b\\(B\\x1b\\[0;7m\\^X`
+        );
+      expect(output[0]).toContain('\x1b[1;40r');
+      expect(output[0]).toMatch(shortcutLines(40));
+      // Lines 1 to 36 of the file shown on rows 2 to 37.
+      expect(output[0]).toContain('\x1b[37d36');
+      expect(output[1]).toContain('\x1b[1;10r');
+      expect(output[1]).toMatch(shortcutLines(10));
+    });
   });
 
   test('should error on redirect stdin from file', async ({ page }) => {

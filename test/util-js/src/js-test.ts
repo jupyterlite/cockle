@@ -1,8 +1,18 @@
 import type { IJavaScriptRunContext } from '@jupyterlite/cockle';
-import { ExitCode, Termios } from '@jupyterlite/cockle';
+import { delay, ExitCode, PosixSignal, Termios } from '@jupyterlite/cockle';
 
 export async function run(context: IJavaScriptRunContext): Promise<number> {
   const { args } = context;
+
+  if (args.includes('onsize')) {
+    // Use this with sleep, stdin or stdinchar args to keep the command running whilst resizing.
+    context.onPosixSignal(signal => {
+      if (signal === PosixSignal.SIGWINCH) {
+        const { rows, columns } = context.size();
+        context.stdout.write(`onsize: rows ${rows} x columns ${columns}\n`);
+      }
+    });
+  }
 
   if (args.includes('environment')) {
     context.environment.set('TEST_JS_VAR', '123');
@@ -114,6 +124,10 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
   if (args.includes('size')) {
     const { rows, columns } = context.size();
     context.stdout.write(`size: rows ${rows} x columns ${columns}\n`);
+  }
+
+  if (args.includes('sleep')) {
+    await delay(2000); // 2 second sleep.
   }
 
   if (args.includes('exitCode')) {

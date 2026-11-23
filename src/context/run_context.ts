@@ -8,6 +8,7 @@ import type { Environment } from '../environment';
 import type { IFileSystem } from '../file_system';
 import type { History } from '../history';
 import type { IInput, IOutput } from '../io';
+import type { IPosixSignalCallback } from '../posix_signal';
 import type { Termios } from '../termios';
 
 /**
@@ -33,4 +34,7 @@ export interface IRunContext {
   workerType: string;
   commandModuleCache: CommandModuleCache;
   stdinContext: IStdinContext;
+
+  // Set by a running command that handles POSIX signals, reset when the command finishes.
+  posixSignalCallback?: IPosixSignalCallback;
 }

@@ -19,8 +19,8 @@ export class ServiceWorkerMainIO extends MainIO implements IMainIO {
       return { text: 'ok:' + request.shellId };
     }
 
-    const text = await this._handleStdinImpl(timeoutMs);
-    return { text };
+    const result = await this._handleStdinImpl(timeoutMs);
+    return typeof result === 'string' ? { text: result } : { signals: result };
   }
 
   async testWithTimeout(timeoutMs: number): Promise<boolean> {

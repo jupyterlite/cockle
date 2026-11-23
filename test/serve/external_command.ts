@@ -1,10 +1,20 @@
 import type { IExternalRunContext } from '@jupyterlite/cockle';
-import { ansi, ExitCode, Termios } from '@jupyterlite/cockle';
+import { ansi, delay, ExitCode, PosixSignal, Termios } from '@jupyterlite/cockle';
 
-// External command with different bahaviour depending on supplied args, to test
+// External command with different behaviour depending on supplied args, to test
 // external command functionality.
 export async function externalCommand(context: IExternalRunContext): Promise<number> {
   const { args } = context;
+
+  if (args.includes('onsize')) {
+    // Use this with sleep, stdin or stdinchar args to keep the command running whilst resizing.
+    context.onPosixSignal(signal => {
+      if (signal === PosixSignal.SIGWINCH) {
+        const { rows, columns } = context.size();
+        context.stdout.write(`onsize: rows ${rows} x columns ${columns}\n`);
+      }
+    });
+  }
 
   if (args.includes('environment')) {
     context.environment.set('TEST_VAR', '23');
@@ -84,6 +94,10 @@ export async function externalCommand(context: IExternalRunContext): Promise<num
   if (args.includes('size')) {
     const { rows, columns } = context.size();
     context.stdout.write(`size: rows ${rows} x columns ${columns}\n`);
+  }
+
+  if (args.includes('sleep')) {
+    await delay(2000); // 2 second sleep.
   }
 
   if (args.includes('exitCode')) {

@@ -1,10 +1,39 @@
 #include <ctype.h>
+#include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 #include <emscripten/version.h>
+
+static volatile sig_atomic_t sizeChanged = 0;
+
+static void handleSigwinch(int signal) {
+  // Only set a flag in the signal handler, act on it in the main code.
+  sizeChanged = 1;
+}
+
+// Read a character from stdin. If the read is interrupted by SIGWINCH, write the new size and
+// continue reading.
+static int readChar(void) {
+  while (1) {
+    int ch = getchar();
+    if (ch != EOF || !ferror(stdin) || errno != EINTR) {
+      return ch;
+    }
+    clearerr(stdin);
+    if (sizeChanged) {
+      sizeChanged = 0;
+      struct winsize ws;
+      ioctl(STDIN_FILENO, TIOCGWINSZ, &ws);
+      printf("onsize: rows %d x columns %d\n", ws.ws_row, ws.ws_col);
+      fflush(stdout);
+    }
+  }
+}
 
 int argsInclude(int argc, char** argv, char* check) {
   for (int i = 1; i < argc; i++) {
@@ -16,6 +45,13 @@ int argsInclude(int argc, char** argv, char* check) {
 }
 
 int main(int argc, char** argv) {
+  if (argsInclude(argc, argv, "onsize")) {
+    // Use this with stdin or stdinchar args to keep the command running whilst resizing.
+    struct sigaction action = {0};
+    action.sa_handler = handleSigwinch;
+    sigaction(SIGWINCH, &action, NULL);
+  }
+
   if (argsInclude(argc, argv, "name")) {
     printf("%s\n", argv[0]);
   }
@@ -52,7 +88,7 @@ int main(int argc, char** argv) {
   if (argsInclude(argc, argv, "stdin")) {
     // Read until EOF, echoing back as upper case. Line buffered.
     while (1) {
-      int ch = getchar();
+      int ch = readChar();
       if (ch == EOF) {
         break;
       } else {
@@ -71,7 +107,7 @@ int main(int argc, char** argv) {
     tcsetattr(0, TCSANOW, &termiosNew);
 
     while (1) {
-      int ch = getchar();
+      int ch = readChar();
       if (ch == EOF) {
         break;
       } else {

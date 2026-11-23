@@ -7,7 +7,14 @@ import type {
   IJavaScriptTabCompleteContext,
   ITabCompleteResult
 } from '@jupyterlite/cockle';
-import { CommandArguments, ExitCode, PositionalArguments, Termios } from '@jupyterlite/cockle';
+import {
+  CommandArguments,
+  delay,
+  ExitCode,
+  PositionalArguments,
+  PosixSignal,
+  Termios
+} from '@jupyterlite/cockle';
 
 class TestArguments extends CommandArguments {
   positional = new PositionalArguments({
@@ -17,9 +24,11 @@ class TestArguments extends CommandArguments {
         'environment',
         'exitCode',
         'name',
+        'onsize',
         'readfile',
         'shellId',
         'size',
+        'sleep',
         'stderr',
         'stdin',
         'stdinchar',
@@ -32,6 +41,16 @@ class TestArguments extends CommandArguments {
 
 export async function run(context: IJavaScriptRunContext): Promise<number> {
   const args = new TestArguments().parse(context.args).positional.strings;
+
+  if (args.includes('onsize')) {
+    // Use this with sleep, stdin or stdinchar args to keep the command running whilst resizing.
+    context.onPosixSignal(signal => {
+      if (signal === PosixSignal.SIGWINCH) {
+        const { rows, columns } = context.size();
+        context.stdout.write(`onsize: rows ${rows} x columns ${columns}\n`);
+      }
+    });
+  }
 
   if (args.includes('environment')) {
     context.environment.set('TEST_JS_VAR', '123');
@@ -143,6 +162,10 @@ export async function run(context: IJavaScriptRunContext): Promise<number> {
   if (args.includes('size')) {
     const { rows, columns } = context.size();
     context.stdout.write(`size: rows ${rows} x columns ${columns}\n`);
+  }
+
+  if (args.includes('sleep')) {
+    await delay(2000); // 2 second sleep.
   }
 
   if (args.includes('exitCode')) {

@@ -5,6 +5,15 @@ var Module = (function (exports) {
         SUCCESS: 0,
         GENERAL_ERROR: 1};
 
+    async function delay(milliseconds = 10) {
+        await new Promise(f => setTimeout(f, milliseconds));
+    }
+
+    var PosixSignal;
+    (function (PosixSignal) {
+        PosixSignal[PosixSignal["SIGWINCH"] = 28] = "SIGWINCH";
+    })(PosixSignal || (PosixSignal = {}));
+
     // Termios settings
     // https://man7.org/linux/man-pages/man3/termios.3.html
     var Termios;
@@ -192,6 +201,15 @@ var Module = (function (exports) {
 
     async function run(context) {
         const { args } = context;
+        if (args.includes('onsize')) {
+            // Use this with sleep, stdin or stdinchar args to keep the command running whilst resizing.
+            context.onPosixSignal(signal => {
+                if (signal === PosixSignal.SIGWINCH) {
+                    const { rows, columns } = context.size();
+                    context.stdout.write(`onsize: rows ${rows} x columns ${columns}\n`);
+                }
+            });
+        }
         if (args.includes('environment')) {
             context.environment.set('TEST_JS_VAR', '123');
             context.environment.delete('TEST_JS_VAR2');
@@ -294,6 +312,9 @@ var Module = (function (exports) {
         if (args.includes('size')) {
             const { rows, columns } = context.size();
             context.stdout.write(`size: rows ${rows} x columns ${columns}\n`);
+        }
+        if (args.includes('sleep')) {
+            await delay(2000); // 2 second sleep.
         }
         if (args.includes('exitCode')) {
             return ExitCode.GENERAL_ERROR;

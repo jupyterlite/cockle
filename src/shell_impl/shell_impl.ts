@@ -6,7 +6,7 @@ import { LineEditor } from './line_editor';
 import { ThemeManager } from './theme';
 import { Aliases } from '../aliases';
 import { ansi } from '../ansi';
-import type { IWorkerIO } from '../buffered_io';
+import type { IPosixSignal, IWorkerIO } from '../buffered_io';
 import type { ISize } from '../callback';
 import type { IExternalCommandResult } from '../callback_internal';
 import { CommandModuleLoader, CommandRegistry } from '../commands';
@@ -18,6 +18,7 @@ import type { IFileSystem } from '../file_system';
 import { History } from '../history';
 import type { IOutput } from '../io';
 import { DummyInput, DummyOutput, TerminalOutput } from '../io';
+import { PosixSignal } from '../posix_signal';
 import { TabCompleter } from '../tab_completer';
 import type { Termios } from '../termios';
 import { stringFromCharCodes } from '../utils';
@@ -190,6 +191,19 @@ export class ShellImpl implements IShellImpl {
     output.write(text);
   }
 
+  /**
+   * Handle a POSIX signal received via WorkerIO, which may occur whilst a command is running.
+   */
+  handlePosixSignal(item: IPosixSignal): void {
+    if (item.signal === PosixSignal.SIGWINCH && item.args !== undefined) {
+      // Update size now as setSize from main thread does not arrive until command has finished.
+      // This notifies the running command if the size has changed.
+      this.setSize({ ...item.args });
+    } else {
+      this._runContext.posixSignalCallback?.(item.signal);
+    }
+  }
+
   get history(): History {
     return this._runContext.history;
   }
@@ -240,7 +254,13 @@ export class ShellImpl implements IShellImpl {
   }
 
   setSize(size: ISize): void {
-    this._size = size;
+    if (size.rows !== this._size.rows || size.columns !== this._size.columns) {
+      this._size = size;
+
+      // Notify a running command. The same size may arrive twice, via both a SIGWINCH and setSize
+      // from the main thread, so only notify if it has changed.
+      this._runContext.posixSignalCallback?.(PosixSignal.SIGWINCH);
+    }
   }
 
   setWorkerIO(workerIO: IWorkerIO) {

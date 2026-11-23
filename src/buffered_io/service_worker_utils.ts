@@ -1,4 +1,4 @@
-import type { IStdinReply, IStdinRequest } from './defs';
+import type { IStdinReply, IStdinRequest, StdinResult } from './defs';
 import { joinURL } from '../utils';
 
 export enum AsyncOrSync {
@@ -15,7 +15,7 @@ export class ServiceWorkerUtils {
     this._url = joinURL(baseUrl, 'api/stdin/terminal');
   }
 
-  getStdin(timeoutMs: number): string {
+  getStdin(timeoutMs: number): StdinResult {
     try {
       const { xhr, msg } = this._prepareStdinRequest(timeoutMs, AsyncOrSync.SYNC);
       xhr.send(msg); // Block until the input reply is received.
@@ -26,7 +26,7 @@ export class ServiceWorkerUtils {
     }
   }
 
-  async getStdinAsync(timeoutMs: number, test: boolean = false): Promise<string> {
+  async getStdinAsync(timeoutMs: number, test: boolean = false): Promise<StdinResult> {
     try {
       const { xhr, msg } = this._prepareStdinRequest(timeoutMs, AsyncOrSync.ASYNC, test);
       const replyText = new Promise<string>((resolve, reject) => {
@@ -56,11 +56,13 @@ export class ServiceWorkerUtils {
     return { xhr, msg };
   }
 
-  private _processStdinReply(replyText: string): string {
+  private _processStdinReply(replyText: string): StdinResult {
     const reply: IStdinReply = JSON.parse(replyText);
     if ('error' in reply) {
       // Service worker may return an error instead of an input reply message.
       throw new Error(reply['error']);
+    } else if (reply.signals !== undefined) {
+      return reply.signals;
     } else if (reply.text !== undefined) {
       return reply.text ?? '';
     } else {

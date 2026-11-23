@@ -1,5 +1,5 @@
 import { PromiseDelegate } from '@lumino/coreutils';
-import type { IWorkerIO } from './defs';
+import type { IPosixSignalHandler, IWorkerIO, StdinResult } from './defs';
 import { ansi } from '../ansi';
 import type { IOutputCallback } from '../callback';
 import { Termios } from '../termios';
@@ -8,6 +8,7 @@ import { isLetter, stringFromCharCodes } from '../utils';
 export abstract class WorkerIO implements IWorkerIO {
   constructor(
     readonly outputCallback: IOutputCallback,
+    readonly posixSignalHandler: IPosixSignalHandler,
     readonly termios: Termios.Termios
   ) {}
 
@@ -42,8 +43,8 @@ export abstract class WorkerIO implements IWorkerIO {
     // Negative timeoutMs means wait forever (infinite timeout).
     // Zero timeout means return immediately.
     if (!readable && timeoutMs !== 0) {
-      const chars = this._getStdin(timeoutMs);
-      this._postRead(chars);
+      const result = this._getStdin(timeoutMs);
+      this._postRead(result);
       // If chars.length > 0 then there are characters to read, so readable is true.
       readable = this._readBuffer.length > 0;
     }
@@ -66,8 +67,8 @@ export abstract class WorkerIO implements IWorkerIO {
     }
 
     while (!this._canReturnNow()) {
-      const chars = this._getStdin(-1);
-      this._postRead(chars);
+      const result = this._getStdin(-1);
+      this._postRead(result);
     }
     return this._readFromBuffer(maxChars);
   }
@@ -89,20 +90,13 @@ export abstract class WorkerIO implements IWorkerIO {
     // Negative timeoutMs means wait forever (infinite timeout).
     // Zero timeout means return immediately.
     while (!this._canReturnNow()) {
-      const chars = await this._getStdinAsync(timeoutMs);
-      this._postRead(chars);
-      if (chars === '' && timeoutMs >= 0) {
+      const result = await this._getStdinAsync(timeoutMs);
+      this._postRead(result);
+      if (result === '' && timeoutMs >= 0) {
         break;
       }
     }
     return this._readFromBuffer(maxChars);
-  }
-
-  utf8ArrayToString(chars: Int8Array): string {
-    if (this._utf8Decoder === undefined) {
-      this._utf8Decoder = new TextDecoder('utf8');
-    }
-    return this._utf8Decoder.decode(chars);
   }
 
   write(text: string | Int8Array | number[]): void {
@@ -123,9 +117,9 @@ export abstract class WorkerIO implements IWorkerIO {
     return this._readBuffer.length > 0;
   }
 
-  protected abstract _getStdin(timeoutMs: number): string;
+  protected abstract _getStdin(timeoutMs: number): StdinResult;
 
-  protected abstract _getStdinAsync(timeoutMs: number): Promise<string>;
+  protected abstract _getStdinAsync(timeoutMs: number): Promise<StdinResult>;
 
   protected _isLineBuffering(): boolean {
     return (this.termios.get().c_lflag & Termios.LocalFlag.ICANON) > 0;
@@ -170,8 +164,13 @@ export abstract class WorkerIO implements IWorkerIO {
     }
   }
 
-  protected _postRead(chars: string): void {
-    const read = chars.split('').map(ch => ch.charCodeAt(0));
+  protected _postRead(result: StdinResult): void {
+    if (typeof result !== 'string') {
+      result.forEach(item => this.posixSignalHandler(item));
+      return;
+    }
+
+    const read = result.split('').map(ch => ch.charCodeAt(0));
     this._processReadChars(read);
   }
 
@@ -329,7 +328,6 @@ export abstract class WorkerIO implements IWorkerIO {
   private _available?: PromiseDelegate<void>;
   protected _enabled: boolean = false;
   private _inAlternativeBuffer = false;
-  private _utf8Decoder?: TextDecoder;
   protected _writeColumn = 0;
 
   protected _readBuffer: number[] = [];

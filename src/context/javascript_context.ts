@@ -2,6 +2,7 @@ import type { ISizeCallback } from '../callback';
 import type { Environment } from '../environment';
 import type { IFileSystem } from '../file_system';
 import type { IJavaScriptInput, IOutput } from '../io';
+import type { IPosixSignalCallback } from '../posix_signal';
 import type { Termios } from '../termios';
 
 /**
@@ -12,6 +13,13 @@ export interface IJavaScriptRunContext {
   args: string[];
   fileSystem: IFileSystem;
   environment: Environment;
+
+  /**
+   * Register a callback to be notified of POSIX signals such as SIGWINCH, replacing any previously
+   * registered callback. The callback must not read from stdin.
+   */
+  onPosixSignal(callback: IPosixSignalCallback): void;
+
   shellId: string;
   stdin: IJavaScriptInput;
   stdout: IOutput;

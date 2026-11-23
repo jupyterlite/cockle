@@ -3,7 +3,10 @@
   "compilerOptions": {
     "composite": false,
     "outDir": "dist",
-    "rootDir": "../"
+    "rootDir": "../",
+    "paths": {
+      "@jupyterlite/cockle": ["./node_modules/@jupyterlite/cockle"]
+    }
   },
   "include": ["serve/*"]
 }

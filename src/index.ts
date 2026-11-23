@@ -24,6 +24,7 @@ export { IFileSystem } from './file_system';
 export * from './io';
 export * from './layout';
 export { parse } from './parse';
+export { IPosixSignalCallback, PosixSignal } from './posix_signal';
 export { Shell } from './shell';
 export { ShellManager } from './shell_manager';
 export * from './tab_complete';

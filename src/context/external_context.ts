@@ -6,6 +6,7 @@
 import type { ISizeCallback } from '../callback';
 import type { ExternalEnvironment } from '../external_environment';
 import type { IExternalInput, IExternalOutput } from '../io';
+import type { IPosixSignalCallback } from '../posix_signal';
 import type { Termios } from '../termios';
 
 /**
@@ -15,6 +16,13 @@ export interface IExternalRunContext {
   name: string;
   args: string[];
   environment: ExternalEnvironment;
+
+  /**
+   * Register a callback to be notified of POSIX signals such as SIGWINCH, replacing any previously
+   * registered callback. The callback must not read from stdin.
+   */
+  onPosixSignal(callback: IPosixSignalCallback): void;
+
   shellId: string;
   stdin: IExternalInput;
   stdout: IExternalOutput;

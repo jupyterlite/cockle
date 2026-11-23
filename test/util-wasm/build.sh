@@ -9,6 +9,7 @@ for name in ${names[@]}; do
         -Os \
         -sALLOW_MEMORY_GROWTH=1 \
         -sEXIT_RUNTIME=1 \
+        -sEXPORTED_FUNCTIONS=_main,_raise \
         -sEXPORTED_RUNTIME_METHODS=FS,ENV,PROXYFS,TTY \
         -sFORCE_FILESYSTEM=1 \
         -sMODULARIZE=1 \

@@ -249,6 +249,30 @@ cmdName.forEach(cmdName => {
         );
         expect(output).toMatch(`${cmdName} stdinchar\r\naABB🎉🎉cC\r\n`);
       });
+
+      test(`should call onPosixSignal callback when size changes whilst reading from stdin via ${stdinOption}`, async ({
+        page,
+        supportsSAB
+      }) => {
+        test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
+        const output = await page.evaluate(
+          async ([stdinOption, cmdName]) => {
+            const { delay, keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+            const { shell, output } = await shellSetupEmpty({ stdinOption });
+            const cmd = shell.inputLine(`${cmdName} onsize stdin`);
+            await terminalInput(shell, ['a', '\n']);
+            await delay(100);
+            await shell.setSize({ rows: 12, columns: 43 });
+            await terminalInput(shell, ['b', '\n', keys.EOT]);
+            await cmd;
+            return output.text;
+          },
+          [stdinOption, cmdName]
+        );
+        expect(output).toMatch(
+          `${cmdName} onsize stdin\r\na\r\nA\r\nonsize: rows 12 x columns 43\r\nb\r\nB\r\n`
+        );
+      });
     });
 
     test('should write color to stdout', async ({ page }) => {
@@ -302,6 +326,19 @@ cmdName.forEach(cmdName => {
       expect(output[2]).toMatch('\r\nsize: rows 0 x columns 0\r\n');
     });
 
+    test('should call onPosixSignal callback when size changes', async ({ page }) => {
+      const output = await page.evaluate(async cmdName => {
+        const { delay, shellSetupEmpty } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty();
+        const cmd = shell.inputLine(`${cmdName} onsize sleep`);
+        await delay(500);
+        await shell.setSize({ rows: 12, columns: 43 });
+        await cmd;
+        return output.text;
+      }, cmdName);
+      expect(output).toMatch('\r\nonsize: rows 12 x columns 43\r\n');
+    });
+
     test('should emit commandStateChanged signals', async ({ page }) => {
       const output = await page.evaluate(async cmdName => {
         const { commandStateChanged, shell } = await globalThis.cockle.shellSetupEmpty({
@@ -327,12 +364,9 @@ test.describe('tab complete js-tab command', () => {
   test('should show all positional arguments', async ({ page }) => {
     const output = await shellInputsSimple(page, ['j', 's', '-', 't', 'a', '\t', '\t']);
     const lines = output.split('\r\n');
-    expect(lines[1]).toEqual(
-      'color        exitCode     readfile     size         stdin        stdout'
-    );
-    expect(lines[2]).toEqual(
-      'environment  name         shellId      stderr       stdinchar    writefile'
-    );
+    expect(lines[1]).toEqual('color        name         shellId      stderr       stdout');
+    expect(lines[2]).toEqual('environment  onsize       size         stdin        writefile');
+    expect(lines[3]).toEqual('exitCode     readfile     sleep        stdinchar');
   });
 
   test('should match the single possible starting with letter w', async ({ page }) => {

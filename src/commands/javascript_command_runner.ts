@@ -4,6 +4,7 @@ import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_run
 import type { IJavaScriptRunContext, IRunContext, ITabCompleteContext } from '../context';
 import { FindCommandError, LoadCommandError, RunCommandError } from '../error_exit_code';
 import { JavaScriptInput } from '../io';
+import { callPosixSignalCallback } from '../posix_signal';
 import type { ITabCompleteResult } from '../tab_complete';
 
 export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
@@ -38,6 +39,9 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
       args,
       environment,
       fileSystem,
+      onPosixSignal: callback => {
+        context.posixSignalCallback = signal => callPosixSignalCallback(callback, signal);
+      },
       shellId,
       stdin,
       stdout,

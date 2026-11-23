@@ -69,6 +69,11 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       return [rows, columns];
     }
 
+    // True if the command handles POSIX signals, in which case errnoError is the Emscripten
+    // FS.ErrnoError.
+    let handlesSignals = false;
+    let errnoError: any;
+
     function poll(stream: any, timeoutMs: number): number {
       // Constants.
       const POLLIN = 1;
@@ -85,7 +90,16 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
 
       let readable = inputBytes.length > 0;
       if (!readable) {
-        readable = stdin.finished ? workerIO.pollInput(timeoutMs) : stdin.poll(timeoutMs);
+        // A blocking terminal poll returns early without input if a POSIX signal such as SIGWINCH
+        // is received. Unlike read, this does not throw EINTR but returns no events so that it
+        // looks like a timeout. This is because some emscripten versions call this from their poll
+        // syscall without catching FS.ErrnoError, so throwing it would crash the command.
+        // If the command does not handle signals then keep waiting, as a poll with an infinite
+        // timeout should only return when input is available.
+        const fromTerminal = stdin.finished || stdin.isTerminal();
+        do {
+          readable = stdin.finished ? workerIO.pollInput(timeoutMs) : stdin.poll(timeoutMs);
+        } while (!readable && timeoutMs < 0 && !handlesSignals && fromTerminal);
       }
       const writable = true;
       return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
@@ -103,6 +117,17 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
         return 0;
       }
 
+      if (handlesSignals && inputBytes.length === 0) {
+        // Command handles POSIX signals, so a blocking read is interrupted by a signal such as
+        // SIGWINCH. Wait using poll as it returns without input if a signal is received. Not
+        // needed if there are bytes remaining from a previous read, such as the rest of a
+        // multi-byte UTF-8 character.
+        const readable = stdin.finished ? workerIO.pollInput(-1) : stdin.poll(-1);
+        if (!readable) {
+          throw new errnoError(27); // EINTR
+        }
+      }
+
       if (inputBytes.length === 0) {
         inputBytes.fill(readCharsFromStdin, length);
       }
@@ -112,6 +137,12 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       buffer.set(bytes, offset);
       return bytes.length;
     }
+
+    // Decoders for terminal stdout and stderr, one per stream for the duration of this command.
+    // Streaming decode retains an incomplete multi-byte character until the rest of its bytes
+    // arrive, as a command may flush in the middle of a character.
+    const stdoutDecoder = new TextDecoder('utf-8');
+    const stderrDecoder = new TextDecoder('utf-8');
 
     function write(
       stream: any,
@@ -125,11 +156,13 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       }
 
       const chars = buffer.subarray(offset, offset + length);
-      const text = workerIO.utf8ArrayToString(chars);
       const isStderr = stream.path === '/dev/tty1';
-
-      const output = isStderr ? stderr : stdout;
-      output.write(text);
+      const decoder = isStderr ? stderrDecoder : stdoutDecoder;
+      const text = decoder.decode(chars, { stream: true });
+      if (text.length > 0) {
+        const output = isStderr ? stderr : stdout;
+        output.write(text);
+      }
       return length;
     }
 
@@ -223,6 +256,16 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
             stream_ops.write = write;
           }
 
+          if (module._raise !== undefined) {
+            // Pass POSIX signals such as SIGWINCH to the command's own signal handlers.
+            const raise = module._raise;
+            context.posixSignalCallback = signal => {
+              raise(signal);
+            };
+            handlesSignals = true;
+            errnoError = FS.ErrnoError;
+          }
+
           commandStateChangedCallback({ commandId, state: 'running' });
         }
       ],
@@ -234,6 +277,16 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     // Flush the remaining output bytes.
     stdoutHandler?.flush();
     stderrHandler?.flush();
+
+    // Emit the replacement character for an incomplete character at the end of terminal output.
+    const stdoutRemaining = stdoutDecoder.decode();
+    if (stdoutRemaining.length > 0) {
+      stdout.write(stdoutRemaining);
+    }
+    const stderrRemaining = stderrDecoder.decode();
+    if (stderrRemaining.length > 0) {
+      stderr.write(stderrRemaining);
+    }
 
     if (exitCode === undefined) {
       exitCode = ExitCode.CANNOT_RUN_COMMAND;

@@ -1,4 +1,4 @@
-import type { IWorkerIO } from './buffered_io';
+import type { IPosixSignal, IWorkerIO } from './buffered_io';
 import { ServiceWorkerWorkerIO, SharedArrayBufferWorkerIO } from './buffered_io';
 import type { IOutputCallback, IQueryParamsCallback, ISize } from './callback';
 import type {
@@ -36,9 +36,12 @@ export abstract class BaseShellWorker implements IShellWorker {
       this._setWorkerIO.bind(this)
     );
 
+    const posixSignalHandler = (item: IPosixSignal) => this._shellImpl?.handlePosixSignal(item);
+
     if (options.supportsServiceWorker) {
       this._serviceWorkerWorkerIO = new ServiceWorkerWorkerIO(
         callbacks.outputCallback,
+        posixSignalHandler,
         this._termios,
         options.baseUrl ?? '',
         options.browsingContextId ?? '',
@@ -49,6 +52,7 @@ export abstract class BaseShellWorker implements IShellWorker {
     if (options.sharedArrayBuffer !== undefined) {
       this._sharedArrayBufferWorkerIO = new SharedArrayBufferWorkerIO(
         callbacks.outputCallback,
+        posixSignalHandler,
         this._termios,
         options.sharedArrayBuffer
       );

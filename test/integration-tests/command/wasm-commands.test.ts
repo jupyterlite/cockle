@@ -89,11 +89,11 @@ test.describe('wasm-test', () => {
 
   test('should read from pipe', async ({ page }) => {
     const output = await page.evaluate(async () => {
-      const { shell, output } = await globalThis.cockle.shellSetupEmpty();
+      const { shell, output } = await globalThis.cockle.shellSetupSimple();
       await shell.inputLine('cat file2 | wasm-test stdin');
       return output.text;
     });
-    expect(output).toMatch(/^cat file2 | wasm-test stdin\r\nSOME OTHER FILE\r\nSECOND LINE\r\n/);
+    expect(output).toMatch(/^cat file2 \| wasm-test stdin\r\nSOME OTHER FILE\r\nSECOND LINE\r\n/);
   });
 
   test('should read from file', async ({ page }) => {
@@ -176,6 +176,42 @@ test.describe('wasm-test', () => {
         return output.text;
       }, stdinOption);
       expect(output).toMatch(/^wasm-test stdinchar\r\naABB {2}cC\r\n/);
+    });
+
+    test(`should read unicode from stdin via ${stdinOption}`, async ({ page, supportsSAB }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
+      const output = await page.evaluate(async stdinOption => {
+        const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ stdinOption });
+        const cmd = shell.inputLine('wasm-test stdinchar');
+        await terminalInput(shell, ['a', 'B', '🎉', 'c', keys.EOT]);
+        await cmd;
+        return output.text;
+      }, stdinOption);
+      expect(output).toMatch(/^wasm-test stdinchar\r\naABB🎉🎉cC\r\n/);
+    });
+
+    test(`should call SIGWINCH handler when size changes whilst reading from stdin via ${stdinOption}`, async ({
+      page,
+      supportsSAB
+    }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
+      const output = await page.evaluate(async stdinOption => {
+        const { delay, keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ stdinOption });
+        const cmd = shell.inputLine('wasm-test onsize stdin');
+        await terminalInput(shell, ['a', '\n']);
+        await delay(100);
+        // Do not await setSize as it does not resolve until wasm-test exits, as the worker is
+        // blocked.
+        shell.setSize({ rows: 12, columns: 43 });
+        await terminalInput(shell, ['b', '\n', keys.EOT]);
+        await cmd;
+        return output.text;
+      }, stdinOption);
+      expect(output).toMatch(
+        /^wasm-test onsize stdin\r\na\r\nA\r\nonsize: rows 12 x columns 43\r\nb\r\nB\r\n/
+      );
     });
   });
 

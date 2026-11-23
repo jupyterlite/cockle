@@ -434,6 +434,7 @@ interface WasmModule {
   PATH?: any;
   PROXYFS?: any;
   TTY?: any;
+  _raise?: (signal: number) => number;
 }
 
 export type MainModule = WasmModule & typeof RuntimeExports;

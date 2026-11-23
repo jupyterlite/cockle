@@ -1,4 +1,4 @@
-import type { IMainIO } from './defs';
+import type { IMainIO, IPosixSignal } from './defs';
 import { MainIO } from './main_io';
 import { SAB } from './sab';
 
@@ -10,9 +10,8 @@ export class SharedArrayBufferMainIO extends MainIO implements IMainIO {
   constructor() {
     super();
     const bytesPerElement = Int32Array.BYTES_PER_ELEMENT;
-    const readLength = SAB.maxChars + 4;
-    this._sharedArrayBuffer = new SharedArrayBuffer(readLength * bytesPerElement);
-    this._intArray = new Int32Array(this._sharedArrayBuffer, 0, readLength);
+    this._sharedArrayBuffer = new SharedArrayBuffer(SAB.length * bytesPerElement);
+    this._intArray = new Int32Array(this._sharedArrayBuffer, 0, SAB.length);
 
     this._intArray[SAB.REQUEST_INDEX] = SAB.NO_REQUEST_VALUE;
   }
@@ -40,11 +39,17 @@ export class SharedArrayBufferMainIO extends MainIO implements IMainIO {
 
   private async _handleStdin(): Promise<void> {
     const timeoutMs = SAB.decodeTimeout(Atomics.load(this._intArray, SAB.TIMEOUT_INDEX));
-    const chars = await this._handleStdinImpl(timeoutMs);
-    await this._sendResult(chars);
+    const result = await this._handleStdinImpl(timeoutMs);
+    if (typeof result === 'string') {
+      await this._sendResult(result);
+    } else {
+      this._sendSignals(result);
+    }
   }
 
   private async _sendResult(chars: string): Promise<void> {
+    Atomics.store(this._intArray, SAB.RESULT_TYPE_INDEX, SAB.CHARS_RESULT);
+
     let moreToFollow = true;
     while (moreToFollow) {
       moreToFollow = chars.length > SAB.maxChars;
@@ -71,6 +76,26 @@ export class SharedArrayBufferMainIO extends MainIO implements IMainIO {
       }
     }
 
+    this._finishRequest();
+  }
+
+  private _sendSignals(signals: IPosixSignal[]): void {
+    const encoded = SAB.encodeSignals(signals);
+    if (encoded.length > SAB.maxChars) {
+      console.error('Too many signals to send via SharedArrayBuffer');
+      encoded.length = 0;
+    }
+
+    Atomics.store(this._intArray, SAB.RESULT_TYPE_INDEX, SAB.SIGNALS_RESULT);
+    Atomics.store(this._intArray, SAB.LENGTH_INDEX, encoded.length);
+    for (let i = 0; i < encoded.length; i++) {
+      Atomics.store(this._intArray, SAB.START_INDEX + i, encoded[i]);
+    }
+
+    this._finishRequest();
+  }
+
+  private _finishRequest(): void {
     Atomics.store(this._intArray, SAB.REQUEST_INDEX, SAB.NO_REQUEST_VALUE);
     this._waitForRequest(); // Start listening for next request.
     Atomics.notify(this._intArray, SAB.REQUEST_INDEX, 1);

@@ -2,7 +2,7 @@ import type { ICommandRunner } from './command_runner';
 import { CommandType } from './command_type';
 import type { ICallExternalCommand, ICallExternalTabComplete } from '../callback_internal';
 import type { IRunContext, ITabCompleteContext } from '../context';
-import { FindCommandError } from '../error_exit_code';
+import { FindCommandError, RunCommandError } from '../error_exit_code';
 import type { ITabCompleteResult } from '../tab_complete';
 
 export class ExternalCommandRunner implements ICommandRunner {
@@ -38,7 +38,7 @@ export class ExternalCommandRunner implements ICommandRunner {
 
     context.commandRegistry.commandStateChangedCallback({ commandId, state: 'running' });
 
-    const { exitCode, environmentChanges } = await this.callExternalCommand(
+    const { exitCode, environmentChanges, error } = await this.callExternalCommand(
       name,
       args,
       Object.fromEntries(environment),
@@ -47,6 +47,11 @@ export class ExternalCommandRunner implements ICommandRunner {
       stderr.isTerminal(),
       context.termios.get()
     );
+
+    if (error) {
+      // Same behaviour as a JavaScript command that throws an error.
+      throw new RunCommandError(name);
+    }
 
     if (environmentChanges !== undefined) {
       Object.entries(environmentChanges).forEach(([envName, envValue]) => {
