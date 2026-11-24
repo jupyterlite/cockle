@@ -1,9 +1,15 @@
 import type { CommandModule } from './command_module';
 import { CommandType } from './command_type';
 import { DynamicallyLoadedCommandRunner } from './dynamically_loaded_command_runner';
-import type { IJavaScriptRunContext, IRunContext, ITabCompleteContext } from '../context';
+import type {
+  IJavaScriptRunContext,
+  IRunContext,
+  IServices,
+  ITabCompleteContext
+} from '../context';
 import { FindCommandError, LoadCommandError, RunCommandError } from '../error_exit_code';
 import { JavaScriptInput } from '../io';
+import { Pager } from '../pager';
 import { callPosixSignalCallback } from '../posix_signal';
 import type { ITabCompleteResult } from '../tab_complete';
 
@@ -31,6 +37,11 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
       throw new LoadCommandError(name);
     }
 
+    // Services that use the narrowed jsContext below.
+    const services: IServices = {
+      createPager: () => new Pager({ context: jsContext })
+    };
+
     // Narrow context passed to JavaScript command so that we don't leak cockle internals.
     const { commandId, environment, fileSystem, shellId, stdout, stderr, termios, size } = context;
     const stdin = new JavaScriptInput(context.stdin);
@@ -47,7 +58,8 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
       stdout,
       stderr,
       size,
-      termios
+      termios,
+      services
     };
 
     context.commandRegistry.commandStateChangedCallback({ commandId, state: 'running' });

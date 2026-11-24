@@ -16,6 +16,7 @@
     "tree": {},
     "util-js": {
       "modules": {
+        "js-pager": {},
         "js-tab": {},
         "js-test": {},
         "js-tui": {}

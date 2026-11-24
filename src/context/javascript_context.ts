@@ -1,3 +1,4 @@
+import type { IServices } from './services';
 import type { ISizeCallback } from '../callback';
 import type { Environment } from '../environment';
 import type { IFileSystem } from '../file_system';
@@ -19,6 +20,12 @@ export interface IJavaScriptRunContext {
    * registered callback. The callback must not read from stdin.
    */
   onPosixSignal(callback: IPosixSignalCallback): void;
+
+  /**
+   * Services provided by cockle at runtime, such as a pager. Use these rather than importing and
+   * bundling them, so that the command uses the implementation of the cockle it is running in.
+   */
+  services: IServices;
 
   shellId: string;
   stdin: IJavaScriptInput;

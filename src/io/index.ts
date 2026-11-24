@@ -1,3 +1,4 @@
+export * from './async_input';
 export * from './buffered_output';
 export * from './console_output';
 export * from './dummy_input';

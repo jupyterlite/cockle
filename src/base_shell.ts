@@ -20,6 +20,7 @@ import type { IExternalCommand, IExternalTabCompleteResult } from './external_co
 import { ExternalEnvironment } from './external_environment';
 import { ExternalTermios } from './external_termios';
 import { ExternalInput, ExternalOutput } from './io';
+import { Pager } from './pager';
 import type { IPosixSignalCallback } from './posix_signal';
 import { callPosixSignalCallback, PosixSignal } from './posix_signal';
 import type { Termios } from './termios';
@@ -301,7 +302,10 @@ export abstract class BaseShell implements IShell {
       stdout,
       stderr,
       size: () => this.size,
-      termios
+      termios,
+      services: {
+        createPager: () => new Pager({ context })
+      }
     };
     const runCommand = async (): Promise<IExternalCommandResult> => {
       try {

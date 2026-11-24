@@ -3,6 +3,7 @@
  * This exists in the main UI thread unlike other contexts that exist in the webworker.
  */
 
+import type { IServices } from './services';
 import type { ISizeCallback } from '../callback';
 import type { ExternalEnvironment } from '../external_environment';
 import type { IExternalInput, IExternalOutput } from '../io';
@@ -22,6 +23,12 @@ export interface IExternalRunContext {
    * registered callback. The callback must not read from stdin.
    */
   onPosixSignal(callback: IPosixSignalCallback): void;
+
+  /**
+   * Services provided by cockle at runtime, such as a pager. These are the same services that are
+   * available to JavaScript commands.
+   */
+  services: IServices;
 
   shellId: string;
   stdin: IExternalInput;

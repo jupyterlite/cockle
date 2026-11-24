@@ -332,7 +332,7 @@ test.describe('TabCompleter', () => {
 
     test('should match command subcommand string possibles', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t', 'c', '\t', 'j', '\t'])).toMatch(
-        /^cockle-config command j\r\njoin {5}js-tab {3}js-test\r\n/
+        /^cockle-config command j\r\njoin {6}js-pager {2}js-tab {4}js-test\r\n/
       );
 
       expect(
@@ -417,7 +417,7 @@ test.describe('TabCompleter', () => {
         const baseCmdLine = `cockle-config command ${args} `;
 
         const output0 = await shellInputsSimple(page, (baseCmdLine + 'j\t').split(''));
-        expect(output0).toEqual(baseCmdLine + 'js-t');
+        expect(output0).toEqual(baseCmdLine + 'js-');
 
         const output1 = await shellInputsSimple(page, (baseCmdLine + 'js-t\t').split(''));
         expect(output1).toMatch(baseCmdLine + 'js-t\r\njs-tab   js-test\r\n');
@@ -459,6 +459,7 @@ test.describe('TabCompleter', () => {
           'j',
           's',
           '\t',
+          't',
           'a',
           '\t',
           'c',

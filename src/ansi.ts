@@ -34,6 +34,7 @@ export const ansi = {
   },
 
   styleReset: ESC + '1;0m',
+  styleReverse: ESC + '7m',
   styleBoldRed: ESC + '1;31m',
   styleBoldGreen: ESC + '1;32m',
   styleBrightRed: ESC + '0;91m',

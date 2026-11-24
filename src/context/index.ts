@@ -1,5 +1,6 @@
 export * from './external_context';
 export * from './javascript_context';
 export * from './run_context';
+export * from './services';
 export * from './stdin_context';
 export * from './tab_complete';

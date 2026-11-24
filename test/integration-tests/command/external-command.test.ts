@@ -350,7 +350,7 @@ test.describe('tab complete js-tab command', () => {
     const output = await page.evaluate(async cmdName => {
       const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty({ externalCommands });
-      await terminalInput(shell, ['e', 'x', 't', '\t', 't', '\t', '\t']);
+      await terminalInput(shell, ['e', 'x', 't', '\t', 't', 'a', '\t', '\t']);
       return output.text;
     });
     const lines = output.split('\r\n');
@@ -366,7 +366,7 @@ test.describe('tab complete js-tab command', () => {
     const output = await page.evaluate(async cmdName => {
       const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty({ externalCommands });
-      await terminalInput(shell, ['e', 'x', 't', '\t', 't', '\t', 'n', '\t']);
+      await terminalInput(shell, ['e', 'x', 't', '\t', 't', 'a', '\t', 'n', '\t']);
       return output.text;
     });
     expect(output).toMatch(/^external-tab name $/);
@@ -376,7 +376,7 @@ test.describe('tab complete js-tab command', () => {
     const output = await page.evaluate(async cmdName => {
       const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty({ externalCommands });
-      await terminalInput(shell, ['e', 'x', 't', '\t', 't', '\t', 's', 't', '\t']);
+      await terminalInput(shell, ['e', 'x', 't', '\t', 't', 'a', '\t', 's', 't', '\t']);
       return output.text;
     });
     expect(output).toMatch(/^external-tab std$/);
@@ -386,7 +386,7 @@ test.describe('tab complete js-tab command', () => {
     const output = await page.evaluate(async cmdName => {
       const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty({ externalCommands });
-      await terminalInput(shell, ['e', 'x', 't', '\t', 't', '\t', 's', 't', 'd', '\t']);
+      await terminalInput(shell, ['e', 'x', 't', '\t', 't', 'a', '\t', 's', 't', 'd', '\t']);
       return output.text;
     });
     expect(output).toMatch(/^external-tab std\r\nstderr {5}stdin {6}stdinchar {2}stdout\r\n/);
@@ -396,7 +396,7 @@ test.describe('tab complete js-tab command', () => {
     const output = await page.evaluate(async cmdName => {
       const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty({ externalCommands });
-      await terminalInput(shell, ['e', 'x', 't', '\t', 't', '\t', 'n', '\t', 'e', 'x', '\t']);
+      await terminalInput(shell, ['e', 'x', 't', '\t', 't', 'a', '\t', 'n', '\t', 'e', 'x', '\t']);
       return output.text;
     });
     expect(output).toMatch(/^external-tab name exitCode $/);
@@ -406,7 +406,7 @@ test.describe('tab complete js-tab command', () => {
     const output = await page.evaluate(async cmdName => {
       const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;
       const { shell, output } = await shellSetupEmpty({ externalCommands });
-      await terminalInput(shell, ['u', 'n', 'a', '\t', ';', 'e', 'x', 't', '\t', 't', '\t']);
+      await terminalInput(shell, ['u', 'n', 'a', '\t', ';', 'e', 'x', 't', '\t', 't', 'a', '\t']);
       return output.text;
     });
     expect(output).toMatch(/^uname ;external-tab $/);
@@ -427,6 +427,7 @@ test.describe('tab complete js-tab command', () => {
         't',
         '\t',
         't',
+        'a',
         '\t',
         'c',
         '\t'

@@ -23,6 +23,7 @@ export { ExternalTermios } from './external_termios';
 export { IFileSystem } from './file_system';
 export * from './io';
 export * from './layout';
+export { IPager } from './pager';
 export { parse } from './parse';
 export { IPosixSignalCallback, PosixSignal } from './posix_signal';
 export { Shell } from './shell';

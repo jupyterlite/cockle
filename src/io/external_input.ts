@@ -1,11 +1,10 @@
+import type { IAsyncInput } from './async_input';
+
 /**
  * Input used by an ExternalCommand, exists in the main UI not webworker.
  * This effectively wraps a real IInput in the webworker ShellImpl IContext.
  */
-export interface IExternalInput {
-  isTerminal(): boolean;
-  readAsync(maxChars: number | null): Promise<string>;
-}
+export interface IExternalInput extends IAsyncInput {}
 
 export class ExternalInput implements IExternalInput {
   constructor(

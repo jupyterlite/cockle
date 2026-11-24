@@ -1,10 +1,8 @@
+import type { IAsyncInput } from './async_input';
 import type { IInput } from './input';
 import { stringFromCharCodes } from '../utils';
 
-export interface IJavaScriptInput {
-  isTerminal(): boolean;
-  readAsync(maxChars: number | null): Promise<string>;
-}
+export interface IJavaScriptInput extends IAsyncInput {}
 
 export class JavaScriptInput implements IJavaScriptInput {
   constructor(readonly input: IInput) {}
