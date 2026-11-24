@@ -20,14 +20,14 @@
         "js-test": {},
         "js-tui": {}
       },
-      "local_directory": "../test/util-js/lib",
+      "local_directory": "../sample-commands/util-js/lib",
       "wasm": false
     },
     "util-wasm": {
       "modules": {
         "wasm-test": {}
       },
-      "local_directory": "../test/util-wasm/wasm"
+      "local_directory": "../sample-commands/util-wasm/wasm"
     },
     "vim": {}
   },

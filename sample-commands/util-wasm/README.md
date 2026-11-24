@@ -1,6 +1,6 @@
 # util-wasm
 
-Utilities that are compiled to wasm and used in testing.
+Utilities that are compiled to wasm and used in testing and in the demo.
 
 This directory includes the C source code, and compiled output is in the wasm directory and is
 checked into git so that it does not have to be recompiled for testing.

@@ -23,7 +23,11 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js', '.wasm']
+    extensions: ['.tsx', '.ts', '.js', '.wasm'],
+    // External commands are imported from ../sample-commands, ensure they use this cockle.
+    alias: {
+      '@jupyterlite/cockle': path.resolve(__dirname, 'node_modules/@jupyterlite/cockle')
+    }
   },
   output: {
     filename: 'bundle.js',

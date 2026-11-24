@@ -4,8 +4,17 @@
     "composite": false,
     "outDir": "dist",
     "rootDir": "../",
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "paths": {
+      "@jupyterlite/cockle": ["./node_modules/@jupyterlite/cockle"]
+    }
   },
-  "include": ["serve/*", "integration-tests/*", "unit-tests/*", "../src/**/*"],
+  "include": [
+    "../sample-commands/external/*",
+    "../src/**/*",
+    "integration-tests/*",
+    "serve/*",
+    "unit-tests/*"
+  ],
   "exclude": ["../src/tools"]
 }

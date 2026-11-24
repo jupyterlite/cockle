@@ -3,9 +3,12 @@ import { Shell, ShellManager } from '@jupyterlite/cockle';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import type { IDemo } from './defs';
-import { externalTuiCommand } from './external_command_tui';
-import { externalCommand } from '../../test/serve/external_command';
-import { externalRun, externalTabComplete } from '../../test/serve/external_command_tab';
+import { externalCommand } from '../../sample-commands/external/external_command';
+import {
+  externalRun,
+  externalTabComplete
+} from '../../sample-commands/external/external_command_tab';
+import { externalTuiCommand } from '../../sample-commands/external/external_command_tui';
 
 export async function runDemo(useLocalCorsProxy: boolean) {
   // Directory containing the current page, so that relative URLs work for any page.

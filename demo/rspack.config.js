@@ -19,7 +19,7 @@ module.exports = {
   },
   resolve: {
     extensions: ['.ts', '.js'],
-    // External commands are imported from ../test/serve, ensure they use this cockle not test's.
+    // External commands are imported from ../sample-commands, ensure they use this cockle.
     alias: {
       '@jupyterlite/cockle': path.resolve(__dirname, 'node_modules/@jupyterlite/cockle')
     }
