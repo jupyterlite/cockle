@@ -316,24 +316,35 @@ test.describe('termios', () => {
 
       // Commands that handle Ctrl-C themselves, either as a character (ISIG not set) or using
       // their own signal handler. If Ctrl-C terminates the command the exit code is 130.
+      // Wait for vim to display the file before typing, as Ctrl-C typed before vim has changed the
+      // terminal mode sends SIGINT, and vim then discards the input that follows it. The inputs to
+      // exit are typed separately so that the command has handled Ctrl-C before it receives them.
       [
-        { cmdText: 'less file2', inputs: [ctrlC, 'q'] },
-        { cmdText: 'nano', inputs: [ctrlC, ctrlX] },
-        { cmdText: 'vim', inputs: ['i', 'a', ctrlC, ':', 'q', '!', enter] }
-      ].forEach(({ cmdText, inputs }) => {
+        { cmdText: 'less file2', inputs: [ctrlC], exitInputs: ['q'] },
+        { cmdText: 'nano', inputs: [ctrlC], exitInputs: [ctrlX] },
+        {
+          cmdText: 'vim file2',
+          readyText: '"file2"',
+          inputs: ['i', 'a', ctrlC],
+          exitInputs: [':', 'q', '!', enter]
+        }
+      ].forEach(({ cmdText, readyText, inputs, exitInputs }) => {
         const name = cmdText.split(' ')[0];
         test(`should not terminate ${name} on Ctrl-C`, async ({ page, supportsSAB }) => {
           test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
           const exitCode = await page.evaluate(
-            async ({ stdinOption, cmdText, inputs }) => {
+            async ({ stdinOption, cmdText, readyText, inputs, exitInputs }) => {
               const { shellSetupSimple, terminalInput } = globalThis.cockle;
-              const { shell } = await shellSetupSimple({ color: true, stdinOption });
+              const { shell, output } = await shellSetupSimple({ color: true, stdinOption });
+              const ready = readyText === undefined ? undefined : output.contains(readyText);
               const cmd = shell.inputLine(cmdText);
+              await ready;
               await terminalInput(shell, inputs);
+              await terminalInput(shell, exitInputs);
               await cmd;
               return await shell.exitCode();
             },
-            { stdinOption, cmdText, inputs }
+            { stdinOption, cmdText, readyText, inputs, exitInputs }
           );
           expect(exitCode).toBe(0);
         });

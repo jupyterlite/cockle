@@ -222,10 +222,12 @@ cmdName.forEach(cmdName => {
         test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
         const output = await page.evaluate(
           async ([stdinOption, cmdName]) => {
-            const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+            const { keys, shellSetupEmpty, terminalInput, terminalInputUpperCaseReply } =
+              globalThis.cockle;
             const { shell, output } = await shellSetupEmpty({ stdinOption });
             const cmd = shell.inputLine(`${cmdName} stdinchar`);
-            await terminalInput(shell, ['a', 'B', ' ', 'c', keys.EOT]);
+            await terminalInputUpperCaseReply(shell, output, ['a', 'B', ' ', 'c']);
+            await terminalInput(shell, [keys.EOT], 0);
             await cmd;
             return output.text;
           },
@@ -238,10 +240,12 @@ cmdName.forEach(cmdName => {
         test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
         const output = await page.evaluate(
           async ([stdinOption, cmdName]) => {
-            const { keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+            const { keys, shellSetupEmpty, terminalInput, terminalInputUpperCaseReply } =
+              globalThis.cockle;
             const { shell, output } = await shellSetupEmpty({ stdinOption });
             const cmd = shell.inputLine(`${cmdName} stdinchar`);
-            await terminalInput(shell, ['a', 'B', '🎉', 'c', keys.EOT]);
+            await terminalInputUpperCaseReply(shell, output, ['a', 'B', '🎉', 'c']);
+            await terminalInput(shell, [keys.EOT], 0);
             await cmd;
             return output.text;
           },

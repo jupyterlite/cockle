@@ -1,5 +1,5 @@
 import { delay, ShellManager, Termios } from '@jupyterlite/cockle';
-import { terminalInput } from './input_setup';
+import { terminalInput, terminalInputUpperCaseReply } from './input_setup';
 import { keys } from './keys';
 import { shellSetupComplex, shellSetupEmpty, shellSetupSimple } from './shell_setup';
 import { externalCommand } from '../../sample-commands/external/external_command';
@@ -29,7 +29,8 @@ async function setup() {
     shellSetupComplex,
     shellSetupEmpty,
     shellSetupSimple,
-    terminalInput
+    terminalInput,
+    terminalInputUpperCaseReply
   };
 
   (globalThis as any).cockle = cockle;

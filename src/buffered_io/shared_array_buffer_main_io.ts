@@ -100,8 +100,10 @@ export class SharedArrayBufferMainIO extends MainIO implements IMainIO {
 
   private _finishRequest(): void {
     Atomics.store(this._intArray, SAB.REQUEST_INDEX, SAB.NO_REQUEST_VALUE);
-    this._waitForRequest(); // Start listening for next request.
+    // Notify the worker before listening for the next request, as otherwise the notify may wake
+    // the new listener rather than the worker.
     Atomics.notify(this._intArray, SAB.REQUEST_INDEX, 1);
+    this._waitForRequest();
   }
 
   private _waitForRequest(): void {
