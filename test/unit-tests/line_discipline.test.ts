@@ -223,6 +223,22 @@ describe('LineDiscipline', () => {
       ld.freshLine();
       expect(terminal()).toBe('a\n\n');
     });
+
+    test('should use column 0 after CR if OCRNL and ONLRET', () => {
+      const { ld, terminal } = setup(
+        flags => (flags.c_oflag = OutputFlag.OPOST | OutputFlag.OCRNL | OutputFlag.ONLRET)
+      );
+      ld.fromCommand('ab\r');
+      ld.freshLine();
+      expect(terminal()).toBe('ab\n');
+    });
+
+    test('should stay at column 0 after backspace at the start of a line', () => {
+      const { ld, terminal } = setup();
+      ld.fromCommand('\b');
+      ld.freshLine();
+      expect(terminal()).toBe('\b');
+    });
   });
 
   describe('canonical input', () => {
@@ -433,6 +449,106 @@ describe('LineDiscipline', () => {
       ld.fromTerminal('AbC\r');
       expect(command).toEqual(['abc\n']);
     });
+
+    test('should treat digits and underscore as part of a word on VWERASE', () => {
+      const { ld, command, terminal } = setup();
+      ld.fromTerminal('foo a_1' + WERASE);
+      expect(terminal()).toBe('foo a_1' + ERASED.repeat(3));
+      ld.fromTerminal('\r');
+      expect(command).toEqual(['foo \n']);
+    });
+
+    test('should not echo VEOL if not ECHO', () => {
+      const { ld, command, terminal } = setup(flags => {
+        flags.c_cc[ControlCharacter.VEOL] = ';'.charCodeAt(0);
+        flags.c_lflag &= ~LocalFlag.ECHO;
+      });
+      ld.fromTerminal('ab;');
+      expect(command).toEqual(['ab;']);
+      expect(terminal()).toBe('');
+    });
+
+    test('should send VWERASE and VREPRINT to the command if not IEXTEN', () => {
+      const { ld, command, terminal } = setup(flags => (flags.c_lflag &= ~LocalFlag.IEXTEN));
+      ld.fromTerminal('ab' + WERASE + REPRINT + '\r');
+      expect(command).toEqual(['ab' + WERASE + REPRINT + '\n']);
+      expect(terminal()).toBe('ab^W^R\r\n');
+    });
+
+    test('should erase line on VKILL without echo if not ECHO', () => {
+      const { ld, command, terminal } = setup(flags => (flags.c_lflag &= ~LocalFlag.ECHO));
+      ld.fromTerminal('abc' + KILL + 'd\r');
+      expect(command).toEqual(['d\n']);
+      expect(terminal()).toBe('');
+    });
+
+    test('should echo the kill character without NL on VKILL if not ECHOK', () => {
+      const { ld, command, terminal } = setup(flags => (flags.c_lflag &= ~LocalFlag.ECHOK));
+      ld.fromTerminal('abc' + KILL);
+      expect(terminal()).toBe('abc^U');
+      ld.fromTerminal('\r');
+      expect(command).toEqual(['\n']);
+    });
+
+    test('should erase on VERASE without echo if not ECHO', () => {
+      const { ld, command, terminal } = setup(flags => (flags.c_lflag &= ~LocalFlag.ECHO));
+      ld.fromTerminal('ab' + ERASE + ERASE + 'c\r');
+      expect(command).toEqual(['c\n']);
+      expect(terminal()).toBe('');
+    });
+
+    test('should erase a tab that follows a tab', () => {
+      const { ld, command, terminal } = setup();
+      ld.fromTerminal('a\t\t' + ERASE);
+      expect(terminal()).toBe('a\t\t' + '\b'.repeat(8));
+      ld.fromTerminal('\r');
+      expect(command).toEqual(['a\t\n']);
+    });
+
+    test('should erase a tab that follows a control character if ECHOCTL', () => {
+      const { ld, terminal } = setup();
+      ld.fromTerminal('\x01\t' + ERASE);
+      expect(terminal()).toBe('^A\t' + '\b'.repeat(6));
+    });
+
+    test('should erase a tab that follows a control character if not ECHOCTL', () => {
+      const { ld, terminal } = setup(flags => (flags.c_lflag &= ~LocalFlag.ECHOCTL));
+      ld.fromTerminal('\x01\t' + ERASE);
+      expect(terminal()).toBe('\x01\t' + '\b'.repeat(8));
+    });
+
+    test('should erase a tab that follows a surrogate pair', () => {
+      const { ld, terminal } = setup();
+      ld.fromTerminal('🎉\t' + ERASE);
+      expect(terminal()).toBe('🎉\t' + '\b'.repeat(7));
+    });
+
+    test('should erase a control character without echo if not ECHOCTL', () => {
+      const { ld, command, terminal } = setup(flags => (flags.c_lflag &= ~LocalFlag.ECHOCTL));
+      ld.fromTerminal('\x01' + ERASE);
+      expect(terminal()).toBe('\x01');
+      ld.fromTerminal('\r');
+      expect(command).toEqual(['\n']);
+    });
+
+    test('should not echo VLNEXT if not ECHO', () => {
+      const { ld, command, signals, terminal } = setup(flags => (flags.c_lflag &= ~LocalFlag.ECHO));
+      ld.fromTerminal(LNEXT + INTR + '\r');
+      expect(terminal()).toBe('');
+      expect(command).toEqual([INTR + '\n']);
+      expect(signals).toEqual([]);
+    });
+
+    test('should not echo VLNEXT if not ECHOCTL', () => {
+      const { ld, command, signals, terminal } = setup(
+        flags => (flags.c_lflag &= ~LocalFlag.ECHOCTL)
+      );
+      ld.fromTerminal(LNEXT + INTR);
+      expect(terminal()).toBe(INTR);
+      ld.fromTerminal('\r');
+      expect(command).toEqual([INTR + '\n']);
+      expect(signals).toEqual([]);
+    });
   });
 
   describe('non-canonical input', () => {
@@ -499,6 +615,13 @@ describe('LineDiscipline', () => {
       ld.fromTerminal(INTR);
       expect(signals).toEqual([PosixSignal.SIGINT]);
       expect(command).toEqual([]);
+    });
+
+    test('should send SIGINT on VINTR if not IXON', () => {
+      const { ld, signals, terminal } = setup(flags => (flags.c_iflag &= ~InputFlag.IXON));
+      ld.fromTerminal('ab' + INTR);
+      expect(signals).toEqual([PosixSignal.SIGINT]);
+      expect(terminal()).toBe('ab^C');
     });
   });
 
