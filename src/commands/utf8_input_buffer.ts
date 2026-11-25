@@ -1,7 +1,4 @@
-import { stringFromCharCodes } from '../utils';
-
-const HIGH_SURROGATE_MIN = 0xd800;
-const HIGH_SURROGATE_MAX = 0xdbff;
+import { isHighSurrogate, stringFromCharCodes } from '../utils';
 
 const textEncoder = new TextEncoder();
 
@@ -69,7 +66,7 @@ export class Utf8InputBuffer {
     }
 
     const last: number | undefined = chars.at(-1);
-    if (last !== undefined && last >= HIGH_SURROGATE_MIN && last <= HIGH_SURROGATE_MAX) {
+    if (last !== undefined && isHighSurrogate(last)) {
       // Trailing high surrogate: retain it to join with the next character.
       this._pendingHighSurrogate = last;
       chars = chars.slice(0, -1);

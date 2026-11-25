@@ -1,17 +1,15 @@
 import type { IPosixSignal, IPosixSignalHandler, IWorkerIO, StdinResult } from './defs';
 import { SAB } from './sab';
 import { WorkerIO } from './worker_io';
-import type { IOutputCallback } from '../callback';
-import type { Termios } from '../termios';
+import type { IWorkerOutputCallback } from '../callback_internal';
 
 export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
   constructor(
-    outputCallback: IOutputCallback,
+    outputCallback: IWorkerOutputCallback,
     posixSignalHandler: IPosixSignalHandler,
-    termios: Termios.Termios,
     sharedArrayBuffer: SharedArrayBuffer
   ) {
-    super(outputCallback, posixSignalHandler, termios);
+    super(outputCallback, posixSignalHandler);
     this._sharedArrayBuffer = sharedArrayBuffer;
     this._intArray = new Int32Array(this._sharedArrayBuffer, 0, SAB.length);
   }
@@ -35,6 +33,9 @@ export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
 
       if (Atomics.load(this._intArray, SAB.RESULT_TYPE_INDEX) === SAB.SIGNALS_RESULT) {
         return this._readSignals();
+      }
+      if (Atomics.load(this._intArray, SAB.RESULT_TYPE_INDEX) === SAB.EOF_RESULT) {
+        return null;
       }
 
       const len = Atomics.load(this._intArray, SAB.LENGTH_INDEX);
@@ -71,6 +72,9 @@ export class SharedArrayBufferWorkerIO extends WorkerIO implements IWorkerIO {
 
       if (Atomics.load(this._intArray, SAB.RESULT_TYPE_INDEX) === SAB.SIGNALS_RESULT) {
         return this._readSignals();
+      }
+      if (Atomics.load(this._intArray, SAB.RESULT_TYPE_INDEX) === SAB.EOF_RESULT) {
+        return null;
       }
 
       const len = Atomics.load(this._intArray, SAB.LENGTH_INDEX);

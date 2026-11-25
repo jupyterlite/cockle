@@ -161,7 +161,6 @@ var Module = (function (exports) {
             }
             setDefaultShell() {
                 this.setDefaultWasm();
-                this._flags.c_oflag |= OutputFlag.ONOCR;
             }
             /**
              * Set termios settings to the default used in WebAssembly commands.

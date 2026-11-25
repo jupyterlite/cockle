@@ -13,10 +13,12 @@ export abstract class MainIO implements IMainIO {
     }
 
     // Send all remaining buffered characters as soon as possible via the supplied sendStdinNow.
-    for (const ch of this._readBuffer) {
-      this._sendStdinNow!(ch);
+    for (const chars of this._queue) {
+      if (chars !== null) {
+        this._sendStdinNow!(chars);
+      }
     }
-    this._readBuffer = '';
+    this._queue = [];
 
     // Discard any queued signals as they were intended for the command that has finished.
     this._signalBuffer = [];
@@ -78,13 +80,15 @@ export abstract class MainIO implements IMainIO {
       throw new Error('MainIO.push when disabled');
     }
 
+    // An empty string is end-of-file.
+    const entry = chars === '' ? null : chars;
     if (this._stdinPromise !== undefined) {
       // If promise pending, resolve it.
-      this._stdinPromise.resolve(chars);
+      this._stdinPromise.resolve(entry);
       this._stdinPromise = undefined;
     } else {
       // Otherwise store it for the next stdin request.
-      this._readBuffer += chars;
+      this._queue.push(entry);
     }
   }
 
@@ -102,11 +106,9 @@ export abstract class MainIO implements IMainIO {
       const signals = this._signalBuffer;
       this._signalBuffer = [];
       return signals;
-    } else if (this._readBuffer.length > 0) {
-      // Have stored input, so return it straight away.
-      const chars = this._readBuffer;
-      this._readBuffer = '';
-      return chars;
+    } else if (this._queue.length > 0) {
+      // Have stored input, so return the first of it straight away.
+      return this._queue.shift() as StdinResult;
     } else if (timeoutMs === 0) {
       // No timeout so return straight away.
       return '';
@@ -129,10 +131,10 @@ export abstract class MainIO implements IMainIO {
   }
 
   protected _enabled: boolean = false;
-  protected _readBuffer: string = '';
   protected _sendStdinNow?: IOutputCallback;
 
   private _isDisposed: boolean = false;
+  private _queue: (string | null)[] = []; // null is end-of-file
   private _signalBuffer: IPosixSignal[] = [];
   private _stdinPromise?: PromiseDelegate<StdinResult>;
 }

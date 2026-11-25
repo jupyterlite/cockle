@@ -61,6 +61,8 @@ export class ServiceWorkerUtils {
     if ('error' in reply) {
       // Service worker may return an error instead of an input reply message.
       throw new Error(reply['error']);
+    } else if (reply.eof) {
+      return null;
     } else if (reply.signals !== undefined) {
       return reply.signals;
     } else if (reply.text !== undefined) {

@@ -10,7 +10,8 @@ import type {
 import { FindCommandError, LoadCommandError, RunCommandError } from '../error_exit_code';
 import { JavaScriptInput } from '../io';
 import { Pager } from '../pager';
-import { callPosixSignalCallback } from '../posix_signal';
+import type { IPosixSignalCallback, PosixSignal } from '../posix_signal';
+import { callPosixSignalCallback, setPosixSignalCallback } from '../posix_signal';
 import type { ITabCompleteResult } from '../tab_complete';
 
 export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
@@ -45,13 +46,20 @@ export class JavascriptCommandRunner extends DynamicallyLoadedCommandRunner {
     // Narrow context passed to JavaScript command so that we don't leak cockle internals.
     const { commandId, environment, fileSystem, shellId, stdout, stderr, termios, size } = context;
     const stdin = new JavaScriptInput(context.stdin);
+    const posixSignalCallbacks = new Map<PosixSignal, IPosixSignalCallback>();
     const jsContext: IJavaScriptRunContext = {
       name,
       args,
       environment,
       fileSystem,
-      onPosixSignal: callback => {
-        context.posixSignalCallback = signal => callPosixSignalCallback(callback, signal);
+      onPosixSignal: (signal, callback) => {
+        // The context's callbacks are wrapped so that they do not wait for the command's callback.
+        setPosixSignalCallback(
+          context.posixSignalCallbacks,
+          signal,
+          callback && (() => callPosixSignalCallback(callback, signal))
+        );
+        return setPosixSignalCallback(posixSignalCallbacks, signal, callback);
       },
       shellId,
       stdin,

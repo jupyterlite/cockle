@@ -2,8 +2,18 @@ export async function delay(milliseconds: number = 10): Promise<void> {
   await new Promise(f => setTimeout(f, milliseconds));
 }
 
+// The first code unit of a UTF-16 surrogate pair.
+export function isHighSurrogate(char: number): boolean {
+  return char >= 0xd800 && char <= 0xdbff;
+}
+
 export function isLetter(char: number): boolean {
   return (char >= 65 && char <= 90) || (char >= 97 && char <= 122);
+}
+
+// The second code unit of a UTF-16 surrogate pair.
+export function isLowSurrogate(char: number): boolean {
+  return char >= 0xdc00 && char <= 0xdfff;
 }
 
 /**

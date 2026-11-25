@@ -29,7 +29,7 @@ static int readChar(void) {
       sizeChanged = 0;
       struct winsize ws;
       ioctl(STDIN_FILENO, TIOCGWINSZ, &ws);
-      printf("onsize: rows %d x columns %d\n", ws.ws_row, ws.ws_col);
+      printf("onsignal: SIGWINCH rows %d x columns %d\n", ws.ws_row, ws.ws_col);
       fflush(stdout);
     }
   }
@@ -45,7 +45,7 @@ int argsInclude(int argc, char** argv, char* check) {
 }
 
 int main(int argc, char** argv) {
-  if (argsInclude(argc, argv, "onsize")) {
+  if (argsInclude(argc, argv, "onsignal")) {
     // Use this with stdin or stdinchar args to keep the command running whilst resizing.
     struct sigaction action = {0};
     action.sa_handler = handleSigwinch;
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
   }
 
   if (argsInclude(argc, argv, "stdinchar")) {
-    // Read until EOF, echoing back as upper case. Character buffered.
+    // Read until EOF or EOT, echoing back as upper case. Character buffered.
     struct termios termiosOld, termiosNew;
     tcgetattr(0, &termiosOld);
     termiosNew = termiosOld;
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 
     while (1) {
       int ch = readChar();
-      if (ch == EOF) {
+      if (ch == EOF || ch == 4) {
         break;
       } else {
         putchar(toupper(ch));
@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
   }
 
   if (argsInclude(argc, argv, "emscripten")) {
-    printf("Emscripten version: %d.%d.%d\n", __EMSCRIPTEN_major__, __EMSCRIPTEN_minor__, __EMSCRIPTEN_tiny__);
+    printf("Emscripten version: %d.%d.%d\n", __EMSCRIPTEN_MAJOR__, __EMSCRIPTEN_MINOR__, __EMSCRIPTEN_TINY__);
   }
 
   if (argsInclude(argc, argv, "isatty")) {

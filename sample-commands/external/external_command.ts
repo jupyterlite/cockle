@@ -6,13 +6,14 @@ import { ansi, delay, ExitCode, PosixSignal, Termios } from '@jupyterlite/cockle
 export async function externalCommand(context: IExternalRunContext): Promise<number> {
   const { args } = context;
 
-  if (args.includes('onsize')) {
-    // Use this with sleep, stdin or stdinchar args to keep the command running whilst resizing.
-    context.onPosixSignal(signal => {
-      if (signal === PosixSignal.SIGWINCH) {
-        const { rows, columns } = context.size();
-        context.stdout.write(`onsize: rows ${rows} x columns ${columns}\n`);
-      }
+  if (args.includes('onsignal')) {
+    // Use this with sleep, stdin or stdinchar args to keep the command running to receive signals.
+    context.onPosixSignal(PosixSignal.SIGWINCH, () => {
+      const { rows, columns } = context.size();
+      context.stdout.write(`onsignal: SIGWINCH rows ${rows} x columns ${columns}\n`);
+    });
+    context.onPosixSignal(PosixSignal.SIGINT, () => {
+      context.stdout.write('onsignal: SIGINT\n');
     });
   }
 

@@ -7,7 +7,7 @@ import type { IServices } from './services';
 import type { ISizeCallback } from '../callback';
 import type { ExternalEnvironment } from '../external_environment';
 import type { IExternalInput, IExternalOutput } from '../io';
-import type { IPosixSignalCallback } from '../posix_signal';
+import type { IPosixSignalCallback, PosixSignal } from '../posix_signal';
 import type { Termios } from '../termios';
 
 /**
@@ -19,10 +19,14 @@ export interface IExternalRunContext {
   environment: ExternalEnvironment;
 
   /**
-   * Register a callback to be notified of POSIX signals such as SIGWINCH, replacing any previously
-   * registered callback. The callback must not read from stdin.
+   * Register a callback to be notified of a POSIX signal such as SIGWINCH, replacing any callback
+   * previously registered for that signal, or pass undefined to unregister. Returns the previously
+   * registered callback, if any. The callback must not read from stdin.
    */
-  onPosixSignal(callback: IPosixSignalCallback): void;
+  onPosixSignal(
+    signal: PosixSignal,
+    callback: IPosixSignalCallback | undefined
+  ): IPosixSignalCallback | undefined;
 
   /**
    * Services provided by cockle at runtime, such as a pager. These are the same services that are

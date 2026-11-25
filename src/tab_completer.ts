@@ -258,7 +258,7 @@ export class TabCompleter {
       }
     }
 
-    this.termios.setDefaultShell();
+    this.termios.setDefault();
     await this.enableBufferedStdinCallback(false);
     return ret;
   }

@@ -92,7 +92,7 @@ export namespace Termios {
 
   export class Termios implements ITermios {
     constructor() {
-      this.setDefaultShell();
+      this.setDefault();
     }
 
     get(): IFlags {
@@ -126,15 +126,10 @@ export namespace Termios {
       this.log('Termios set');
     }
 
-    setDefaultShell(): void {
-      this.setDefaultWasm();
-      this._flags.c_oflag |= OutputFlag.ONOCR;
-    }
-
     /**
      * Set termios settings to the default used in WebAssembly commands.
      */
-    setDefaultWasm(): void {
+    setDefault(): void {
       // This is taken from the default in emscripten-compiled code.
       const flags = this._flags;
       flags.c_iflag = InputFlag.IUTF8 | InputFlag.IMAXBEL | InputFlag.IXON | InputFlag.ICRNL; // 25856 = 0x6500

@@ -1,6 +1,6 @@
 import type { IPosixSignal, IWorkerIO } from './buffered_io';
 import { ServiceWorkerWorkerIO, SharedArrayBufferWorkerIO } from './buffered_io';
-import type { IOutputCallback, IQueryParamsCallback, ISize } from './callback';
+import type { IQueryParamsCallback, ISize } from './callback';
 import type {
   ICallExternalCommandNoReturn,
   ICallExternalTabComplete,
@@ -11,13 +11,15 @@ import type {
   IExternalInputReturnCallback,
   ISetMainIOCallback,
   ITerminateCallback,
-  IWorkerCallbacks
+  IWorkerCallbacks,
+  IWorkerOutputCallback
 } from './callback_internal';
 import { StdinContext } from './context';
 import type { IShellImpl, IShellWorker } from './defs_internal';
 import type { IDriveFSOptions } from './drive_fs';
 import { ShellImpl } from './shell_impl';
-import { Termios } from './termios';
+import type { Termios } from './termios';
+import { WorkerTermios } from './worker_termios';
 
 /**
  * Abstract base class for web worker running ShellImpl.
@@ -29,6 +31,8 @@ export abstract class BaseShellWorker implements IShellWorker {
     if (callbacks === undefined) {
       throw new Error('Callbacks not registered in BaseShellWorker');
     }
+
+    this._termios.registerChangedCallback(termios => callbacks.outputCallback('', { termios }));
 
     // Create IWorkerIO equivalents of the IMainIO used in the main UI thread (BaseShell class).
     this._stdinContext = new StdinContext(
@@ -42,7 +46,6 @@ export abstract class BaseShellWorker implements IShellWorker {
       this._serviceWorkerWorkerIO = new ServiceWorkerWorkerIO(
         callbacks.outputCallback,
         posixSignalHandler,
-        this._termios,
         options.baseUrl ?? '',
         options.browsingContextId ?? '',
         options.shellId
@@ -53,7 +56,6 @@ export abstract class BaseShellWorker implements IShellWorker {
       this._sharedArrayBufferWorkerIO = new SharedArrayBufferWorkerIO(
         callbacks.outputCallback,
         posixSignalHandler,
-        this._termios,
         options.sharedArrayBuffer
       );
       this._stdinContext.setAvailable('sab', true);
@@ -154,7 +156,7 @@ export abstract class BaseShellWorker implements IShellWorker {
     downloadModuleCallback: IDownloadModuleCallback,
     enableBufferedStdinCallback: IEnableBufferedStdinCallback,
     externalInputReturn: IExternalInputReturnCallback,
-    outputCallback: IOutputCallback,
+    outputCallback: IWorkerOutputCallback,
     setMainIOCallback: ISetMainIOCallback,
     terminateCallback: ITerminateCallback,
     wasmUrlQueryParamsCallback?: IQueryParamsCallback
@@ -212,6 +214,6 @@ export abstract class BaseShellWorker implements IShellWorker {
   private _stdinContext?: StdinContext;
   private _serviceWorkerWorkerIO?: ServiceWorkerWorkerIO;
   private _sharedArrayBufferWorkerIO?: SharedArrayBufferWorkerIO;
-  private _termios = new Termios.Termios();
+  private _termios = new WorkerTermios();
   private _workerIO?: IWorkerIO;
 }

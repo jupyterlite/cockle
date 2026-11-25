@@ -1,7 +1,11 @@
 import { describe, expect, test } from '@jest/globals';
 import { ansi } from '../../src/ansi';
 import { charWidth } from '../../src/char_width';
-import { escapeSequenceAt, removeUnsupported } from '../../src/escape_sequence';
+import {
+  escapeSequenceAt,
+  isIncompleteEscapeSequenceAt,
+  removeUnsupported
+} from '../../src/escape_sequence';
 import { PagedOutput } from '../../src/paged_output';
 
 describe('PagedOutput', () => {
@@ -157,6 +161,18 @@ describe('PagedOutput', () => {
     expect(escapeSequenceAt('x\x1b[1;31mx', 1)).toEqual('\x1b[1;31m');
     expect(escapeSequenceAt('\x1b]8;;http://x\x07x', 0)).toEqual('\x1b]8;;http://x\x07');
     expect(escapeSequenceAt('x\x1b', 1)).toEqual('\x1b');
+  });
+
+  test('isIncompleteEscapeSequenceAt', () => {
+    expect(isIncompleteEscapeSequenceAt('x\x1b', 1)).toBe(true);
+    expect(isIncompleteEscapeSequenceAt('\x1b[1;3', 0)).toBe(true);
+    expect(isIncompleteEscapeSequenceAt('\x1b]8;;http://x', 0)).toBe(true);
+    expect(isIncompleteEscapeSequenceAt('\x1b]8;;http://x\x1b', 0)).toBe(true);
+    expect(isIncompleteEscapeSequenceAt('\x1bO', 0)).toBe(true);
+    expect(isIncompleteEscapeSequenceAt('\x1b(', 0)).toBe(true);
+    expect(isIncompleteEscapeSequenceAt('\x1b[1;31m', 0)).toBe(false);
+    expect(isIncompleteEscapeSequenceAt('\x1b[1;3x\x1b[0m', 0)).toBe(false);
+    expect(isIncompleteEscapeSequenceAt('\x1b\n', 0)).toBe(false);
   });
 
   test('charWidth', () => {

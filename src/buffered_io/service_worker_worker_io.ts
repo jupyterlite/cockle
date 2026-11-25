@@ -1,19 +1,17 @@
 import type { IPosixSignalHandler, IWorkerIO, StdinResult } from './defs';
 import { ServiceWorkerUtils } from './service_worker_utils';
 import { WorkerIO } from './worker_io';
-import type { IOutputCallback } from '../callback';
-import type { Termios } from '../termios';
+import type { IWorkerOutputCallback } from '../callback_internal';
 
 export class ServiceWorkerWorkerIO extends WorkerIO implements IWorkerIO {
   constructor(
-    outputCallback: IOutputCallback,
+    outputCallback: IWorkerOutputCallback,
     posixSignalHandler: IPosixSignalHandler,
-    termios: Termios.Termios,
     baseUrl: string,
     browsingContextId: string,
     shellId: string
   ) {
-    super(outputCallback, posixSignalHandler, termios);
+    super(outputCallback, posixSignalHandler);
     this._utils = new ServiceWorkerUtils(baseUrl, browsingContextId, shellId);
   }
 

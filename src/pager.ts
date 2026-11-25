@@ -9,7 +9,7 @@
  * `close()` when it has finished writing. Output that fits on the first page is written directly.
  * Once the first page is full the pager reads keys from stdin, so the command must not read from
  * stdin. The pager registers a POSIX signal callback to handle SIGWINCH, replacing any callback
- * registered by the command.
+ * registered by the command, which is restored when paging has finished.
  *
  * If stdin or stdout is not a terminal, output is passed straight through to stdout.
  */
@@ -73,17 +73,21 @@ export class Pager extends PagedOutput implements IPager {
     this._passThrough = !context.stdin.isTerminal() || !context.stdout.isTerminal();
     if (!this._passThrough) {
       this._updateSize();
-      context.onPosixSignal(signal => {
-        if (signal === PosixSignal.SIGWINCH) {
-          this._resize();
-        }
-      });
+      this._previousSignalCallback = context.onPosixSignal(PosixSignal.SIGWINCH, () =>
+        this._resize()
+      );
     }
   }
 
   close(): Promise<void> {
     if (!this._closed) {
       this._closed = true;
+      if (!this._passThrough) {
+        // Restore the previous SIGWINCH callback when paging has finished.
+        this._done.promise.then(() =>
+          this.options.context.onPosixSignal(PosixSignal.SIGWINCH, this._previousSignalCallback)
+        );
+      }
       if (this._mode === 'paged') {
         // Update prompt in case it should now be (END).
         this._stdout.write('\r' + this._prompt());
@@ -551,6 +555,7 @@ export class Pager extends PagedOutput implements IPager {
   private _number = ''; // Digits entered before a command.
   private _passThrough: boolean;
   private _pendingKey = ''; // First key of a two key command.
+  private _previousSignalCallback?: IPosixSignalCallback; // Restored when paging has finished.
   private _rows = 1;
   private _savedTopLine = 0; // Output line at top of page when help page was opened.
   private _topRow = 0; // Index of screen row displayed at top of page.
@@ -565,7 +570,10 @@ export namespace Pager {
     stdout: IOutput;
     size: ISizeCallback;
     termios: Termios.ITermios;
-    onPosixSignal(callback: IPosixSignalCallback): void;
+    onPosixSignal(
+      signal: PosixSignal,
+      callback: IPosixSignalCallback | undefined
+    ): IPosixSignalCallback | undefined;
   }
 
   export interface IOptions {

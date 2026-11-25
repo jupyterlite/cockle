@@ -1,11 +1,6 @@
 import type { Remote } from 'comlink';
 import type { IWorkerIO } from './buffered_io';
-import type {
-  IInitDriveFSCallback,
-  IOutputCallback,
-  IQueryParamsCallback,
-  ISize
-} from './callback';
+import type { IInitDriveFSCallback, IQueryParamsCallback, ISize } from './callback';
 import type {
   ICallExternalCommandNoReturn,
   ICallExternalTabComplete,
@@ -15,7 +10,8 @@ import type {
   IExternalCommandResult,
   IExternalInputReturnCallback,
   ISetMainIOCallback,
-  ITerminateCallback
+  ITerminateCallback,
+  IWorkerOutputCallback
 } from './callback_internal';
 import type { IStdinContext } from './context';
 import type { IShell } from './defs';
@@ -74,7 +70,7 @@ export interface IShellWorker extends IShellCommon {
     downloadModuleCallback: IDownloadModuleCallback,
     enableBufferedStdinCallback: IEnableBufferedStdinCallback,
     externalInputReturn: IExternalInputReturnCallback,
-    outputCallback: IOutputCallback,
+    outputCallback: IWorkerOutputCallback,
     setMainIOCallback: ISetMainIOCallback,
     terminateCallback: ITerminateCallback,
     wasmUrlQueryParamsCallback?: IQueryParamsCallback

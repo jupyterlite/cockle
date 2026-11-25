@@ -20,6 +20,9 @@ export class ServiceWorkerMainIO extends MainIO implements IMainIO {
     }
 
     const result = await this._handleStdinImpl(timeoutMs);
+    if (result === null) {
+      return { eof: true };
+    }
     return typeof result === 'string' ? { text: result } : { signals: result };
   }
 

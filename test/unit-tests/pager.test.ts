@@ -93,6 +93,7 @@ interface ISetupOptions {
   columns?: number;
   stdinIsTerminal?: boolean;
   stdoutIsTerminal?: boolean;
+  signalCallback?: IPosixSignalCallback; // Registered before the pager is created.
 }
 
 function setup(options: ISetupOptions = {}) {
@@ -101,15 +102,19 @@ function setup(options: ISetupOptions = {}) {
   const stdout = new FakeStdout(options.stdoutIsTerminal ?? true);
   const termios = new FakeTermios();
   const originalFlags = termios.flags;
-  let signalCallback: IPosixSignalCallback | undefined;
+  let { signalCallback } = options;
 
   const context = {
     stdin,
     stdout,
     size: () => ({ ...size }),
     termios,
-    onPosixSignal: (callback: IPosixSignalCallback) => {
-      signalCallback = callback;
+    onPosixSignal: (signal: PosixSignal, callback: IPosixSignalCallback | undefined) => {
+      const previous = signalCallback;
+      if (signal === PosixSignal.SIGWINCH) {
+        signalCallback = callback;
+      }
+      return previous;
     }
   };
   const pager = new Pager({ context });
@@ -127,8 +132,19 @@ function setup(options: ISetupOptions = {}) {
   };
 
   const hasSignalCallback = () => signalCallback !== undefined;
+  const getSignalCallback = () => signalCallback;
 
-  return { pager, stdin, stdout, termios, originalFlags, resize, send, hasSignalCallback };
+  return {
+    pager,
+    stdin,
+    stdout,
+    termios,
+    originalFlags,
+    resize,
+    send,
+    hasSignalCallback,
+    getSignalCallback
+  };
 }
 
 /**
@@ -631,6 +647,20 @@ describe('Pager', () => {
     test('should register POSIX signal callback', () => {
       const { hasSignalCallback } = setup();
       expect(hasSignalCallback()).toBe(true);
+    });
+
+    test('should unregister POSIX signal callback on close', async () => {
+      const { pager, hasSignalCallback } = setup();
+      await pager.close();
+      expect(hasSignalCallback()).toBe(false);
+    });
+
+    test('should restore previous POSIX signal callback on close', async () => {
+      const previous = () => {};
+      const { pager, getSignalCallback } = setup({ signalCallback: previous });
+      expect(getSignalCallback()).not.toBe(previous);
+      await pager.close();
+      expect(getSignalCallback()).toBe(previous);
     });
 
     test('should start paging if output no longer fits', () => {

@@ -1,15 +1,12 @@
 import { PromiseDelegate } from '@lumino/coreutils';
 import type { IPosixSignalHandler, IWorkerIO, StdinResult } from './defs';
-import { ansi } from '../ansi';
-import type { IOutputCallback } from '../callback';
-import { Termios } from '../termios';
-import { isLetter, stringFromCharCodes } from '../utils';
+import type { IWorkerOutputCallback } from '../callback_internal';
+import { stringFromCharCodes } from '../utils';
 
 export abstract class WorkerIO implements IWorkerIO {
   constructor(
-    readonly outputCallback: IOutputCallback,
-    readonly posixSignalHandler: IPosixSignalHandler,
-    readonly termios: Termios.Termios
+    readonly outputCallback: IWorkerOutputCallback,
+    readonly posixSignalHandler: IPosixSignalHandler
   ) {}
 
   async canEnable(): Promise<void> {
@@ -22,6 +19,7 @@ export abstract class WorkerIO implements IWorkerIO {
     }
 
     this._enabled = false;
+    this._eof = false;
     this._available?.resolve();
   }
 
@@ -39,17 +37,12 @@ export abstract class WorkerIO implements IWorkerIO {
       throw new Error('WorkerIO.pollInput when disabled');
     }
 
-    let readable = this._readBuffer.length > 0;
     // Negative timeoutMs means wait forever (infinite timeout).
     // Zero timeout means return immediately.
-    if (!readable && timeoutMs !== 0) {
-      const result = this._getStdin(timeoutMs);
-      this._postRead(result);
-      // If chars.length > 0 then there are characters to read, so readable is true.
-      readable = this._readBuffer.length > 0;
+    if (!this._readable() && timeoutMs !== 0) {
+      this._postRead(this._getStdin(timeoutMs));
     }
-
-    return readable;
+    return this._readable();
   }
 
   read(maxChars: number | null): number[] {
@@ -61,14 +54,8 @@ export abstract class WorkerIO implements IWorkerIO {
       return [];
     }
 
-    if (this._readBuffer.length > 0 && this._canReturnNow()) {
-      // If have cached read data just return that.
-      return this._readFromBuffer(maxChars);
-    }
-
-    while (!this._canReturnNow()) {
-      const result = this._getStdin(-1);
-      this._postRead(result);
+    while (!this._readable()) {
+      this._postRead(this._getStdin(-1));
     }
     return this._readFromBuffer(maxChars);
   }
@@ -82,14 +69,9 @@ export abstract class WorkerIO implements IWorkerIO {
       return [];
     }
 
-    if (this._readBuffer.length > 0 && this._canReturnNow()) {
-      // If have cached read data just return that.
-      return this._readFromBuffer(maxChars);
-    }
-
     // Negative timeoutMs means wait forever (infinite timeout).
     // Zero timeout means return immediately.
-    while (!this._canReturnNow()) {
+    while (!this._readable()) {
       const result = await this._getStdinAsync(timeoutMs);
       this._postRead(result);
       if (result === '' && timeoutMs >= 0) {
@@ -99,213 +81,30 @@ export abstract class WorkerIO implements IWorkerIO {
     return this._readFromBuffer(maxChars);
   }
 
-  write(text: string | Int8Array | number[]): void {
-    let chars: number[];
-    if (typeof text === 'string') {
-      chars = this._processWriteChars(text.split('').map(ch => ch.charCodeAt(0)));
-    } else {
-      chars = this._processWriteChars(text);
-    }
-    this.outputCallback(stringFromCharCodes(chars));
-  }
-
-  protected _canReturnNow(): boolean {
-    if (this._isLineBuffering()) {
-      const lastChar = this._readBuffer.at(-1);
-      return lastChar === 10 || lastChar === 4;
-    }
-    return this._readBuffer.length > 0;
+  write(text: string | Int8Array | number[], freshLine: boolean = false): void {
+    const output = typeof text === 'string' ? text : stringFromCharCodes(text);
+    this.outputCallback(output, freshLine ? { freshLine } : undefined);
   }
 
   protected abstract _getStdin(timeoutMs: number): StdinResult;
 
   protected abstract _getStdinAsync(timeoutMs: number): Promise<StdinResult>;
 
-  protected _isLineBuffering(): boolean {
-    return (this.termios.get().c_lflag & Termios.LocalFlag.ICANON) > 0;
-  }
-
-  protected _maybeEchoToOutput(chars: number[]): void {
-    const NL = 10; // Linefeed \n
-    const CR = 13; // Carriage return \r
-    const termiosFlags = this.termios.get();
-    const echo = (termiosFlags.c_lflag & Termios.LocalFlag.ECHO) > 0;
-    const echoNL = (termiosFlags.c_lflag & Termios.LocalFlag.ECHONL) > 0;
-    if (!echo && !echoNL) {
-      return;
-    }
-
-    const ret: number[] = [];
-    for (const char of chars) {
-      switch (char) {
-        case NL:
-          if (termiosFlags.c_oflag & Termios.OutputFlag.ONLCR) {
-            ret.push(CR, NL);
-          } else {
-            ret.push(NL);
-          }
-          break;
-        case 4:
-          break;
-        case 127:
-          // This should only be converted if output is a terminal?
-          ret.push(8, 32, 8); // Backspace, space, backspace
-          break;
-        default:
-          if (echo) {
-            ret.push(char);
-          }
-          break;
-      }
-    }
-
-    if (ret.length > 0) {
-      this.write(ret);
-    }
-  }
-
   protected _postRead(result: StdinResult): void {
-    if (typeof result !== 'string') {
+    if (result === null) {
+      this._eof = true;
+    } else if (typeof result === 'string') {
+      for (let i = 0; i < result.length; i++) {
+        this._readBuffer.push(result.charCodeAt(i));
+      }
+    } else {
       result.forEach(item => this.posixSignalHandler(item));
-      return;
     }
-
-    const read = result.split('').map(ch => ch.charCodeAt(0));
-    this._processReadChars(read);
   }
 
-  protected _processReadChars(chars: number[]) {
-    // Should echo to output a character at a time.
-    const NL = 10; // Linefeed \n
-    const CR = 13; // Carriage return \r
-    const termiosFlags = this.termios.get();
-
-    const temp: number[] = [];
-    for (const char of chars) {
-      switch (char) {
-        case CR:
-          if ((termiosFlags.c_iflag & Termios.InputFlag.IGNCR) === 0) {
-            if ((termiosFlags.c_iflag & Termios.InputFlag.ICRNL) > 0) {
-              temp.push(NL);
-              this._readBuffer.push(NL);
-            } else {
-              temp.push(CR);
-              this._readBuffer.push(CR);
-            }
-          }
-          break;
-        case NL:
-          if ((termiosFlags.c_iflag & Termios.InputFlag.INLCR) > 0) {
-            temp.push(CR);
-            this._readBuffer.push(CR);
-          } else {
-            temp.push(NL);
-            this._readBuffer.push(NL);
-          }
-          break;
-        //case 8:
-        case 127:
-          if ((termiosFlags.c_lflag & Termios.LocalFlag.ICANON) === 0) {
-            temp.push(127);
-            this._readBuffer.push(127);
-          } else if (this._readBuffer.length > 0) {
-            temp.push(127);
-            this._readBuffer.pop();
-          }
-          break;
-        default:
-          temp.push(char);
-          this._readBuffer.push(char);
-          break;
-      }
-    }
-
-    this._maybeEchoToOutput(temp);
-  }
-
-  protected _processWriteChars(chars: Int8Array | number[]): number[] {
-    const NL = 10; // Linefeed \n
-    const CR = 13; // Carriage return \r
-    const termiosFlags = this.termios.get();
-    const { c_oflag } = termiosFlags;
-
-    const ret: number[] = [];
-    for (let i = 0; i < chars.length; i++) {
-      const char = chars[i];
-
-      if (char === 27) {
-        // Escape character '\x1B'
-        const nextChar = chars.at(i + 1);
-        if (nextChar === 91 || nextChar === 93) {
-          // '[' or ']'
-          // ANSI escape sequence.
-          const isOpenBracket = chars[i + 1] === 91;
-          const slice = chars.slice(i + 2);
-          const index = slice.findIndex(ch =>
-            isOpenBracket ? isLetter(ch) : ch === 7 || ch === 27
-          );
-
-          if (index >= 0) {
-            const sequence = chars.slice(i, i + index + 3);
-            ret.push(...sequence);
-            i += index + 2;
-
-            const asString = stringFromCharCodes(sequence);
-
-            if (this._inAlternativeBuffer) {
-              if (asString === ansi.disableAlternativeBuffer) {
-                this._inAlternativeBuffer = false;
-              }
-            } else {
-              // !this._inAlternativeBuffer
-              if (asString === ansi.enableAlternativeBuffer) {
-                this._inAlternativeBuffer = true;
-              } else if (asString === ansi.cursorHome) {
-                this._writeColumn = 0;
-              }
-            }
-
-            continue; // No further processing of escape sequence.
-          }
-        } else if (nextChar !== undefined) {
-          // ESC followed by single char.
-          const sequence = chars.slice(i, i + 2);
-          ret.push(...sequence);
-          i += 1;
-          continue; // No further processing of escape sequence.
-        }
-      }
-
-      switch (char) {
-        case CR:
-          if (ret.at(-1) !== CR) {
-            ret.push(CR);
-          }
-          break;
-        case NL:
-          if (this._writeColumn === 0 && (c_oflag & Termios.OutputFlag.ONOCR) > 0) {
-            break;
-          }
-          this._writeColumn = 0;
-          if ((c_oflag & Termios.OutputFlag.ONLCR) > 0) {
-            if (ret.at(-1) !== CR) {
-              ret.push(CR);
-            }
-            ret.push(NL);
-          } else {
-            ret.push(NL);
-          }
-          break;
-        default:
-          if (!this._inAlternativeBuffer && char >= 32) {
-            this._writeColumn++;
-          }
-          ret.push(char);
-          break;
-      }
-    }
-
-    return ret;
+  // True if a read would return immediately, with either characters or end-of-file.
+  private _readable(): boolean {
+    return this._readBuffer.length > 0 || this._eof;
   }
 
   /**
@@ -314,6 +113,7 @@ export abstract class WorkerIO implements IWorkerIO {
    * _readBuffer may or may not be empty when this is called.
    */
   protected _readFromBuffer(maxChars: number | null): number[] {
+    this._eof = false;
     if (maxChars === null) {
       const ret = this._readBuffer;
       this._readBuffer = [];
@@ -327,8 +127,7 @@ export abstract class WorkerIO implements IWorkerIO {
 
   private _available?: PromiseDelegate<void>;
   protected _enabled: boolean = false;
-  private _inAlternativeBuffer = false;
-  protected _writeColumn = 0;
+  private _eof = false; // End-of-file received but not yet read.
 
   protected _readBuffer: number[] = [];
 }

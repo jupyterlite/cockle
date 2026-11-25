@@ -75,7 +75,8 @@ export class ShellImpl implements IShellImpl {
       workerIO,
       workerType,
       commandModuleCache: this._commandModuleLoader.cache,
-      stdinContext
+      stdinContext,
+      posixSignalCallbacks: new Map()
     };
 
     // External commands.
@@ -200,7 +201,15 @@ export class ShellImpl implements IShellImpl {
       // This notifies the running command if the size has changed.
       this.setSize({ ...item.args });
     } else {
-      this._runContext.posixSignalCallback?.(item.signal);
+      const { signal } = item;
+      const callback = this._runContext.posixSignalCallbacks.get(signal);
+      if (callback !== undefined) {
+        callback(signal);
+      } else {
+        console.warn(
+          `Cockle command '${this._runContext.name}' has no handler for ${PosixSignal[signal]}`
+        );
+      }
     }
   }
 
@@ -259,7 +268,7 @@ export class ShellImpl implements IShellImpl {
 
       // Notify a running command. The same size may arrive twice, via both a SIGWINCH and setSize
       // from the main thread, so only notify if it has changed.
-      this._runContext.posixSignalCallback?.(PosixSignal.SIGWINCH);
+      this._runContext.posixSignalCallbacks.get(PosixSignal.SIGWINCH)?.(PosixSignal.SIGWINCH);
     }
   }
 
@@ -297,7 +306,7 @@ export class ShellImpl implements IShellImpl {
     }
     // Get prompt just before using as a theme change above can change the PS1 prompt colors.
     const prompt = expandString(this.environment.getPrompt(promptIndex), this.environment);
-    this._runContext.workerIO.write(`\n${prompt}`);
+    this._runContext.workerIO.write(prompt, true);
   }
 
   private _setExitCode(exitCode: number) {

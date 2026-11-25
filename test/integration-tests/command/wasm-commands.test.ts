@@ -175,7 +175,7 @@ test.describe('wasm-test', () => {
         await cmd;
         return output.text;
       }, stdinOption);
-      expect(output).toMatch(/^wasm-test stdinchar\r\naABB {2}cC\r\n/);
+      expect(output).toMatch(/^wasm-test stdinchar\r\naABB {2}cC\^D\r\n/);
     });
 
     test(`should read unicode from stdin via ${stdinOption}`, async ({ page, supportsSAB }) => {
@@ -188,7 +188,7 @@ test.describe('wasm-test', () => {
         await cmd;
         return output.text;
       }, stdinOption);
-      expect(output).toMatch(/^wasm-test stdinchar\r\naABB🎉🎉cC\r\n/);
+      expect(output).toMatch(/^wasm-test stdinchar\r\naABB🎉🎉cC\^D\r\n/);
     });
 
     test(`should call SIGWINCH handler when size changes whilst reading from stdin via ${stdinOption}`, async ({
@@ -199,7 +199,7 @@ test.describe('wasm-test', () => {
       const output = await page.evaluate(async stdinOption => {
         const { delay, keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ stdinOption });
-        const cmd = shell.inputLine('wasm-test onsize stdin');
+        const cmd = shell.inputLine('wasm-test onsignal stdin');
         await terminalInput(shell, ['a', '\n']);
         await delay(100);
         // Do not await setSize as it does not resolve until wasm-test exits, as the worker is
@@ -210,7 +210,7 @@ test.describe('wasm-test', () => {
         return output.text;
       }, stdinOption);
       expect(output).toMatch(
-        /^wasm-test onsize stdin\r\na\r\nA\r\nonsize: rows 12 x columns 43\r\nb\r\nB\r\n/
+        /^wasm-test onsignal stdin\r\na\r\nA\r\nonsignal: SIGWINCH rows 12 x columns 43\r\nb\r\nB\r\n/
       );
     });
   });

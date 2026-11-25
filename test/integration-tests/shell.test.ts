@@ -974,7 +974,7 @@ test.describe('Shell', () => {
           await cmd;
           return output.text;
         }, stdinOption);
-        expect(output).toMatch('wc\r\na\x1B[Bb\r\n      1       1       6\r\n');
+        expect(output).toMatch('wc\r\na^[[Bb\r\n      1       1       6\r\n');
       });
 
       test(`should support terminal stdin via ${stdinOption} more than once`, async ({

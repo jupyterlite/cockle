@@ -11,6 +11,7 @@ var Module = (function (exports) {
 
     var PosixSignal;
     (function (PosixSignal) {
+        PosixSignal[PosixSignal["SIGINT"] = 2] = "SIGINT";
         PosixSignal[PosixSignal["SIGWINCH"] = 28] = "SIGWINCH";
     })(PosixSignal || (PosixSignal = {}));
 
@@ -124,7 +125,6 @@ var Module = (function (exports) {
             }
             setDefaultShell() {
                 this.setDefaultWasm();
-                this._flags.c_oflag |= OutputFlag.ONOCR;
             }
             /**
              * Set termios settings to the default used in WebAssembly commands.
@@ -201,13 +201,14 @@ var Module = (function (exports) {
 
     async function run(context) {
         const { args } = context;
-        if (args.includes('onsize')) {
-            // Use this with sleep, stdin or stdinchar args to keep the command running whilst resizing.
-            context.onPosixSignal(signal => {
-                if (signal === PosixSignal.SIGWINCH) {
-                    const { rows, columns } = context.size();
-                    context.stdout.write(`onsize: rows ${rows} x columns ${columns}\n`);
-                }
+        if (args.includes('onsignal')) {
+            // Use this with sleep, stdin or stdinchar args to keep the command running to receive signals.
+            context.onPosixSignal(PosixSignal.SIGWINCH, () => {
+                const { rows, columns } = context.size();
+                context.stdout.write(`onsignal: SIGWINCH rows ${rows} x columns ${columns}\n`);
+            });
+            context.onPosixSignal(PosixSignal.SIGINT, () => {
+                context.stdout.write('onsignal: SIGINT\n');
             });
         }
         if (args.includes('environment')) {

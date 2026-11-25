@@ -70,7 +70,7 @@ export class ThemeManager {
     const chars = await workerIO.readAsync(null, timeoutMs);
     console.debug('Cockle theme change', (performance.now() - start).toFixed(1), 'ms');
 
-    termios.setDefaultShell();
+    termios.setDefault();
     await this._options.enableBufferedStdinCallback(false);
 
     this._themeStatus = ThemeStatus.Ok;

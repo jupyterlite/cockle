@@ -1,9 +1,10 @@
 export enum PosixSignal {
+  SIGINT = 2,
   SIGWINCH = 28
 }
 
 /**
- * Callback registered by a JavaScript or external command to be notified of POSIX signals.
+ * Callback registered by a JavaScript or external command to be notified of a POSIX signal.
  * For SIGWINCH the command should call its context's size() to obtain the new size.
  */
 export interface IPosixSignalCallback {
@@ -23,4 +24,21 @@ export async function callPosixSignalCallback(
   } catch (err) {
     console.error(`Error in POSIX signal callback: ${err}`);
   }
+}
+
+/**
+ * Set or unset the callback for a POSIX signal, returning the callback that it replaces, if any.
+ */
+export function setPosixSignalCallback(
+  callbacks: Map<PosixSignal, IPosixSignalCallback>,
+  signal: PosixSignal,
+  callback: IPosixSignalCallback | undefined
+): IPosixSignalCallback | undefined {
+  const previous = callbacks.get(signal);
+  if (callback === undefined) {
+    callbacks.delete(signal);
+  } else {
+    callbacks.set(signal, callback);
+  }
+  return previous;
 }

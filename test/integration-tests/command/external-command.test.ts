@@ -208,7 +208,7 @@ cmdName.forEach(cmdName => {
           },
           [stdinOption, cmdName]
         );
-        expect(output).toMatch(`${cmdName} stdinchar\r\naABB  cC\r\n`);
+        expect(output).toMatch(`${cmdName} stdinchar\r\naABB  cC^D\r\n`);
       });
 
       test(`should read unicode from stdin via ${stdinOption}`, async ({ page, supportsSAB }) => {
@@ -224,7 +224,7 @@ cmdName.forEach(cmdName => {
           },
           [stdinOption, cmdName]
         );
-        expect(output).toMatch(`${cmdName} stdinchar\r\naABB⚽⚽cC\r\n`);
+        expect(output).toMatch(`${cmdName} stdinchar\r\naABB⚽⚽cC^D\r\n`);
       });
 
       test(`should call onPosixSignal callback when size changes whilst reading from stdin via ${stdinOption}`, async ({
@@ -237,7 +237,7 @@ cmdName.forEach(cmdName => {
             const { delay, externalCommands, keys, shellSetupEmpty, terminalInput } =
               globalThis.cockle;
             const { shell, output } = await shellSetupEmpty({ externalCommands, stdinOption });
-            const cmd = shell.inputLine(`${cmdName} onsize stdin`);
+            const cmd = shell.inputLine(`${cmdName} onsignal stdin`);
             await terminalInput(shell, ['a', '\n']);
             await delay(100);
             await shell.setSize({ rows: 12, columns: 43 });
@@ -248,8 +248,47 @@ cmdName.forEach(cmdName => {
           [stdinOption, cmdName]
         );
         expect(output).toMatch(
-          `${cmdName} onsize stdin\r\na\r\nA\r\nonsize: rows 12 x columns 43\r\nb\r\nB\r\n`
+          `${cmdName} onsignal stdin\r\na\r\nA\r\nonsignal: SIGWINCH rows 12 x columns 43\r\nb\r\nB\r\n`
         );
+      });
+
+      // The onsignal handler writes the signal name, and the command continues to run.
+      [
+        {
+          description: 'call onPosixSignal callback on Ctrl-C',
+          args: 'onsignal stdin',
+          inputs: ['a', '\r', '\x03'],
+          expected: 'a\r\nA\r\n^Consignal: SIGINT\r\nb\r\nB\r\n'
+        },
+        {
+          description: 'discard partial line on Ctrl-C',
+          args: 'onsignal stdin',
+          inputs: ['a', '\x03'],
+          expected: 'a^Consignal: SIGINT\r\nb\r\nB\r\n'
+        },
+        {
+          description: 'continue to run on Ctrl-C if no onPosixSignal callback',
+          args: 'stdin',
+          inputs: ['a', '\x03'],
+          expected: 'a^Cb\r\nB\r\n'
+        }
+      ].forEach(({ description, args, inputs, expected }) => {
+        test(`should ${description} via ${stdinOption}`, async ({ page, supportsSAB }) => {
+          test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
+          const output = await page.evaluate(
+            async ({ stdinOption, cmdText, inputs }) => {
+              const { externalCommands, keys, shellSetupEmpty, terminalInput } = globalThis.cockle;
+              const { shell, output } = await shellSetupEmpty({ externalCommands, stdinOption });
+              const cmd = shell.inputLine(cmdText);
+              await terminalInput(shell, inputs);
+              await terminalInput(shell, ['b', '\r', keys.EOT]);
+              await cmd;
+              return [await shell.exitCode(), output.text];
+            },
+            { stdinOption, cmdText: `${cmdName} ${args}`, inputs }
+          );
+          expect(output).toEqual([0, `${cmdName} ${args}\r\n${expected}js-shell: `]);
+        });
       });
     });
 
@@ -313,13 +352,13 @@ cmdName.forEach(cmdName => {
       const output = await page.evaluate(async cmdName => {
         const { delay, externalCommands, shellSetupEmpty } = globalThis.cockle;
         const { shell, output } = await shellSetupEmpty({ externalCommands });
-        const cmd = shell.inputLine(`${cmdName} onsize sleep`);
+        const cmd = shell.inputLine(`${cmdName} onsignal sleep`);
         await delay(500);
         await shell.setSize({ rows: 12, columns: 43 });
         await cmd;
         return output.text;
       }, cmdName);
-      expect(output).toMatch('\r\nonsize: rows 12 x columns 43\r\n');
+      expect(output).toMatch('\r\nonsignal: SIGWINCH rows 12 x columns 43\r\n');
     });
 
     test('should emit commandStateChanged signals', async ({ page }) => {
@@ -355,7 +394,7 @@ test.describe('tab complete js-tab command', () => {
     });
     const lines = output.split('\r\n');
     expect(lines[1]).toEqual(
-      'color        exitCode     onsize       size         stderr       stdinchar'
+      'color        exitCode     onsignal     size         stderr       stdinchar'
     );
     expect(lines[2]).toEqual(
       'environment  name         shellId      sleep        stdin        stdout'

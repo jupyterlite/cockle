@@ -20,10 +20,10 @@ export interface IPosixSignal {
 }
 
 /**
- * Result of a stdin request: either characters (an empty string means timeout reached before any
- * input available) or one or more POSIX signals.
+ * Result of a stdin request: characters (an empty string means timeout reached before any input
+ * available), one or more POSIX signals, or null for end-of-file.
  */
-export type StdinResult = string | IPosixSignal[];
+export type StdinResult = string | IPosixSignal[] | null;
 
 /**
  * Handler for a POSIX signal received by WorkerIO.
@@ -42,7 +42,8 @@ export interface IWorkerIO {
   read(maxChars: number | null): number[];
   // Negative timeoutMs means wait forever (infinite timeout).
   readAsync(maxChars: number | null, timeoutMs: number): Promise<number[]>;
-  write(text: string | Int8Array | number[]): void;
+  // If freshLine is true, first start a new line if the cursor is not at the start of a line.
+  write(text: string | Int8Array | number[], freshLine?: boolean): void;
 }
 
 /**
@@ -65,6 +66,7 @@ export interface IStdinRequest {
  * Reply to a stdin request via service worker.
  */
 export interface IStdinReply {
+  eof?: boolean;
   error?: string;
   signals?: IPosixSignal[];
   text?: string; // An empty string means timeout reached before any input available.

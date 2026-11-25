@@ -17,6 +17,7 @@ export namespace SAB {
   // Possible values of RESULT_TYPE_INDEX:
   export const CHARS_RESULT = 0;
   export const SIGNALS_RESULT = 1;
+  export const EOF_RESULT = 2;
 
   export const maxChars: number = 1000; // Number of characters that can be stored in the buffer.
 

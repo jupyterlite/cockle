@@ -54,7 +54,7 @@ export class CommandExecutor {
     }
 
     await this._options.enableBufferedStdinCallback(true);
-    this._options.termios.setDefaultWasm();
+    this._options.termios.setDefault();
 
     this._runContext.history.add(cmdText);
 
@@ -104,7 +104,7 @@ export class CommandExecutor {
       exitCode = exitCode ?? ExitCode.GENERAL_ERROR;
       this._host.setExitCode(exitCode);
 
-      this._options.termios.setDefaultShell();
+      this._options.termios.setDefault();
       await this._options.enableBufferedStdinCallback(false);
     }
   }
@@ -297,7 +297,7 @@ export class CommandExecutor {
       this._runContext.stdin = this._dummyInput;
       this._runContext.stdout = this._dummyOutput;
       this._runContext.stderr = this._dummyOutput;
-      this._runContext.posixSignalCallback = undefined;
+      this._runContext.posixSignalCallbacks.clear();
 
       if (temporaryEnvironment) {
         this._runContext.environment = savedEnvironment;

@@ -2,7 +2,7 @@
  * Utility to test termios settings in cockle.
  *
  * Pass in termios flags to override the defaults, then it loops accepting a line of stdin at a
- * time and echoing it back to stdout. Use EOT (Ctrl-C, ascii 4) to stop.
+ * time and echoing it back to stdout. Use EOT (Ctrl-D, ascii 4) to stop.
  */
 
 #include <getopt.h>

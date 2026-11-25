@@ -6,6 +6,7 @@ import type { IRunContext } from '../context';
 import { FindCommandError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import type { IInput, IOutput } from '../io';
+import { PosixSignal } from '../posix_signal';
 import { SharedFS } from '../shared_fs';
 import type { Termios } from '../termios';
 import type { MainModule } from '../types/wasm_module';
@@ -46,12 +47,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
     // Read characters from stdin for the wasm command. Defined once because it is called many
     // times as the command reads its input.
     function readCharsFromStdin(maxChars: number): number[] {
-      let chars = stdin.finished ? workerIO.read(maxChars) : stdin.read(maxChars);
-      if (chars.length === 1 && chars[0] === 4) {
-        // End of text (e.g. Ctrl+D typed at the terminal): treat as the end of the input.
-        chars = [];
-      }
-      return chars;
+      return stdin.finished ? workerIO.read(maxChars) : stdin.read(maxChars);
     }
 
     function getTermios(tty: any): Termios.IFlags {
@@ -259,9 +255,11 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
           if (module._raise !== undefined) {
             // Pass POSIX signals such as SIGWINCH to the command's own signal handlers.
             const raise = module._raise;
-            context.posixSignalCallback = signal => {
+            const callback = (signal: PosixSignal) => {
               raise(signal);
             };
+            context.posixSignalCallbacks.set(PosixSignal.SIGINT, callback);
+            context.posixSignalCallbacks.set(PosixSignal.SIGWINCH, callback);
             handlesSignals = true;
             errnoError = FS.ErrnoError;
           }

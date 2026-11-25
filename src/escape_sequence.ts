@@ -4,6 +4,12 @@ const escapeRegex =
   // eslint-disable-next-line no-control-regex
   /\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|O[@-~]|[ -/]*[0-~])?/y;
 
+// Matches from a particular index to the end of the text if that is the start of an escape sequence
+// that needs more characters to complete it.
+const incompleteEscapeRegex =
+  // eslint-disable-next-line no-control-regex
+  /\x1b(?:\[[0-?]*[ -/]*|\][^\x07\x1b]*\x1b?|O|[ -/]*)$/y;
+
 // eslint-disable-next-line no-control-regex
 const sgrRegex = /^\x1b\[[0-9;:]*m$/;
 
@@ -35,6 +41,15 @@ export function isControl(codePoint: number): boolean {
 
 function isHyperlink(seq: string): boolean {
   return seq.startsWith(hyperlinkPrefix);
+}
+
+/**
+ * Return true if `text` from `index`, which must be an ESC character, to its end is the start of
+ * an escape sequence that needs more characters to complete it.
+ */
+export function isIncompleteEscapeSequenceAt(text: string, index: number): boolean {
+  incompleteEscapeRegex.lastIndex = index;
+  return incompleteEscapeRegex.test(text);
 }
 
 export function isSgr(seq: string): boolean {

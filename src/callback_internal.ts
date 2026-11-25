@@ -1,4 +1,4 @@
-import type { IOutputCallback, IQueryParamsCallback } from './callback';
+import type { IQueryParamsCallback } from './callback';
 import type { IShell } from './defs';
 import type { IExternalTabCompleteResult } from './external_command';
 import type { Termios } from './termios';
@@ -104,6 +104,20 @@ export interface IExternalInputReturnCallback {
   (text: string): void;
 }
 
+export interface IWorkerOutputOptions {
+  freshLine?: boolean; // Start a new line if the cursor is not at the start of a line.
+  termios?: Termios.IFlags; // New termios flags, sent whenever they change.
+}
+
+/**
+ * Send output from the web worker to the main UI thread. Changes of termios flags are sent the
+ * same way so that they are kept in order with the output. The options are applied before the
+ * text is output.
+ */
+export interface IWorkerOutputCallback {
+  (text: string, options?: IWorkerOutputOptions): void;
+}
+
 /**
  * Callbacks in the shell worker, to call functions in the shall.
  */
@@ -114,7 +128,7 @@ export interface IWorkerCallbacks {
   downloadModuleCallback: IDownloadModuleCallback;
   enableBufferedStdinCallback: IEnableBufferedStdinCallback;
   externalInputReturn: IExternalInputReturnCallback;
-  outputCallback: IOutputCallback;
+  outputCallback: IWorkerOutputCallback;
   setMainIOCallback: ISetMainIOCallback;
   terminateCallback: ITerminateCallback;
   wasmUrlQueryParamsCallback?: IQueryParamsCallback;

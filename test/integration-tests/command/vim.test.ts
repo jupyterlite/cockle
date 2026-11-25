@@ -135,7 +135,11 @@ test.describe('vim command', () => {
         });
         const { keys, terminalInput } = globalThis.cockle;
         const { backspace, delete_, escape } = keys;
+        // Wait for vim to display the file before typing. Input typed before vim has changed the
+        // terminal mode is line edited, so backspace would erase the previous character.
+        const ready = output.contains('"file1"');
         const cmd = shell.inputLine('vim file1');
+        await ready;
         await terminalInput(shell, [
           ...('$' + backspace + 'iz' + escape + backspace + backspace + delete_ + escape + ':wq\r')
         ]);

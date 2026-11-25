@@ -8,7 +8,7 @@ import type { IMainIO, IStdinReply, IStdinRequest } from './buffered_io';
 import { ServiceWorkerMainIO, SharedArrayBufferMainIO } from './buffered_io';
 import type { IOutputCallback } from './callback';
 import type { ISize } from './callback';
-import type { IExternalCommandResult } from './callback_internal';
+import type { IExternalCommandResult, IWorkerOutputOptions } from './callback_internal';
 import type { ICoincidentShellWorker } from './coincident_shell_worker';
 import type { IComlinkShellWorker } from './comlink_shell_worker';
 import type { IExternalRunContext } from './context';
@@ -20,10 +20,11 @@ import type { IExternalCommand, IExternalTabCompleteResult } from './external_co
 import { ExternalEnvironment } from './external_environment';
 import { ExternalTermios } from './external_termios';
 import { ExternalInput, ExternalOutput } from './io';
+import { LineDiscipline } from './line_discipline';
 import { Pager } from './pager';
 import type { IPosixSignalCallback } from './posix_signal';
-import { callPosixSignalCallback, PosixSignal } from './posix_signal';
-import type { Termios } from './termios';
+import { callPosixSignalCallback, PosixSignal, setPosixSignalCallback } from './posix_signal';
+import { Termios } from './termios';
 
 /**
  * Abstract base class for Shell that external libraries use.
@@ -42,6 +43,13 @@ export abstract class BaseShell implements IShell {
     }
 
     this._outputCallback = options.outputCallback;
+
+    this._lineDiscipline = new LineDiscipline({
+      termiosFlags: new Termios.Termios().get(),
+      toTerminal: options.outputCallback,
+      toCommand: chars => this._mainIO?.push(chars),
+      signal: this._sendPosixSignal.bind(this)
+    });
 
     this._initialize(options);
   }
@@ -63,7 +71,7 @@ export abstract class BaseShell implements IShell {
       remote.downloadModuleCallback = this._downloadWasmModuleCallback.bind(this);
       remote.enableBufferedStdinCallback = this._enableBufferedStdinCallback.bind(this);
       remote.externalInputReturn = this._externalInputReturn.bind(this);
-      remote.outputCallback = options.outputCallback.bind(this);
+      remote.outputCallback = this._workerOutput.bind(this);
       remote.setMainIOCallback = this._setMainIO.bind(this);
       remote.terminateCallback = this.dispose.bind(this);
       if (options.wasmUrlQueryParams !== undefined) {
@@ -86,7 +94,7 @@ export abstract class BaseShell implements IShell {
         proxy(this._downloadWasmModuleCallback.bind(this)),
         proxy(this._enableBufferedStdinCallback.bind(this)),
         proxy(this._externalInputReturn.bind(this)),
-        proxy(options.outputCallback),
+        proxy(this._workerOutput.bind(this)),
         proxy(this._setMainIO.bind(this)),
         proxy(this.dispose.bind(this)), // terminateCallback
         options.wasmUrlQueryParams !== undefined ? proxy(options.wasmUrlQueryParams) : undefined
@@ -188,7 +196,7 @@ export abstract class BaseShell implements IShell {
     }
 
     if (this._mainIO?.enabled) {
-      await this._mainIO.push(char);
+      this._lineDiscipline.fromTerminal(char);
     } else {
       await this._remote!.input(char);
     }
@@ -294,9 +302,8 @@ export abstract class BaseShell implements IShell {
       name,
       args,
       environment: externalEnvironment,
-      onPosixSignal: callback => {
-        this._externalPosixSignalCallback = callback;
-      },
+      onPosixSignal: (signal, callback) =>
+        setPosixSignalCallback(this._externalPosixSignalCallbacks, signal, callback),
       shellId: this._shellId,
       stdin,
       stdout,
@@ -320,7 +327,7 @@ export abstract class BaseShell implements IShell {
     // Exit code is returned via a separate message to the web worker rather than a return from this
     // function.
     runCommand().then(result => {
-      this._externalPosixSignalCallback = undefined;
+      this._externalPosixSignalCallbacks.clear();
       remote.exitExternalCommand(result);
     });
   }
@@ -384,6 +391,11 @@ export abstract class BaseShell implements IShell {
     if (enable) {
       await this._mainIO?.enable();
     } else {
+      // Any partial line is passed to the shell along with other unread input.
+      const pending = this._lineDiscipline.reset();
+      if (pending.length > 0 && this._mainIO?.enabled) {
+        await this._mainIO.push(pending);
+      }
       await this._mainIO?.disable();
     }
   }
@@ -471,6 +483,17 @@ export abstract class BaseShell implements IShell {
     }
   }
 
+  private _sendPosixSignal(signal: PosixSignal): void {
+    const callback = this._externalPosixSignalCallbacks.get(signal);
+    if (callback !== undefined) {
+      // Notify a running external command, which runs in this main UI thread.
+      callPosixSignalCallback(callback, signal);
+    } else {
+      // Send signal to web worker.
+      this._mainIO?.sendPosixSignal(signal);
+    }
+  }
+
   private async _serviceWorkerHandleStdin(request: IStdinRequest): Promise<IStdinReply> {
     if (this._serviceWorkerMainIO !== undefined) {
       return await this._serviceWorkerMainIO.handleStdin(request);
@@ -506,15 +529,27 @@ export abstract class BaseShell implements IShell {
       this._size.rows = rows;
       this._size.columns = columns;
 
-      if (this._externalPosixSignalCallback !== undefined) {
+      const callback = this._externalPosixSignalCallbacks.get(PosixSignal.SIGWINCH);
+      if (callback !== undefined) {
         // Notify a running external command, which runs in this main UI thread.
-        callPosixSignalCallback(this._externalPosixSignalCallback, PosixSignal.SIGWINCH);
+        callPosixSignalCallback(callback, PosixSignal.SIGWINCH);
       } else if (this._mainIO?.enabled) {
         // Send signal to web worker.
         await this._mainIO.sendPosixSignal(PosixSignal.SIGWINCH, { ...this._size });
       }
       await this._remote!.setSize(this._size);
     }
+  }
+
+  // Handler for output from the web worker.
+  private _workerOutput(text: string, options?: IWorkerOutputOptions): void {
+    if (options?.termios !== undefined) {
+      this._lineDiscipline.setTermios(options.termios);
+    }
+    if (options?.freshLine) {
+      this._lineDiscipline.freshLine();
+    }
+    this._lineDiscipline.fromCommand(text);
   }
 
   private _disposed = new Signal<this, void>(this);
@@ -527,11 +562,12 @@ export abstract class BaseShell implements IShell {
   private _worker?: Worker;
   private _remote?: ICoincidentShellWorker | IComlinkShellWorker;
   private _externalCommands = new Map<string, IExternalCommand.IOptions>();
-  private _externalPosixSignalCallback?: IPosixSignalCallback;
+  private _externalPosixSignalCallbacks = new Map<PosixSignal, IPosixSignalCallback>();
   private _externalStdinPromise?: PromiseDelegate<string>;
 
   private _serviceWorkerMainIO?: ServiceWorkerMainIO;
   private _sharedArrayBufferMainIO?: SharedArrayBufferMainIO;
+  private _lineDiscipline: LineDiscipline;
   private _mainIO?: IMainIO;
 
   private _commandStateChanged = new Signal<this, IShell.ICommandStateChangedArgs>(this);

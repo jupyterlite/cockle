@@ -40,7 +40,10 @@ export class SharedArrayBufferMainIO extends MainIO implements IMainIO {
   private async _handleStdin(): Promise<void> {
     const timeoutMs = SAB.decodeTimeout(Atomics.load(this._intArray, SAB.TIMEOUT_INDEX));
     const result = await this._handleStdinImpl(timeoutMs);
-    if (typeof result === 'string') {
+    if (result === null) {
+      Atomics.store(this._intArray, SAB.RESULT_TYPE_INDEX, SAB.EOF_RESULT);
+      this._finishRequest();
+    } else if (typeof result === 'string') {
       await this._sendResult(result);
     } else {
       this._sendSignals(result);

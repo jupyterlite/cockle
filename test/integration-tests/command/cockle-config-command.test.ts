@@ -60,8 +60,9 @@ test.describe('cockle-config command', () => {
     expect(lines[2]).toEqual(
       '│ package │ type │ version │ build string │ source                                 │'
     );
+    // Build string is a hash and build number such as h84152e7_1.
     expect(lines[4]).toMatch(
-      '│ grep    │ wasm │ 3.12    │ ha5b1db9_0   │ https://prefix.dev/emscripten-forge/6x │'
+      /^│ grep {4}│ wasm │ 3\.12 {4}│ h[0-9a-f]{7}_\d+ +│ https:\/\/prefix\.dev\/emscripten-forge\/6x │$/
     );
 
     const output1 = await shellLineSimple(page, 'cockle-config package xyz123');
