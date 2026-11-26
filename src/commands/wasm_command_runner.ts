@@ -40,15 +40,9 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
       throw new FindCommandError(name);
     }
 
-    // Buffer which converts the UTF-16 characters of stdin into the UTF-8 bytes of a wasm
+    // Buffer which converts the UTF-16 characters of terminal input into the UTF-8 bytes of a wasm
     // command, retaining bytes which do not fit in a read buffer until the next read.
     const inputBytes = new Utf8InputBuffer();
-
-    // Read characters from stdin for the wasm command. Defined once because it is called many
-    // times as the command reads its input.
-    function readCharsFromStdin(maxChars: number): number[] {
-      return stdin.finished ? workerIO.read(maxChars) : stdin.read(maxChars);
-    }
 
     function getTermios(tty: any): Termios.IFlags {
       return termios.get();
@@ -92,10 +86,9 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
         // syscall without catching FS.ErrnoError, so throwing it would crash the command.
         // If the command does not handle signals then keep waiting, as a poll with an infinite
         // timeout should only return when input is available.
-        const fromTerminal = stdin.finished || stdin.isTerminal();
         do {
-          readable = stdin.finished ? workerIO.pollInput(timeoutMs) : stdin.poll(timeoutMs);
-        } while (!readable && timeoutMs < 0 && !handlesSignals && fromTerminal);
+          readable = stdin.isTerminal() ? stdin.poll(timeoutMs) : workerIO.pollInput(timeoutMs);
+        } while (!readable && timeoutMs < 0 && !handlesSignals);
       }
       const writable = true;
       return (readable ? POLLIN : 0) | (writable ? POLLOUT : 0);
@@ -118,14 +111,17 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
         // SIGWINCH. Wait using poll as it returns without input if a signal is received. Not
         // needed if there are bytes remaining from a previous read, such as the rest of a
         // multi-byte UTF-8 character.
-        const readable = stdin.finished ? workerIO.pollInput(-1) : stdin.poll(-1);
+        const readable = stdin.isTerminal() ? stdin.poll(-1) : workerIO.pollInput(-1);
         if (!readable) {
           throw new errnoError(27); // EINTR
         }
       }
 
       if (inputBytes.length === 0) {
-        inputBytes.fill(readCharsFromStdin, length);
+        inputBytes.fill(
+          maxChars => (stdin.isTerminal() ? stdin.read(maxChars) : workerIO.read(maxChars)),
+          length
+        );
       }
 
       // Do not pass more bytes to the wasm command than fit in the buffer.
@@ -267,7 +263,7 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
           commandStateChangedCallback({ commandId, state: 'running' });
         }
       ],
-      stdin: this._inputHandler(stdin, inputBytes),
+      stdin: this._inputHandler(stdin),
       stderr: stderrHandler?.write,
       stdout: stdoutHandler?.write
     });
@@ -310,11 +306,10 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
    * With this, WebAssembly commands can use `isatty` correctly.
    * The wrapper returns the UTF-8 bytes expected by the WebAssembly command, one byte at a time.
    */
-  private _inputHandler(
-    input: IInput,
-    inputBytes: Utf8InputBuffer
-  ): (() => number | null | undefined) | undefined {
+  private _inputHandler(input: IInput): (() => number | null | undefined) | undefined {
     if (!input.isTerminal()) {
+      // Separate buffer from that used for terminal input.
+      const inputBytes = new Utf8InputBuffer();
       const readChars = (maxChars: number) => input.read(maxChars);
       return () => {
         inputBytes.fill(readChars, INPUT_CHARS_PER_READ);

@@ -90,6 +90,27 @@ test.describe('less command', () => {
       // If less does not close, test will timeout.
     });
 
+    test(`should not read pipe as keyboard input using ${stdinOption}`, async ({
+      page,
+      supportsSAB
+    }) => {
+      test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
+      const output = await page.evaluate(async stdinOption => {
+        const { delay, shellSetupEmpty, terminalInput } = globalThis.cockle;
+        const { shell, output } = await shellSetupEmpty({ color: true, stdinOption });
+        // Pipe content is larger than the block size that less reads at a time.
+        const cmd = shell.inputLine('seq 1 5000 | less');
+        await delay(200);
+        const ret = output.text;
+        await terminalInput(shell, ['q']); // q key to exit.
+        await cmd;
+        return ret;
+      }, stdinOption);
+      // Initially 24 rows so lines 1 to 23 shown followed by prompt, and nothing else.
+      // eslint-disable-next-line no-control-regex
+      expect(output).toMatch(/\r\n22\r\n23\r\n:\x1b\[K$/);
+    });
+
     test(`should redraw on SIGWINCH using ${stdinOption}`, async ({ page, supportsSAB }) => {
       test.skip(stdinOption === 'sab' && !supportsSAB, 'SAB not available');
       const output = await page.evaluate(async stdinOption => {
@@ -97,14 +118,14 @@ test.describe('less command', () => {
         const { shell, output } = await shellSetupEmpty({ color: true, stdinOption });
         await shell.inputLine('seq 50 > lines');
         const cmd = shell.inputLine('less lines');
-        await delay(500);
+        await delay(200);
         output.clear();
         // Do not await setSize as it does not resolve until less exits, as the worker is blocked.
         shell.setSize({ rows: 40, columns: 80 });
-        await delay(500);
+        await delay(200);
         const redraw0 = output.textAndClear();
         shell.setSize({ rows: 10, columns: 80 });
-        await delay(500);
+        await delay(200);
         const redraw1 = output.text;
         await terminalInput(shell, ['q']); // q key to exit.
         await cmd;
