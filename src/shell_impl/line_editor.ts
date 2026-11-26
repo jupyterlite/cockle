@@ -2,7 +2,6 @@ import type { Aliases } from '../aliases';
 import { ansi } from '../ansi';
 import type { ICommandLine } from '../command_line';
 import type { Environment } from '../environment';
-import { expandString } from '../expand';
 import type { History } from '../history';
 import { isCommandComplete } from '../parse';
 import type { TabCompleter } from '../tab_completer';
@@ -152,7 +151,7 @@ export class LineEditor {
         this._host.output(
           ansi.eraseEndLine +
             ansi.eraseStartLine +
-            `\r${expandString(this._host.environment().getPrompt(1), this._host.environment())}${this._commandLine.text}`
+            `\r${this._host.environment().getPrompt(1)}${this._commandLine.text}`
         );
         break;
       }

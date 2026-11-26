@@ -1,4 +1,5 @@
 import { ansi } from './ansi';
+import { expandPrompt } from './expand';
 
 export const DEFAULT_USER = 'web_user';
 
@@ -27,12 +28,10 @@ export class Environment extends Map<string, string> {
     if (browsingContextId) {
       env.set('COCKLE_BROWSING_CONTEXT_ID', browsingContextId);
     }
+    env.set('PS1', '\\w$ ');
     if (color) {
-      env.set('PS1', ansi.styleGreen + 'js-shell:' + ansi.styleReset + ' ');
       env.set('TERM', 'xterm-256color');
       env.set('TERMINFO', '/usr/local/share/terminfo'); // Needed for nano
-    } else {
-      env.set('PS1', 'js-shell: ');
     }
 
     // Set env vars for user. These are set by default to use 'web_user' in wasm modules. We only
@@ -64,12 +63,30 @@ export class Environment extends Map<string, string> {
     return isNaN(number) ? null : number;
   }
 
+  /**
+   * Return the prompt to display, with prompt escapes and environment variables expanded.
+   */
   getPrompt(index: number): string {
     switch (index) {
-      case 1:
-        return this.get('PS1') ?? '$ ';
+      case 1: {
+        const prompt = expandPrompt(this.get('PS1') ?? '$ ', this);
+        if (!this.color) {
+          return prompt;
+        }
+        // Temporary: PS1 is colored here rather than within PS1 itself, up to the last '$' if
+        // there is one.
+        const darkMode = this.get('COCKLE_DARK_MODE') === '1';
+        const dollarIndex = prompt.lastIndexOf('$');
+        const end = dollarIndex < 0 ? prompt.length : dollarIndex;
+        return (
+          (darkMode ? ansi.styleBoldGreen : ansi.styleGreen) +
+          prompt.slice(0, end) +
+          ansi.styleReset +
+          prompt.slice(end)
+        );
+      }
       case 2:
-        return this.get('PS2') ?? '> ';
+        return expandPrompt(this.get('PS2') ?? '> ', this);
     }
     throw new Error(`Unknown prompt index: ${index}`);
   }

@@ -594,7 +594,7 @@ test.describe('Shell', () => {
     test('should discard the current input line', async ({ page }) => {
       const output = await shellInputsSimpleN(page, [['abc'], ['\x03'], ['echo ok\r']]);
       expect(output[1]).toMatch('^C');
-      expect(output[1]).toMatch('js-shell: ');
+      expect(output[1]).toMatch('/drive$ ');
       expect(output[2]).toMatch('\r\nok\r\n');
     });
 
@@ -606,7 +606,7 @@ test.describe('Shell', () => {
       ]);
       expect(output[0]).toMatch('> ');
       expect(output[1]).toMatch('^C');
-      expect(output[1]).toMatch('js-shell: ');
+      expect(output[1]).toMatch('/drive$ ');
       expect(output[2]).toMatch('\r\ndone\r\n');
     });
   });
@@ -764,7 +764,7 @@ test.describe('Shell', () => {
         ['echo AB', leftArrow, ctrlL],
         ['C', enter]
       ]);
-      expect(output[0]).toEqual('echo AB\x1b[1D\x1b[2J\x1b[3J\x1b[Hjs-shell: echo AB\x1b[1D');
+      expect(output[0]).toEqual('echo AB\x1b[1D\x1b[2J\x1b[3J\x1b[H/drive$ echo AB\x1b[1D');
       expect(output[1]).toMatch(/\r\nACB\r\n/);
     });
 

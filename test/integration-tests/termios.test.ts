@@ -10,7 +10,7 @@ interface IFlagChanges {
 }
 
 // Output when check_termios finishes, followed by the next prompt.
-const END = 'End of input\r\njs-shell: ';
+const END = 'End of input\r\n/drive$ ';
 
 /**
  * Run check_termios with the specified changes to the default termios flags, type the inputs
@@ -119,7 +119,7 @@ const lineDisciplineCases: ILineDisciplineCase[] = [
     name: 'map lower case to upper case if OutputFlag.OLCUC',
     changes: { oflag: { set: ['OLCUC'] } },
     inputs: ['a', 'b', enter],
-    expected: 'AB\r\nAB\r\nEND OF INPUT\r\njs-shell: '
+    expected: 'AB\r\nAB\r\nEND OF INPUT\r\n/drive$ '
   },
   {
     name: 'pass Ctrl-C to command if not LocalFlag.ISIG',
@@ -237,19 +237,19 @@ test.describe('termios', () => {
             },
             { stdinOption, cmdText }
           );
-          expect(output).toBe(`${cmdText}\r\nabc\r\njs-shell: `);
+          expect(output).toBe(`${cmdText}\r\nabc\r\n/drive$ `);
         });
       });
     });
 
     test.describe(`signals via ${stdinOption}`, () => {
       [
-        { cmdText: 'cat', inputs: ['a', 'b', ctrlC], expected: 'cat\r\nab^C\r\njs-shell: ' },
-        { cmdText: 'wc', inputs: ['a', enter, ctrlC], expected: 'wc\r\na\r\n^C\r\njs-shell: ' },
+        { cmdText: 'cat', inputs: ['a', 'b', ctrlC], expected: 'cat\r\nab^C\r\n/drive$ ' },
+        { cmdText: 'wc', inputs: ['a', enter, ctrlC], expected: 'wc\r\na\r\n^C\r\n/drive$ ' },
         {
           cmdText: 'grep a',
           inputs: ['b', enter, ctrlC],
-          expected: 'grep a\r\nb\r\n^C\r\njs-shell: '
+          expected: 'grep a\r\nb\r\n^C\r\n/drive$ '
         }
       ].forEach(({ cmdText, inputs, expected }) => {
         test(`should interrupt ${cmdText} on Ctrl-C`, async ({ page, supportsSAB }) => {
@@ -288,7 +288,7 @@ test.describe('termios', () => {
             },
             { stdinOption, cmdText, inputs: ['a', 'b', ctrlC] }
           );
-          expect(output).toBe(`${cmdText}\r\n${expected}\r\njs-shell: `);
+          expect(output).toBe(`${cmdText}\r\n${expected}\r\n/drive$ `);
         });
       });
 
@@ -310,7 +310,7 @@ test.describe('termios', () => {
             },
             { stdinOption, inputs: ['a', key, enter, ctrlD] }
           );
-          expect(output).toEqual([0, `cat\r\na${echo}\r\na${key}\r\njs-shell: `]);
+          expect(output).toEqual([0, `cat\r\na${echo}\r\na${key}\r\n/drive$ `]);
         });
       });
 

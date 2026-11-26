@@ -13,7 +13,6 @@ import { CommandModuleLoader, CommandRegistry } from '../commands';
 import type { IRunContext } from '../context';
 import type { IShellImpl } from '../defs_internal';
 import { Environment } from '../environment';
-import { expandString } from '../expand';
 import type { IFileSystem } from '../file_system';
 import { History } from '../history';
 import type { IOutput } from '../io';
@@ -304,8 +303,8 @@ export class ShellImpl implements IShellImpl {
     if (this._theme.isPending()) {
       await this._theme.resolve();
     }
-    // Get prompt just before using as a theme change above can change the PS1 prompt colors.
-    const prompt = expandString(this.environment.getPrompt(promptIndex), this.environment);
+    // Get prompt just before using as a theme change above can change the prompt colors.
+    const prompt = this.environment.getPrompt(promptIndex);
     this._runContext.workerIO.write(prompt, true);
   }
 

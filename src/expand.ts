@@ -194,6 +194,34 @@ export function expandString(value: string, environment: ReadonlyMap<string, str
 }
 
 /**
+ * Expand a prompt string such as PS1. Supports the bash prompt escapes `\w` for the current
+ * directory with a leading $HOME replaced by `~`, and `\W` for the last component of that,
+ * followed by expansion of environment variable references.
+ * @param value The prompt string.
+ * @param environment The environment mapping variable names to their values.
+ * @returns The prompt to display.
+ */
+export function expandPrompt(value: string, environment: ReadonlyMap<string, string>): string {
+  const decoded = value.replace(/\\([\\wW])/g, (match: string, char: string) => {
+    if (char === '\\') {
+      // An escaped backslash, so a following 'w' or 'W' is not a prompt escape.
+      return match;
+    }
+    const home = environment.get('HOME');
+    let dir = environment.get('PWD') ?? '';
+    if (home && (dir === home || dir.startsWith(home + '/'))) {
+      dir = '~' + dir.slice(home.length);
+    }
+    if (char === 'W' && dir !== '/') {
+      dir = dir.slice(dir.lastIndexOf('/') + 1);
+    }
+    // Escape so that a '$' or '\' in the directory name is not expanded below.
+    return dir.replace(/[\\$]/g, '\\$&');
+  });
+  return expandString(decoded, environment);
+}
+
+/**
  * Expand environment variable references in a token, ignoring references within its
  * single-quoted sections.
  * @param token The token containing the potential variable references.

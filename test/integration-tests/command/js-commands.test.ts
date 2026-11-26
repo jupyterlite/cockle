@@ -313,7 +313,7 @@ cmdName.forEach(cmdName => {
             },
             { stdinOption, cmdText: `${cmdName} ${args}`, inputs }
           );
-          expect(output).toEqual([0, `${cmdName} ${args}\r\n${expected}js-shell: `]);
+          expect(output).toEqual([0, `${cmdName} ${args}\r\n${expected}/drive$ `]);
         });
       });
     });

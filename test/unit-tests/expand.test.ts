@@ -1,6 +1,7 @@
 import {
   expandFields,
   expandHeredoc,
+  expandPrompt,
   expandString,
   expandToken,
   splitToken,
@@ -82,6 +83,49 @@ describe('expandString', () => {
     const env2 = new Map(environment);
     env2.set('A', '$B');
     expect(expandString('$A', env2)).toEqual('$B');
+  });
+});
+
+describe('expandPrompt', () => {
+  function prompt(value: string, pwd: string): string {
+    const environment = getEnvironment();
+    environment.set('PWD', pwd);
+    return expandPrompt(value, environment);
+  }
+
+  test('should expand \\w to the current directory', () => {
+    expect(prompt('\\w$ ', '/drive/dirA')).toEqual('/drive/dirA$ ');
+  });
+
+  test('should expand \\W to the last component of the current directory', () => {
+    expect(prompt('\\W$ ', '/drive/dirA')).toEqual('dirA$ ');
+  });
+
+  test('should replace a leading $HOME with ~', () => {
+    expect(prompt('\\w$ ', '/home/cockle')).toEqual('~$ ');
+    expect(prompt('\\W$ ', '/home/cockle')).toEqual('~$ ');
+    expect(prompt('\\w$ ', '/home/cockle/dirA')).toEqual('~/dirA$ ');
+    expect(prompt('\\W$ ', '/home/cockle/dirA')).toEqual('dirA$ ');
+    expect(prompt('\\w$ ', '/home/cockle2')).toEqual('/home/cockle2$ ');
+  });
+
+  test('should expand the root directory to /', () => {
+    expect(prompt('\\w$ ', '/')).toEqual('/$ ');
+    expect(prompt('\\W$ ', '/')).toEqual('/$ ');
+  });
+
+  test('should not expand an escaped backslash followed by w or W', () => {
+    expect(prompt('\\\\w$ ', '/drive')).toEqual('\\w$ ');
+    expect(prompt('\\\\W$ ', '/drive')).toEqual('\\W$ ');
+  });
+
+  test('should not expand a $ or backslash in the directory name', () => {
+    expect(prompt('\\w$ ', '/drive/$NAME')).toEqual('/drive/$NAME$ ');
+    expect(prompt('\\W$ ', '/drive/a\\b')).toEqual('a\\b$ ');
+  });
+
+  test('should expand environment variable references', () => {
+    expect(prompt('$NAME:\\W$ ', '/drive')).toEqual('world:drive$ ');
   });
 });
 

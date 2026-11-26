@@ -99,12 +99,9 @@ export class ThemeManager {
 
     this._darkMode = darkMode;
 
-    // Set prompt color.
+    // Set stderr color.
     if (this._options.color) {
       this._host.stderr.prefix = darkMode ? ansi.styleBrightRed : ansi.styleRed;
-
-      const promptColor = darkMode ? ansi.styleBoldGreen : ansi.styleGreen;
-      this._host.environment().set('PS1', promptColor + 'js-shell:' + ansi.styleReset + ' ');
     }
 
     // Set/delete environment variable.
