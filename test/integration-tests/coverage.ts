@@ -2,6 +2,7 @@ import type { BrowserContext, CDPSession, Page } from '@playwright/test';
 import { test as base } from '@playwright/test';
 import type { CoverageReportOptions } from 'monocart-coverage-reports';
 import MCR from 'monocart-coverage-reports';
+import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import type { TestOptions } from './utils';
@@ -41,6 +42,24 @@ export async function transformSource(entry: ITransformerEntry): Promise<void> {
   entry.fake = false;
 }
 
+/** A type-only file transpiles to just `export {};`, which would count as one uncovered line. */
+function isTypeOnly(filePath: string): boolean {
+  const { outputText } = ts.transpileModule(fs.readFileSync(filePath, 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.ESNext, removeComments: true }
+  });
+  return outputText.trim() === 'export {};';
+}
+
+/** The service worker is served as a hashed asset without its source map, so supply tsc's. */
+function serviceWorkerSourceMap(): object {
+  const sourceMap = JSON.parse(
+    fs.readFileSync(path.join(ROOT, 'lib', 'service_worker.js.map'), 'utf8')
+  );
+  sourceMap.sources = [path.join(SRC_DIR, 'service_worker.ts')];
+  sourceMap.sourcesContent = [fs.readFileSync(path.join(SRC_DIR, 'service_worker.ts'), 'utf8')];
+  return sourceMap;
+}
+
 /** Options for the browser (V8) report written to <repo>/.coverage/integration. */
 export const coverageOptions: CoverageReportOptions = {
   name: 'cockle integration coverage',
@@ -58,11 +77,15 @@ export const coverageOptions: CoverageReportOptions = {
     // subdirectories ('/vim/vim.js', '/util-js/js-tab.js') and hold no src code.
     return new URL(entry.url).pathname.lastIndexOf('/') === 0;
   },
-  sourceFilter: sourcePath => sourcePath.startsWith('src/') && sourcePath !== 'src/version.ts',
+  sourceFilter: sourcePath =>
+    sourcePath.startsWith('src/') &&
+    sourcePath !== 'src/version.ts' &&
+    !sourcePath.endsWith('/index.ts'),
   sourcePath: toSourcePath,
   all: {
     dir: [SRC_DIR],
-    filter: { '**/*.d.ts': false, '**/tools/**': false, '**/version.ts': false, '**/*': true },
+    filter: filePath =>
+      !/\.d\.ts$|\/tools\/|\/version\.ts$/.test(filePath) && !isTypeOnly(filePath),
     transformer: transformSource
   }
 };
@@ -72,6 +95,7 @@ interface ICoverageEntry {
   type: 'js';
   source: string;
   functions: unknown[];
+  sourceMap?: object;
 }
 
 interface ICoverage {
@@ -133,7 +157,8 @@ export async function startCoverage(context: BrowserContext, page: Page): Promis
     return reply.result;
   };
 
-  const workers: Array<() => Promise<ICoverageEntry[]>> = [];
+  const entries: ICoverageEntry[] = [];
+  const workers: Array<() => Promise<void>> = [];
   cdp.on('Target.attachedToTarget', async event => {
     const { sessionId, targetInfo } = event;
     if (targetInfo.type !== 'worker' && targetInfo.type !== 'service_worker') {
@@ -142,11 +167,11 @@ export async function startCoverage(context: BrowserContext, page: Page): Promis
     await send(sessionId, 'Profiler.enable');
     await send(sessionId, 'Debugger.enable');
     await send(sessionId, 'Profiler.startPreciseCoverage', { callCount: true, detailed: true });
+    const sourceMap = targetInfo.type === 'service_worker' ? serviceWorkerSourceMap() : undefined;
     workers.push(async () => {
       const coverage = (await send(sessionId, 'Profiler.takePreciseCoverage')) as {
         result: ICdpScriptCoverage[];
       };
-      const entries: ICoverageEntry[] = [];
       for (const script of coverage.result) {
         const source = (await send(sessionId, 'Debugger.getScriptSource', {
           scriptId: script.scriptId
@@ -155,11 +180,35 @@ export async function startCoverage(context: BrowserContext, page: Page): Promis
           url: script.url,
           type: 'js',
           source: source.scriptSource,
-          functions: script.functions
+          functions: script.functions,
+          sourceMap
         });
       }
-      return entries;
     });
+  });
+
+  const takeWorkers = async (): Promise<void> => {
+    for (const take of workers) {
+      try {
+        await take();
+      } catch {
+        // A worker that has already terminated cannot be queried any more.
+      }
+    }
+  };
+
+  // Worker.terminate() discards the worker's coverage, so block it on a dialog whilst the
+  // coverage collected so far is taken.
+  page.on('dialog', async dialog => {
+    await takeWorkers();
+    await dialog.dismiss();
+  });
+  await page.evaluate(() => {
+    const terminate = Worker.prototype.terminate;
+    Worker.prototype.terminate = function () {
+      alert();
+      terminate.call(this);
+    };
   });
 
   await cdp.send('Target.setAutoAttach', {
@@ -171,15 +220,7 @@ export async function startCoverage(context: BrowserContext, page: Page): Promis
 
   return {
     stop: async () => {
-      const entries: ICoverageEntry[] = [];
-      for (const take of workers) {
-        try {
-          entries.push(...(await take()));
-        } catch {
-          // A worker that detached before this call cannot be queried any more; the page bundle
-          // captured below still contributes coverage.
-        }
-      }
+      await takeWorkers();
       for (const entry of await page.coverage.stopJSCoverage()) {
         entries.push({
           url: entry.url,
