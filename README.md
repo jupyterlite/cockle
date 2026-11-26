@@ -38,6 +38,7 @@ name as the package unless otherwise specified:
 - `less`
 - `lua`
 - `nano`
+- `ripgrep`: `rg` command
 - `sed`
 - `tree`
 - `vim`

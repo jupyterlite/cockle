@@ -1,5 +1,6 @@
 /**
- * Information relating to file system shared between `cockle_fs` and WebAssembly commands.
+ * Information relating to the Emscripten file system shared between `cockle_fs` and WebAssembly
+ * commands. Also includes some Emscripten constants related to file system.
  */
 export namespace SharedFS {
   /**
@@ -31,4 +32,11 @@ export namespace SharedFS {
    * Top-level directory permissions.
    */
   export const TOP_LEVEL_DIRECTORY_PERMISSIONS = 0o770;
+
+  /**
+   * File type bits of a file mode, and the file type of a FIFO (pipe). These values are POSIX
+   * convention and match those used by Emscripten.
+   */
+  export const S_IFMT = 0o170000;
+  export const S_IFIFO = 0o010000;
 }

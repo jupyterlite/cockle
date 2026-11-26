@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from '../utils';
+import { shellLineSimple, test } from '../utils';
 
 test.describe('tee command', () => {
   test('should write to stdout and file', async ({ page }) => {
@@ -35,6 +35,11 @@ test.describe('tee command', () => {
     expect(output[2]).toMatch(
       'cat file1\r\nContents of the fileSome other file\r\nSecond line\r\n'
     );
+  });
+
+  test('should write to /dev/stdout when stdout is a pipe', async ({ page }) => {
+    const output = await shellLineSimple(page, 'echo abc | tee /dev/stdout | cat');
+    expect(output).toMatch('echo abc | tee /dev/stdout | cat\r\nabc\r\nabc\r\n');
   });
 
   test('should error on unknown argument', async ({ page }) => {

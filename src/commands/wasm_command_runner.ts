@@ -257,7 +257,38 @@ export class WasmCommandRunner extends DynamicallyLoadedCommandRunner {
             context.posixSignalCallbacks.set(PosixSignal.SIGINT, callback);
             context.posixSignalCallbacks.set(PosixSignal.SIGWINCH, callback);
             handlesSignals = true;
-            errnoError = FS.ErrnoError;
+            errnoError = FS?.ErrnoError;
+          }
+
+          if (FS !== undefined) {
+            // Create the standard streams, which Emscripten would otherwise do just after preRun.
+            // It creates a standard stream that is not a terminal from its input or output handler
+            // as a character device. Report it as a FIFO instead, as commands such as rg use fstat
+            // to check if stdin is a pipe or file. Only the mode reported by getattr is changed,
+            // the node remains a character device so that it can be opened with O_TRUNC. A redirect
+            // from a file is also reported as a FIFO as it is read sequentially and cannot be
+            // seeked.
+            FS.init();
+            const streams: [string, IInput | IOutput][] = [
+              ['/dev/stdin', stdin],
+              ['/dev/stdout', stdout],
+              ['/dev/stderr', stderr]
+            ];
+            for (const [path, stream] of streams) {
+              if (!stream.isTerminal()) {
+                const { node } = FS.lookupPath(path);
+                const { getattr } = node.node_ops;
+                // Copy node_ops as it is shared by all character device nodes.
+                node.node_ops = {
+                  ...node.node_ops,
+                  getattr: (node: any) => {
+                    const attr = getattr(node);
+                    attr.mode = (attr.mode & ~SharedFS.S_IFMT) | SharedFS.S_IFIFO;
+                    return attr;
+                  }
+                };
+              }
+            }
           }
 
           commandStateChangedCallback({ commandId, state: 'running' });
