@@ -1,6 +1,7 @@
 import type { IShell } from '@jupyterlite/cockle';
 import { Shell, ShellManager } from '@jupyterlite/cockle';
 import { FitAddon } from '@xterm/addon-fit';
+import { Unicode11Addon } from '@xterm/addon-unicode11';
 import { Terminal } from '@xterm/xterm';
 import type { IDemo } from './defs';
 import { externalCommand } from '../../sample-commands/external/external_command';
@@ -45,6 +46,7 @@ export class Demo {
     this._targetDiv = options.targetDiv;
 
     const termOptions = {
+      allowProposedApi: true, // Needed for unicode support.
       fontSize: 14,
       theme: {
         foreground: 'white',
@@ -56,6 +58,10 @@ export class Demo {
 
     this._fitAddon = new FitAddon();
     this._term.loadAddon(this._fitAddon);
+
+    // Use unicode 11 character widths so that emojis are 2 columns wide.
+    this._term.loadAddon(new Unicode11Addon());
+    this._term.unicode.activeVersion = '11';
 
     const { baseUrl, browsingContextId, shellManager } = options;
 

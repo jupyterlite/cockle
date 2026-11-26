@@ -56,7 +56,7 @@ var Module = (function (exports) {
             }
             else if (i % 10 === 9) {
                 // Wide characters.
-                pager.write(`${i}: 中文字🚀\n`);
+                pager.write(`${i}: 中文字🚀🚀\n`);
             }
             else {
                 pager.write(`${i}: ` + ansi.styleGreen + 'line' + ansi.styleReset + '\n');

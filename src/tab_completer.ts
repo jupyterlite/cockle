@@ -1,5 +1,6 @@
 import { ansi } from './ansi';
 import type { IEnableBufferedStdinCallback } from './callback_internal';
+import { stringWidth } from './char_width';
 import type { ICommandLine } from './command_line';
 import type { IRunContext } from './context';
 import { CommandNode, parse } from './parse';
@@ -124,7 +125,7 @@ export class TabCompleter {
     commandLine.text = text.slice(0, wordEnd) + extra + afterWord;
     commandLine.cursorIndex = wordEnd + extra.length;
     this.context.workerIO.write(
-      text.slice(cursorIndex, wordEnd) + extra + afterWord + ansi.cursorLeft(afterWord.length)
+      text.slice(cursorIndex, wordEnd) + extra + afterWord + ansi.cursorLeft(stringWidth(afterWord))
     );
     return commandLine;
   }
@@ -223,7 +224,7 @@ export class TabCompleter {
 
     // Rewrite prompt and command line.
     this.context.workerIO.write(
-      output + environment.getPrompt(1) + commandLine.text + ansi.cursorLeft(suffix.length)
+      output + environment.getPrompt(1) + commandLine.text + ansi.cursorLeft(stringWidth(suffix))
     );
   }
 

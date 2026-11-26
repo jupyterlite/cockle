@@ -759,6 +759,37 @@ test.describe('Shell', () => {
       expect(output[4]).toMatch(/\r\nxyz\r\n/);
     });
 
+    test('should edit an emoji as a whole', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [
+        ['echo 🚀', enter],
+        ['echo 🚀🚀', backspace, enter],
+        ['echo A🚀B', leftArrow, leftArrow, 'Z', enter],
+        ['echo A🚀B', leftArrow, leftArrow, delete_, enter],
+        ['echo A🚀B', leftArrow, leftArrow, rightArrow, 'Z', enter],
+        ['cho 🚀B', leftArrow, home, 'e', end, 'C', enter],
+        ['echo ❤️X', leftArrow, backspace, enter]
+      ]);
+      expect(output[0]).toMatch(/\r\n🚀\r\n/);
+      expect(output[1]).toMatch(/\r\n🚀\r\n/);
+      expect(output[2]).toMatch(/\r\nAZ🚀B\r\n/);
+      expect(output[3]).toMatch(/\r\nAB\r\n/);
+      expect(output[4]).toMatch(/\r\nA🚀ZB\r\n/);
+      expect(output[5]).toMatch(/\r\n🚀BC\r\n/);
+      expect(output[6]).toMatch(/\r\nX\r\n/);
+    });
+
+    test('should move cursor by the width of an emoji', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [
+        ['echo 🚀'],
+        [leftArrow],
+        [rightArrow],
+        [backspace]
+      ]);
+      expect(output[1]).toEqual('\x1b[2D');
+      expect(output[2]).toEqual('\x1b[2C');
+      expect(output[3]).toEqual('\x1b[2D\x1b[K');
+    });
+
     test('should clear screen and redraw command line on Ctrl-L', async ({ page }) => {
       const output = await shellInputsSimpleN(page, [
         ['echo AB', leftArrow, ctrlL],

@@ -94,7 +94,7 @@ var Module = (function (exports) {
         Termios_1.Flags = Flags;
         class Termios {
             constructor() {
-                this.setDefaultShell();
+                this.setDefault();
             }
             get() {
                 return this._flags;
@@ -123,13 +123,10 @@ var Module = (function (exports) {
                 this._flags = flags;
                 this.log('Termios set');
             }
-            setDefaultShell() {
-                this.setDefaultWasm();
-            }
             /**
              * Set termios settings to the default used in WebAssembly commands.
              */
-            setDefaultWasm() {
+            setDefault() {
                 // This is taken from the default in emscripten-compiled code.
                 const flags = this._flags;
                 flags.c_iflag = InputFlag.IUTF8 | InputFlag.IMAXBEL | InputFlag.IXON | InputFlag.ICRNL; // 25856 = 0x6500

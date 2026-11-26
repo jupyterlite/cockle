@@ -1,5 +1,6 @@
 import type { Aliases } from '../aliases';
 import { ansi } from '../ansi';
+import { nextCharIndex, prevCharIndex, stringWidth } from '../char_width';
 import type { ICommandLine } from '../command_line';
 import type { Environment } from '../environment';
 import type { History } from '../history';
@@ -29,7 +30,9 @@ export class LineEditor {
     // Input from a paste operation will be a single, potentially very large, string.
     const n = chars.length;
     for (let index = 0; index < n; ++index) {
-      const char = chars[index];
+      // A character may be two UTF-16 code units, such as an emoji.
+      const char = String.fromCodePoint(chars.codePointAt(index)!);
+      index += char.length - 1;
       const code = char.charCodeAt(0);
       switch (code) {
         case 10:
@@ -56,11 +59,15 @@ export class LineEditor {
         case 127: // Backspace
           if (this._commandLine.cursorIndex > 0) {
             const { cursorIndex, text } = this._commandLine;
+            const prevIndex = prevCharIndex(text, cursorIndex);
             const suffix = text.slice(cursorIndex);
-            this._commandLine.text = text.slice(0, cursorIndex - 1) + suffix;
-            this._commandLine.cursorIndex--;
+            this._commandLine.text = text.slice(0, prevIndex) + suffix;
+            this._commandLine.cursorIndex = prevIndex;
             this._host.output(
-              ansi.cursorLeft(1) + suffix + ansi.eraseEndLine + ansi.cursorLeft(suffix.length)
+              ansi.cursorLeft(stringWidth(text.slice(prevIndex, cursorIndex))) +
+                suffix +
+                ansi.eraseEndLine +
+                ansi.cursorLeft(stringWidth(suffix))
             );
           }
           break;
@@ -88,7 +95,7 @@ export class LineEditor {
           const { cursorIndex, text } = this._commandLine;
           this._host.output(ansi.eraseScreen + ansi.eraseSavedLines + ansi.cursorHome);
           await this._host.outputPrompt();
-          this._host.output(text + ansi.cursorLeft(text.length - cursorIndex));
+          this._host.output(text + ansi.cursorLeft(stringWidth(text.slice(cursorIndex))));
           break;
         }
         default:
@@ -106,9 +113,11 @@ export class LineEditor {
             const { cursorIndex, text } = this._commandLine;
             const suffix = text.slice(cursorIndex);
             this._commandLine.text = text.slice(0, cursorIndex) + char + suffix;
-            this._host.output(ansi.eraseEndLine + char + suffix + ansi.cursorLeft(suffix.length));
+            this._host.output(
+              ansi.eraseEndLine + char + suffix + ansi.cursorLeft(stringWidth(suffix))
+            );
           }
-          this._commandLine.cursorIndex++;
+          this._commandLine.cursorIndex += char.length;
           break;
       }
     }
@@ -158,38 +167,43 @@ export class LineEditor {
       case 'D': // Left arrow
       case '1D':
         if (this._commandLine.cursorIndex > 0) {
-          this._commandLine.cursorIndex--;
-          this._host.output(ansi.cursorLeft());
+          const { cursorIndex, text } = this._commandLine;
+          const prevIndex = prevCharIndex(text, cursorIndex);
+          this._host.output(ansi.cursorLeft(stringWidth(text.slice(prevIndex, cursorIndex))));
+          this._commandLine.cursorIndex = prevIndex;
         }
         break;
       case 'C': // Right arrow
       case '1C':
         if (this._commandLine.cursorIndex < this._commandLine.text.length) {
-          this._commandLine.cursorIndex++;
-          this._host.output(ansi.cursorRight());
+          const { cursorIndex, text } = this._commandLine;
+          const nextIndex = nextCharIndex(text, cursorIndex);
+          this._host.output(ansi.cursorRight(stringWidth(text.slice(cursorIndex, nextIndex))));
+          this._commandLine.cursorIndex = nextIndex;
         }
         break;
       case '3~': // Delete
         if (this._commandLine.cursorIndex < this._commandLine.text.length) {
           const { cursorIndex, text } = this._commandLine;
-          const suffix = text.slice(cursorIndex + 1);
+          const suffix = text.slice(nextCharIndex(text, cursorIndex));
           this._commandLine.text = text.slice(0, cursorIndex) + suffix;
-          this._host.output(ansi.eraseEndLine + suffix + ansi.cursorLeft(suffix.length));
+          this._host.output(ansi.eraseEndLine + suffix + ansi.cursorLeft(stringWidth(suffix)));
         }
         break;
       case 'H': // Home
       case '1;2H':
         if (this._commandLine.cursorIndex > 0) {
-          this._host.output(ansi.cursorLeft(this._commandLine.cursorIndex));
+          const { cursorIndex, text } = this._commandLine;
+          this._host.output(ansi.cursorLeft(stringWidth(text.slice(0, cursorIndex))));
           this._commandLine.cursorIndex = 0;
         }
         break;
       case 'F': // End
       case '1;2F': {
-        const { length } = this._commandLine.text;
-        if (this._commandLine.cursorIndex < length) {
-          this._host.output(ansi.cursorRight(length - this._commandLine.cursorIndex));
-          this._commandLine.cursorIndex = length;
+        const { cursorIndex, text } = this._commandLine;
+        if (cursorIndex < text.length) {
+          this._host.output(ansi.cursorRight(stringWidth(text.slice(cursorIndex))));
+          this._commandLine.cursorIndex = text.length;
         }
         break;
       }
@@ -198,7 +212,7 @@ export class LineEditor {
         if (this._commandLine.cursorIndex > 0) {
           const { cursorIndex, text } = this._commandLine;
           const index = text.slice(0, cursorIndex).trimEnd().lastIndexOf(' ') + 1;
-          this._host.output(ansi.cursorLeft(cursorIndex - index));
+          this._host.output(ansi.cursorLeft(stringWidth(text.slice(index, cursorIndex))));
           this._commandLine.cursorIndex = index;
         }
         break;
@@ -211,7 +225,7 @@ export class LineEditor {
           const trimmed = end.trimStart();
           const i = trimmed.indexOf(' ');
           const index = i < 0 ? length : cursorIndex + end.length - trimmed.length + i;
-          this._host.output(ansi.cursorRight(index - cursorIndex));
+          this._host.output(ansi.cursorRight(stringWidth(text.slice(cursorIndex, index))));
           this._commandLine.cursorIndex = index;
         }
         break;

@@ -1,3 +1,5 @@
+import { isHighSurrogate, isLowSurrogate } from './utils';
+
 // Combining marks and format characters such as zero width joiner, which take up no columns.
 const zeroWidthRegex = /^[\p{Mn}\p{Me}\p{Cf}]$/u;
 
@@ -99,4 +101,53 @@ export function charWidth(codePoint: number): number {
     }
   }
   return 1;
+}
+
+/**
+ * Index of the end of the character starting at index in text. A character is a code point
+ * followed by any zero-width code points such as combining marks, so that it is edited as a
+ * whole.
+ */
+export function nextCharIndex(text: string, index: number): number {
+  let first = true;
+  while (index < text.length) {
+    const codePoint = text.codePointAt(index)!;
+    if (!first && charWidth(codePoint) > 0) {
+      break;
+    }
+    index += codePoint > 0xffff ? 2 : 1;
+    first = false;
+  }
+  return index;
+}
+
+/**
+ * Index of the start of the character before index in text.
+ */
+export function prevCharIndex(text: string, index: number): number {
+  while (index > 0) {
+    index--;
+    if (
+      index > 0 &&
+      isLowSurrogate(text.charCodeAt(index)) &&
+      isHighSurrogate(text.charCodeAt(index - 1))
+    ) {
+      index--;
+    }
+    if (charWidth(text.codePointAt(index)!) > 0) {
+      break;
+    }
+  }
+  return index;
+}
+
+/**
+ * Number of columns taken up by a string of printable characters.
+ */
+export function stringWidth(text: string): number {
+  let width = 0;
+  for (const char of text) {
+    width += charWidth(char.codePointAt(0)!);
+  }
+  return width;
 }
