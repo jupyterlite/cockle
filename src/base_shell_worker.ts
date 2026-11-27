@@ -156,7 +156,7 @@ export abstract class BaseShellWorker implements IShellWorker {
     downloadModuleCallback: IDownloadModuleCallback,
     enableBufferedStdinCallback: IEnableBufferedStdinCallback,
     externalInputReturn: IExternalInputReturnCallback,
-    outputCallback: IWorkerOutputCallback,
+    outputCallback: IWorkerOutputCallback | undefined,
     setMainIOCallback: ISetMainIOCallback,
     terminateCallback: ITerminateCallback,
     wasmUrlQueryParamsCallback?: IQueryParamsCallback
@@ -168,7 +168,8 @@ export abstract class BaseShellWorker implements IShellWorker {
       downloadModuleCallback,
       enableBufferedStdinCallback,
       externalInputReturn,
-      outputCallback,
+      outputCallback:
+        outputCallback ?? ((text, options) => self.postMessage({ output: { text, options } })),
       setMainIOCallback,
       terminateCallback,
       wasmUrlQueryParamsCallback

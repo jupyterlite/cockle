@@ -87,6 +87,15 @@ export abstract class BaseShell implements IShell {
     } else {
       const remote = wrap(worker) as IComlinkShellWorker;
 
+      // Output is sent as messages on the worker's own channel rather than via a proxy callback,
+      // so that it is received in order with respect to the replies to calls such as input().
+      worker.addEventListener('message', (event: MessageEvent) => {
+        const output = event.data?.output;
+        if (output !== undefined) {
+          this._workerOutput(output.text, output.options);
+        }
+      });
+
       remote.registerCallbacks(
         proxy(this._callExternalCommand.bind(this)),
         proxy(this._callExternalTabComplete.bind(this)),
@@ -94,7 +103,7 @@ export abstract class BaseShell implements IShell {
         proxy(this._downloadWasmModuleCallback.bind(this)),
         proxy(this._enableBufferedStdinCallback.bind(this)),
         proxy(this._externalInputReturn.bind(this)),
-        proxy(this._workerOutput.bind(this)),
+        undefined, // outputCallback
         proxy(this._setMainIO.bind(this)),
         proxy(this.dispose.bind(this)), // terminateCallback
         options.wasmUrlQueryParams !== undefined ? proxy(options.wasmUrlQueryParams) : undefined

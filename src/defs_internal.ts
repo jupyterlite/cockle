@@ -70,7 +70,7 @@ export interface IShellWorker extends IShellCommon {
     downloadModuleCallback: IDownloadModuleCallback,
     enableBufferedStdinCallback: IEnableBufferedStdinCallback,
     externalInputReturn: IExternalInputReturnCallback,
-    outputCallback: IWorkerOutputCallback,
+    outputCallback: IWorkerOutputCallback | undefined,
     setMainIOCallback: ISetMainIOCallback,
     terminateCallback: ITerminateCallback,
     wasmUrlQueryParamsCallback?: IQueryParamsCallback
