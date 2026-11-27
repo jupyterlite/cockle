@@ -52,14 +52,17 @@ jobs:
         env:
           HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
         run: |
-          read -r run_id status < <(gh run list --workflow test.yml --commit "$HEAD_SHA" \
-            --limit 1 --json databaseId,status --jq '.[] | "\(.databaseId) \(.status)"') || true
+          run_id=$(gh run list --workflow test.yml --commit "$HEAD_SHA" \
+            --limit 1 --json databaseId --jq '.[].databaseId')
           if [ -z "$run_id" ]; then
             echo "No \`Test\` workflow run found for commit $HEAD_SHA." > "$RUNNER_TEMP/message.md"
             exit 1
           fi
+          # Only the visual tests job needs to have finished, not the whole workflow run.
+          status=$(gh run view "$run_id" --json jobs \
+            --jq '.jobs[] | select(.name == "Visual tests") | .status')
           if [ "$status" != "completed" ]; then
-            echo "The \`Test\` workflow run for commit $HEAD_SHA has not finished yet, please try again when it has." > "$RUNNER_TEMP/message.md"
+            echo "The \`Visual tests\` job for commit $HEAD_SHA has not finished yet, please try again when it has." > "$RUNNER_TEMP/message.md"
             exit 1
           fi
           if ! gh run download "$run_id" --name cockle-visual-tests --dir "$RUNNER_TEMP/artifact"; then
