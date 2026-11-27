@@ -1,11 +1,11 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, shellLineSimpleN, test } from './utils';
+import { describeCoiAndNonCoi, shellLineSimple, shellLineSimpleN, test } from './utils';
 
 // Directories that do and do not persist between wasm commands.
 const DIRECTORIES_THAT_PERSIST = ['/drive', '/home', '/include', '/lib', '/share', '/tmp'];
 const DIRECTORIES_THAT_DONT_PERSIST = ['/dev', '/proc'];
 
-test.describe('Shared filesystem', () => {
+describeCoiAndNonCoi('Shared filesystem', () => {
   test.describe('file persistence', () => {
     DIRECTORIES_THAT_PERSIST.forEach(dir => {
       test(`should persist file in ${dir}`, async ({ page }) => {

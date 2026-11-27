@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { test } from '../utils';
+import { describeCoiAndNonCoi, test } from '../utils';
 
-test.describe('sed command', () => {
+describeCoiAndNonCoi('sed command', () => {
   test('should run successfully', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { output, shell } = await globalThis.cockle.shellSetupSimple();

@@ -1,9 +1,9 @@
 import { expect } from '@playwright/test';
-import { test } from '../utils';
+import { describeCoiAndNonCoi, test } from '../utils';
 
 const cmdName = ['external-cmd', 'external-tab'];
 cmdName.forEach(cmdName => {
-  test.describe(cmdName, () => {
+  describeCoiAndNonCoi(cmdName, () => {
     test.describe('external command', () => {
       test('should register', async ({ page }) => {
         const output = await page.evaluate(async cmdName => {
@@ -398,7 +398,7 @@ cmdName.forEach(cmdName => {
   });
 });
 
-test.describe('tab complete js-tab command', () => {
+describeCoiAndNonCoi('tab complete js-tab command', () => {
   test('should show all positional arguments', async ({ page }) => {
     const output = await page.evaluate(async cmdName => {
       const { externalCommands, shellSetupEmpty, terminalInput } = globalThis.cockle;

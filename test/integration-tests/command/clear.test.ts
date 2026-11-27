@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('clear command', () => {
+describeCoiAndNonCoi('clear command', () => {
   test('should emit terminal clear ansi sequence', async ({ page }) => {
     const output = await shellLineSimple(page, 'clear');
     // Note no newline after the clear, before the prompt.

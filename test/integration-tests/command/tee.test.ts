@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('tee command', () => {
+describeCoiAndNonCoi('tee command', () => {
   test('should write to stdout and file', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { output, shell } = await globalThis.cockle.shellSetupSimple();

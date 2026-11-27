@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, shellLineSimpleN, test } from '../utils';
 
-test.describe('alias command', () => {
+describeCoiAndNonCoi('alias command', () => {
   test('should write all to stdout', async ({ page }) => {
     expect(await shellLineSimple(page, 'alias')).toMatch(
       "\r\ndir='dir --color=auto'\r\n" +

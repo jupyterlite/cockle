@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimpleN, test } from '../utils';
 
-test.describe('expansion and assignment correctness', () => {
+describeCoiAndNonCoi('expansion and assignment correctness', () => {
   test('should expand a redirect target', async ({ page }) => {
     const output = await shellLineSimpleN(page, ['OUT=out.txt', 'echo hi > $OUT', 'ls out.txt']);
     expect(output[2]).toMatch('\r\nout.txt\r\n');

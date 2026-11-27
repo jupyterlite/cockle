@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('tree command', () => {
+describeCoiAndNonCoi('tree command', () => {
   test('should write version', async ({ page }) => {
     const output = await shellLineSimple(page, 'tree --version');
     expect(output).toMatch(

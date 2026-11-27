@@ -9,6 +9,10 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 defaults:
   run:
     shell: bash
@@ -36,73 +40,8 @@ jobs:
           npm install
           npm run lint:check
 
-  test:
-    name: 'Unit and integration tests ${{ matrix.os }}'
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Set conda environment
-        uses: mamba-org/setup-micromamba@main
-        with:
-          environment-name: cockle
-          environment-file: environment-dev.yml
-          init-shell: bash
-          cache-downloads: true
-
-      - name: Build
-        run: |
-          npm install
-          npm run build
-
-      - name: Run tests
-        working-directory: test
-        env:
-          COVERAGE: ${{ matrix.os == 'ubuntu-latest' && 1 || 0 }}
-        run: |
-          npm install
-          npx playwright install --with-deps chromium
-          npm run build
-          npm run test
-
-      - name: Upload coverage report
-        if: always() && matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v7
-        with:
-          name: cockle-coverage
-          path: |
-            .coverage/unit
-            .coverage/integration
-
-      - name: Upload unit test coverage to Codecov
-        if: ${{ !cancelled() && matrix.os == 'ubuntu-latest' }}
-        uses: codecov/codecov-action@v7
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: .coverage/unit/lcov.info
-          flags: unit
-          disable_search: true
-          fail_ci_if_error: false
-
-      - name: Upload integration test coverage to Codecov
-        if: ${{ !cancelled() && matrix.os == 'ubuntu-latest' }}
-        uses: codecov/codecov-action@v7
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: .coverage/integration/lcov.info
-          flags: integration
-          disable_search: true
-          fail_ci_if_error: false
-
-  ui-test:
-    name: Visual tests
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -123,12 +62,160 @@ jobs:
           npm install
           npm run build
 
-      - name: Run visual tests
+      - name: Build tests
+        working-directory: test
+        run: |
+          npm install
+          npm run build
+
+      - name: Build demo
         working-directory: demo
         run: |
           npm install
-          npx playwright install --with-deps chromium
           npm run build
+
+      - name: Upload build
+        uses: actions/upload-artifact@v7
+        with:
+          name: cockle-build
+          path: |
+            lib
+            src/version.ts
+            test/dist
+            demo/dist
+
+  test:
+    name: 'Test ${{ matrix.os }} ${{ matrix.browser }}'
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            browser: chromium
+          - os: ubuntu-latest
+            browser: firefox
+          - os: macos-latest
+            browser: webkit
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set conda environment
+        uses: mamba-org/setup-micromamba@main
+        with:
+          environment-name: cockle
+          environment-file: environment-dev.yml
+          init-shell: bash
+          cache-downloads: true
+
+      - name: Download build
+        uses: actions/download-artifact@v8
+        with:
+          name: cockle-build
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install test dependencies
+        working-directory: test
+        run: |
+          npm install
+          echo "PLAYWRIGHT_VERSION=$(npx playwright --version | cut -d' ' -f2)" >> $GITHUB_ENV
+
+      - name: Cache playwright browser
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.os == 'macOS' && '~/Library/Caches/ms-playwright' || '~/.cache/ms-playwright' }}
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Install playwright browser
+        working-directory: test
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Run unit tests
+        working-directory: test
+        env:
+          COVERAGE: ${{ matrix.browser == 'chromium' && 1 || 0 }}
+        run: npm run test:unit
+
+      - name: Run integration tests
+        working-directory: test
+        env:
+          COVERAGE: ${{ matrix.browser == 'chromium' && 1 || 0 }}
+        run: npm run test:integration:all -- --project ${{ matrix.browser }}
+
+      - name: Upload coverage report
+        if: always() && matrix.browser == 'chromium'
+        uses: actions/upload-artifact@v7
+        with:
+          name: cockle-coverage
+          path: |
+            .coverage/unit
+            .coverage/integration
+
+      - name: Upload unit test coverage to Codecov
+        if: ${{ !cancelled() && matrix.browser == 'chromium' }}
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: .coverage/unit/lcov.info
+          flags: unit
+          disable_search: true
+          fail_ci_if_error: false
+
+      - name: Upload integration test coverage to Codecov
+        if: ${{ !cancelled() && matrix.browser == 'chromium' }}
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: .coverage/integration/lcov.info
+          flags: integration
+          disable_search: true
+          fail_ci_if_error: false
+
+  ui-test:
+    name: Visual tests
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set conda environment
+        uses: mamba-org/setup-micromamba@main
+        with:
+          environment-name: cockle
+          environment-file: environment-dev.yml
+          init-shell: bash
+          cache-downloads: true
+
+      - name: Download build
+        uses: actions/download-artifact@v8
+        with:
+          name: cockle-build
+
+      - name: Install visual test dependencies
+        working-directory: demo
+        run: |
+          npm install
+          echo "PLAYWRIGHT_VERSION=$(npx playwright --version | cut -d' ' -f2)" >> $GITHUB_ENV
+
+      - name: Cache playwright browser
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Run visual tests
+        working-directory: demo
+        run: |
+          npx playwright install --with-deps chromium
           npm run test
 
       - name: Upload Playwright Test report

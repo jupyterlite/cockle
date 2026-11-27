@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimpleN, test } from '../utils';
 
-test.describe('ls command', () => {
+describeCoiAndNonCoi('ls command', () => {
   test('should write to stdout', async ({ page }) => {
     const output = await shellLineSimpleN(page, ['ls', 'ls -a']);
     expect(output[0]).toMatch('\r\ndirA  file1  file2\r\n');

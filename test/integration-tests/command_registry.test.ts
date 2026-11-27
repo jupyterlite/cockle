@@ -1,8 +1,8 @@
 /*
 import { expect } from '@playwright/test';
-import { test } from './utils';
+import { describeCoiAndNonCoi, test } from './utils';
 
-test.describe('CommandRegistry', () => {
+describeCoiAndNonCoi('CommandRegistry', () => {
   test('should store commands', async ({ page }) => {
     const output = await page.evaluate(() => {
       const registry = globalThis.cockle.CommandRegistry.instance();

@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimpleN, test } from '../utils';
 
-test.describe('export command', () => {
+describeCoiAndNonCoi('export command', () => {
   test('should export to env', async ({ page }) => {
     const output = await shellLineSimpleN(page, [
       "export SOME_NAME='a b c'",

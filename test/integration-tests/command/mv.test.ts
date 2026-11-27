@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimpleN, test } from '../utils';
 
-test.describe('mv command', () => {
+describeCoiAndNonCoi('mv command', () => {
   test('should move single file', async ({ page }) => {
     const output = await shellLineSimpleN(page, [
       // Check initial conditions

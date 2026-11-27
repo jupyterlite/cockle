@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('awk command', () => {
+describeCoiAndNonCoi('awk command', () => {
   test('should print each line', async ({ page }) => {
     const output = await shellLineSimple(page, "awk '{ print }' file2");
     expect(output).toMatch(/^awk '\{ print \}' file2\r\nSome other file\r\nSecond line\r\n/);

@@ -1,8 +1,8 @@
 /*
 import { expect } from '@playwright/test';
-import { test } from '../utils';
+import { describeCoiAndNonCoi, test } from '../utils';
 
-test.describe('TerminalInput', () => {
+describeCoiAndNonCoi('TerminalInput', () => {
   test('should return 4 (EOT) if no callback', async ({ page }) => {
     const charCodes = await page.evaluate(() => {
       const terminalInput = new globalThis.cockle.TerminalInput();

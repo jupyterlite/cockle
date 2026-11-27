@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from '../utils';
+import { describeCoiAndNonCoi, test } from '../utils';
 
 // Prompt displayed when paging, preceded by erase to end of line.
 const pagedPrompt = '\x1b[K:';
@@ -11,7 +11,7 @@ const commands = [
 ];
 
 commands.forEach(([description, cmd]) => {
-  test.describe(description, () => {
+  describeCoiAndNonCoi(description, () => {
     test('should write output that fits on one page and exit', async ({ page }) => {
       const output = await page.evaluate(async cmd => {
         const { externalCommands, shellSetupEmpty } = globalThis.cockle;

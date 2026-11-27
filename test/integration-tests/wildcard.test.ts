@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineComplexN, shellLineSimpleN, test } from './utils';
+import { describeCoiAndNonCoi, shellLineComplexN, shellLineSimpleN, test } from './utils';
 
-test.describe('filename expansion', () => {
+describeCoiAndNonCoi('filename expansion', () => {
   test('should expand * and ?', async ({ page }) => {
     const output = await shellLineSimpleN(page, [
       'echo file*',

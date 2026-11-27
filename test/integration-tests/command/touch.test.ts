@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { test } from '../utils';
+import { describeCoiAndNonCoi, test } from '../utils';
 
-test.describe('touch command', () => {
+describeCoiAndNonCoi('touch command', () => {
   test('should create file', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { shell, output } = await globalThis.cockle.shellSetupEmpty();

@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('wc command', () => {
+describeCoiAndNonCoi('wc command', () => {
   test('should read from single file as argument', async ({ page }) => {
     expect(await shellLineSimple(page, 'wc file2')).toMatch('\r\n 1  5 27 file2\r\n');
   });

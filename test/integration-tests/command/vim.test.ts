@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('vim command', () => {
+describeCoiAndNonCoi('vim command', () => {
   test('should output version', async ({ page }) => {
     const output = await shellLineSimple(page, 'vim --version');
     expect(output).toMatch(/^vim --version\r\nVIM - Vi IMproved 9.2/);

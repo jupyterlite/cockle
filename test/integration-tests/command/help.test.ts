@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('built-in commands help coverage', () => {
+describeCoiAndNonCoi('built-in commands help coverage', () => {
   test('every built-in command has --help output', async ({ page }) => {
     // Get list of built-ins from `cockle-config command --builtin`
     const output = await shellLineSimple(page, 'cockle-config command --builtin');

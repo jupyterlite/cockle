@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('less command', () => {
+describeCoiAndNonCoi('less command', () => {
   test('should output version', async ({ page }) => {
     const output = await shellLineSimple(page, 'less --version');
     expect(output).toMatch(/^less --version\r\nless \d{3} \(PCRE2 regular expressions\)\r\n/);

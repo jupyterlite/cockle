@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimpleN, test } from '../utils';
 
-test.describe('cp command', () => {
+describeCoiAndNonCoi('cp command', () => {
   test('should copy single file', async ({ page }) => {
     const output = await shellLineSimpleN(page, [
       // Check initial conditions

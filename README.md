@@ -120,6 +120,12 @@ npm run test
 ```
 
 You can interactively run individual playwright tests using `npm run test:integration:ui`.
+
+The integration tests run in Chromium by default. To also run them in Firefox and WebKit, install
+those browsers using `npx playwright install --with-deps firefox webkit` and then use
+`npm run test:integration:all` to run in all browsers, or
+`npm run test:integration:all -- --project firefox` to run in just one.
+
 The testing framework serves its own CORS proxy using
 [cors-anywhere](https://github.com/Rob--W/cors-anywhere) so that `git clone` of github repositories
 can be tested without using an external CORS proxy that may be rate limited or otherwise restricted.

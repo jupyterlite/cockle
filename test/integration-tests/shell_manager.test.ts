@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { test } from './utils';
+import { describeCoiAndNonCoi, test } from './utils';
 
-test.describe('ShellManager', () => {
+describeCoiAndNonCoi('ShellManager', () => {
   test('should support no shells created', async ({ page }) => {
     const output = await page.evaluate(async () => {
       const { shellManager } = globalThis.cockle;

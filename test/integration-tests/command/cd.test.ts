@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, shellLineSimpleN, test } from '../utils';
 
-test.describe('cd command', () => {
+describeCoiAndNonCoi('cd command', () => {
   test('should do nothing if no arguments', async ({ page }) => {
     const output = await shellLineSimpleN(page, ['pwd', 'cd', 'pwd']);
     expect(output[0]).toMatch('\r\n/drive\r\n');
