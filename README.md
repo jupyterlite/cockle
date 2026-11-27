@@ -125,7 +125,9 @@ The testing framework serves its own CORS proxy using
 can be tested without using an external CORS proxy that may be rate limited or otherwise restricted.
 
 In addition, the `demo` directory contains separate visual tests that can be run in the same way.
-Only Linux screenshots are stored within the repository.
+Only Linux screenshots are stored within the repository. If a pull request changes the screenshots,
+wait for the `Test` workflow to finish and then add a comment containing "Please update snapshots"
+to commit the new screenshots to the pull request. This needs write access to the repository.
 
 Coverage for `src/*.ts` is opt-in, as collecting it slows the tests down. Run `npm run test:coverage`,
 or prefix any test command with `COVERAGE=1`:

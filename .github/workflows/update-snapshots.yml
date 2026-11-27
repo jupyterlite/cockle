@@ -1,0 +1,117 @@
+name: Update snapshots
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  update-snapshots:
+    name: Update visual test snapshots
+    if: >-
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, 'please update snapshots')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: update-snapshots-${{ github.event.issue.number }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - name: Check commenter permission
+        env:
+          COMMENTER: ${{ github.event.comment.user.login }}
+        run: |
+          permission=$(gh api "repos/$GH_REPO/collaborators/$COMMENTER/permission" --jq .permission)
+          if [ "$permission" != "admin" ] && [ "$permission" != "write" ]; then
+            echo "Only users with write access to this repository can update snapshots." > "$RUNNER_TEMP/message.md"
+            exit 1
+          fi
+
+      - name: React to comment
+        run: |
+          gh api --method POST \
+            "repos/$GH_REPO/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content=+1
+
+      - name: Get pull request details
+        id: pr
+        run: |
+          read -r head_repo head_ref head_sha < <(gh pr view "$PR_NUMBER" \
+            --json headRepository,headRepositoryOwner,headRefName,headRefOid \
+            --jq '"\(.headRepositoryOwner.login)/\(.headRepository.name) \(.headRefName) \(.headRefOid)"')
+          echo "head_repo=$head_repo" >> "$GITHUB_OUTPUT"
+          echo "head_ref=$head_ref" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Download visual test artifact
+        env:
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
+        run: |
+          read -r run_id status < <(gh run list --workflow test.yml --commit "$HEAD_SHA" \
+            --limit 1 --json databaseId,status --jq '.[] | "\(.databaseId) \(.status)"') || true
+          if [ -z "$run_id" ]; then
+            echo "No \`Test\` workflow run found for commit $HEAD_SHA." > "$RUNNER_TEMP/message.md"
+            exit 1
+          fi
+          if [ "$status" != "completed" ]; then
+            echo "The \`Test\` workflow run for commit $HEAD_SHA has not finished yet, please try again when it has." > "$RUNNER_TEMP/message.md"
+            exit 1
+          fi
+          if ! gh run download "$run_id" --name cockle-visual-tests --dir "$RUNNER_TEMP/artifact"; then
+            echo "Could not download the \`cockle-visual-tests\` artifact from run $run_id." > "$RUNNER_TEMP/message.md"
+            exit 1
+          fi
+
+      - name: Checkout pull request
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ steps.pr.outputs.head_repo }}
+          ref: ${{ steps.pr.outputs.head_sha }}
+
+      - name: Update snapshots
+        env:
+          HEAD_REF: ${{ steps.pr.outputs.head_ref }}
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
+          SNAPSHOT_DIR: demo/ui-tests/demo.test.ts-snapshots
+        run: |
+          results="$RUNNER_TEMP/artifact/test-results"
+          if [ -d "$results" ]; then
+            # Sorted so that later retries overwrite earlier attempts.
+            find "$results" -name '*-actual.png' -printf '%h\t%p\n' | LC_ALL=C sort | cut -f2 | while read -r file; do
+              name=$(basename "$file" -actual.png)
+              cp "$file" "$SNAPSHOT_DIR/$name-chromium-linux.png"
+            done
+          fi
+
+          if [ -z "$(git status --porcelain -- "$SNAPSHOT_DIR")" ]; then
+            echo "No changed snapshots found in the visual test results for commit $HEAD_SHA." > "$RUNNER_TEMP/message.md"
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "$SNAPSHOT_DIR"
+          git commit -m "Update visual test snapshots"
+          if ! git push origin "HEAD:refs/heads/$HEAD_REF"; then
+            echo "Could not push to \`$HEAD_REF\`. It may have new commits since the visual tests ran, or 'Allow edits by maintainers' may not be enabled on this pull request." > "$RUNNER_TEMP/message.md"
+            exit 1
+          fi
+
+          {
+            echo "Updated snapshots in $(git rev-parse --short HEAD):"
+            git diff --name-only HEAD~1 HEAD | sed 's/^/- `/; s/$/`/'
+          } > "$RUNNER_TEMP/message.md"
+
+      - name: Report result
+        if: always()
+        run: |
+          msg="$RUNNER_TEMP/message.md"
+          [ -f "$msg" ] || echo "Snapshot update failed." > "$msg"
+          printf '\n[Workflow run](%s/%s/actions/runs/%s)\n' \
+            "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> "$msg"
+          gh pr comment "$PR_NUMBER" --body-file "$msg"
