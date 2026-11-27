@@ -131,4 +131,14 @@ describeCoiAndNonCoi('filename expansion', () => {
     expect(output[4]).toMatch('echo dir/*/\r\ndir/subdir/\r\n');
     expect(output[5]).toMatch('echo */*.txt\r\ndir/subfile.txt\r\n');
   });
+
+  test('should expand a pattern starting with ~', async ({ page }) => {
+    const output = await shellLineSimpleN(page, [
+      'touch ~/a.txt ~/b.txt ~/c.dat',
+      'echo ~/*.txt',
+      'echo "~/*.txt"'
+    ]);
+    expect(output[1]).toMatch('echo ~/*.txt\r\n/home/web_user/a.txt /home/web_user/b.txt\r\n');
+    expect(output[2]).toMatch('echo "~/*.txt"\r\n~/*.txt\r\n');
+  });
 });

@@ -84,6 +84,41 @@ function _sectionMask(length: number, sections: [number, number][] = []): boolea
   return mask;
 }
 
+/** Where a `~` is expanded to $HOME: at the start of a word, or in the value of a `NAME=value`
+ * assignment where it can be at the start of the value or follow a ':', as in `PATH=~/a:~/b`.
+ */
+type TildeMode = 'word' | 'assignment';
+
+/**
+ * Whether the '~' at index is expanded to $HOME, as bash does for a tilde on its own. It must be
+ * unquoted, at a position allowed by the mode, and followed by the end of the value or an unquoted
+ * '/' (or ':' in an assignment). So `~` and `~/x` are expanded whereas `'~'`, `~"/x"`, `a~` and
+ * `~name` are not.
+ * @param value The string containing the '~'.
+ * @param index The index of the '~' character.
+ * @param mode Where in the value a '~' is expanded.
+ * @param quoted An array of quoted sections in the string.
+ * @returns True if the '~' is to be expanded.
+ */
+function _isTilde(
+  value: string,
+  index: number,
+  mode: TildeMode,
+  quoted?: [number, number][]
+): boolean {
+  const isQuoted = (i: number): boolean =>
+    quoted?.some(([start, end]) => i >= start && i < end) ?? false;
+  const assignment: boolean = mode === 'assignment';
+  const first: number = assignment ? value.indexOf('=') + 1 : 0;
+  const atStart: boolean =
+    index === first ||
+    (assignment && index > first && value[index - 1] === ':' && !isQuoted(index - 1));
+  const next: string | undefined = value[index + 1];
+  const atEnd: boolean =
+    next === undefined || ((assignment ? '/:' : '/').includes(next) && !isQuoted(index + 1));
+  return atStart && atEnd && !isQuoted(index);
+}
+
 /**
  * Expand environment variable references in part of a command. Supports ` $NAME` and `${NAME}`.
  * A reference to an unset variable becomes an empty string.
@@ -96,6 +131,9 @@ function _sectionMask(length: number, sections: [number, number][] = []): boolea
  * @param singleQuoted An array of single-quoted sections in the string.
  * @param heredoc Whether the value is the body of a here document. Its backslashes quote only '$',
  * '`', '\\' and newline, and its text is never split into fields.
+ * @param tilde Where a `~` is expanded to $HOME, or undefined to not expand it. The expanded text
+ * is literal, so it is neither split into fields nor a wildcard. If HOME is unset the `~` is left
+ * untouched.
  * @returns The expanded text, a mask of the characters which came from an unquoted reference, and
  * a mask of the characters which were quoted or escaped in the source.
  */
@@ -104,9 +142,10 @@ function _expand(
   environment: ReadonlyMap<string, string>,
   quoted?: [number, number][],
   singleQuoted?: [number, number][],
-  heredoc: boolean = false
+  heredoc: boolean = false,
+  tilde?: TildeMode
 ): Expansion {
-  if (value.indexOf('$') < 0 && value.indexOf('\\') < 0) {
+  if (value.indexOf('$') < 0 && value.indexOf('\\') < 0 && value.indexOf('~') < 0) {
     return {
       text: value,
       expandable: new Array<boolean>(value.length).fill(false),
@@ -140,6 +179,19 @@ function _expand(
       quotedMask.push(true);
       index += 2;
       continue;
+    }
+
+    if (char === '~' && tilde !== undefined && _isTilde(value, index, tilde, quoted)) {
+      const home: string | undefined = environment.get('HOME');
+      if (home !== undefined) {
+        text += home;
+        for (let i = 0; i < home.length; i++) {
+          expandable.push(false);
+          quotedMask.push(true);
+        }
+        index++;
+        continue;
+      }
     }
 
     if (char !== '$' || singleQuotedAtIndex) {
@@ -223,13 +275,26 @@ export function expandPrompt(value: string, environment: ReadonlyMap<string, str
 
 /**
  * Expand environment variable references in a token, ignoring references within its
- * single-quoted sections.
+ * single-quoted sections, and a leading unquoted `~` to $HOME.
  * @param token The token containing the potential variable references.
  * @param environment The environment mapping variable names to their values.
  * @returns The string with environment variable references expanded.
  */
 export function expandToken(token: Token, environment: ReadonlyMap<string, string>): string {
-  return _expand(token.value, environment, token.quoted, token.singleQuoted).text;
+  return _expand(token.value, environment, token.quoted, token.singleQuoted, false, 'word').text;
+}
+
+/**
+ * Expand a `NAME=value` assignment token. This is the same as expandToken except that an unquoted
+ * `~` is expanded to $HOME at the start of the value and after each ':' in it, so that
+ * `PATH=~/a:~/b` expands both.
+ * @param token The assignment token containing the potential variable references.
+ * @param environment The environment mapping variable names to their values.
+ * @returns The whole `NAME=value` string with its value expanded.
+ */
+export function expandAssignment(token: Token, environment: ReadonlyMap<string, string>): string {
+  return _expand(token.value, environment, token.quoted, token.singleQuoted, false, 'assignment')
+    .text;
 }
 
 /**
@@ -243,7 +308,11 @@ export function expandToken(token: Token, environment: ReadonlyMap<string, strin
  * to nothing.
  */
 export function splitTokenFields(token: Token, environment: ReadonlyMap<string, string>): Field[] {
-  if (token.value.indexOf('$') < 0 && token.value.indexOf('\\') < 0) {
+  if (
+    token.value.indexOf('$') < 0 &&
+    token.value.indexOf('\\') < 0 &&
+    token.value.indexOf('~') < 0
+  ) {
     if (token.value === '') {
       return token.quoted?.length ? [{ text: '', quoted: [] }] : [];
     }
@@ -254,7 +323,9 @@ export function splitTokenFields(token: Token, environment: ReadonlyMap<string, 
     token.value,
     environment,
     token.quoted,
-    token.singleQuoted
+    token.singleQuoted,
+    false,
+    'word'
   );
   if (text === '') {
     // bash: 'E=; $E' gives no fields, '"$E"' gives one empty field.

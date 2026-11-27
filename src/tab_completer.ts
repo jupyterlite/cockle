@@ -150,6 +150,18 @@ export class TabCompleter {
       tokenToComplete = './';
     }
 
+    // A leading ~ is the home directory. Only the end of the path is completed, so the ~ is kept
+    // in the command line.
+    const home = this.context.environment.get('HOME');
+    if (home !== undefined) {
+      if (tokenToComplete === '~') {
+        return [commandLine, tokenToComplete, ['~/']];
+      }
+      if (tokenToComplete.startsWith('~/')) {
+        tokenToComplete = home + tokenToComplete.slice(1);
+      }
+    }
+
     const endsWithSlash = tokenToComplete.endsWith('/');
     const prev = [undefined, '/'];
     const doubleDot = tokenToComplete.endsWith('..') && prev.includes(tokenToComplete.at(-3));

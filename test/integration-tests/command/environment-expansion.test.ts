@@ -51,4 +51,29 @@ describeCoiAndNonCoi('environment variable expansion', () => {
     expect(output[0]).toMatch('\r\ncost$\r\n');
     expect(output[1]).toMatch('\r\n${\r\n');
   });
+
+  test('should expand ~ to $HOME', async ({ page }) => {
+    const output = await shellLineSimpleN(page, ['echo ~ ~/x', "echo '~' a~"]);
+    expect(output[0]).toMatch('\r\n/home/web_user /home/web_user/x\r\n');
+    expect(output[1]).toMatch('\r\n~ a~\r\n');
+  });
+
+  test('should expand ~ in a redirect target', async ({ page }) => {
+    const output = await shellLineSimpleN(page, [
+      'echo hello > ~/out.txt',
+      'cat /home/web_user/out.txt'
+    ]);
+    expect(output[1]).toMatch('\r\nhello\r\n');
+  });
+
+  test('should expand ~ in a here string', async ({ page }) => {
+    const output = await shellLineSimpleN(page, ['cat <<< ~/x', 'cat <<< "~/x"']);
+    expect(output[0]).toMatch('\r\n/home/web_user/x\r\n');
+    expect(output[1]).toMatch('\r\n~/x\r\n');
+  });
+
+  test('should expand ~ in the value of an assignment', async ({ page }) => {
+    const output = await shellLineSimpleN(page, ['A=~/x:~/y', 'echo $A']);
+    expect(output[1]).toMatch('\r\n/home/web_user/x:/home/web_user/y\r\n');
+  });
 });

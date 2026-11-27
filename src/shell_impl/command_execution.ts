@@ -9,7 +9,7 @@ import { Environment } from '../environment';
 import { ErrorExitCode, FindCommandError, GeneralError } from '../error_exit_code';
 import { ExitCode } from '../exit_code';
 import type { Field } from '../expand';
-import { expandFields, expandToken } from '../expand';
+import { expandAssignment, expandFields } from '../expand';
 import type { IInput, IOutput } from '../io';
 import { Pipe, TerminalInput, TerminalOutput } from '../io';
 import { CommandNode, parse, PipeNode } from '../parse';
@@ -336,7 +336,7 @@ export class CommandExecutor {
     const assignment = parseAssignment(token);
     if (assignment !== undefined) {
       const [name] = assignment;
-      environment.set(name, expandToken(token, environment).slice(name.length + 1));
+      environment.set(name, expandAssignment(token, environment).slice(name.length + 1));
     }
   }
 

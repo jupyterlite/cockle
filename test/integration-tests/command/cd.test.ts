@@ -2,10 +2,26 @@ import { expect } from '@playwright/test';
 import { describeCoiAndNonCoi, shellLineSimple, shellLineSimpleN, test } from '../utils';
 
 describeCoiAndNonCoi('cd command', () => {
-  test('should do nothing if no arguments', async ({ page }) => {
+  test('should change to home directory if no arguments', async ({ page }) => {
     const output = await shellLineSimpleN(page, ['pwd', 'cd', 'pwd']);
     expect(output[0]).toMatch('\r\n/drive\r\n');
+    expect(output[2]).toMatch('\r\n/home/web_user\r\n');
+  });
+
+  test('should error if no arguments and HOME not set', async ({ page }) => {
+    const output = await shellLineSimpleN(page, ['unset HOME', 'cd', 'pwd']);
+    expect(output[1]).toMatch(/cd: HOME not set/);
     expect(output[2]).toMatch('\r\n/drive\r\n');
+  });
+
+  test('should support cd ~', async ({ page }) => {
+    const output = await shellLineSimpleN(page, ['cd ~', 'pwd']);
+    expect(output[1]).toMatch('\r\n/home/web_user\r\n');
+  });
+
+  test('should support cd to a directory in ~', async ({ page }) => {
+    const output = await shellLineSimpleN(page, ['mkdir ~/sub', 'cd ~/sub', 'pwd']);
+    expect(output[2]).toMatch('\r\n/home/web_user/sub\r\n');
   });
 
   test('should error if more than one argument', async ({ page }) => {

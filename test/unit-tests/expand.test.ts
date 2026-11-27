@@ -1,4 +1,5 @@
 import {
+  expandAssignment,
   expandFields,
   expandHeredoc,
   expandPrompt,
@@ -300,5 +301,99 @@ describe('splitTokenFields', () => {
         splitToken(tokenize(source)[0], env)
       );
     }
+  });
+});
+
+describe('tilde expansion', () => {
+  const environment = getEnvironment();
+
+  const fields = (source: string, env: Map<string, string> = environment) =>
+    splitTokenFields(tokenize(source)[0], env);
+  const text = (source: string, env: Map<string, string> = environment) =>
+    fields(source, env).map(field => field.text);
+
+  test('should expand ~ on its own and before a slash', () => {
+    expect(text('~')).toEqual(['/home/cockle']);
+    expect(text('~/')).toEqual(['/home/cockle/']);
+    expect(text('~/x/y')).toEqual(['/home/cockle/x/y']);
+    expect(expandToken(tokenize('~/x')[0], environment)).toEqual('/home/cockle/x');
+  });
+
+  test('should not expand a quoted or escaped ~', () => {
+    expect(text("'~'")).toEqual(['~']);
+    expect(text('"~/x"')).toEqual(['~/x']);
+    expect(text('\\~')).toEqual(['~']);
+    expect(text('\\~/x')).toEqual(['~/x']);
+  });
+
+  test('should not expand ~ followed by a quoted slash', () => {
+    expect(text('~"/x"')).toEqual(['~/x']);
+  });
+
+  test('should not expand ~ that is not at the start of the word', () => {
+    expect(text('a~')).toEqual(['a~']);
+    expect(text('a/~')).toEqual(['a/~']);
+    expect(text('a/~/b')).toEqual(['a/~/b']);
+  });
+
+  test('should not expand ~ followed by other characters', () => {
+    expect(text('~name')).toEqual(['~name']);
+    expect(text('~name/x')).toEqual(['~name/x']);
+    expect(text('~+')).toEqual(['~+']);
+    expect(text('~-')).toEqual(['~-']);
+    expect(text('~:x')).toEqual(['~:x']);
+  });
+
+  test('should mark the expanded text as quoted so that it is not a wildcard', () => {
+    const env = new Map(environment);
+    env.set('HOME', '/h*');
+    expect(fields('~/*', env)).toEqual([
+      { text: '/h*/*', quoted: [true, true, true, false, false] }
+    ]);
+  });
+
+  test('should not split the expanded text into fields', () => {
+    const env = new Map(environment);
+    env.set('HOME', '/my home');
+    expect(text('~/x', env)).toEqual(['/my home/x']);
+  });
+
+  test('should expand references after the ~', () => {
+    expect(text('~/$NAME')).toEqual(['/home/cockle/world']);
+  });
+
+  test('should leave ~ if HOME is not set', () => {
+    const env = new Map(environment);
+    env.delete('HOME');
+    expect(text('~', env)).toEqual(['~']);
+    expect(text('~/x', env)).toEqual(['~/x']);
+  });
+
+  test('should not expand ~ in a string, prompt or here document', () => {
+    expect(expandString('~/x', environment)).toEqual('~/x');
+    expect(expandPrompt('~/x', environment)).toEqual('~/x');
+    expect(expandHeredoc('~/x', environment)).toEqual('~/x');
+  });
+
+  test('should not expand ~ in the value of a NAME=value argument', () => {
+    expect(text('A=~/x')).toEqual(['A=~/x']);
+  });
+
+  test('should expand ~ at the start of an assignment value and after each colon', () => {
+    const assign = (source: string) => expandAssignment(tokenize(source)[0], environment);
+    expect(assign('A=~')).toEqual('A=/home/cockle');
+    expect(assign('A=~/x')).toEqual('A=/home/cockle/x');
+    expect(assign('A=~/x:~/y')).toEqual('A=/home/cockle/x:/home/cockle/y');
+    expect(assign('A=~:~')).toEqual('A=/home/cockle:/home/cockle');
+    expect(assign('A=$B:~/y')).toEqual('A=y:/home/cockle/y');
+  });
+
+  test('should not expand other ~ in an assignment value', () => {
+    const assign = (source: string) => expandAssignment(tokenize(source)[0], environment);
+    expect(assign('A=x~')).toEqual('A=x~');
+    expect(assign('A=x/~')).toEqual('A=x/~');
+    expect(assign('A="~"')).toEqual('A=~');
+    expect(assign("A='~/x'")).toEqual('A=~/x');
+    expect(assign('A=~name')).toEqual('A=~name');
   });
 });

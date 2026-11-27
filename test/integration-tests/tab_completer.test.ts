@@ -287,6 +287,45 @@ describeCoiAndNonCoi('TabCompleter', () => {
     });
   });
 
+  test.describe('tab complete ~ for home directory', () => {
+    // Create a directory and files in the home directory before tab completing.
+    const setup = [
+      [...'mkdir ~/adir', '\r'],
+      [...'touch ~/hfile1 ~/hfile2', '\r']
+    ];
+
+    test('should complete ~ to ~/', async ({ page }) => {
+      expect(await shellInputsSimple(page, ['l', 's', ' ', '~', '\t'])).toEqual('ls ~/');
+    });
+
+    test('should show contents of home directory', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [...setup, ['l', 's', ' ', '~', '/', '\t']]);
+      expect(output[2]).toMatch(/^ls ~\/\r\nadir\/ {3}hfile1 {2}hfile2\r\n/);
+      expect(output[2]).toMatch(/ls ~\/$/);
+    });
+
+    test('should add common startsWith in home directory', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [
+        ...setup,
+        ['l', 's', ' ', '~', '/', 'h', 'f', '\t']
+      ]);
+      expect(output[2]).toEqual('ls ~/hfile');
+    });
+
+    test('should complete single directory in home directory', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [
+        ...setup,
+        ['l', 's', ' ', '~', '/', 'a', '\t']
+      ]);
+      expect(output[2]).toEqual('ls ~/adir/');
+    });
+
+    test('should match only directories for cd', async ({ page }) => {
+      const output = await shellInputsSimpleN(page, [...setup, ['c', 'd', ' ', '~', '/', '\t']]);
+      expect(output[2]).toEqual('cd ~/adir/');
+    });
+  });
+
   test.describe('tab complete builtin cockle-config command', () => {
     test('should show all subcommands if none mentioned', async ({ page }) => {
       expect(await shellInputsSimple(page, ['c', 'o', '\t', '\t'])).toMatch(
