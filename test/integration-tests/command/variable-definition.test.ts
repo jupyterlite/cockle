@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimpleN, test } from '../utils';
 
-test.describe('variable definition', () => {
+describeCoiAndNonCoi('variable definition', () => {
   test('should persist a standalone assignment for a later command', async ({ page }) => {
     const output = await shellLineSimpleN(page, ['A=1', 'echo $A', 'A=2', 'echo $A']);
     expect(output[1]).toMatch('\r\n1\r\n');

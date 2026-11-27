@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimpleN, test } from '../utils';
 
-test.describe('unset command', () => {
+describeCoiAndNonCoi('unset command', () => {
   test('should unset environment variables', async ({ page }) => {
     const output = await shellLineSimpleN(page, [
       'export ABC1=hello ABC2=goodbye',

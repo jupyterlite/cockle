@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('sleep command', () => {
+describeCoiAndNonCoi('sleep command', () => {
   test('should write to stdout', async ({ page }) => {
     expect(await shellLineSimple(page, 'sleep --version')).toMatch('\r\nsleep (GNU coreutils) ');
   });

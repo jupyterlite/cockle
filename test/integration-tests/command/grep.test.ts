@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, shellLineSimpleN, test } from '../utils';
 
-test.describe('grep command', () => {
+describeCoiAndNonCoi('grep command', () => {
   test('should write to stdout', async ({ page }) => {
     const output = await shellLineSimple(page, 'grep cond file2');
     expect(output).toMatch(/^grep cond file2\r\nSecond line\r\n/);

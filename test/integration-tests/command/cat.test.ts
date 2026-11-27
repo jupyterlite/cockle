@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, shellLineSimpleN, test } from '../utils';
 
-test.describe('cat command', () => {
+describeCoiAndNonCoi('cat command', () => {
   test('should write to stdout', async ({ page }) => {
     expect(await shellLineSimple(page, 'cat file1')).toMatch('\r\nContents of the file\r\n');
   });

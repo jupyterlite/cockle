@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
-import { test } from './utils';
+import { describeCoiAndNonCoi, test } from './utils';
 
 type FlagNames = { set?: string[]; clear?: string[] };
 interface IFlagChanges {
@@ -149,7 +149,7 @@ const lineDisciplineCases: ILineDisciplineCase[] = [
 
 const flagOptions = [{ flag: 'default' }, { flag: 'enabled' }, { flag: 'disabled' }];
 
-test.describe('termios', () => {
+describeCoiAndNonCoi('termios', () => {
   test.describe('check_termios', () => {
     flagOptions.forEach(({ flag }) => {
       test(`should support OutputFlag.ONLCR ${flag}`, async ({ page }) => {

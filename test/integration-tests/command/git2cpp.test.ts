@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('git2cpp command', () => {
+describeCoiAndNonCoi('git2cpp command', () => {
   test('should write version', async ({ page }) => {
     const output = await shellLineSimple(page, 'git -v');
     const lines = output.split('\r\n');

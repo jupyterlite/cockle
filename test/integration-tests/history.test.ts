@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimpleN, test } from './utils';
+import { describeCoiAndNonCoi, shellLineSimpleN, test } from './utils';
 
-test.describe('history', () => {
+describeCoiAndNonCoi('history', () => {
   test('should be stored', async ({ page }) => {
     const output = await shellLineSimpleN(page, ['cat a', 'echo', 'ls', 'history']);
     expect(output.at(-1)).toMatch(

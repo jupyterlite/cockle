@@ -248,8 +248,8 @@ export const test = base.extend<TestOptions & { coverage: void }>({
   },
 
   coverage: [
-    async ({ context, page }, use) => {
-      if (!coverageEnabled || !test.info().project.name.startsWith('chromium')) {
+    async ({ browserName, context, page }, use) => {
+      if (!coverageEnabled || browserName !== 'chromium') {
         await use();
         return;
       }

@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { test } from './coverage';
 import type { IOptions } from '../serve/shell_setup';
 
 export type TestOptions = {
@@ -8,7 +9,22 @@ export type TestOptions = {
 // `test` (the page override plus the automatic coverage fixture) and the CDP/report plumbing live in
 // coverage.ts. Re-exported here so the existing `import { test } from '../utils'` call sites are
 // unchanged.
-export { test } from './coverage';
+export { test };
+
+const servers = [
+  { name: 'non-coi', baseURL: 'http://localhost:8000', supportsSAB: false },
+  { name: 'coi', baseURL: 'http://localhost:8001', supportsSAB: true }
+];
+
+// Declare a group of tests that runs twice, on the servers without and with cross-origin isolation.
+export function describeCoiAndNonCoi(title: string, callback: () => void): void {
+  for (const { name, ...use } of servers) {
+    test.describe(name, () => {
+      test.use(use);
+      test.describe(title, callback);
+    });
+  }
+}
 
 export function sequenceOfLetters(n: number): string {
   let ret = '';

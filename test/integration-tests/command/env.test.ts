@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('env command', () => {
+describeCoiAndNonCoi('env command', () => {
   test('should write to stdout', async ({ page }) => {
     const output = await shellLineSimple(page, 'env MYENV=23|grep MYENV');
     expect(output).toMatch(/env MYENV=23|grep MYENV\r\nMYENV=23\r\n/);

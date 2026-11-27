@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import {
+  describeCoiAndNonCoi,
   sequenceOfLetters,
   shellInputsSimple,
   shellInputsSimpleN,
@@ -12,7 +13,7 @@ import {
 import { DEFAULT_USER } from '../../src/environment';
 import { keys } from '../serve/keys';
 
-test.describe('Shell', () => {
+describeCoiAndNonCoi('Shell', () => {
   test.describe('run command', () => {
     test('should run ls command', async ({ page }) => {
       expect(await shellLineSimple(page, 'ls')).toMatch(/^ls\r\ndirA {2}file1 {2}file2\r\n/);

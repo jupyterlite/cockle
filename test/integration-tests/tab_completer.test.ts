@@ -1,8 +1,8 @@
 import { expect } from '@playwright/test';
-import { shellInputsSimple, shellInputsSimpleN, test } from './utils';
+import { describeCoiAndNonCoi, shellInputsSimple, shellInputsSimpleN, test } from './utils';
 import { keys } from '../serve/keys';
 
-test.describe('TabCompleter', () => {
+describeCoiAndNonCoi('TabCompleter', () => {
   test.describe('tab complete commands', () => {
     test('should complete ec', async ({ page }) => {
       expect(await shellInputsSimple(page, ['e', 'c', '\t'])).toEqual('echo ');

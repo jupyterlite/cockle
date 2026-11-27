@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, shellLineSimpleN, test } from '../utils';
 
-test.describe('stat command', () => {
+describeCoiAndNonCoi('stat command', () => {
   test('should report terminal stdin as character special file', async ({ page }) => {
     const output = await shellLineSimple(page, 'stat -c %F -');
     expect(output).toMatch('stat -c %F -\r\ncharacter special file\r\n');

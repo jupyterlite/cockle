@@ -1,9 +1,9 @@
 import { expect } from '@playwright/test';
-import { shellInputsSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellInputsSimple, test } from '../utils';
 
 const cmdName = ['js-test', 'js-tab'];
 cmdName.forEach(cmdName => {
-  test.describe(cmdName, () => {
+  describeCoiAndNonCoi(cmdName, () => {
     test('should register', async ({ page }) => {
       const output = await page.evaluate(async cmdName => {
         const { shell, output } = await globalThis.cockle.shellSetupEmpty();
@@ -403,7 +403,7 @@ cmdName.forEach(cmdName => {
   });
 });
 
-test.describe('tab complete js-tab command', () => {
+describeCoiAndNonCoi('tab complete js-tab command', () => {
   test('should show all positional arguments', async ({ page }) => {
     const output = await shellInputsSimple(page, ['j', 's', '-', 't', 'a', '\t', '\t']);
     const lines = output.split('\r\n');

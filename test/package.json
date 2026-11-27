@@ -16,10 +16,11 @@
         "serve:cockle": "concurrently 'npm run serve:simple' 'npm run serve:cross-origin'",
         "serve:simple": "npx static-handler --port 8000 dist/",
         "serve:cross-origin": "npx static-handler --coi --port 8001 dist/",
-        "serve:cors-proxy": "HOST=localhost PORT=8881 node node_modules/cors-anywhere/server.js",
+        "serve:cors-proxy": "HOST=localhost PORT=8881 node --no-deprecation node_modules/cors-anywhere/server.js",
         "test": "npm run test:unit && npm run test:integration",
         "test:coverage": "COVERAGE=1 npm run test",
-        "test:integration": "cd integration-tests && playwright test",
+        "test:integration": "cd integration-tests && playwright test --project=chromium",
+        "test:integration:all": "cd integration-tests && playwright test",
         "test:integration:ui": "cd integration-tests && playwright test --ui",
         "test:unit": "jest"
     },

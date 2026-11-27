@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, shellLineSimpleN, test } from '../utils';
 
-test.describe('environment variable expansion', () => {
+describeCoiAndNonCoi('environment variable expansion', () => {
   test('should expand unquoted and double-quoted references', async ({ page }) => {
     const output = await shellLineSimpleN(page, [
       'export GREETING=hello',

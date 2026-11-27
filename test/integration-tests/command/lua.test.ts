@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, shellLineSimpleN, test } from '../utils';
 
-test.describe('lua command', () => {
+describeCoiAndNonCoi('lua command', () => {
   test('should write to stdout', async ({ page }) => {
     const output = await shellLineSimple(page, 'lua -v');
     expect(output).toMatch(/Lua \d+\.\d+\.\d+ {2}Copyright \(C\) 1994-202\d Lua.org, PUC-Rio/);

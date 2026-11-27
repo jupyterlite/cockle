@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, shellLineSimpleN, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, shellLineSimpleN, test } from '../utils';
 
-test.describe('base64 command', () => {
+describeCoiAndNonCoi('base64 command', () => {
   test('should write to stdout', async ({ page }) => {
     expect(await shellLineSimple(page, 'base64 --version')).toMatch(
       /\r\nbase64 \(GNU coreutils\) \d+\.\d+\r\n/

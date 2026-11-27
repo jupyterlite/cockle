@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineComplexN, shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineComplexN, shellLineSimple, test } from '../utils';
 
-test.describe('find command', () => {
+describeCoiAndNonCoi('find command', () => {
   test('should write version', async ({ page }) => {
     expect(await shellLineSimple(page, 'find --version')).toMatch(
       /\r\nfind \(GNU findutils\) \d+\.\d+\.\d+\r\n/

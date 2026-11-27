@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('cockle-config command', () => {
+describeCoiAndNonCoi('cockle-config command', () => {
   ['-v', '--version'].forEach(option => {
     test(`should show version using ${option}`, async ({ page }) => {
       const output = await shellLineSimple(page, `cockle-config ${option}`);

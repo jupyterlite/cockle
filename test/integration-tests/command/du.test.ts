@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { shellLineSimple, test } from '../utils';
+import { describeCoiAndNonCoi, shellLineSimple, test } from '../utils';
 
-test.describe('du command', () => {
+describeCoiAndNonCoi('du command', () => {
   test('should write version', async ({ page }) => {
     const output = await shellLineSimple(page, 'du --version');
     const lines = output.split('\r\n');

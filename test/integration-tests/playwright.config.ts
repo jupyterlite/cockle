@@ -1,8 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 import { coverageEnabled } from './coverage';
-import type { TestOptions } from './utils';
 
-export default defineConfig<TestOptions>({
+export default defineConfig({
   testDir: './',
   globalSetup: coverageEnabled ? './coverage-setup.ts' : undefined,
   globalTeardown: coverageEnabled ? './coverage-teardown.ts' : undefined,
@@ -16,25 +15,35 @@ export default defineConfig<TestOptions>({
   projects: [
     {
       name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        baseURL: 'http://localhost:8000',
-        supportsSAB: false
-      }
+      use: { ...devices['Desktop Chrome'] }
     },
     {
-      name: 'chromium-coi',
-      use: {
-        ...devices['Desktop Chrome'],
-        baseURL: 'http://localhost:8001',
-        supportsSAB: true
-      }
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] }
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] }
     }
   ],
-  webServer: {
-    name: 'simple',
-    command: 'npm run serve',
-    url: 'http://localhost:8000',
-    reuseExistingServer: !process.env.CI
-  }
+  webServer: [
+    {
+      name: 'simple',
+      command: 'npm run serve:simple',
+      url: 'http://localhost:8000',
+      reuseExistingServer: !process.env.CI
+    },
+    {
+      name: 'cross-origin',
+      command: 'npm run serve:cross-origin',
+      url: 'http://localhost:8001',
+      reuseExistingServer: !process.env.CI
+    },
+    {
+      name: 'cors-proxy',
+      command: 'npm run serve:cors-proxy',
+      url: 'http://localhost:8881',
+      reuseExistingServer: !process.env.CI
+    }
+  ]
 });
